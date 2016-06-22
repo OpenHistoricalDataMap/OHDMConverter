@@ -1,4 +1,27 @@
+#ant specific
+dist/
+build/
+
+#netbeans specific
+core
+nbproject/*
+!nbproject/project.properties
+!nbproject/project.xml
+
+#config file
+conf/config.xml
+
+#java specific
 *.class
+
+#general swap/backup files
+*.so
+*.log
+*.out
+*~
+*.swp
+*.DS_Store
+*.lock
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/

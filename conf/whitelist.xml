@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<whitelist version='0.1'>
+    <key k="highway">
+        <target t="test">
+            <value v="motorway_junction" />
+            <value v="traffic_signals" />
+        </target>
+    </key>
+</whitelist>

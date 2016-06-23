@@ -16,7 +16,7 @@ import java.util.Properties;
 class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private static String NODETABLE = "ImportNodes";
-  private static String MAX_ID_SIZE;
+  private static String MAX_ID_SIZE = "10485760";
 
   private boolean n = true;
   private boolean w = true;
@@ -29,8 +29,17 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   private String serverName;
   private String portNumber;
   private Connection connection;
+  
+  private static SQLImportCommandBuilder instance = null;
 
-  public SQLImportCommandBuilder() throws Exception {
+  public static SQLImportCommandBuilder getInstance(){
+    if (instance == null) {
+      instance = new SQLImportCommandBuilder();
+    }
+    return instance;
+  }
+  
+  private SQLImportCommandBuilder() {
     try {
       this.user = Config.getInstance().getValue("db_user");
       this.pwd = Config.getInstance().getValue("db_password");
@@ -43,17 +52,17 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
               "jdbc:postgresql://" + this.serverName
               + ":" + this.portNumber + "/", connProps);
     } catch (SQLException e) {
-      throw new Exception("cannot connect to database: " + e.getLocalizedMessage());
+      System.err.println("cannot connect to database: " + e.getLocalizedMessage());
     }
 
     if (this.connection == null) {
-      throw new Exception("cannot connect to database: reason unknown");
+      System.err.println("cannot connect to database: reason unknown");
     }
 
     this.setupKB();
   }
 
-  private void setupKB() throws Exception {
+  private void setupKB() {
     Statement statement = null;
     try {
       statement = connection.createStatement();
@@ -75,7 +84,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
                 + " (id integer PRIMARY KEY default nextval('nodeid'), "
                 + "long character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), "
                 + "lat character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), "
-                + "tags character varying(),"
+                + "tags character varying(255),"
                 + "ohdm_geom_ID integer, "
                 + "ohdm_go_ID integer, "
                 + "st_type smallint,"
@@ -84,7 +93,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       }
     } catch (SQLException e) {
       System.err.println("error while setting up tables: " + e.getLocalizedMessage());
-      throw new Exception("error while setting up tables: " + e.getLocalizedMessage());
+      System.err.println("error while setting up tables: " + e.getLocalizedMessage());
     } finally {
       if (statement != null) {
         try {

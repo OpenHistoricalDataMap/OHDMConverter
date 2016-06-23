@@ -39,7 +39,7 @@ public class OSMImporter extends DefaultHandler {
 
   public OSMImporter() throws Exception {
     this.whitelist = Whitelist.getInstance();
-    this.builder = new SQLImportCommandBuilder();
+    this.builder = SQLImportCommandBuilder.getInstance();
   }
 
   private HashMap<String, String> parseTagAttributes(Attributes attributes) {

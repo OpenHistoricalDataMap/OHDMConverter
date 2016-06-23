@@ -4,4 +4,5 @@
     <entry k="db_password" v="root" />
     <entry k="db_serverName" v="localhost" />
     <entry k="db_portNumber" v="5432" />
+    <entry k="osm_sourceFile" v="path" />
 </config>

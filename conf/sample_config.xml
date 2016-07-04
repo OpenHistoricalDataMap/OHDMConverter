@@ -4,5 +4,8 @@
     <entry k="db_password" v="root" />
     <entry k="db_serverName" v="localhost" />
     <entry k="db_portNumber" v="5432" />
+    <entry k="db_dropTables" v="yes" />
+    <entry k="tmpStorageSize" v="10000" />
     <entry k="osm_sourceFile" v="path" />
+    <entry k="logger" v="enabled" />
 </config>

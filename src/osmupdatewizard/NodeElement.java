@@ -15,4 +15,12 @@ public class NodeElement extends OSMElement {
     NodeElement(ElementStorage storage, HashMap<String, String> attributes, HashSet<TagElement> tags) {
         super(storage, attributes, tags);
     }
+    
+    public String getLatitude(){
+      return this.attributes.get("lat");
+    }
+    
+    public String getLongitude(){
+      return this.attributes.get("lon");
+    }
 }

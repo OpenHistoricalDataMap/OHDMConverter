@@ -10,7 +10,7 @@ import java.util.Iterator;
  */
 public class OSMElement {
 
-  private final HashMap<String, String> attributes;
+  protected final HashMap<String, String> attributes;
   private HashSet<TagElement> tags = null;
 
   private String id = null;
@@ -49,5 +49,9 @@ public class OSMElement {
 
   ElementStorage getStorage() {
     return this.storage;
+  }
+  
+  public HashSet<TagElement> getTags() {
+    return this.tags;
   }
 }

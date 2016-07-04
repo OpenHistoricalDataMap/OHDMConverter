@@ -7,6 +7,7 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -15,8 +16,12 @@ import java.util.Properties;
  */
 class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
-  private static String NODETABLE = "ImportNodes";
-  private static String MAX_ID_SIZE = "10485760";
+  private static final String TAGTABLE = "Tags";
+  private static final String NODETMPTABLE = "NodesTmp";
+  private static final String NODEWOTAGTABLE = "NodesWOTag";
+  private static final String WAYTMPTABLE = "WaysTmp";
+  private static final String RELATIONTMPTABLE = "RelationsTmp";
+  private static final String MAX_ID_SIZE = "10485760";
 
   private boolean n = true;
   private boolean w = true;
@@ -29,17 +34,20 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   private String serverName;
   private String portNumber;
   private Connection connection;
-  
+
+  private Logger logger;
+
   private static SQLImportCommandBuilder instance = null;
 
-  public static SQLImportCommandBuilder getInstance(){
+  public static SQLImportCommandBuilder getInstance() {
     if (instance == null) {
       instance = new SQLImportCommandBuilder();
     }
     return instance;
   }
-  
+
   private SQLImportCommandBuilder() {
+    this.logger = Logger.getInstance();
     try {
       this.user = Config.getInstance().getValue("db_user");
       this.pwd = Config.getInstance().getValue("db_password");
@@ -63,46 +71,69 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   }
 
   private void setupKB() {
-    Statement statement = null;
+    logger.print("--- setting up tables ---", true);
+    Statement stmt = null;
     try {
-      statement = connection.createStatement();
+      stmt = connection.createStatement();
+      if (Config.getInstance().getValue("db_dropTables").equalsIgnoreCase("yes")) {
+        try {
+          stmt.execute("DROP TABLE " + SQLImportCommandBuilder.TAGTABLE + ", " + SQLImportCommandBuilder.NODEWOTAGTABLE + ", " + SQLImportCommandBuilder.NODETMPTABLE);
+          logger.print("tables dropped");
+        } catch (SQLException e) {
+          logger.print("failed to drop tables: " + e.getLocalizedMessage());
+        }
 
+      }
       /**
        * ************ Knowledge base table ****************************
        */
       try {
-        statement.execute("SELECT * from " + SQLImportCommandBuilder.NODETABLE);
-        System.out.println(SQLImportCommandBuilder.NODETABLE + " already exists");
+        this.checkIfTableExists(stmt, SQLImportCommandBuilder.TAGTABLE);
+        logger.print(SQLImportCommandBuilder.TAGTABLE + " already exists");
       } catch (SQLException e) {
-        // does not exist: create
-        System.out.println(SQLImportCommandBuilder.NODETABLE + " does not exists - create");
-        try {
-          statement.execute("drop sequence nodeid;");
-        } catch (SQLException ee) { /* ignore */ }
-        statement.execute("create sequence nodeid;");
-        statement.execute("CREATE TABLE " + SQLImportCommandBuilder.NODETABLE
-                + " (id integer PRIMARY KEY default nextval('nodeid'), "
-                + "long character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), "
-                + "lat character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), "
-                + "tags character varying(255),"
-                + "ohdm_geom_ID integer, "
-                + "ohdm_go_ID integer, "
-                + "st_type smallint,"
-                + "valid boolean default false"
-                + ");");
+        logger.print(SQLImportCommandBuilder.TAGTABLE + " does not exist - creating...");
+        this.resetSequence(stmt, "tagid");
+        stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.TAGTABLE + " (id integer PRIMARY KEY default nextval('tagid'), key character varying(255), value character varying(255));");
+      }
+      try {
+        this.checkIfTableExists(stmt, SQLImportCommandBuilder.NODEWOTAGTABLE);
+        logger.print(SQLImportCommandBuilder.NODEWOTAGTABLE + " already exists");
+      } catch (SQLException e) {
+        logger.print(SQLImportCommandBuilder.NODEWOTAGTABLE + " does not exist - creating...");
+        this.resetSequence(stmt, "nodewoid");
+        stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.NODEWOTAGTABLE + " (id integer PRIMARY KEY default nextval('nodewoid'), long character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), lat character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "));");
+      }
+      try {
+        this.checkIfTableExists(stmt, SQLImportCommandBuilder.NODETMPTABLE);
+        logger.print(SQLImportCommandBuilder.NODETMPTABLE + " already exists");
+      } catch (SQLException e) {
+        logger.print(SQLImportCommandBuilder.NODETMPTABLE + " does not exist - creating...");
+        this.resetSequence(stmt, "nodeid");
+        stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.NODETMPTABLE + " (id integer PRIMARY KEY default nextval('nodeid'), long character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), lat character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), tag integer REFERENCES " + SQLImportCommandBuilder.TAGTABLE + " (id));");
       }
     } catch (SQLException e) {
       System.err.println("error while setting up tables: " + e.getLocalizedMessage());
-      System.err.println("error while setting up tables: " + e.getLocalizedMessage());
     } finally {
-      if (statement != null) {
+      if (stmt != null) {
         try {
-          statement.close();
+          stmt.close();
         } catch (SQLException ex) {
           // ignore
         }
       }
     }
+    logger.print("--- finished setting up tables ---", true);
+  }
+
+  private void checkIfTableExists(Statement stmt, String table) throws SQLException {
+    stmt.execute("SELECT '" + table + "'::regclass;");
+  }
+
+  private void resetSequence(Statement stmt, String sequence) throws SQLException {
+    try {
+      stmt.execute("drop sequence " + sequence + ";");
+    } catch (SQLException ee) { /* ignore */ }
+    stmt.execute("create sequence " + sequence + ";");
   }
 
   private void printAttributes(HashMap<String, String> a) {
@@ -163,33 +194,38 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private HashMap<String, NodeElement> nodes = new HashMap<>();
 
-  private NodeElement saveNodeElement(ElementStorage storage, HashMap<String, String> attributes, HashSet<TagElement> tags) {
-    NodeElement newNode = new NodeElement(storage, attributes, tags);
-    if (newNode == null) {
-      System.err.println("node null");
-      return null;
+  private void saveNodeElements() {
+    String sqlWO = "INSERT INTO " + SQLImportCommandBuilder.NODEWOTAGTABLE + " (long, lat) VALUES";
+    String sql = null;
+    for (Map.Entry<String, NodeElement> entry : nodes.entrySet()) {
+      if (entry.getValue().getTags() == null) {
+        sqlWO += " (" + entry.getValue().getLatitude() + ", " + entry.getValue().getLongitude() + "),";
+      } else {
+        sql += " (";
+      }
     }
-
-    String id = newNode.getID();
-    nodes.put(id, newNode);
-    return newNode;
+    try {
+      Statement stmt = connection.createStatement();
+      stmt.execute(sqlWO.substring(0, sqlWO.length() - 1) + ";");
+    } catch (SQLException e) {
+      logger.print("Error: " + e.getLocalizedMessage(), true);
+    }
   }
 
   @Override
   public void addNode(HashMap<String, String> attributes, HashSet<TagElement> tags) {
-    this.saveNodeElement(this, attributes, tags);
+    NodeElement newNode = new NodeElement(this, attributes, tags);
+    String id = newNode.getID();
+    nodes.put(id, newNode);
 
-    if (tags == null) {
-      /* a node without tags has no identity - it's only stored
-       * in temporary database
-       */
-      return; // debugging
-    } else {
-      // node has tags - has an identity - also save in OHDM as GO
+    if (nodes.size() > Integer.parseInt(Config.getInstance().getValue("tmpStorageSize"))) {
+      logger.print("save nodes in db and clear hashmap", true);
+      this.saveNodeElements();
+      nodes.clear();
     }
 
     // debugging / testing
-    if (n) {
+    if (n && tags != null) {
       System.out.println("Tag");
       this.printAttributes(attributes);
       this.printTags(tags);
@@ -277,5 +313,9 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   @Override
   public NodeElement getNodeByID(String id) {
     return this.nodes.get(id);
+  }
+
+  public void saveAllToDB() {
+
   }
 }

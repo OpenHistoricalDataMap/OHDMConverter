@@ -2,6 +2,7 @@ package osmupdatewizard;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
@@ -82,7 +83,6 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
         } catch (SQLException e) {
           logger.print("failed to drop tables: " + e.getLocalizedMessage());
         }
-
       }
       /**
        * ************ Knowledge base table ****************************
@@ -95,6 +95,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
         this.resetSequence(stmt, "tagid");
         stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.TAGTABLE + " (id integer PRIMARY KEY default nextval('tagid'), key character varying(255), value character varying(255));");
       }
+      this.importWhitelist();
       try {
         this.checkIfTableExists(stmt, SQLImportCommandBuilder.NODEWOTAGTABLE);
         logger.print(SQLImportCommandBuilder.NODEWOTAGTABLE + " already exists");
@@ -123,6 +124,31 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       }
     }
     logger.print("--- finished setting up tables ---", true);
+  }
+
+  private void importWhitelist() {
+    // import whitelist to auto create ids
+    try {
+      Statement stmt = connection.createStatement();
+      stmt.execute(Whitelist.getInstance().getSQLImport(SQLImportCommandBuilder.TAGTABLE));
+      logger.print("Whitelist imported", true);
+    } catch (SQLException e) {
+      logger.print("whitelist import failed: " + e.getLocalizedMessage(), true);
+    }
+    // select tag table to get ids
+    Map<String, Integer> tagtable = new HashMap<>();
+    try {
+      Statement stmt = connection.createStatement();
+      ResultSet rs = stmt.executeQuery("SELECT * FROM " + SQLImportCommandBuilder.TAGTABLE);
+      while (rs.next()) {
+        tagtable.put(rs.getString("key") + "|" + rs.getString("value"), rs.getInt("id"));
+      }
+    } catch (SQLException e) {
+      logger.print("select statement failed: " + e.getLocalizedMessage(), true);
+    }
+    // push ids into whitelistobject
+    Whitelist.getInstance().feedWithId(tagtable);
+    logger.print(Whitelist.getInstance().toString(), true);
   }
 
   private void checkIfTableExists(Statement stmt, String table) throws SQLException {
@@ -201,6 +227,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       if (entry.getValue().getTags() == null) {
         sqlWO += " (" + entry.getValue().getLatitude() + ", " + entry.getValue().getLongitude() + "),";
       } else {
+        // TODO: create sql (TAGS!!)
         sql += " (";
       }
     }
@@ -225,13 +252,13 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     }
 
     // debugging / testing
-    if (n && tags != null) {
-      System.out.println("Tag");
-      this.printAttributes(attributes);
-      this.printTags(tags);
-      n = false;
-      System.out.println("===========================");
-    }
+    /*if (n && tags != null) {
+     System.out.println("Tag");
+     this.printAttributes(attributes);
+     this.printTags(tags);
+     n = false;
+     System.out.println("===========================");
+     }*/
   }
 
   private final HashMap<String, WayElement> ways = new HashMap<>();

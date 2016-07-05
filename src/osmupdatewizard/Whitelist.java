@@ -14,7 +14,7 @@ import org.xml.sax.helpers.DefaultHandler;
 public class Whitelist extends DefaultHandler {
 
   private final static Whitelist instance = new Whitelist();
-  private final Map<String, Map<String, String>> list = new HashMap<>();
+  private final Map<String, Map<String, WhitelistTarget>> list = new HashMap<>();
 
   private String key = null;
   private String target = null;
@@ -48,10 +48,31 @@ public class Whitelist extends DefaultHandler {
   public String reduce(String key, String value) {
     if (this.list.containsKey(key)) {
       if (this.list.get(key).containsKey(value)) {
-        return this.list.get(key).get(value);
+        return this.list.get(key).get(value).getValue();
       }
     }
     return null;
+  }
+
+  public String getSQLImport(String tablename) {
+    String sql = "INSERT INTO " + tablename + " (key, value) VALUES";
+    for (Map.Entry<String, Map<String, WhitelistTarget>> keyEntry : this.list.entrySet()) {
+      for (Map.Entry<String, WhitelistTarget> valueEntry : keyEntry.getValue().entrySet()) {
+        sql += " ('" + keyEntry.getKey() + "', '" + valueEntry.getKey() + "'),";
+      }
+    }
+    return sql.substring(0, sql.length() - 1) + ";";
+  }
+
+  public void feedWithId(Map<String, Integer> ids) {
+    ids.entrySet().stream().forEach((entry) -> {
+      String[] parts = entry.getKey().split("\\|");
+      this.list.get(parts[0]).get(parts[1]).setId(entry.getValue());
+    });
+  }
+
+  private String makeCompoundKey(String key, String value) {
+    return key + "|" + value;
   }
 
   /**
@@ -103,7 +124,8 @@ public class Whitelist extends DefaultHandler {
       if (!this.list.containsKey(this.key)) {
         this.list.put(this.key, new HashMap<>());
       }
-      this.list.get(this.key).put(this.value, this.target);
+      this.list.get(this.key).put(this.value, new WhitelistTarget(this.target));
     }
   }
+
 }

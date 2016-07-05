@@ -1,16 +1,16 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <config>
-    <!--- Some general database-connection info. --->
+    <!-- Some general database-connection info. -->
     <entry k="db_user" v="admin" />
     <entry k="db_password" v="root" />
     <entry k="db_serverName" v="localhost" />
     <entry k="db_portNumber" v="5432" />
-    <!--- If activated, all tables will be deleted when the program starts. (yes, no) --->
+    <!-- If activated, all tables will be deleted when the program starts. (yes, no) -->
     <entry k="db_dropTables" v="yes" />
-    <!--- Declares how many datasets are stored before they are saved to the database. A higher number may cause storage problems and a lower one is a litte slower due to connection creation. (integer) --->
+    <!-- Declares how many datasets are stored before they are saved to the database. A higher number may cause storage problems and a lower one is a litte slower due to connection creation. (integer) -->
     <entry k="tmpStorageSize" v="10000" />
-    <!--- This path says where the osm-source file is located on the computer. --->
+    <!-- This path says where the osm-source file is located on the computer. -->
     <entry k="osm_sourceFile" v="path" />
-    <!--- If activated the output in the console will be activated. (enabled, disabled) --->
+    <!-- If activated the output in the console will be activated. (enabled, disabled) -->
     <entry k="logger" v="enabled" />
 </config>

@@ -93,7 +93,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       } catch (SQLException e) {
         logger.print(4, SQLImportCommandBuilder.TAGTABLE + " does not exist - creating...");
         this.resetSequence(stmt, "tagid");
-        stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.TAGTABLE + " (id integer PRIMARY KEY default nextval('tagid'), key character varying(255), value character varying(255));");
+        stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.TAGTABLE + " (id bigint PRIMARY KEY default nextval('tagid'), key character varying(255), value character varying(255));");
       }
       this.importWhitelist();
       try {
@@ -101,14 +101,14 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
         logger.print(4, SQLImportCommandBuilder.NODEWOTAGTABLE + " already exists");
       } catch (SQLException e) {
         logger.print(4, SQLImportCommandBuilder.NODEWOTAGTABLE + " does not exist - creating...");
-        stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.NODEWOTAGTABLE + " (id integer PRIMARY KEY, long character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), lat character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "));");
+        stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.NODEWOTAGTABLE + " (id bigint PRIMARY KEY, long character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), lat character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "));");
       }
       try {
         this.checkIfTableExists(stmt, SQLImportCommandBuilder.NODETMPTABLE);
         logger.print(4, SQLImportCommandBuilder.NODETMPTABLE + " already exists");
       } catch (SQLException e) {
         logger.print(4, SQLImportCommandBuilder.NODETMPTABLE + " does not exist - creating...");
-        stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.NODETMPTABLE + " (id integer PRIMARY KEY, long character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), lat character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), tag integer REFERENCES " + SQLImportCommandBuilder.TAGTABLE + " (id));");
+        stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.NODETMPTABLE + " (id bigint PRIMARY KEY, long character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), lat character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), tag integer REFERENCES " + SQLImportCommandBuilder.TAGTABLE + " (id));");
       }
     } catch (SQLException e) {
       System.err.println("error while setting up tables: " + e.getLocalizedMessage());

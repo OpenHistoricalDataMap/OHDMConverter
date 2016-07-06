@@ -61,7 +61,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
               "jdbc:postgresql://" + this.serverName
               + ":" + this.portNumber + "/", connProps);
     } catch (SQLException e) {
-      logger.print("cannot connect to database: " + e.getLocalizedMessage());
+      logger.print(0, "cannot connect to database: " + e.getLocalizedMessage());
     }
 
     if (this.connection == null) {
@@ -72,16 +72,16 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   }
 
   private void setupKB() {
-    logger.print("--- setting up tables ---", true);
+    logger.print(4, "--- setting up tables ---", true);
     Statement stmt = null;
     try {
       stmt = connection.createStatement();
       if (Config.getInstance().getValue("db_dropTables").equalsIgnoreCase("yes")) {
         try {
           stmt.execute("DROP TABLE " + SQLImportCommandBuilder.TAGTABLE + ", " + SQLImportCommandBuilder.NODEWOTAGTABLE + ", " + SQLImportCommandBuilder.NODETMPTABLE);
-          logger.print("tables dropped");
+          logger.print(4, "tables dropped");
         } catch (SQLException e) {
-          logger.print("failed to drop tables: " + e.getLocalizedMessage());
+          logger.print(4, "failed to drop tables: " + e.getLocalizedMessage());
         }
       }
       /**
@@ -89,25 +89,25 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
        */
       try {
         this.checkIfTableExists(stmt, SQLImportCommandBuilder.TAGTABLE);
-        logger.print(SQLImportCommandBuilder.TAGTABLE + " already exists");
+        logger.print(4, SQLImportCommandBuilder.TAGTABLE + " already exists");
       } catch (SQLException e) {
-        logger.print(SQLImportCommandBuilder.TAGTABLE + " does not exist - creating...");
+        logger.print(4, SQLImportCommandBuilder.TAGTABLE + " does not exist - creating...");
         this.resetSequence(stmt, "tagid");
         stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.TAGTABLE + " (id integer PRIMARY KEY default nextval('tagid'), key character varying(255), value character varying(255));");
       }
       this.importWhitelist();
       try {
         this.checkIfTableExists(stmt, SQLImportCommandBuilder.NODEWOTAGTABLE);
-        logger.print(SQLImportCommandBuilder.NODEWOTAGTABLE + " already exists");
+        logger.print(4, SQLImportCommandBuilder.NODEWOTAGTABLE + " already exists");
       } catch (SQLException e) {
-        logger.print(SQLImportCommandBuilder.NODEWOTAGTABLE + " does not exist - creating...");
+        logger.print(4, SQLImportCommandBuilder.NODEWOTAGTABLE + " does not exist - creating...");
         stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.NODEWOTAGTABLE + " (id integer PRIMARY KEY, long character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), lat character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "));");
       }
       try {
         this.checkIfTableExists(stmt, SQLImportCommandBuilder.NODETMPTABLE);
-        logger.print(SQLImportCommandBuilder.NODETMPTABLE + " already exists");
+        logger.print(4, SQLImportCommandBuilder.NODETMPTABLE + " already exists");
       } catch (SQLException e) {
-        logger.print(SQLImportCommandBuilder.NODETMPTABLE + " does not exist - creating...");
+        logger.print(4, SQLImportCommandBuilder.NODETMPTABLE + " does not exist - creating...");
         stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.NODETMPTABLE + " (id integer PRIMARY KEY, long character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), lat character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), tag integer REFERENCES " + SQLImportCommandBuilder.TAGTABLE + " (id));");
       }
     } catch (SQLException e) {
@@ -121,7 +121,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
         }
       }
     }
-    logger.print("--- finished setting up tables ---", true);
+    logger.print(4, "--- finished setting up tables ---", true);
   }
 
   private void importWhitelist() {
@@ -129,9 +129,9 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     try {
       Statement stmt = connection.createStatement();
       stmt.execute(Whitelist.getInstance().getSQLImport(SQLImportCommandBuilder.TAGTABLE));
-      logger.print("Whitelist imported", true);
+      logger.print(4, "Whitelist imported", true);
     } catch (SQLException e) {
-      logger.print("whitelist import failed: " + e.getLocalizedMessage(), true);
+      logger.print(4, "whitelist import failed: " + e.getLocalizedMessage(), true);
     }
     // select tag table to get ids
     Map<String, Integer> tagtable = new HashMap<>();
@@ -142,11 +142,10 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
         tagtable.put(rs.getString("key") + "|" + rs.getString("value"), rs.getInt("id"));
       }
     } catch (SQLException e) {
-      logger.print("select statement failed: " + e.getLocalizedMessage(), true);
+      logger.print(4, "select statement failed: " + e.getLocalizedMessage(), true);
     }
     // push ids into whitelistobject
     Whitelist.getInstance().feedWithId(tagtable);
-    logger.print(Whitelist.getInstance().toString(), true);
   }
 
   private void checkIfTableExists(Statement stmt, String table) throws SQLException {
@@ -177,7 +176,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       stmt.execute(sqlWO.substring(0, sqlWO.length() - 1) + ";");
       stmt.execute(sql.substring(0, sql.length() - 1) + ";");
     } catch (SQLException e) {
-      logger.print("Error: " + e.getLocalizedMessage(), true);
+      logger.print(3, "Error: " + e.getLocalizedMessage(), true);
     }
   }
 
@@ -188,7 +187,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     nodes.put(id, newNode);
 
     if (nodes.size() > Integer.parseInt(Config.getInstance().getValue("tmpStorageSize"))) {
-      logger.print("save nodes in db and clear hashmap", true);
+      logger.print(5, "save nodes in db and clear hashmap", true);
       this.saveNodeElements();
       nodes.clear();
     }

@@ -13,4 +13,6 @@
     <entry k="osm_sourceFile" v="path" />
     <!-- If activated the output in the console will be activated. (enabled, disabled) -->
     <entry k="logger" v="enabled" />
+    <!-- As higher the value is as more information is posted. -->
+    <entry k="logLevel" v="5" />
 </config>

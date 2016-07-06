@@ -19,9 +19,10 @@ public class OSMUpdateWizard {
     try {
       SAXParserFactory spf = SAXParserFactory.newInstance();
       SAXParser newSAXParser = spf.newSAXParser();
-      
+
       newSAXParser.parse(new File("conf/whitelist.xml"), Whitelist.getInstance());
       newSAXParser.parse(new File("conf/config.xml"), Config.getInstance());
+      MyLogger.getInstance().print(0, "+++ OSM Update WIzard +++", true);
       newSAXParser.parse(new File(Config.getInstance().getValue("osm_sourceFile")), new OSMImporter());
     } catch (ParserConfigurationException ex) {
       Logger.getLogger(OSMUpdateWizard.class.getName()).log(Level.SEVERE, null, ex);
@@ -32,6 +33,7 @@ public class OSMUpdateWizard {
     } catch (Exception ex) {
       Logger.getLogger(OSMUpdateWizard.class.getName()).log(Level.SEVERE, null, ex);
     }
+    MyLogger.getInstance().print(0, "+++ OSM Update Wizard finished import +++", true);
   }
 
 }

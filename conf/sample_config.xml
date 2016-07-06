@@ -6,7 +6,7 @@
     <entry k="db_serverName" v="localhost" />
     <entry k="db_portNumber" v="5432" />
     <!-- If activated, all tables will be deleted when the program starts. (yes, no) -->
-    <entry k="db_dropTables" v="yes" />
+    <entry k="db_dropTables" v="no" />
     <!-- Declares how many datasets are stored before they are saved to the database. A higher number may cause storage problems and a lower one is a litte slower due to connection creation. (integer) -->
     <entry k="tmpStorageSize" v="10000" />
     <!-- This path says where the osm-source file is located on the computer. -->

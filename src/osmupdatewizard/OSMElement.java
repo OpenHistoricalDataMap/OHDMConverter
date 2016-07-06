@@ -30,11 +30,13 @@ public class OSMElement {
     this.storage = storage;
     this.attributes = attributes;
     this.tags = tags;
-    this.tags.stream().forEach((t) -> {
-      t.attributes.entrySet().stream().filter((entry) -> (Whitelist.getInstance().reduce(entry.getKey(), entry.getValue()) != null)).forEach((entry) -> {
-        this.tagId = Whitelist.getInstance().getId(entry.getKey(), entry.getValue());
+    if (this.tags != null) {
+      this.tags.stream().forEach((t) -> {
+        t.attributes.entrySet().stream().filter((entry) -> (Whitelist.getInstance().reduce(entry.getKey(), entry.getValue()) != null)).forEach((entry) -> {
+          this.tagId = Whitelist.getInstance().getId(entry.getKey(), entry.getValue());
+        });
       });
-    });
+    }
   }
 
   void print() {
@@ -65,5 +67,4 @@ public class OSMElement {
   public Integer getTagId() {
     return this.tagId;
   }
-
 }

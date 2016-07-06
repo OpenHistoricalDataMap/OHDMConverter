@@ -10,13 +10,13 @@ import java.util.Date;
  *
  * @author Sven Petsche
  */
-public class Logger {
+public class MyLogger {
 
   private boolean enabled;
-  private static Logger instance = null;
+  private static MyLogger instance = null;
   private final int lvl;
 
-  private Logger() {
+  private MyLogger() {
     if (Config.getInstance().getValue("logger").equalsIgnoreCase("enabled")) {
       this.enabled = true;
     } else {
@@ -25,9 +25,9 @@ public class Logger {
     this.lvl = Integer.parseInt(Config.getInstance().getValue("logLevel"));
   }
 
-  public static Logger getInstance() {
+  public static MyLogger getInstance() {
     if (instance == null) {
-      instance = new Logger();
+      instance = new MyLogger();
     }
     return instance;
   }

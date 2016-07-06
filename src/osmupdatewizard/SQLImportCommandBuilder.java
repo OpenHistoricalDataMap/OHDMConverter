@@ -36,7 +36,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   private String portNumber;
   private Connection connection;
 
-  private Logger logger;
+  private MyLogger logger;
 
   private static SQLImportCommandBuilder instance = null;
 
@@ -48,7 +48,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   }
 
   private SQLImportCommandBuilder() {
-    this.logger = Logger.getInstance();
+    this.logger = MyLogger.getInstance();
     try {
       this.user = Config.getInstance().getValue("db_user");
       this.pwd = Config.getInstance().getValue("db_password");

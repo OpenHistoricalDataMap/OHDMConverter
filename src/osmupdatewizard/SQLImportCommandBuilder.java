@@ -169,14 +169,13 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       if (entry.getValue().getTags() == null) {
         sqlWO += " (" + entry.getKey() + ", " + entry.getValue().getLatitude() + ", " + entry.getValue().getLongitude() + "),";
       } else {
-        //String key = entry.getValue().getTags();
-        //String target;
-        //sql += " (" + entry.getKey() + ", " + entry.getValue().getLatitude() + ", " + entry.getValue().getLongitude() + ", " + Whitelist.getInstance().getId(key, target);
+        sql += " (" + entry.getKey() + ", " + entry.getValue().getLatitude() + ", " + entry.getValue().getLongitude() + ", " + entry.getValue().getTagId() + "),";
       }
     }
     try {
       Statement stmt = connection.createStatement();
       stmt.execute(sqlWO.substring(0, sqlWO.length() - 1) + ";");
+      stmt.execute(sql.substring(0, sql.length() - 1) + ";");
     } catch (SQLException e) {
       logger.print("Error: " + e.getLocalizedMessage(), true);
     }

@@ -61,7 +61,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
               "jdbc:postgresql://" + this.serverName
               + ":" + this.portNumber + "/", connProps);
     } catch (SQLException e) {
-      System.err.println("cannot connect to database: " + e.getLocalizedMessage());
+      logger.print("cannot connect to database: " + e.getLocalizedMessage());
     }
 
     if (this.connection == null) {
@@ -101,16 +101,14 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
         logger.print(SQLImportCommandBuilder.NODEWOTAGTABLE + " already exists");
       } catch (SQLException e) {
         logger.print(SQLImportCommandBuilder.NODEWOTAGTABLE + " does not exist - creating...");
-        this.resetSequence(stmt, "nodewoid");
-        stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.NODEWOTAGTABLE + " (id integer PRIMARY KEY default nextval('nodewoid'), long character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), lat character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "));");
+        stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.NODEWOTAGTABLE + " (id integer PRIMARY KEY, long character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), lat character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "));");
       }
       try {
         this.checkIfTableExists(stmt, SQLImportCommandBuilder.NODETMPTABLE);
         logger.print(SQLImportCommandBuilder.NODETMPTABLE + " already exists");
       } catch (SQLException e) {
         logger.print(SQLImportCommandBuilder.NODETMPTABLE + " does not exist - creating...");
-        this.resetSequence(stmt, "nodeid");
-        stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.NODETMPTABLE + " (id integer PRIMARY KEY default nextval('nodeid'), long character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), lat character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), tag integer REFERENCES " + SQLImportCommandBuilder.TAGTABLE + " (id));");
+        stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.NODETMPTABLE + " (id integer PRIMARY KEY, long character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), lat character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), tag integer REFERENCES " + SQLImportCommandBuilder.TAGTABLE + " (id));");
       }
     } catch (SQLException e) {
       System.err.println("error while setting up tables: " + e.getLocalizedMessage());
@@ -162,73 +160,18 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     stmt.execute("create sequence " + sequence + ";");
   }
 
-  private void printAttributes(HashMap<String, String> a) {
-    System.out.println("\nAttributes");
-    if (a == null) {
-      System.out.println("Empty");
-      return;
-    }
-
-    Iterator<String> kIter = a.keySet().iterator();
-    while (kIter.hasNext()) {
-      String k = kIter.next();
-      String v = a.get(k);
-      System.out.print("k|v: " + k + "|" + v + "\n");
-    }
-  }
-
-  private void printTags(HashSet<TagElement> tags) {
-    System.out.println("\nTags");
-    if (tags == null) {
-      System.out.println("Empty");
-      return;
-    }
-    Iterator<TagElement> iterator = tags.iterator();
-    while (iterator.hasNext()) {
-      TagElement tag = iterator.next();
-      tag.print();
-    }
-  }
-
-  private void printNodes(HashSet<NDElement> nds) {
-    System.out.println("\nNodes");
-    if (nds == null) {
-      System.out.println("Empty");
-      return;
-    }
-    Iterator<NDElement> iterator = nds.iterator();
-    while (iterator.hasNext()) {
-      System.out.print("node:\n");
-      NDElement node = iterator.next();
-      node.print();
-    }
-  }
-
-  private void printMembers(HashSet<MemberElement> members) {
-    System.out.println("\nMember");
-    if (members == null) {
-      System.out.println("Empty");
-      return;
-    }
-    Iterator<MemberElement> iterator = members.iterator();
-    while (iterator.hasNext()) {
-      System.out.print("member:\n");
-      MemberElement member = iterator.next();
-      member.print();
-    }
-  }
-
   private HashMap<String, NodeElement> nodes = new HashMap<>();
 
   private void saveNodeElements() {
-    String sqlWO = "INSERT INTO " + SQLImportCommandBuilder.NODEWOTAGTABLE + " (long, lat) VALUES";
-    String sql = null;
+    String sqlWO = "INSERT INTO " + SQLImportCommandBuilder.NODEWOTAGTABLE + " (id, long, lat) VALUES";
+    String sql = "INSERT INTO " + SQLImportCommandBuilder.NODETMPTABLE + " (id, long, lat, tag) VALUES";
     for (Map.Entry<String, NodeElement> entry : nodes.entrySet()) {
       if (entry.getValue().getTags() == null) {
-        sqlWO += " (" + entry.getValue().getLatitude() + ", " + entry.getValue().getLongitude() + "),";
+        sqlWO += " (" + entry.getKey() + ", " + entry.getValue().getLatitude() + ", " + entry.getValue().getLongitude() + "),";
       } else {
-        // TODO: create sql (TAGS!!)
-        sql += " (";
+        //String key = entry.getValue().getTags();
+        //String target;
+        //sql += " (" + entry.getKey() + ", " + entry.getValue().getLatitude() + ", " + entry.getValue().getLongitude() + ", " + Whitelist.getInstance().getId(key, target);
       }
     }
     try {
@@ -341,8 +284,64 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   public NodeElement getNodeByID(String id) {
     return this.nodes.get(id);
   }
+  
+  ////////////////////////////////////////////////////////////////////
+  //                       print for debug                          //
+  ////////////////////////////////////////////////////////////////////
 
-  public void saveAllToDB() {
+  private void printAttributes(HashMap<String, String> a) {
+    System.out.println("\nAttributes");
+    if (a == null) {
+      System.out.println("Empty");
+      return;
+    }
 
+    Iterator<String> kIter = a.keySet().iterator();
+    while (kIter.hasNext()) {
+      String k = kIter.next();
+      String v = a.get(k);
+      System.out.print("k|v: " + k + "|" + v + "\n");
+    }
+  }
+
+  private void printTags(HashSet<TagElement> tags) {
+    System.out.println("\nTags");
+    if (tags == null) {
+      System.out.println("Empty");
+      return;
+    }
+    Iterator<TagElement> iterator = tags.iterator();
+    while (iterator.hasNext()) {
+      TagElement tag = iterator.next();
+      tag.print();
+    }
+  }
+
+  private void printNodes(HashSet<NDElement> nds) {
+    System.out.println("\nNodes");
+    if (nds == null) {
+      System.out.println("Empty");
+      return;
+    }
+    Iterator<NDElement> iterator = nds.iterator();
+    while (iterator.hasNext()) {
+      System.out.print("node:\n");
+      NDElement node = iterator.next();
+      node.print();
+    }
+  }
+
+  private void printMembers(HashSet<MemberElement> members) {
+    System.out.println("\nMember");
+    if (members == null) {
+      System.out.println("Empty");
+      return;
+    }
+    Iterator<MemberElement> iterator = members.iterator();
+    while (iterator.hasNext()) {
+      System.out.print("member:\n");
+      MemberElement member = iterator.next();
+      member.print();
+    }
   }
 }

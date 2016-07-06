@@ -71,8 +71,8 @@ public class Whitelist extends DefaultHandler {
     });
   }
 
-  private String makeCompoundKey(String key, String value) {
-    return key + "|" + value;
+  public Integer getId(String key, String value) {
+    return this.list.get(key).get(value).getId();
   }
 
   /**

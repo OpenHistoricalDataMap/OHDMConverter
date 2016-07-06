@@ -3,6 +3,7 @@ package osmupdatewizard;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  *
@@ -12,6 +13,7 @@ public class OSMElement {
 
   protected final HashMap<String, String> attributes;
   private HashSet<TagElement> tags = null;
+  private Integer tagId = null;
 
   private String id = null;
   private ElementStorage storage;
@@ -28,6 +30,11 @@ public class OSMElement {
     this.storage = storage;
     this.attributes = attributes;
     this.tags = tags;
+    this.tags.stream().forEach((t) -> {
+      t.attributes.entrySet().stream().filter((entry) -> (Whitelist.getInstance().reduce(entry.getKey(), entry.getValue()) != null)).forEach((entry) -> {
+        this.tagId = Whitelist.getInstance().getId(entry.getKey(), entry.getValue());
+      });
+    });
   }
 
   void print() {
@@ -50,8 +57,13 @@ public class OSMElement {
   ElementStorage getStorage() {
     return this.storage;
   }
-  
+
   public HashSet<TagElement> getTags() {
     return this.tags;
   }
+
+  public Integer getTagId() {
+    return this.tagId;
+  }
+
 }

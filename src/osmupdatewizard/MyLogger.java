@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 /**
+ * Singleton
  *
  * @author Sven Petsche
  */
@@ -16,15 +17,18 @@ public class MyLogger {
   private static MyLogger instance = null;
   private final int lvl;
 
+  /**
+   * Loads generel information from Config.
+   */
   private MyLogger() {
-    if (Config.getInstance().getValue("logger").equalsIgnoreCase("enabled")) {
-      this.enabled = true;
-    } else {
-      this.enabled = false;
-    }
+    this.enabled = Config.getInstance().getValue("logger").equalsIgnoreCase("enabled");
     this.lvl = Integer.parseInt(Config.getInstance().getValue("logLevel"));
   }
 
+  /**
+   *
+   * @return instance of this object
+   */
   public static MyLogger getInstance() {
     if (instance == null) {
       instance = new MyLogger();
@@ -40,12 +44,29 @@ public class MyLogger {
     this.enabled = enabled;
   }
 
+  public int getLevel() {
+    return this.lvl;
+  }
+
+  /**
+   * Prints the message if the printlevel is good enough.
+   *
+   * @param level
+   * @param message
+   */
   public void print(int level, String message) {
     if (this.checkIfPrint(level)) {
       System.out.println(message);
     }
   }
 
+  /**
+   * Prints the message with a timestamp in front if the printlevel is enough.
+   *
+   * @param level
+   * @param message
+   * @param timestamp
+   */
   public void print(int level, String message, boolean timestamp) {
     if (this.checkIfPrint(level)) {
       Date time = new Timestamp(Calendar.getInstance().getTime().getTime());
@@ -54,6 +75,12 @@ public class MyLogger {
     }
   }
 
+  /**
+   * Private method to check if message should be printed.
+   *
+   * @param level
+   * @return
+   */
   private boolean checkIfPrint(int level) {
     return this.enabled && level <= this.lvl;
   }

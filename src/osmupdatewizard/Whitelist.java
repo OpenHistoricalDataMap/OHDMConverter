@@ -54,6 +54,12 @@ public class Whitelist extends DefaultHandler {
     return null;
   }
 
+  /**
+   * Creates the sql statement for the Tagtable import.
+   *
+   * @param tablename the tablename of the tagtable
+   * @return
+   */
   public String getSQLImport(String tablename) {
     String sql = "INSERT INTO " + tablename + " (key, value) VALUES";
     for (Map.Entry<String, Map<String, WhitelistTarget>> keyEntry : this.list.entrySet()) {
@@ -64,6 +70,11 @@ public class Whitelist extends DefaultHandler {
     return sql.substring(0, sql.length() - 1) + ";";
   }
 
+  /**
+   * Adds IDs to the datastructure.
+   *
+   * @param ids the maps key is the |-seperated key|value pair
+   */
   public void feedWithId(Map<String, Integer> ids) {
     ids.entrySet().stream().forEach((entry) -> {
       String[] parts = entry.getKey().split("\\|");
@@ -71,6 +82,13 @@ public class Whitelist extends DefaultHandler {
     });
   }
 
+  /**
+   * Searches for the targets-tag-ID
+   *
+   * @param key
+   * @param value
+   * @return null or the targets tag id
+   */
   public Integer getId(String key, String value) {
     return this.list.get(key).get(value).getId();
   }

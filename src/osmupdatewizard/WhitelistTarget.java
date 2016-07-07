@@ -1,6 +1,7 @@
 package osmupdatewizard;
 
 /**
+ * Stores a tag-value and its key-value-id in the tag table.
  *
  * @author Sven Petsche
  */

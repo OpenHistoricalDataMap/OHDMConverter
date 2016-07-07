@@ -27,8 +27,6 @@ public class OSMImporter extends DefaultHandler {
   private int wA = 0;
   private int rA = 0;
 
-  private final Whitelist whitelist;
-
   private enum Status {
 
     OUTSIDE, NODE, WAY, RELATION
@@ -38,24 +36,16 @@ public class OSMImporter extends DefaultHandler {
   ImportCommandBuilder builder;
 
   public OSMImporter() throws Exception {
-    this.whitelist = Whitelist.getInstance();
     this.builder = SQLImportCommandBuilder.getInstance();
   }
 
   private HashMap<String, String> parseTagAttributes(Attributes attributes) {
     HashMap<String, String> a = new HashMap<>();
-
-    int length = attributes.getLength();
-
     // there are alternating key values pairs
     int i = 0;
-    while (i < length) {
-      String key = attributes.getValue(i++);
-      String value = attributes.getValue(i++);
-
-      a.put(key, value);
+    while (i < attributes.getLength()) {
+      a.put(attributes.getValue(i++), attributes.getValue(i++));
     }
-
     return a;
   }
 
@@ -206,7 +196,7 @@ public class OSMImporter extends DefaultHandler {
         System.out.print("don't import: " + qName + ", ");
     }
     if ((nodeC + wayC + relationC + tagC + ndC + memberC + otherC) % 10000 == 0) {
-      
+
     }
   }
 

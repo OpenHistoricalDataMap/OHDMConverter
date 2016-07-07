@@ -40,19 +40,21 @@ public class OSMElement {
   }
 
   void print() {
-    Iterator<String> kIter = this.attributes.keySet().iterator();
-    while (kIter.hasNext()) {
-      String k = kIter.next();
-      String v = this.attributes.get(k);
-      System.out.print("k|v: " + k + "|" + v + "\n");
-    }
+    attributes.entrySet().stream().forEach((entry) -> {
+      System.out.print("k|v: " + entry.getKey() + "|" + entry.getValue() + "\n");
+    });
+    /*Iterator<String> kIter = this.attributes.keySet().iterator();
+     while (kIter.hasNext()) {
+     String k = kIter.next();
+     String v = this.attributes.get(k);
+     System.out.print("k|v: " + k + "|" + v + "\n");
+     }*/
   }
 
   String getID() {
     if (id == null) {
       this.id = this.attributes.get("id");
     }
-
     return this.id;
   }
 

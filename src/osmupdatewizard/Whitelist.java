@@ -1,6 +1,8 @@
 package osmupdatewizard;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -61,13 +63,27 @@ public class Whitelist extends DefaultHandler {
    * @return
    */
   public String getSQLImport(String tablename) {
-    String sql = "INSERT INTO " + tablename + " (key, value) VALUES";
+    MyLogger ml = MyLogger.getInstance();
+    StringBuilder sql = new StringBuilder("INSERT INTO " + tablename + " (key, value) VALUES");
     for (Map.Entry<String, Map<String, WhitelistTarget>> keyEntry : this.list.entrySet()) {
       for (Map.Entry<String, WhitelistTarget> valueEntry : keyEntry.getValue().entrySet()) {
-        sql += " ('" + keyEntry.getKey() + "', '" + valueEntry.getKey() + "'),";
+        List<String> l = new ArrayList<>();
+        ml.print(0, "hey");
+        l.add(keyEntry.getKey());
+        l.add(valueEntry.getKey());
+        sql.append(buildSQLValues(l));
       }
     }
-    return sql.substring(0, sql.length() - 1) + ";";
+    sql.deleteCharAt(sql.length() - 1);
+    return sql.replace(sql.length(), sql.length(), ";").toString();
+  }
+
+  private String buildSQLValues(List<String> l) {
+    StringBuilder sb = new StringBuilder(" ('");
+    l.stream().forEach((s) -> {
+      sb.append(s).append("', '");
+    });
+    return sb.delete(sb.length() - 3, sb.length()).replace(sb.length(), sb.length(), "),").toString();
   }
 
   /**

@@ -195,9 +195,6 @@ public class OSMImporter extends DefaultHandler {
       default:
         System.out.print("don't import: " + qName + ", ");
     }
-    if ((nodeC + wayC + relationC + tagC + ndC + memberC + otherC) % 10000 == 0) {
-
-    }
   }
 
   private HashMap<String, String> parseAttributes(Attributes attributes) {

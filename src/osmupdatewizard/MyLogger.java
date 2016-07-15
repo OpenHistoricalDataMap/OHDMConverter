@@ -14,7 +14,7 @@ import java.util.Date;
 public class MyLogger {
 
   private boolean enabled;
-  private static MyLogger instance = null;
+  private static MyLogger instance = new MyLogger();
   private final int lvl;
 
   /**
@@ -30,9 +30,6 @@ public class MyLogger {
    * @return instance of this object
    */
   public static MyLogger getInstance() {
-    if (instance == null) {
-      instance = new MyLogger();
-    }
     return instance;
   }
 

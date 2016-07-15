@@ -20,8 +20,8 @@ public class OSMUpdateWizard {
       SAXParserFactory spf = SAXParserFactory.newInstance();
       SAXParser newSAXParser = spf.newSAXParser();
 
-      newSAXParser.parse(new File("conf/whitelist.xml"), Whitelist.getInstance());
       newSAXParser.parse(new File("conf/config.xml"), Config.getInstance());
+      newSAXParser.parse(new File("conf/whitelist.xml"), Whitelist.getInstance());
       MyLogger.getInstance().print(0, "+++ OSM Update WIzard +++", true);
       newSAXParser.parse(new File(Config.getInstance().getValue("osm_sourceFile")), new OSMImporter());
     } catch (ParserConfigurationException ex) {

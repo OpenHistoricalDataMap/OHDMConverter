@@ -12,9 +12,7 @@ class RelationElement extends OSMElement {
 
     public RelationElement(HashMap<String, String> attributes, 
             HashSet<MemberElement> members, HashSet<TagElement> tags) {
-        
         super(attributes, tags);
-        
         this.members = members;
     }
     

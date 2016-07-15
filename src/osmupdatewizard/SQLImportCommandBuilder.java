@@ -117,7 +117,6 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
         try {
           stmt.close();
         } catch (SQLException ex) {
-          // ignore
         }
       }
     }
@@ -126,23 +125,41 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private void importWhitelist() {
     // import whitelist to auto create ids
+    Statement stmtImport = null;
     try {
-      Statement stmt = connection.createStatement();
-      stmt.execute(Whitelist.getInstance().getSQLImport(SQLImportCommandBuilder.TAGTABLE));
+      stmtImport = connection.createStatement();
+      String sql = Whitelist.getInstance().getSQLImport(SQLImportCommandBuilder.TAGTABLE);
+      stmtImport.execute(sql);
       logger.print(4, "Whitelist imported", true);
     } catch (SQLException e) {
       logger.print(4, "whitelist import failed: " + e.getLocalizedMessage(), true);
+    } finally {
+      if (stmtImport != null) {
+        try {
+          stmtImport.close();
+        } catch (SQLException e) {
+        }
+      }
     }
     // select tag table to get ids
     Map<String, Integer> tagtable = new HashMap<>();
+    Statement stmtSelect = null;
     try {
-      Statement stmt = connection.createStatement();
-      ResultSet rs = stmt.executeQuery("SELECT * FROM " + SQLImportCommandBuilder.TAGTABLE);
+      stmtSelect = connection.createStatement();
+      ResultSet rs = stmtSelect.executeQuery("SELECT * FROM " + SQLImportCommandBuilder.TAGTABLE);
       while (rs.next()) {
         tagtable.put(rs.getString("key") + "|" + rs.getString("value"), rs.getInt("id"));
       }
+      rs.close();
     } catch (SQLException e) {
       logger.print(4, "select statement failed: " + e.getLocalizedMessage(), true);
+    } finally {
+      if (stmtSelect != null) {
+        try {
+          stmtSelect.close();
+        } catch (SQLException e) {
+        }
+      }
     }
     // push ids into whitelistobject
     Whitelist.getInstance().feedWithId(tagtable);
@@ -282,11 +299,10 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   public NodeElement getNodeByID(String id) {
     return this.nodes.get(id);
   }
-  
+
   ////////////////////////////////////////////////////////////////////
   //                       print for debug                          //
   ////////////////////////////////////////////////////////////////////
-
   private void printAttributes(HashMap<String, String> a) {
     System.out.println("\nAttributes");
     if (a == null) {

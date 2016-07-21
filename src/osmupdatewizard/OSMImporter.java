@@ -193,7 +193,7 @@ public class OSMImporter extends DefaultHandler {
       case "member":
         break; // inside a relation
       default:
-        System.out.print("don't import: " + qName + ", ");
+        //System.out.print("don't import: " + qName + ", ");
     }
   }
 

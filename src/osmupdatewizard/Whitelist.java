@@ -63,12 +63,10 @@ public class Whitelist extends DefaultHandler {
    * @return
    */
   public String getSQLImport(String tablename) {
-    MyLogger ml = MyLogger.getInstance();
     StringBuilder sql = new StringBuilder("INSERT INTO " + tablename + " (key, value) VALUES");
     for (Map.Entry<String, Map<String, WhitelistTarget>> keyEntry : this.list.entrySet()) {
       for (Map.Entry<String, WhitelistTarget> valueEntry : keyEntry.getValue().entrySet()) {
         List<String> l = new ArrayList<>();
-        ml.print(0, "hey");
         l.add(keyEntry.getKey());
         l.add(valueEntry.getKey());
         sql.append(buildSQLValues(l));

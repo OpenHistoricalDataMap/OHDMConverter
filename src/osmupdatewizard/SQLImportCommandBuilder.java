@@ -2,31 +2,36 @@ package osmupdatewizard;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 /**
  *
- * @author thsc
+ * @author thsc, Sven Petsche
  */
 class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private static final String TAGTABLE = "Tags";
-  private static final String NODETMPTABLE = "NodesTmp";
+  private static final String NODETABLE = "Nodes";
   private static final String NODEWOTAGTABLE = "NodesWOTag";
-  private static final String WAYTMPTABLE = "WaysTmp";
+  private static final String WAYTABLE = "Ways";
   private static final String RELATIONTMPTABLE = "RelationsTmp";
   private static final String MAX_ID_SIZE = "10485760";
 
   private boolean n = true;
   private boolean w = true;
   private boolean r = true;
+
+  private final Integer tmpStorageSize;
 
   private int rCount = 10;
   private int wCount = 10;
@@ -67,58 +72,102 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     if (this.connection == null) {
       System.err.println("cannot connect to database: reason unknown");
     }
-
+    this.tmpStorageSize = Integer.parseInt(Config.getInstance().getValue("tmpStorageSize"));
     this.setupKB();
+  }
+
+  private List<String> createTablesList() {
+    List<String> l = new ArrayList<>();
+    l.add(TAGTABLE);
+    l.add(NODEWOTAGTABLE);
+    l.add(NODETABLE);
+    l.add(WAYTABLE);
+    return l;
+  }
+
+  private void dropTables() throws SQLException {
+    if (Config.getInstance().getValue("db_dropTables").equalsIgnoreCase("yes")) {
+      StringBuilder sqlDel = new StringBuilder("DROP TABLE ");
+      PreparedStatement delStmt = null;
+      List<String> tables = this.createTablesList();
+      tables.stream().forEach((table) -> {
+        sqlDel.append(table).append(", ");
+      });
+      sqlDel.delete(sqlDel.lastIndexOf(","), sqlDel.length()).replace(sqlDel.length(), sqlDel.length(), ";");
+      try {
+        delStmt = connection.prepareStatement(sqlDel.toString());
+        delStmt.execute();
+        logger.print(4, "tables dropped");
+      } catch (SQLException e) {
+        logger.print(4, "failed to drop table: " + e.getLocalizedMessage());
+      } finally {
+        if (delStmt != null) {
+          delStmt.close();
+        }
+      }
+    }
+  }
+
+  private void setupTable(String table, String sqlCreate) throws SQLException {
+    try {
+      this.checkIfTableExists(table);
+      logger.print(4, table + " already exists");
+    } catch (SQLException e) {
+      logger.print(4, table + " does not exist - creating...");
+      PreparedStatement stmt = null;
+      StringBuilder sql = new StringBuilder("CREATE TABLE ");
+      sql.append(table).append(sqlCreate);
+      try {
+        //logger.print(0, sql.toString());
+        stmt = connection.prepareStatement(sql.toString());
+        stmt.execute();
+      } catch (SQLException ex) {
+        logger.print(1, ex.getLocalizedMessage(), true);
+      } finally {
+        if (stmt != null) {
+          stmt.close();
+        }
+      }
+    }
   }
 
   private void setupKB() {
     logger.print(4, "--- setting up tables ---", true);
-    Statement stmt = null;
     try {
-      stmt = connection.createStatement();
-      if (Config.getInstance().getValue("db_dropTables").equalsIgnoreCase("yes")) {
-        try {
-          stmt.execute("DROP TABLE " + SQLImportCommandBuilder.TAGTABLE + ", " + SQLImportCommandBuilder.NODEWOTAGTABLE + ", " + SQLImportCommandBuilder.NODETMPTABLE);
-          logger.print(4, "tables dropped");
-        } catch (SQLException e) {
-          logger.print(4, "failed to drop tables: " + e.getLocalizedMessage());
-        }
-      }
+      this.dropTables();
       /**
-       * ************ Knowledge base table ****************************
+       * ************ Knowledge base tables ****************************
        */
-      try {
-        this.checkIfTableExists(stmt, SQLImportCommandBuilder.TAGTABLE);
-        logger.print(4, SQLImportCommandBuilder.TAGTABLE + " already exists");
-      } catch (SQLException e) {
-        logger.print(4, SQLImportCommandBuilder.TAGTABLE + " does not exist - creating...");
-        this.resetSequence(stmt, "tagid");
-        stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.TAGTABLE + " (id bigint PRIMARY KEY default nextval('tagid'), key character varying(255), value character varying(255));");
-      }
+      StringBuilder sqlTag = new StringBuilder();
+      sqlTag.append(" (id SERIAL PRIMARY KEY, ")
+              .append("key character varying(255), ")
+              .append("value character varying(255));");
+      this.setupTable(TAGTABLE, sqlTag.toString());
       this.importWhitelist();
-      try {
-        this.checkIfTableExists(stmt, SQLImportCommandBuilder.NODEWOTAGTABLE);
-        logger.print(4, SQLImportCommandBuilder.NODEWOTAGTABLE + " already exists");
-      } catch (SQLException e) {
-        logger.print(4, SQLImportCommandBuilder.NODEWOTAGTABLE + " does not exist - creating...");
-        stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.NODEWOTAGTABLE + " (id bigint PRIMARY KEY, long character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), lat character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "));");
-      }
-      try {
-        this.checkIfTableExists(stmt, SQLImportCommandBuilder.NODETMPTABLE);
-        logger.print(4, SQLImportCommandBuilder.NODETMPTABLE + " already exists");
-      } catch (SQLException e) {
-        logger.print(4, SQLImportCommandBuilder.NODETMPTABLE + " does not exist - creating...");
-        stmt.execute("CREATE TABLE " + SQLImportCommandBuilder.NODETMPTABLE + " (id bigint PRIMARY KEY, long character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), lat character varying(" + SQLImportCommandBuilder.MAX_ID_SIZE + "), tag integer REFERENCES " + SQLImportCommandBuilder.TAGTABLE + " (id));");
-      }
+      StringBuilder sqlNodeWoTag = new StringBuilder();
+      sqlNodeWoTag.append(" (osm_id bigint PRIMARY KEY,")
+              .append("long character varying(").append(MAX_ID_SIZE).append("), ")
+              .append("lat character varying(").append(MAX_ID_SIZE).append("), ")
+              .append("way bigint);");
+      this.setupTable(NODEWOTAGTABLE, sqlNodeWoTag.toString());
+      StringBuilder sqlNodeTmp = new StringBuilder();
+      sqlNodeTmp.append(" (osm_id bigint PRIMARY KEY, ")
+              .append("long character varying(").append(MAX_ID_SIZE).append("), ")
+              .append("lat character varying(").append(MAX_ID_SIZE).append("), ")
+              .append("tag bigint REFERENCES ").append(TAGTABLE).append(" (id), ")
+              .append("ohdm_id bigint, ")
+              .append("ohdm_object bigint, ")
+              .append("valid boolean);");
+      this.setupTable(NODETABLE, sqlNodeTmp.toString());
+      StringBuilder sqlWay = new StringBuilder();
+      sqlWay.append(" (osm_id bigint PRIMARY KEY, ")
+              .append("tag bigint REFERENCES ").append(TAGTABLE).append(" (id), ")
+              .append("ohdm_id bigint, ")
+              .append("ohdm_object bigint, ")
+              .append("valid boolean);");
+      this.setupTable(WAYTABLE, sqlWay.toString());
     } catch (SQLException e) {
       System.err.println("error while setting up tables: " + e.getLocalizedMessage());
-    } finally {
-      if (stmt != null) {
-        try {
-          stmt.close();
-        } catch (SQLException ex) {
-        }
-      }
     }
     logger.print(4, "--- finished setting up tables ---", true);
   }
@@ -165,10 +214,20 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     Whitelist.getInstance().feedWithId(tagtable);
   }
 
+  private void checkIfTableExists(String table) throws SQLException {
+    PreparedStatement stmt = null;
+    StringBuilder sql = new StringBuilder("SELECT '");
+    sql.append(table).append("'::regclass;");
+    stmt = connection.prepareStatement(sql.toString());
+    stmt.execute();
+  }
+
+  @Deprecated
   private void checkIfTableExists(Statement stmt, String table) throws SQLException {
     stmt.execute("SELECT '" + table + "'::regclass;");
   }
 
+  @Deprecated
   private void resetSequence(Statement stmt, String sequence) throws SQLException {
     try {
       stmt.execute("drop sequence " + sequence + ";");
@@ -179,8 +238,9 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   private HashMap<String, NodeElement> nodes = new HashMap<>();
 
   private void saveNodeElements() {
-    String sqlWO = "INSERT INTO " + SQLImportCommandBuilder.NODEWOTAGTABLE + " (id, long, lat) VALUES";
-    String sql = "INSERT INTO " + SQLImportCommandBuilder.NODETMPTABLE + " (id, long, lat, tag) VALUES";
+    logger.print(5, "save nodes in db and clear hashmap", true);
+    String sqlWO = "INSERT INTO " + SQLImportCommandBuilder.NODEWOTAGTABLE + " (osm_id, long, lat) VALUES";
+    String sql = "INSERT INTO " + SQLImportCommandBuilder.NODETABLE + " (osm_id, long, lat, tag) VALUES";
     for (Map.Entry<String, NodeElement> entry : nodes.entrySet()) {
       if (entry.getValue().getTags() == null) {
         sqlWO += " (" + entry.getKey() + ", " + entry.getValue().getLatitude() + ", " + entry.getValue().getLongitude() + "),";
@@ -193,40 +253,43 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       stmt.execute(sqlWO.substring(0, sqlWO.length() - 1) + ";");
       stmt.execute(sql.substring(0, sql.length() - 1) + ";");
     } catch (SQLException e) {
-      logger.print(3, "Error: " + e.getLocalizedMessage(), true);
+      logger.print(3, e.getLocalizedMessage(), true);
     }
+    nodes.clear();
   }
 
   @Override
   public void addNode(HashMap<String, String> attributes, HashSet<TagElement> tags) {
     NodeElement newNode = new NodeElement(this, attributes, tags);
-    String id = newNode.getID();
-    nodes.put(id, newNode);
-
-    if (nodes.size() > Integer.parseInt(Config.getInstance().getValue("tmpStorageSize"))) {
-      logger.print(5, "save nodes in db and clear hashmap", true);
+    nodes.put(newNode.getID(), newNode);
+    if (nodes.size() > this.tmpStorageSize) {
       this.saveNodeElements();
-      nodes.clear();
     }
-
-    // debugging / testing
-    /*if (n && tags != null) {
-     System.out.println("Tag");
-     this.printAttributes(attributes);
-     this.printTags(tags);
-     n = false;
-     System.out.println("===========================");
-     }*/
   }
 
   private final HashMap<String, WayElement> ways = new HashMap<>();
 
+  @Deprecated
   private WayElement saveWayElement(ElementStorage storage, HashMap<String, String> attributes, HashSet<NDElement> nds, HashSet<TagElement> tags) {
     WayElement wayElement = new WayElement(storage, attributes, nds, tags);
     String id = wayElement.getID();
     ways.put(id, wayElement);
-
     return wayElement;
+  }
+
+  private void saveWayElements() {
+    logger.print(5, "save ways in db and clear hashmap", true);
+    StringBuilder sb = new StringBuilder("INSERT INTO ");
+    sb.append(WAYTABLE).append("(osm_id, tag) VALUES");
+    ways.entrySet().stream().filter((entry) -> (entry.getValue().getTags() != null)).forEach((entry) -> {
+      sb.append(" (").append(entry.getKey()).append(", ").append(entry.getValue().getTagId()).append("),");
+    });
+    try (PreparedStatement stmt = connection.prepareStatement(sb.deleteCharAt(sb.length() - 1).append(";").toString())) {
+      stmt.execute();
+    } catch (SQLException ex) {
+      logger.print(1, ex.getLocalizedMessage(), true);
+    }
+    ways.clear();
   }
 
   /**
@@ -238,25 +301,14 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
    */
   @Override
   public void addWay(HashMap<String, String> attributes, HashSet<NDElement> nds, HashSet<TagElement> tags) {
-    WayElement wayElement = this.saveWayElement(this, attributes, nds, tags);
-
-    if (this.wCount-- > 0) {
-      wayElement.print();
-      w = false;
-    }
-
-    if (nds == null && nds.isEmpty()) {
+    if (nds == null || nds.isEmpty()) {
       return; // a way without nodes makes no sense.
     }
-
-    // get nodes from temp database 
-    // produce geometry
-    // save in OHDM
-    // debugging / testing
-    if (nds == null || tags == null) {
-      return; // debugging
+    WayElement newWay = new WayElement(this, attributes, nds, tags);
+    ways.put(newWay.getID(), newWay);
+    if (ways.size() > this.tmpStorageSize) {
+      this.saveWayElements();
     }
-
   }
 
   /**
@@ -290,6 +342,17 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       r = false;
       System.out.println("===========================");
     }
+  }
+
+  @Override
+  public void emptyAllTmpStorage() {
+    if (!nodes.isEmpty()) {
+      this.saveNodeElements();
+    }
+    if (!ways.isEmpty()) {
+      this.saveWayElements();
+    }
+    // add relation here
   }
 
   ////////////////////////////////////////////////////////////////////

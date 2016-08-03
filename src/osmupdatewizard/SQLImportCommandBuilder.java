@@ -195,11 +195,11 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     Statement stmtSelect = null;
     try {
       stmtSelect = connection.createStatement();
-      ResultSet rs = stmtSelect.executeQuery("SELECT * FROM " + SQLImportCommandBuilder.TAGTABLE);
-      while (rs.next()) {
-        tagtable.put(rs.getString("key") + "|" + rs.getString("value"), rs.getInt("id"));
+      try (ResultSet rs = stmtSelect.executeQuery("SELECT * FROM " + SQLImportCommandBuilder.TAGTABLE)) {
+        while (rs.next()) {
+          tagtable.put(rs.getString("key") + "|" + rs.getString("value"), rs.getInt("id"));
+        }
       }
-      rs.close();
     } catch (SQLException e) {
       logger.print(4, "select statement failed: " + e.getLocalizedMessage(), true);
     } finally {
@@ -215,10 +215,9 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   }
 
   private void checkIfTableExists(String table) throws SQLException {
-    PreparedStatement stmt = null;
     StringBuilder sql = new StringBuilder("SELECT '");
     sql.append(table).append("'::regclass;");
-    stmt = connection.prepareStatement(sql.toString());
+    PreparedStatement stmt = connection.prepareStatement(sql.toString());
     stmt.execute();
   }
 
@@ -321,7 +320,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   @Override
   public void addRelation(HashMap<String, String> attributes,
           HashSet<MemberElement> members, HashSet<TagElement> tags) {
-    if (members == null && members.isEmpty()) {
+    if (members == null || members.isEmpty() || tags == null) {
       return; // empty relations makes no sense;
     }
 
@@ -331,9 +330,6 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     // produce geometry
     // save in OHDM
     // debugging / testing
-    if (members == null || tags == null) {
-      return;
-    }
     if (this.rCount-- > 0) {
       System.out.println("Relation");
       this.printAttributes(attributes);

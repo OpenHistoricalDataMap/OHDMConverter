@@ -169,7 +169,7 @@ public class OSMImporter extends DefaultHandler {
         if (!this.attributes.isEmpty()) {
           this.wA++;
         }
-        //this.builder.addWay(this.attributes, this.nds, this.tags);
+        this.builder.addWay(this.attributes, this.nds, this.tags);
         this.status = Status.OUTSIDE;
         // cleanup
         this.tags = null;

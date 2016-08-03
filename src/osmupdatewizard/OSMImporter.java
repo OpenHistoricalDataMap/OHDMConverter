@@ -57,6 +57,8 @@ public class OSMImporter extends DefaultHandler {
 
   @Override
   public void endDocument() {
+    this.builder.emptyAllTmpStorage();
+    
     System.out.println("end Document");
 
     System.out.println("nodes: " + nodeC);

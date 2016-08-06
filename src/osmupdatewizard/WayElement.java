@@ -28,7 +28,7 @@ class WayElement extends OSMElement {
     Iterator<NDElement> ndIter = this.nds.iterator();
     while (ndIter.hasNext()) {
       NDElement nd = ndIter.next();
-      NodeElement node = storage.getNodeByID(nd.getID());
+      NodeElement node = storage.getNodeByID(String.valueOf(nd.getID()));
       nodes.add(node);
     }
     return nodes.iterator();

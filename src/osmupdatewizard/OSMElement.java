@@ -13,7 +13,7 @@ public class OSMElement {
   private HashSet<TagElement> tags = null;
   private Integer tagId = null;
 
-  private Integer id = null;
+  private long id = 0;
   private ElementStorage storage;
 
   OSMElement(HashMap<String, String> attributes) {
@@ -49,9 +49,9 @@ public class OSMElement {
      }*/
   }
 
-  public Integer getID() {
-    if (id == null) {
-      this.id = Integer.valueOf(this.attributes.get("id"));
+  public long getID() {
+    if (id == 0) {
+      this.id = Long.valueOf(this.attributes.get("id"));
     }
     return this.id;
   }

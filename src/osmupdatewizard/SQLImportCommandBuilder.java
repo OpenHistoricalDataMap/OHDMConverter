@@ -31,11 +31,9 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   private boolean w = true;
   private boolean r = true;
 
-  private final Integer tmpStorageSize;
-
-  private Integer nodesNew = 0;
-  private Integer nodesChanged = 0;
-  private Integer nodesExisting = 0;
+  private long nodesNew = 0;
+  private long nodesChanged = 0;
+  private long nodesExisting = 0;
 
   private int rCount = 10;
   private int wCount = 10;
@@ -76,7 +74,6 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     if (this.connection == null) {
       System.err.println("cannot connect to database: reason unknown");
     }
-    this.tmpStorageSize = Integer.parseInt(Config.getInstance().getValue("tmpStorageSize"));
     this.setupKB();
   }
 
@@ -255,6 +252,9 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private void saveNodeElement(NodeElement node) {
     StringBuilder sb = new StringBuilder("INSERT INTO ");
+    if (nodesNew % 100000 == 0) {
+      logger.print(1, "step", true);
+    }
     if (node.getTagId() == null) {
       sb.append(NODETABLE).append(" (osm_id, long, lat) VALUES (?, ?, ?);");
     } else {
@@ -263,7 +263,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     PreparedStatement stmt = null;
     try {
       stmt = connection.prepareStatement(sb.toString());
-      stmt.setInt(1, node.getID());
+      stmt.setLong(1, node.getID());
       stmt.setString(2, node.getLongitude());
       stmt.setString(3, node.getLatitude());
       if (node.getTagId() != null) {
@@ -282,13 +282,13 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     }
   }
 
-  private void deleteNodeById(Integer osm_id) {
+  private void deleteNodeById(long osm_id) {
     StringBuilder sb = new StringBuilder("DELETE FROM ");
     sb.append(NODETABLE).append(" WHERE osm_id = ? ;");
     PreparedStatement stmt = null;
     try {
       stmt = connection.prepareStatement(sb.toString());
-      stmt.setInt(1, osm_id);
+      stmt.setLong(1, osm_id);
       stmt.execute();
     } catch (SQLException e) {
       logger.print(1, e.getLocalizedMessage(), true);
@@ -329,14 +329,14 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
      }*/
   }
 
-  private NodeElement selectNodeById(Integer osm_id) {
+  private NodeElement selectNodeById(long osm_id) {
     StringBuilder sb = new StringBuilder("SELECT * FROM ");
     sb.append(NODETABLE).append(" WHERE osm_id = ?;");
     PreparedStatement stmt = null;
     HashMap<String, String> attributes = null;
     try {
       stmt = connection.prepareStatement(sb.toString());
-      stmt.setInt(1, osm_id);
+      stmt.setLong(1, osm_id);
       ResultSet rs = stmt.executeQuery();
       if (rs.next()) {
         attributes = new HashMap<>();
@@ -383,14 +383,6 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private final HashMap<Integer, WayElement> ways = new HashMap<>();
 
-  @Deprecated
-  private WayElement saveWayElement(ElementStorage storage, HashMap<String, String> attributes, HashSet<NDElement> nds, HashSet<TagElement> tags) {
-    WayElement wayElement = new WayElement(storage, attributes, nds, tags);
-    Integer id = wayElement.getID();
-    ways.put(id, wayElement);
-    return wayElement;
-  }
-
   private void saveWayElements() {
     logger.print(5, "save ways in db and clear hashmap", true);
     StringBuilder sb = new StringBuilder("INSERT INTO ");
@@ -419,10 +411,10 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       return; // a way without nodes makes no sense.
     }
     WayElement newWay = new WayElement(this, attributes, nds, tags);
-    ways.put(newWay.getID(), newWay);
-    if (ways.size() > this.tmpStorageSize) {
-      this.saveWayElements();
-    }
+    //ways.put(newWay.getID(), newWay);
+    /*if (ways.size() > this.tmpStorageSize) {
+     this.saveWayElements();
+     }*/
   }
 
   /**

@@ -12,26 +12,45 @@ import java.util.List;
  */
 class WayElement extends OSMElement {
 
-  private final HashSet<NDElement> nds;
+  private final HashSet<NodeElement> nds;
+
+  public WayElement(HashMap<String, String> attributes, HashSet<NodeElement> nds, HashSet<TagElement> tags) {
+    super(attributes, tags);
+    this.nds = nds;
+  }
 
   public WayElement(ElementStorage storage, HashMap<String, String> attributes,
-          HashSet<NDElement> nds, HashSet<TagElement> tags) {
+          HashSet<NodeElement> nds, HashSet<TagElement> tags) {
     super(storage, attributes, tags);
     this.nds = nds;
   }
 
-  public Iterator<NodeElement> getNodes() {
+  public HashSet<NodeElement> getNodes(){
+    return this.nds;
+  }
+  
+  /*public Iterator<NodeElement> getNodes() {
     List<NodeElement> nodes = new ArrayList<>();
     ElementStorage storage = this.getStorage();
 
     // fill list with real nodes instead of placeholders
-    Iterator<NDElement> ndIter = this.nds.iterator();
+    Iterator<NodeElement> ndIter = this.nds.iterator();
     while (ndIter.hasNext()) {
-      NDElement nd = ndIter.next();
+      NodeElement nd = ndIter.next();
       NodeElement node = storage.getNodeByID(String.valueOf(nd.getID()));
       nodes.add(node);
     }
     return nodes.iterator();
+  } */
+
+  public boolean hasNodeId(long id) {
+    boolean result = false;
+    for (NodeElement nd : nds) {
+      if (nd.getID() == id) {
+        result = true;
+      }
+    }
+    return result;
   }
 
   @Override
@@ -39,11 +58,14 @@ class WayElement extends OSMElement {
     System.out.println("Way");
     super.print();
     System.out.println("Nodes");
-    Iterator<NodeElement> nodeIter = this.getNodes();
+    for (NodeElement nd : this.nds){
+      nd.print();
+    }
+    /*Iterator<NodeElement> nodeIter = this.getNodes();
     while (nodeIter.hasNext()) {
       NodeElement node = nodeIter.next();
       node.print();
-    }
+    }*/
     System.out.println("===========================");
   }
 

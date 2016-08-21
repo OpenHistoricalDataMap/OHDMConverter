@@ -10,7 +10,7 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class OSMImporter extends DefaultHandler {
 
-  private HashSet<NDElement> nds = null;
+  private HashSet<NodeElement> nds = null;
   private HashSet<TagElement> tags = null;
   private HashSet<MemberElement> members = null;
 
@@ -94,7 +94,7 @@ public class OSMImporter extends DefaultHandler {
       }
       break; // inside a relation
       default:
-        //System.out.print(qName + ", ");
+      //System.out.print(qName + ", ");
     }
   }
 
@@ -107,7 +107,7 @@ public class OSMImporter extends DefaultHandler {
   }
 
   private void addND(HashMap<String, String> a) {
-    NDElement node = new NDElement(a);
+    NodeElement node = new NodeElement(a, null);
     if (this.nds == null) {
       this.nds = new HashSet<>();
     }
@@ -142,7 +142,7 @@ public class OSMImporter extends DefaultHandler {
         if (!this.attributes.isEmpty()) {
           this.wA++;
         }
-        //this.builder.addWay(this.attributes, this.nds, this.tags);
+        this.builder.addWay(this.attributes, this.nds, this.tags);
         this.status = Status.OUTSIDE;
         // cleanup
         this.tags = null;

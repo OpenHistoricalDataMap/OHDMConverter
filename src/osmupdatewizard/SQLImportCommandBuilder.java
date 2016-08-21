@@ -20,12 +20,12 @@ import java.util.Properties;
  */
 class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
-  private static final String TAGTABLE = "Tags";
-  private static final String NODETABLE = "Nodes";
-  private static final String NODEWOTAGTABLE = "NodesWOTag";
-  private static final String WAYTABLE = "Ways";
-  private static final String RELATIONTMPTABLE = "RelationsTmp";
-  private static final String MAX_ID_SIZE = "10485760";
+  public static final String TAGTABLE = "Tags";
+  public static final String NODETABLE = "Nodes";
+  public static final String NODEWOTAGTABLE = "NodesWOTag";
+  public static final String WAYTABLE = "Ways";
+  public static final String RELATIONTMPTABLE = "RelationsTmp";
+  public static final String MAX_ID_SIZE = "10485760";
 
   private boolean n = true;
   private boolean w = true;
@@ -34,6 +34,10 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   private long nodesNew = 0;
   private long nodesChanged = 0;
   private long nodesExisting = 0;
+
+  private long waysNew = 0;
+  private long waysChanged = 0;
+  private long waysExisting = 0;
 
   private int rCount = 10;
   private int wCount = 10;
@@ -143,15 +147,6 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
               .append("value character varying(255));");
       this.setupTable(TAGTABLE, sqlTag.toString());
       this.importWhitelist();
-      StringBuilder sqlNode = new StringBuilder();
-      sqlNode.append(" (osm_id bigint PRIMARY KEY, ")
-              .append("long character varying(").append(MAX_ID_SIZE).append("), ")
-              .append("lat character varying(").append(MAX_ID_SIZE).append("), ")
-              .append("tag bigint REFERENCES ").append(TAGTABLE).append(" (id), ")
-              .append("ohdm_id bigint, ")
-              .append("ohdm_object bigint, ")
-              .append("valid boolean);");
-      this.setupTable(NODETABLE, sqlNode.toString());
       StringBuilder sqlWay = new StringBuilder();
       sqlWay.append(" (osm_id bigint PRIMARY KEY, ")
               .append("tag bigint REFERENCES ").append(TAGTABLE).append(" (id), ")
@@ -159,6 +154,16 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
               .append("ohdm_object bigint, ")
               .append("valid boolean);");
       this.setupTable(WAYTABLE, sqlWay.toString());
+      StringBuilder sqlNode = new StringBuilder();
+      sqlNode.append(" (osm_id bigint PRIMARY KEY, ")
+              .append("long character varying(").append(MAX_ID_SIZE).append("), ")
+              .append("lat character varying(").append(MAX_ID_SIZE).append("), ")
+              .append("tag bigint REFERENCES ").append(TAGTABLE).append(" (id), ")
+              .append("ohdm_id bigint, ")
+              .append("ohdm_object bigint, ")
+              .append("id_way bigint REFERENCES ").append(WAYTABLE).append(" (osm_id), ")
+              .append("valid boolean);");
+      this.setupTable(NODETABLE, sqlNode.toString());
     } catch (SQLException e) {
       System.err.println("error while setting up tables: " + e.getLocalizedMessage());
     }
@@ -229,6 +234,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private HashMap<String, NodeElement> nodes = new HashMap<>();
 
+  @Deprecated
   private void saveNodeElements() {
     logger.print(5, "save nodes in db and clear hashmap", true);
     String sqlWO = "INSERT INTO " + SQLImportCommandBuilder.NODEWOTAGTABLE + " (osm_id, long, lat) VALUES";
@@ -252,9 +258,6 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private void saveNodeElement(NodeElement node) {
     StringBuilder sb = new StringBuilder("INSERT INTO ");
-    if (nodesNew % 100000 == 0) {
-      logger.print(1, "step", true);
-    }
     if (node.getTagId() == null) {
       sb.append(NODETABLE).append(" (osm_id, long, lat) VALUES (?, ?, ?);");
     } else {
@@ -302,6 +305,41 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     }
   }
 
+  private void updateNode(NodeElement newNode, NodeElement dbNode) {
+    HashMap<String, String> map = new HashMap<>();
+    if (!newNode.getLatitude().equals(dbNode.getLatitude())) {
+      map.put("lat", newNode.getLatitude());
+    }
+    if (!newNode.getLongitude().equals(dbNode.getLongitude())) {
+      map.put("lon", newNode.getLongitude());
+    }
+    this.updateNode(newNode.getID(), map);
+  }
+
+  private void updateNode(long id, HashMap<String, String> map) {
+    StringBuilder sb = new StringBuilder("UPDATE ");
+    sb.append(NODETABLE).append(" SET ");
+    map.entrySet().stream().forEach((e) -> {
+      sb.append(e.getKey()).append(" = ").append(e.getValue()).append(" ");
+    });
+    sb.append("WHERE osm_id = ?;");
+    PreparedStatement stmt = null;
+    try {
+      stmt = connection.prepareStatement(sb.toString());
+      stmt.setLong(1, id);
+      stmt.executeUpdate();
+    } catch (SQLException e) {
+      logger.print(1, e.getLocalizedMessage(), true);
+    } finally {
+      try {
+        if (stmt != null) {
+          stmt.close();
+        }
+      } catch (SQLException e) {
+      }
+    }
+  }
+
   @Override
   public void addNode(HashMap<String, String> attributes, HashSet<TagElement> tags) {
     NodeElement newNode = new NodeElement(this, attributes, tags);
@@ -313,8 +351,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
         break;
       case 1:
         this.nodesChanged++;
-        this.deleteNodeById(newNode.getID());
-        this.saveNodeElement(newNode);
+        this.updateNode(newNode, dbNode);
         break;
       case 2:
         this.nodesExisting++;
@@ -383,6 +420,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private final HashMap<Integer, WayElement> ways = new HashMap<>();
 
+  @Deprecated
   private void saveWayElements() {
     logger.print(5, "save ways in db and clear hashmap", true);
     StringBuilder sb = new StringBuilder("INSERT INTO ");
@@ -398,6 +436,33 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     ways.clear();
   }
 
+  private void saveWayElement(WayElement way) {
+    StringBuilder sb = new StringBuilder("INSERT INTO ");
+    if (way.getTagId() == null) {
+      sb.append(WAYTABLE).append(" (osm_id) VALUES (?);");
+    } else {
+      sb.append(WAYTABLE).append(" (osm_id, tag) VALUES (?, ?);");
+    }
+    PreparedStatement stmt = null;
+    try {
+      stmt = connection.prepareStatement(sb.toString());
+      stmt.setLong(1, way.getID());
+      if (way.getTagId() != null) {
+        stmt.setInt(2, way.getTagId());
+      }
+      stmt.execute();
+    } catch (SQLException e) {
+      logger.print(1, e.getLocalizedMessage(), true);
+    } finally {
+      try {
+        if (stmt != null) {
+          stmt.close();
+        }
+      } catch (SQLException e) {
+      }
+    }
+  }
+
   /**
    * http://wiki.openstreetmap.org/wiki/Way
    *
@@ -406,15 +471,115 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
    * @param tags
    */
   @Override
-  public void addWay(HashMap<String, String> attributes, HashSet<NDElement> nds, HashSet<TagElement> tags) {
+  public void addWay(HashMap<String, String> attributes, HashSet<NodeElement> nds, HashSet<TagElement> tags) {
     if (nds == null || nds.isEmpty()) {
       return; // a way without nodes makes no sense.
     }
     WayElement newWay = new WayElement(this, attributes, nds, tags);
-    //ways.put(newWay.getID(), newWay);
-    /*if (ways.size() > this.tmpStorageSize) {
-     this.saveWayElements();
-     }*/
+    WayElement dbWay = selectWayById(newWay.getID());
+    switch (matchWays(newWay, dbWay)) {
+      case 0:
+        this.waysNew++;
+        this.saveWayElement(newWay);
+        newWay.getNodes().stream().forEach((nd) -> {
+          HashMap<String, String> map = new HashMap<>();
+          map.put("id_way", String.valueOf(newWay.getID()));
+          this.updateNode(nd.getID(), map);
+        });
+        break;
+      case 1:
+        this.waysChanged++;
+        // update nodes column id_way in NODETABLE
+        
+        break;
+      case 2:
+        this.waysExisting++;
+        break;
+      default:
+        break;
+    }
+  }
+
+  private WayElement selectWayById(long osm_id) {
+    StringBuilder sqlWay = new StringBuilder("SELECT * FROM ");
+    sqlWay.append(WAYTABLE).append(" WHERE osm_id = ? ;");
+    StringBuilder sqlNodes = new StringBuilder("SELECT * FROM ");
+    sqlNodes.append(NODETABLE).append(" WHERE id_way = ?;");
+    PreparedStatement stmtNodes = null;
+    PreparedStatement stmtWay = null;
+    HashMap<String, String> attrWay = new HashMap<>();
+    HashSet<NodeElement> nds = new HashSet<>();
+    try {
+      stmtNodes = connection.prepareStatement(sqlNodes.toString());
+      stmtNodes.setLong(1, osm_id);
+      ResultSet rsNodes = stmtNodes.executeQuery();
+      while (rsNodes.next()) {
+        HashMap<String, String> attrNode = new HashMap<>();
+        attrNode.put("id", String.valueOf(rsNodes.getInt("osm_id")));
+        attrNode.put("lat", rsNodes.getString("lat"));
+        attrNode.put("lon", rsNodes.getString("long"));
+        nds.add(new NodeElement(attrNode, null));
+      }
+
+      if (!nds.isEmpty()) {
+        stmtWay = connection.prepareStatement(sqlWay.toString());
+        stmtWay.setLong(1, osm_id);
+        ResultSet rsWay = stmtWay.executeQuery();
+        if (rsWay.next()) {
+          attrWay.put("id", String.valueOf(rsWay.getInt("osm_id")));
+        }
+      }
+    } catch (SQLException e) {
+      logger.print(1, e.getLocalizedMessage(), true);
+    } finally {
+      try {
+        if (stmtNodes != null) {
+          stmtNodes.close();
+        }
+      } catch (SQLException e) {
+      }
+      try {
+        if (stmtWay != null) {
+          stmtNodes.close();
+        }
+      } catch (SQLException e) {
+      }
+    }
+    if (nds.isEmpty()) {
+      return null;
+    } else {
+      return new WayElement(attrWay, nds, null);
+    }
+  }
+
+  /**
+   * checks if the ways have the same nodes (compared by their id)
+   *
+   * @param newWay
+   * @param dbWay
+   * @return 0: way does not exist, 1: way has changed, 2: ways are the same
+   */
+  private Integer matchWays(WayElement newWay, WayElement dbWay) {
+    Integer state = 2;
+    if (dbWay == null) {
+      return 0;
+    } else {
+      // checks if all nodes in the new way are in the stored way
+      for (NodeElement nd : newWay.getNodes()) {
+        if (!dbWay.hasNodeId(nd.getID())) {
+          state = 1;
+        }
+      }
+      // checks if all nodes in the stored way are also in the new way
+      if (state != 1) {
+        for (NodeElement nd : dbWay.getNodes()) {
+          if (!newWay.hasNodeId(nd.getID())) {
+            state = 1;
+          }
+        }
+      }
+    }
+    return state;
   }
 
   /**
@@ -449,9 +614,32 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   @Override
   public void printStatus() {
-    logger.print(0, "\nNodes");
-    logger.print(0, "new\t  changed\t  existing");
-    logger.print(0, this.nodesNew + "\t| " + this.nodesChanged + "\t| " + this.nodesExisting);
+    logger.print(0, "\n\tnew\t  changed\t  existing\t deleted");
+    logger.print(0, "Nodes\t" + this.nodesNew + "\t| " + this.nodesChanged + "\t\t| " + this.nodesExisting);
+    logger.print(0, "Ways\t" + this.waysNew + "\t| " + this.waysChanged + "\t\t| " + this.waysExisting);
+  }
+
+  public Connection getConnection() {
+    return this.connection;
+  }
+
+  ////////////////////////////////////////////////////////////////////
+  //                       counter                                  //
+  ////////////////////////////////////////////////////////////////////
+  public void incrementNodeCounter(String type) {
+    switch (type) {
+      case "new":
+        this.nodesNew++;
+        break;
+      case "changed":
+        this.nodesChanged++;
+        break;
+      case "existing":
+        this.nodesExisting++;
+        break;
+      default:
+        break;
+    }
   }
 
   ////////////////////////////////////////////////////////////////////

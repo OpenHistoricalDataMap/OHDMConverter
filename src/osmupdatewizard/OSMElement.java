@@ -51,7 +51,11 @@ public class OSMElement {
 
   public long getID() {
     if (id == 0) {
-      this.id = Long.valueOf(this.attributes.get("id"));
+      if (this.attributes.get("id") != null) {
+        this.id = Long.valueOf(this.attributes.get("id"));
+      } else {
+        this.id = Long.valueOf(this.attributes.get("ref"));
+      }
     }
     return this.id;
   }

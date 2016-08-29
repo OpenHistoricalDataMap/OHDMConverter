@@ -38,6 +38,10 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   private long waysNew = 0;
   private long waysChanged = 0;
   private long waysExisting = 0;
+  
+  private long relNew = 0;
+  private long relChanged = 0;
+  private long relExisting = 0;
 
   private int rCount = 10;
   private int wCount = 10;
@@ -490,7 +494,22 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       case 1:
         this.waysChanged++;
         // update nodes column id_way in NODETABLE
-        
+        // new Node in this Way
+        newWay.getNodes().stream().forEach((nd) -> {
+          if (!dbWay.hasNodeId(nd.getID())) {
+            HashMap<String, String> newNode = new HashMap<>();
+            newNode.put("id_way", String.valueOf(newWay.getID()));
+            this.updateNode(nd.getID(), newNode);
+          }
+        });
+        // Node does not exist any more in this Way
+        dbWay.getNodes().stream().forEach((nd) -> {
+          if (!newWay.hasNodeId(nd.getID())) {
+            HashMap<String, String> delNode = new HashMap<>();
+            delNode.put("id_way", "null");
+            this.updateNode(nd.getID(), delNode);
+          }
+        });
         break;
       case 2:
         this.waysExisting++;
@@ -614,9 +633,15 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   @Override
   public void printStatus() {
-    logger.print(0, "\n\tnew\t  changed\t  existing\t deleted");
-    logger.print(0, "Nodes\t" + this.nodesNew + "\t| " + this.nodesChanged + "\t\t| " + this.nodesExisting);
-    logger.print(0, "Ways\t" + this.waysNew + "\t| " + this.waysChanged + "\t\t| " + this.waysExisting);
+    logger.print(0, "\n\t\t|---------------|---------------|---------------|");
+    logger.print(0, "\t\t| new\t\t| changed\t| existing\t|");
+    logger.print(0, "|---------------|---------------|---------------|---------------|");
+    logger.print(0, "| Nodes\t\t| " + this.nodesNew + "\t\t| " + this.nodesChanged + "\t\t| " + this.nodesExisting + "\t\t|");
+    logger.print(0, "|---------------|---------------|---------------|---------------|");
+    logger.print(0, "| Ways\t\t| " + this.waysNew + "\t\t| " + this.waysChanged + "\t\t| " + this.waysExisting + "\t\t|");
+    logger.print(0, "|---------------|---------------|---------------|---------------|");
+    logger.print(0, "| Relations\t| " + this.relNew + "\t\t| " + this.relChanged + "\t\t| " + this.relExisting + "\t\t|");
+    logger.print(0, "|---------------|---------------|---------------|---------------|");
   }
 
   public Connection getConnection() {

@@ -38,7 +38,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   private long waysNew = 0;
   private long waysChanged = 0;
   private long waysExisting = 0;
-  
+
   private long relNew = 0;
   private long relChanged = 0;
   private long relExisting = 0;
@@ -609,26 +609,12 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
    * @param tags
    */
   @Override
-  public void addRelation(HashMap<String, String> attributes,
-          HashSet<MemberElement> members, HashSet<TagElement> tags) {
+  public void addRelation(HashMap<String, String> attributes, HashSet<MemberElement> members, HashSet<TagElement> tags) {
     if (members == null || members.isEmpty() || tags == null) {
       return; // empty relations makes no sense;
     }
-
-    RelationElement relationElement = new RelationElement(attributes, members, tags);
-
-    // get ways and points
-    // produce geometry
-    // save in OHDM
-    // debugging / testing
-    if (this.rCount-- > 0) {
-      System.out.println("Relation");
-      this.printAttributes(attributes);
-      this.printTags(tags);
-      this.printMembers(members);
-      r = false;
-      System.out.println("===========================");
-    }
+    RelationElement newRelation = new RelationElement(attributes, members, tags);
+    
   }
 
   @Override

@@ -22,9 +22,8 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   public static final String TAGTABLE = "Tags";
   public static final String NODETABLE = "Nodes";
-  public static final String NODEWOTAGTABLE = "NodesWOTag";
   public static final String WAYTABLE = "Ways";
-  public static final String RELATIONTMPTABLE = "RelationsTmp";
+  public static final String RELATIONTMPTABLE = "Relations";
   public static final String MAX_ID_SIZE = "10485760";
 
   private boolean n = true;
@@ -238,28 +237,6 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private HashMap<String, NodeElement> nodes = new HashMap<>();
 
-  @Deprecated
-  private void saveNodeElements() {
-    logger.print(5, "save nodes in db and clear hashmap", true);
-    String sqlWO = "INSERT INTO " + SQLImportCommandBuilder.NODEWOTAGTABLE + " (osm_id, long, lat) VALUES";
-    String sql = "INSERT INTO " + SQLImportCommandBuilder.NODETABLE + " (osm_id, long, lat, tag) VALUES";
-    for (Map.Entry<String, NodeElement> entry : nodes.entrySet()) {
-      if (entry.getValue().getTags() == null) {
-        sqlWO += " (" + entry.getKey() + ", " + entry.getValue().getLatitude() + ", " + entry.getValue().getLongitude() + "),";
-      } else {
-        sql += " (" + entry.getKey() + ", " + entry.getValue().getLatitude() + ", " + entry.getValue().getLongitude() + ", " + entry.getValue().getTagId() + "),";
-      }
-    }
-    try {
-      Statement stmt = connection.createStatement();
-      stmt.execute(sqlWO.substring(0, sqlWO.length() - 1) + ";");
-      stmt.execute(sql.substring(0, sql.length() - 1) + ";");
-    } catch (SQLException e) {
-      logger.print(3, e.getLocalizedMessage(), true);
-    }
-    nodes.clear();
-  }
-
   private void saveNodeElement(NodeElement node) {
     StringBuilder sb = new StringBuilder("INSERT INTO ");
     if (node.getTagId() == null) {
@@ -364,10 +341,6 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       default:
         break;
     }
-    /*nodes.put(newNode.getID(), newNode);
-     if (nodes.size() > this.tmpStorageSize) {
-     this.saveNodeElements();
-     }*/
   }
 
   private NodeElement selectNodeById(long osm_id) {

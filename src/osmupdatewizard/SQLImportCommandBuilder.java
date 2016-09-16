@@ -48,6 +48,8 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   private String pwd;
   private String serverName;
   private String portNumber;
+  private String path;
+  private String schema;
   private Connection connection;
 
   private MyLogger logger;
@@ -68,12 +70,30 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       this.pwd = Config.getInstance().getValue("db_password");
       this.serverName = Config.getInstance().getValue("db_serverName");
       this.portNumber = Config.getInstance().getValue("db_portNumber");
+      this.path = Config.getInstance().getValue("db_path");
+      this.schema = Config.getInstance().getValue("db_schema");
       Properties connProps = new Properties();
       connProps.put("user", this.user);
       connProps.put("password", this.pwd);
       this.connection = DriverManager.getConnection(
               "jdbc:postgresql://" + this.serverName
-              + ":" + this.portNumber + "/", connProps);
+              + ":" + this.portNumber + "/" + this.path, connProps);
+      if (!this.schema.equalsIgnoreCase("")) {
+        StringBuilder sql = new StringBuilder("SET search_path = ");
+        sql.append(this.schema);
+        PreparedStatement stmt = null;
+        try {
+          stmt = connection.prepareStatement(sql.toString());
+          stmt.execute();
+          logger.print(4, "schema altered");
+        } catch (SQLException e) {
+          logger.print(4, "failed to alter schema: " + e.getLocalizedMessage());
+        } finally {
+          if (stmt != null) {
+            stmt.close();
+          }
+        }
+      }
     } catch (SQLException e) {
       logger.print(0, "cannot connect to database: " + e.getLocalizedMessage());
     }
@@ -587,7 +607,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       return; // empty relations makes no sense;
     }
     RelationElement newRelation = new RelationElement(attributes, members, tags);
-    
+
   }
 
   @Override

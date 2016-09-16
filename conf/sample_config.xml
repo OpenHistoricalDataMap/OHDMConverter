@@ -5,6 +5,9 @@
     <entry k="db_password" v="root" />
     <entry k="db_serverName" v="localhost" />
     <entry k="db_portNumber" v="5432" />
+    <entry k="db_path" v="ohdm" />
+    <!-- leave it empty if you want to use the default schema -->
+    <entry k="db_schema" v="" />
     <!-- If activated, all tables will be deleted when the program starts. (yes, no) -->
     <entry k="db_dropTables" v="no" />
     <!-- (create_new, use_existing) -->

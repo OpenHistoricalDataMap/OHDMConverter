@@ -1,5 +1,11 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <whitelist version='0.1'>
+    <key k="Barrier">
+        <target t="cable_barrier">
+            <value v="cable_barrier">
+            </value>
+        </target>
+    </key>
     <key k="highway">
         <target t="test">
             <value v="motorway_junction" />

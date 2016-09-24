@@ -10,10 +10,8 @@
     <entry k="db_schema" v="" />
     <!-- If activated, all tables will be deleted when the program starts. (yes, no) -->
     <entry k="db_dropTables" v="no" />
-    <!-- (create_new, use_existing) -->
+    <!-- Currently only useExisting is supported (create_new, use_existing) -->
     <entry k="db_tagTable" v="use_existing" />
-    <!-- -->
-    <entry k="db_tagTableName" v="classification" />
     <!-- This path says where the osm-source file is located on the computer. -->
     <entry k="osm_sourceFile" v="path" />
     <!-- If activated the output in the console will be activated. (enabled, disabled) -->

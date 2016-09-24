@@ -24,6 +24,8 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   public static final String NODETABLE = "Nodes";
   public static final String WAYTABLE = "Ways";
   public static final String RELATIONTMPTABLE = "Relations";
+  public static final String MAPTABLE = "RelationMember";
+  public static final String CLASSIFICATIONTABLE = "Classification";
   public static final String MAX_ID_SIZE = "10485760";
 
   private boolean n = true;
@@ -52,7 +54,9 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   private String schema;
   private Connection connection;
 
-  private MyLogger logger;
+  private final MyLogger logger;
+  private final Classification classification;
+  private final Config config;
 
   private static SQLImportCommandBuilder instance = null;
 
@@ -64,14 +68,16 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   }
 
   private SQLImportCommandBuilder() {
+    this.config = Config.getInstance();
     this.logger = MyLogger.getInstance();
+    this.classification = Classification.getInstance();
     try {
-      this.user = Config.getInstance().getValue("db_user");
-      this.pwd = Config.getInstance().getValue("db_password");
-      this.serverName = Config.getInstance().getValue("db_serverName");
-      this.portNumber = Config.getInstance().getValue("db_portNumber");
-      this.path = Config.getInstance().getValue("db_path");
-      this.schema = Config.getInstance().getValue("db_schema");
+      this.user = config.getValue("db_user");
+      this.pwd = config.getValue("db_password");
+      this.serverName = config.getValue("db_serverName");
+      this.portNumber = config.getValue("db_portNumber");
+      this.path = config.getValue("db_path");
+      this.schema = config.getValue("db_schema");
       Properties connProps = new Properties();
       connProps.put("user", this.user);
       connProps.put("password", this.pwd);
@@ -81,17 +87,11 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       if (!this.schema.equalsIgnoreCase("")) {
         StringBuilder sql = new StringBuilder("SET search_path = ");
         sql.append(this.schema);
-        PreparedStatement stmt = null;
-        try {
-          stmt = connection.prepareStatement(sql.toString());
+        try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
           stmt.execute();
           logger.print(4, "schema altered");
         } catch (SQLException e) {
           logger.print(4, "failed to alter schema: " + e.getLocalizedMessage());
-        } finally {
-          if (stmt != null) {
-            stmt.close();
-          }
         }
       }
     } catch (SQLException e) {
@@ -106,14 +106,13 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private List<String> createTablesList() {
     List<String> l = new ArrayList<>();
-    l.add(TAGTABLE);
     l.add(NODETABLE);
     l.add(WAYTABLE);
     return l;
   }
 
   private void dropTables() throws SQLException {
-    if (Config.getInstance().getValue("db_dropTables").equalsIgnoreCase("yes")) {
+    if (config.getValue("db_dropTables").equalsIgnoreCase("yes")) {
       StringBuilder sqlDel = new StringBuilder("DROP TABLE ");
       PreparedStatement delStmt = null;
       List<String> tables = this.createTablesList();
@@ -164,15 +163,10 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       /**
        * ************ Knowledge base tables ****************************
        */
-      StringBuilder sqlTag = new StringBuilder();
-      sqlTag.append(" (id SERIAL PRIMARY KEY, ")
-              .append("key character varying(255), ")
-              .append("value character varying(255));");
-      this.setupTable(TAGTABLE, sqlTag.toString());
-      this.importWhitelist();
+      this.loadClassification();
       StringBuilder sqlWay = new StringBuilder();
       sqlWay.append(" (osm_id bigint PRIMARY KEY, ")
-              .append("tag bigint REFERENCES ").append(TAGTABLE).append(" (id), ")
+              .append("tag bigint REFERENCES ").append(CLASSIFICATIONTABLE).append(" (classcode), ")
               .append("ohdm_id bigint, ")
               .append("ohdm_object bigint, ")
               .append("valid boolean);");
@@ -181,18 +175,52 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       sqlNode.append(" (osm_id bigint PRIMARY KEY, ")
               .append("long character varying(").append(MAX_ID_SIZE).append("), ")
               .append("lat character varying(").append(MAX_ID_SIZE).append("), ")
-              .append("tag bigint REFERENCES ").append(TAGTABLE).append(" (id), ")
+              .append("tag bigint REFERENCES ").append(CLASSIFICATIONTABLE).append(" (classcode), ")
               .append("ohdm_id bigint, ")
               .append("ohdm_object bigint, ")
               .append("id_way bigint REFERENCES ").append(WAYTABLE).append(" (osm_id), ")
               .append("valid boolean);");
       this.setupTable(NODETABLE, sqlNode.toString());
+      StringBuilder sqlRelation;
+      StringBuilder sqlWayMember;
     } catch (SQLException e) {
       System.err.println("error while setting up tables: " + e.getLocalizedMessage());
     }
     logger.print(4, "--- finished setting up tables ---", true);
   }
 
+  private void loadClassification() {
+    if (config.getValue("db_classificationTable").equals("useExisting")) {
+      Statement stmt = null;
+      try {
+        stmt = connection.createStatement();
+        StringBuilder sb = new StringBuilder("SELECT * FROM ");
+        if (!this.schema.equalsIgnoreCase("")) {
+          sb.append(schema).append(".");
+        }
+        sb.append(CLASSIFICATIONTABLE).append(";");
+        try (ResultSet rs = stmt.executeQuery(sb.toString())) {
+          while (rs.next()) {
+            this.classification.put(rs.getString("class"), rs.getString("subclass"), rs.getInt("classcode"));
+          }
+        }
+      } catch (SQLException e) {
+        logger.print(4, "classification loadingt failed: " + e.getLocalizedMessage(), true);
+      } finally {
+        if (stmt != null) {
+          try {
+            stmt.close();
+          } catch (SQLException e) {
+          }
+        }
+      }
+    } else {
+      // ToDo needs to be implemented for xml import
+    }
+  }
+
+  // can later be user for config flag db_classificationTable -> createNew
+  @Deprecated
   private void importWhitelist() {
     // import whitelist to auto create ids
     Statement stmtImport = null;
@@ -243,19 +271,12 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   }
 
   @Deprecated
-  private void checkIfTableExists(Statement stmt, String table) throws SQLException {
-    stmt.execute("SELECT '" + table + "'::regclass;");
-  }
-
-  @Deprecated
   private void resetSequence(Statement stmt, String sequence) throws SQLException {
     try {
       stmt.execute("drop sequence " + sequence + ";");
     } catch (SQLException ee) { /* ignore */ }
     stmt.execute("create sequence " + sequence + ";");
   }
-
-  private HashMap<String, NodeElement> nodes = new HashMap<>();
 
   private void saveNodeElement(NodeElement node) {
     StringBuilder sb = new StringBuilder("INSERT INTO ");
@@ -651,7 +672,8 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   ////////////////////////////////////////////////////////////////////
   @Override
   public NodeElement getNodeByID(String id) {
-    return this.nodes.get(id);
+    // ToDo Select from db
+    return null;
   }
 
   ////////////////////////////////////////////////////////////////////

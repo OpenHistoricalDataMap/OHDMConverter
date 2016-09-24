@@ -2,6 +2,7 @@ package osmupdatewizard;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map.Entry;
 
 /**
  *
@@ -29,11 +30,7 @@ public class OSMElement {
     this.attributes = attributes;
     this.tags = tags;
     if (this.tags != null) {
-      this.tags.stream().forEach((t) -> {
-        t.attributes.entrySet().stream().filter((entry) -> (Whitelist.getInstance().reduce(entry.getKey(), entry.getValue()) != null)).forEach((entry) -> {
-          this.tagId = Whitelist.getInstance().getId(entry.getKey(), entry.getValue());
-        });
-      });
+      this.tagId = this.getClassificationTag();
     }
   }
 
@@ -66,6 +63,32 @@ public class OSMElement {
 
   public HashSet<TagElement> getTags() {
     return this.tags;
+  }
+
+  /**
+   * Searches for a valid attribute, that is listed in the classification table.
+   * If there is no valid one, null is returned, otherwiese the classcode (id)
+   * of it.
+   *
+   * @return
+   */
+  private Integer getClassificationTag() {
+    Integer tag = null;
+    for (TagElement t : tags) {
+      if (tag == null) {
+        tag = t.getCTagFromAttr();
+      }
+    }
+    return tag;
+  }
+
+  public Integer getCTagFromAttr() {
+    Integer tag = null;
+    for (Entry entry : attributes.entrySet()) {
+      if (tag == null) {
+      tag = Classification.getInstance().getClasscode(entry.getKey().toString(), entry.getValue().toString());}
+    }
+    return tag;
   }
 
   public Integer getTagId() {

@@ -29,8 +29,19 @@ public class OSMElement {
     this.storage = storage;
     this.attributes = attributes;
     this.tags = tags;
-    if (this.tags != null) {
-      this.tagId = this.getClassificationTag();
+    try {
+      if (id == 0) {
+        if (this.attributes.get("id") != null) {
+          this.id = Long.valueOf(this.attributes.get("id"));
+        } else if (this.attributes.get("ref") != null) {
+          this.id = Long.valueOf(this.attributes.get("ref"));
+        }
+      }
+    } catch (NumberFormatException e) {
+    }
+    if (this.id != 0) {
+
+      this.findClassificationTag();
     }
   }
 
@@ -38,22 +49,9 @@ public class OSMElement {
     attributes.entrySet().stream().forEach((entry) -> {
       System.out.print("k|v: " + entry.getKey() + "|" + entry.getValue() + "\n");
     });
-    /*Iterator<String> kIter = this.attributes.keySet().iterator();
-     while (kIter.hasNext()) {
-     String k = kIter.next();
-     String v = this.attributes.get(k);
-     System.out.print("k|v: " + k + "|" + v + "\n");
-     }*/
   }
 
   public long getID() {
-    if (id == 0) {
-      if (this.attributes.get("id") != null) {
-        this.id = Long.valueOf(this.attributes.get("id"));
-      } else {
-        this.id = Long.valueOf(this.attributes.get("ref"));
-      }
-    }
     return this.id;
   }
 
@@ -72,23 +70,14 @@ public class OSMElement {
    *
    * @return
    */
-  private Integer getClassificationTag() {
-    Integer tag = null;
-    for (TagElement t : tags) {
-      if (tag == null) {
-        tag = t.getCTagFromAttr();
-      }
+  private void findClassificationTag() {
+    if (this.tags != null) {
+      this.tags.stream().forEach((t) -> {
+        t.attributes.entrySet().stream().filter((entry) -> (Classification.getInstance().getClasscode(entry.getKey(), entry.getValue()) != null)).forEach((entry) -> {
+          this.tagId = Classification.getInstance().getClasscode(entry.getKey(), entry.getValue());
+        });
+      });
     }
-    return tag;
-  }
-
-  public Integer getCTagFromAttr() {
-    Integer tag = null;
-    for (Entry entry : attributes.entrySet()) {
-      if (tag == null) {
-      tag = Classification.getInstance().getClasscode(entry.getKey().toString(), entry.getValue().toString());}
-    }
-    return tag;
   }
 
   public Integer getTagId() {

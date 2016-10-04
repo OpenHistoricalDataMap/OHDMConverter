@@ -53,10 +53,10 @@ public class Classification extends DefaultHandler {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder("Classification:");
-    for (Entry entry : list.entrySet()) {
+    list.entrySet().stream().forEach((entry) -> {
       sb.append("\nclasscode: ").append(entry.getValue())
               .append("; class|subclass: ").append(entry.getKey());
-    }
+    });
     return sb.toString();
   }
 }

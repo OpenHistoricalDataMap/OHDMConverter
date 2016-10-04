@@ -48,6 +48,7 @@ public class OSMImporter extends DefaultHandler {
 
   @Override
   public void endDocument() {
+    builder.flush();
     builder.printStatus();
   }
 
@@ -153,7 +154,7 @@ public class OSMImporter extends DefaultHandler {
         if (!this.attributes.isEmpty()) {
           this.rA++;
         }
-        //this.builder.addRelation(this.attributes, this.members, this.tags);
+        this.builder.addRelation(this.attributes, this.members, this.tags);
         this.status = Status.OUTSIDE;
         // cleanup
         this.tags = null;

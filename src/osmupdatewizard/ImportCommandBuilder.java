@@ -15,5 +15,7 @@ public interface ImportCommandBuilder {
 
   public void addRelation(HashMap<String, String> attributes, HashSet<MemberElement> members, HashSet<TagElement> tags);
 
+  public void flush();
+  
   public void printStatus();
 }

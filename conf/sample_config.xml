@@ -12,6 +12,10 @@
     <entry k="db_dropTables" v="no" />
     <!-- Currently only useExisting is supported (create_new, use_existing) -->
     <entry k="db_tagTable" v="use_existing" />
+    <!-- Choose the mode: initial_import is faster but does not update the nodes (the tables have to be empty). update will check every object if it has been changed -->
+    <entry k="importMode" v="initial_import" />
+    <!-- Needed for initial_import -->
+    <entry k="tmpStorageSize" v="10000" />
     <!-- This path says where the osm-source file is located on the computer. -->
     <entry k="osm_sourceFile" v="path" />
     <!-- If activated the output in the console will be activated. (enabled, disabled) -->

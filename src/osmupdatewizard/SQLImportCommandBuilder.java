@@ -54,6 +54,9 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   private String schema;
   private Connection connection;
 
+  private String importMode;
+  private Integer tmpStorageSize;
+
   private final MyLogger logger;
   private final Classification classification;
   private final Config config;
@@ -71,6 +74,8 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     this.config = Config.getInstance();
     this.logger = MyLogger.getInstance();
     this.classification = Classification.getInstance();
+    importMode = config.getValue("importMode");
+    tmpStorageSize = Integer.valueOf(config.getValue("tmpStorageSize")) - 1;
     try {
       this.user = config.getValue("db_user");
       this.pwd = config.getValue("db_password");
@@ -278,6 +283,28 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     stmt.execute("create sequence " + sequence + ";");
   }
 
+  private Map<String, NodeElement> nodes = new HashMap<>();
+
+  private void saveNodeElements() {
+    String sqlWO = "INSERT INTO " + SQLImportCommandBuilder.NODETABLE + " (osm_id, long, lat) VALUES";
+    String sql = "INSERT INTO " + SQLImportCommandBuilder.NODETABLE + " (osm_id, long, lat, tag) VALUES";
+    for (Map.Entry<String, NodeElement> entry : nodes.entrySet()) {
+      if (entry.getValue().getTags() == null) {
+        sqlWO += " (" + entry.getKey() + ", " + entry.getValue().getLatitude() + ", " + entry.getValue().getLongitude() + "),";
+      } else {
+        sql += " (" + entry.getKey() + ", " + entry.getValue().getLatitude() + ", " + entry.getValue().getLongitude() + ", " + entry.getValue().getTagId() + "),";
+      }
+    }
+    try {
+      Statement stmt = connection.createStatement();
+      stmt.execute(sqlWO.substring(0, sqlWO.length() - 1) + ";");
+      stmt.execute(sql.substring(0, sql.length() - 1) + ";");
+    } catch (SQLException e) {
+      logger.print(3, "saveNodeElements() " + e.getLocalizedMessage(), true);
+    }
+    nodes.clear();
+  }
+
   private void saveNodeElement(NodeElement node) {
     StringBuilder sb = new StringBuilder("INSERT INTO ");
     if (node.getTagId() == null) {
@@ -296,7 +323,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       }
       stmt.execute();
     } catch (SQLException e) {
-      logger.print(1, e.getLocalizedMessage(), true);
+      logger.print(1, "saveNodeElement(NodeElement) " + e.getLocalizedMessage(), true);
     } finally {
       try {
         if (stmt != null) {
@@ -365,22 +392,33 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   @Override
   public void addNode(HashMap<String, String> attributes, HashSet<TagElement> tags) {
     NodeElement newNode = new NodeElement(this, attributes, tags);
-    NodeElement dbNode = selectNodeById(newNode.getID());
-    switch (matchNodes(newNode, dbNode)) {
-      case 0:
-        this.nodesNew++;
-        this.saveNodeElement(newNode);
-        break;
-      case 1:
-        this.nodesChanged++;
-        this.updateNode(newNode, dbNode);
-        break;
-      case 2:
-        this.nodesExisting++;
-        // do nothing, because node is ok
-        break;
-      default:
-        break;
+    if (importMode.equalsIgnoreCase("update")) {
+      NodeElement dbNode = selectNodeById(newNode.getID());
+      switch (matchNodes(newNode, dbNode)) {
+        case 0:
+          this.nodesNew++;
+          this.saveNodeElement(newNode);
+          break;
+        case 1:
+          this.nodesChanged++;
+          this.updateNode(newNode, dbNode);
+          break;
+        case 2:
+          this.nodesExisting++;
+          // do nothing, because node is ok
+          break;
+        default:
+          break;
+      }
+    } else if (importMode.equalsIgnoreCase("initial_import")) {
+      nodes.put(String.valueOf(newNode.getID()), newNode);
+      if (nodes.size() > this.tmpStorageSize) {
+        nodesNew += nodes.size();
+        this.saveNodeElements();
+        this.printStatusShort(4);
+      }
+    } else {
+      logger.print(1, "not supported importMode in config file");
     }
   }
 
@@ -436,20 +474,34 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     return state;
   }
 
-  private final HashMap<Integer, WayElement> ways = new HashMap<>();
+  private final HashMap<String, WayElement> ways = new HashMap<>();
 
-  @Deprecated
   private void saveWayElements() {
-    logger.print(5, "save ways in db and clear hashmap", true);
     StringBuilder sb = new StringBuilder("INSERT INTO ");
     sb.append(WAYTABLE).append("(osm_id, tag) VALUES");
+    StringBuilder sqlUpdateNodes = new StringBuilder();
     ways.entrySet().stream().filter((entry) -> (entry.getValue().getTags() != null)).forEach((entry) -> {
       sb.append(" (").append(entry.getKey()).append(", ").append(entry.getValue().getTagId()).append("),");
+      sqlUpdateNodes.append("UPDATE ");
+      sqlUpdateNodes.append(NODETABLE).append(" SET id_way = ")
+              .append(entry.getKey()).append(" WHERE osm_id IN (");
+      entry.getValue().getNodes().stream().forEach((nd) -> {
+        sqlUpdateNodes.append(String.valueOf(nd.getID())).append(", ");
+      });
+      sqlUpdateNodes.delete(sqlUpdateNodes.length() - 2, sqlUpdateNodes.length() - 1).append(");\n");
     });
-    try (PreparedStatement stmt = connection.prepareStatement(sb.deleteCharAt(sb.length() - 1).append(";").toString())) {
+    sb.deleteCharAt(sb.length() - 1).append(";");
+    try (PreparedStatement stmt = connection.prepareStatement(sb.toString())) {
       stmt.execute();
     } catch (SQLException ex) {
       logger.print(1, ex.getLocalizedMessage(), true);
+      logger.print(4, sb.toString());
+    }
+    try (PreparedStatement stmtUpdate = connection.prepareStatement(sqlUpdateNodes.toString())) {
+      stmtUpdate.execute();
+    } catch (SQLException e) {
+      logger.print(1, e.getLocalizedMessage(), true);
+      logger.print(4, sqlUpdateNodes.toString());
     }
     ways.clear();
   }
@@ -493,43 +545,61 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     if (nds == null || nds.isEmpty()) {
       return; // a way without nodes makes no sense.
     }
+    if (!nodes.isEmpty()) {
+      nodesNew += nodes.size();
+      this.saveNodeElements();
+      printStatusShort(1);
+      logger.print(1, "finished saving nodes, continuing with ways", true);
+    }
     WayElement newWay = new WayElement(this, attributes, nds, tags);
-    WayElement dbWay = selectWayById(newWay.getID());
-    switch (matchWays(newWay, dbWay)) {
-      case 0:
-        this.waysNew++;
-        this.saveWayElement(newWay);
-        newWay.getNodes().stream().forEach((nd) -> {
-          HashMap<String, String> map = new HashMap<>();
-          map.put("id_way", String.valueOf(newWay.getID()));
-          this.updateNode(nd.getID(), map);
-        });
-        break;
-      case 1:
-        this.waysChanged++;
-        // update nodes column id_way in NODETABLE
-        // new Node in this Way
-        newWay.getNodes().stream().forEach((nd) -> {
-          if (!dbWay.hasNodeId(nd.getID())) {
-            HashMap<String, String> newNode = new HashMap<>();
-            newNode.put("id_way", String.valueOf(newWay.getID()));
-            this.updateNode(nd.getID(), newNode);
-          }
-        });
-        // Node does not exist any more in this Way
-        dbWay.getNodes().stream().forEach((nd) -> {
-          if (!newWay.hasNodeId(nd.getID())) {
-            HashMap<String, String> delNode = new HashMap<>();
-            delNode.put("id_way", "null");
-            this.updateNode(nd.getID(), delNode);
-          }
-        });
-        break;
-      case 2:
-        this.waysExisting++;
-        break;
-      default:
-        break;
+
+    if (importMode.equalsIgnoreCase("update")) {
+      WayElement dbWay = selectWayById(newWay.getID());
+      switch (matchWays(newWay, dbWay)) {
+        case 0:
+          this.waysNew++;
+          this.saveWayElement(newWay);
+          newWay.getNodes().stream().forEach((nd) -> {
+            HashMap<String, String> map = new HashMap<>();
+            map.put("id_way", String.valueOf(newWay.getID()));
+            this.updateNode(nd.getID(), map);
+          });
+          break;
+        case 1:
+          this.waysChanged++;
+          // update nodes column id_way in NODETABLE
+          // new Node in this Way
+          newWay.getNodes().stream().forEach((nd) -> {
+            if (!dbWay.hasNodeId(nd.getID())) {
+              HashMap<String, String> newNode = new HashMap<>();
+              newNode.put("id_way", String.valueOf(newWay.getID()));
+              this.updateNode(nd.getID(), newNode);
+            }
+          });
+          // Node does not exist any more in this Way
+          dbWay.getNodes().stream().forEach((nd) -> {
+            if (!newWay.hasNodeId(nd.getID())) {
+              HashMap<String, String> delNode = new HashMap<>();
+              delNode.put("id_way", "null");
+              this.updateNode(nd.getID(), delNode);
+            }
+          });
+          break;
+        case 2:
+          this.waysExisting++;
+          break;
+        default:
+          break;
+      }
+    } else if (importMode.equalsIgnoreCase("initial_import")) {
+      this.waysNew++;
+      this.ways.put(String.valueOf(newWay.getID()), newWay);
+      if (((ways.size() * 10) + 1) % tmpStorageSize == 0) {
+        this.saveWayElements();
+        this.printStatusShort(4);
+      }
+    } else {
+      logger.print(1, "not supported importMode in config file");
     }
   }
 
@@ -573,7 +643,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       }
       try {
         if (stmtWay != null) {
-          stmtNodes.close();
+          stmtWay.close();
         }
       } catch (SQLException e) {
       }
@@ -627,8 +697,24 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     if (members == null || members.isEmpty() || tags == null) {
       return; // empty relations makes no sense;
     }
-    RelationElement newRelation = new RelationElement(attributes, members, tags);
+    if (!ways.isEmpty()) {
+      saveWayElements();
+    }
+//    RelationElement newRelation = new RelationElement(attributes, members, tags);
 
+  }
+
+  @Override
+  public void flush() {
+    if (!nodes.isEmpty()) {
+      this.saveNodeElements();
+    }
+    if (!ways.isEmpty()) {
+      this.saveWayElements();
+    }
+//    if (!rel.isEmpty()) {
+//    this.saveRelationElements();
+//    }
   }
 
   @Override
@@ -642,6 +728,10 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     logger.print(0, "|---------------|---------------|---------------|---------------|");
     logger.print(0, "| Relations\t| " + this.relNew + "\t\t| " + this.relChanged + "\t\t| " + this.relExisting + "\t\t|");
     logger.print(0, "|---------------|---------------|---------------|---------------|");
+  }
+
+  public void printStatusShort(int level) {
+    logger.print(level, "n: " + nodesNew + " w: " + waysNew, true);
   }
 
   public Connection getConnection() {

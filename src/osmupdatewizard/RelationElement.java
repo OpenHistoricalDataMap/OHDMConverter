@@ -10,11 +10,14 @@ import java.util.HashSet;
 class RelationElement extends OSMElement {
 
   private final HashSet<MemberElement> members;
-
+  
   public RelationElement(HashMap<String, String> attributes,
           HashSet<MemberElement> members, HashSet<TagElement> tags) {
     super(attributes, tags);
     this.members = members;
   }
 
+  public HashSet<MemberElement> getMember() {
+    return members;
+  }
 }

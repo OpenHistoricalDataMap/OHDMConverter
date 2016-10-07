@@ -23,7 +23,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   public static final String TAGTABLE = "Tags";
   public static final String NODETABLE = "Nodes";
   public static final String WAYTABLE = "Ways";
-  public static final String RELATIONTMPTABLE = "Relations";
+  public static final String RELATIONTABLE = "Relations";
   public static final String MAPTABLE = "RelationMember";
   public static final String CLASSIFICATIONTABLE = "Classification";
   public static final String MAX_ID_SIZE = "10485760";
@@ -111,8 +111,10 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private List<String> createTablesList() {
     List<String> l = new ArrayList<>();
+    l.add(MAPTABLE); // dependencies to way, node and relations
+    l.add(WAYTABLE); // dependencies to node
     l.add(NODETABLE);
-    l.add(WAYTABLE);
+    l.add(RELATIONTABLE);
     return l;
   }
 
@@ -140,23 +142,19 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   }
 
   private void setupTable(String table, String sqlCreate) throws SQLException {
+    logger.print(4, "creating table if not exists: " + table);
+    PreparedStatement stmt = null;
+    StringBuilder sql = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
+    sql.append(table).append(sqlCreate);
     try {
-      this.checkIfTableExists(table);
-      logger.print(4, table + " already exists");
-    } catch (SQLException e) {
-      logger.print(4, table + " does not exist - creating...");
-      PreparedStatement stmt = null;
-      StringBuilder sql = new StringBuilder("CREATE TABLE ");
-      sql.append(table).append(sqlCreate);
-      try {
-        stmt = connection.prepareStatement(sql.toString());
-        stmt.execute();
-      } catch (SQLException ex) {
-        logger.print(1, ex.getLocalizedMessage(), true);
-      } finally {
-        if (stmt != null) {
-          stmt.close();
-        }
+      stmt = connection.prepareStatement(sql.toString());
+      stmt.execute();
+    } catch (SQLException ex) {
+      logger.print(1, ex.getLocalizedMessage(), true);
+      logger.print(1, sql.toString());
+    } finally {
+      if (stmt != null) {
+        stmt.close();
       }
     }
   }
@@ -186,8 +184,19 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
               .append("id_way bigint REFERENCES ").append(WAYTABLE).append(" (osm_id), ")
               .append("valid boolean);");
       this.setupTable(NODETABLE, sqlNode.toString());
-      StringBuilder sqlRelation;
-      StringBuilder sqlWayMember;
+      StringBuilder sqlRelation = new StringBuilder();
+      sqlRelation.append(" (osm_id bigint PRIMARY KEY, ")
+              .append("tag bigint REFERENCES ").append(CLASSIFICATIONTABLE).append(" (classcode), ")
+              .append("ohdm_id bigint, ")
+              .append("ohdm_object bigint, ")
+              .append("valid boolean);");
+      this.setupTable(RELATIONTABLE, sqlRelation.toString());
+      StringBuilder sqlRelMember = new StringBuilder();
+      sqlRelMember.append(" (relation_id bigint REFERENCES ").append(RELATIONTABLE).append(" (osm_id) NOT NULL, ")
+              .append("way_id bigint REFERENCES ").append(WAYTABLE).append(" (osm_id), ")
+              .append("node_id bigint REFERENCES ").append(NODETABLE).append(" (osm_id), ")
+              .append("member_rel_id bigint REFERENCES ").append(RELATIONTABLE).append(" (osm_id));");
+      this.setupTable(MAPTABLE, sqlRelMember.toString());
     } catch (SQLException e) {
       System.err.println("error while setting up tables: " + e.getLocalizedMessage());
     }
@@ -268,6 +277,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     Whitelist.getInstance().feedWithId(tagtable);
   }
 
+  @Deprecated
   private void checkIfTableExists(String table) throws SQLException {
     StringBuilder sql = new StringBuilder("SELECT '");
     sql.append(table).append("'::regclass;");
@@ -481,10 +491,11 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     sb.append(WAYTABLE).append("(osm_id, tag) VALUES");
     StringBuilder sqlUpdateNodes = new StringBuilder();
     ways.entrySet().stream().filter((entry) -> (entry.getValue().getTags() != null)).forEach((entry) -> {
-      sb.append(" (").append(entry.getKey()).append(", ").append(entry.getValue().getTagId()).append("),");
-      sqlUpdateNodes.append("UPDATE ");
-      sqlUpdateNodes.append(NODETABLE).append(" SET id_way = ")
-              .append(entry.getKey()).append(" WHERE osm_id IN (");
+      sb.append(" (").append(entry.getKey()).append(", ")
+              .append(entry.getValue().getTagId()).append("),");
+      sqlUpdateNodes.append("UPDATE ").append(NODETABLE)
+              .append(" SET id_way = ").append(entry.getKey())
+              .append(" WHERE osm_id IN (");
       entry.getValue().getNodes().stream().forEach((nd) -> {
         sqlUpdateNodes.append(String.valueOf(nd.getID())).append(", ");
       });
@@ -685,6 +696,83 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     return state;
   }
 
+  private final HashMap<String, RelationElement> rels = new HashMap<>();
+
+  private void saveRelElements() {
+    StringBuilder sb = new StringBuilder("INSERT INTO ");
+    sb.append(RELATIONTABLE).append(" (osm_id, tag) VALUES");
+    boolean nodeInside = false;
+    StringBuilder sqlMapNode = new StringBuilder("INSERT INTO ");
+    sqlMapNode.append(MAPTABLE).append(" (relation_id, node_id) VALUES");
+    boolean wayInside = false;
+    StringBuilder sqlMapWay = new StringBuilder("INSERT INTO ");
+    sqlMapWay.append(MAPTABLE).append(" (relation_id, way_id) VALUES");
+    boolean relInside = false;
+    StringBuilder sqlMapRel = new StringBuilder("INSERT INTO ");
+    sqlMapRel.append(MAPTABLE).append(" (relation_id, member_rel_id) VALUES");
+    for (Map.Entry<String, RelationElement> entry : rels.entrySet()) {
+      sb.append(" (").append(entry.getKey()).append(", ")
+              .append(entry.getValue().getTagId()).append("),");
+      for (MemberElement member : entry.getValue().getMember()) {
+        switch (member.getType()) {
+          case "node":
+            sqlMapNode.append(" (").append(entry.getKey()).append(", ")
+                    .append(member.getId()).append("),");
+            nodeInside = true;
+            break;
+          case "way":
+            sqlMapWay.append(" (").append(entry.getKey()).append(", ")
+                    .append(member.getId()).append("),");
+            wayInside = true;
+            break;
+          case "relation":
+            sqlMapRel.append(" (").append(entry.getKey()).append(", ")
+                    .append(member.getId()).append("),");
+            relInside = true;
+            break;
+          default:
+            logger.print(3, "member with incorrect type");
+            break;
+        }
+        member.getId();
+      }
+    }
+    try (PreparedStatement stmt = connection.prepareStatement(
+            sb.deleteCharAt(sb.length() - 1).append(";").toString())) {
+      stmt.execute();
+    } catch (SQLException e) {
+      logger.print(1, e.getLocalizedMessage(), true);
+      logger.print(4, sb.toString());
+    }
+    if (nodeInside) {
+      try (PreparedStatement stmt = connection.prepareStatement(
+              sqlMapNode.deleteCharAt(sqlMapNode.length() - 1).append(";").toString())) {
+        stmt.execute();
+      } catch (SQLException e) {
+        logger.print(1, e.getLocalizedMessage(), true);
+        logger.print(4, sqlMapNode.toString());
+      }
+    }
+    if (wayInside) {
+      try (PreparedStatement stmt = connection.prepareStatement(
+              sqlMapWay.deleteCharAt(sqlMapWay.length() - 1).append(";").toString())) {
+        stmt.execute();
+      } catch (SQLException e) {
+        logger.print(1, e.getLocalizedMessage(), true);
+        logger.print(4, sqlMapWay.toString());
+      }
+    }
+    if (relInside) {
+      try (PreparedStatement stmt = connection.prepareStatement(
+              sqlMapRel.deleteCharAt(sqlMapRel.length() - 1).append(";").toString())) {
+        stmt.execute();
+      } catch (SQLException e) {
+        logger.print(1, e.getLocalizedMessage(), true);
+        logger.print(4, sqlMapRel.toString());
+      }
+    }
+  }
+
   /**
    * OSM Relations are defined here: http://wiki.openstreetmap.org/wiki/Relation
    *
@@ -693,15 +781,42 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
    * @param tags
    */
   @Override
-  public void addRelation(HashMap<String, String> attributes, HashSet<MemberElement> members, HashSet<TagElement> tags) {
+  public void addRelation(HashMap<String, String> attributes, HashSet<MemberElement> members, HashSet<TagElement> tags
+  ) {
     if (members == null || members.isEmpty() || tags == null) {
       return; // empty relations makes no sense;
     }
     if (!ways.isEmpty()) {
+      waysNew += ways.size();
       saveWayElements();
+      this.printStatusShort(1);
+      logger.print(1, "finished saving ways, continuing with relations", true);
     }
-//    RelationElement newRelation = new RelationElement(attributes, members, tags);
-
+    RelationElement newRel = new RelationElement(attributes, members, tags);
+    if (importMode.equalsIgnoreCase("update")) {
+      // todo
+      // todo
+      // todo
+      // todo
+      // todo
+      // todo
+      // todo
+      // todo
+      // todo
+      // todo
+      // todo
+      // todo
+      // todo
+    } else if (importMode.equalsIgnoreCase("initial_import")) {
+      this.relNew++;
+      this.rels.put(String.valueOf(newRel.getID()), newRel);
+      if (((rels.size() * 100) + 1) % tmpStorageSize == 0) {
+        this.saveRelElements();
+        this.printStatusShort(4);
+      }
+    } else {
+      logger.print(1, "not supported importMode in config file");
+    }
   }
 
   @Override
@@ -712,9 +827,9 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     if (!ways.isEmpty()) {
       this.saveWayElements();
     }
-//    if (!rel.isEmpty()) {
-//    this.saveRelationElements();
-//    }
+    if (!rels.isEmpty()) {
+      this.saveRelElements();
+    }
   }
 
   @Override

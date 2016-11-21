@@ -170,37 +170,38 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       
       StringBuilder sqlWay = new StringBuilder();
       sqlWay.append(" (osm_id bigint PRIMARY KEY, ")
-              .append("tag bigint REFERENCES ").append(CLASSIFICATIONTABLE).append(" (classcode), ")
+              .append("classcode bigint REFERENCES ").append(CLASSIFICATIONTABLE).append(" (classcode), ")
               .append("ohdm_id bigint, ")
               .append("ohdm_object bigint, ")
               .append("valid boolean);");
       this.setupTable(WAYTABLE, sqlWay.toString());
-      
+
       StringBuilder sqlNode = new StringBuilder();
       sqlNode.append(" (osm_id bigint PRIMARY KEY, ")
-              .append("long character varying(").append(MAX_ID_SIZE).append("), ")
-              .append("lat character varying(").append(MAX_ID_SIZE).append("), ")
-              .append("tag bigint REFERENCES ").append(CLASSIFICATIONTABLE).append(" (classcode), ")
+              .append("classcode bigint REFERENCES ").append(CLASSIFICATIONTABLE).append(" (classcode), ")
+              .append("longitude character varying(").append(MAX_ID_SIZE).append("), ")
+              .append("latitude character varying(").append(MAX_ID_SIZE).append("), ")
               .append("ohdm_id bigint, ")
               .append("ohdm_object bigint, ")
               .append("id_way bigint REFERENCES ").append(WAYTABLE).append(" (osm_id), ")
               .append("valid boolean);");
       this.setupTable(NODETABLE, sqlNode.toString());
-      
+
       StringBuilder sqlRelation = new StringBuilder();
       sqlRelation.append(" (osm_id bigint PRIMARY KEY, ")
-              .append("tag bigint REFERENCES ").append(CLASSIFICATIONTABLE).append(" (classcode), ")
+              .append("classcode bigint REFERENCES ").append(CLASSIFICATIONTABLE).append(" (classcode), ")
               .append("ohdm_id bigint, ")
               .append("ohdm_object bigint, ")
               .append("valid boolean);");
-      
       this.setupTable(RELATIONTABLE, sqlRelation.toString());
+      
       StringBuilder sqlRelMember = new StringBuilder();
       sqlRelMember.append(" (relation_id bigint REFERENCES ").append(RELATIONTABLE).append(" (osm_id) NOT NULL, ")
               .append("way_id bigint REFERENCES ").append(WAYTABLE).append(" (osm_id), ")
               .append("node_id bigint REFERENCES ").append(NODETABLE).append(" (osm_id), ")
               .append("member_rel_id bigint REFERENCES ").append(RELATIONTABLE).append(" (osm_id));");
       this.setupTable(MAPTABLE, sqlRelMember.toString());
+      
     } catch (SQLException e) {
       System.err.println("error while setting up tables: " + e.getLocalizedMessage());
     }
@@ -351,9 +352,9 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private void saveNodeElements() {
     StringBuilder sqlWO = new StringBuilder("INSERT INTO ");
-    sqlWO.append(NODETABLE).append(" (osm_id, long, lat, valid) VALUES");
+    sqlWO.append(NODETABLE).append(" (osm_id, longitude, latitude, valid) VALUES");
     StringBuilder sql = new StringBuilder("INSERT INTO ");
-    sql.append(NODETABLE).append(" (osm_id, long, lat, tag, valid) VALUES");
+    sql.append(NODETABLE).append(" (osm_id, longitude, latitude, classcode, valid) VALUES");
     for (Map.Entry<String, NodeElement> entry : nodes.entrySet()) {
       if (entry.getValue().getTags() == null) {
         sqlWO.append(" (").append(entry.getKey()).append(", ")
@@ -386,9 +387,9 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   private void saveNodeElement(NodeElement node) {
     StringBuilder sb = new StringBuilder("INSERT INTO ");
     if (node.getTagId() == null) {
-      sb.append(NODETABLE).append(" (osm_id, long, lat, valid) VALUES (?, ?, ?, true);");
+      sb.append(NODETABLE).append(" (osm_id, longitude, latitude, valid) VALUES (?, ?, ?, true);");
     } else {
-      sb.append(NODETABLE).append(" (osm_id, long, lat, tag, valid) VALUES (?, ?, ?, ?, true);");
+      sb.append(NODETABLE).append(" (osm_id, longitude, latitude, classcode, valid) VALUES (?, ?, ?, ?, true);");
     }
     try (PreparedStatement stmt = connection.prepareStatement(sb.toString())) {
       stmt.setLong(1, node.getID());
@@ -532,7 +533,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private void saveWayElements() {
     StringBuilder sb = new StringBuilder("INSERT INTO ");
-    sb.append(WAYTABLE).append("(osm_id, tag, valid) VALUES");
+    sb.append(WAYTABLE).append("(osm_id, classcode, valid) VALUES");
     StringBuilder sqlUpdateNodes = new StringBuilder();
     ways.entrySet().stream().filter((entry) -> (entry.getValue().getTags() != null)).forEach((entry) -> {
       sb.append(" (").append(entry.getKey()).append(", ")
@@ -567,7 +568,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     if (way.getTagId() == null) {
       sb.append(WAYTABLE).append(" (osm_id, valid) VALUES (?, true);");
     } else {
-      sb.append(WAYTABLE).append(" (osm_id, tag, valid) VALUES (?, ?, true);");
+      sb.append(WAYTABLE).append(" (osm_id, classcode, valid) VALUES (?, ?, true);");
     }
     PreparedStatement stmt = null;
     try {
@@ -745,7 +746,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private void saveRelElements() {
     StringBuilder sb = new StringBuilder("INSERT INTO ");
-    sb.append(RELATIONTABLE).append(" (osm_id, tag, valid) VALUES");
+    sb.append(RELATIONTABLE).append(" (osm_id, classcode, valid) VALUES");
     boolean nodeInside = false;
     StringBuilder sqlMapNode = new StringBuilder("INSERT INTO ");
     sqlMapNode.append(MAPTABLE).append(" (relation_id, node_id) VALUES");

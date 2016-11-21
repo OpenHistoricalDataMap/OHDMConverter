@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<config>
+    <!-- Some general database-connection info. -->
+    <entry k="db_user" v="admin" />
+    <entry k="db_password" v="root" />
+    <entry k="db_serverName" v="localhost" />
+    <entry k="db_portNumber" v="5432" />
+    <entry k="db_path" v="ohdm" />
+    <!-- leave it empty if you want to use the default schema -->
+    <entry k="db_schema" v="" />
+    <!-- If activated, all tables will be deleted when the program starts. (yes, no) -->
+    <entry k="db_dropTables" v="no" />
+    <!-- Currently only useExisting is supported (create_new, use_existing) -->
+    <entry k="db_tagTable" v="use_existing" />
+    <!-- Choose the mode: initial_import is faster but does not update the nodes (the tables have to be empty). update will check every object if it has been changed -->
+    <entry k="importMode" v="initial_import" />
+    <!-- Needed for initial_import -->
+    <entry k="tmpStorageSize" v="10000" />
+    <!-- This path says where the osm-source file is located on the computer. -->
+    <entry k="osm_sourceFile" v="path" />
+    <!-- If activated the output in the console will be activated. (enabled, disabled) -->
+    <entry k="logger" v="enabled" />
+    <!-- As higher the value is as more information is posted. -->
+    <entry k="logLevel" v="5" />
+</config>

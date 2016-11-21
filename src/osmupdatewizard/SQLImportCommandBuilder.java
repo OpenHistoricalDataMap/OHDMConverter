@@ -207,9 +207,9 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     logger.print(4, "--- finished setting up tables ---", true);
   }
 
-  private void loadClassification() {
+  private void loadClassification() throws SQLException {
       String db_classificationTable = config.getValue("db_classificationTable");
-    if (db_classificationTable.equalsIgnoreCase("useExisting")) {
+    if (db_classificationTable!= null && db_classificationTable.equalsIgnoreCase("useExisting")) {
       Statement stmt = null;
       try {
         stmt = connection.createStatement();
@@ -234,7 +234,56 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
         }
       }
     } else {
-      // ToDo needs to be implemented for xml import
+        StringBuilder sqlRelMember = new StringBuilder();
+        sqlRelMember.append("(id bigint, ")
+          .append("classname character varying, ")
+          .append("subclassname character varying);");
+
+        this.setupTable(CLASSIFICATIONTABLE, sqlRelMember.toString());
+
+        // fill that table
+        // set up classification table from scratch
+        OSMClassification osmClassification = new OSMClassification();
+
+        int id = 0;
+
+        // create classification table
+        // iterate classes
+        Iterator<String> classIter = osmClassification.osmFeatureClasses.keySet().iterator();
+
+        while(classIter.hasNext()) {
+            String className = classIter.next();
+            List<String> subClasses = osmClassification.osmFeatureClasses.get(className);
+            Iterator<String> subClassIter = subClasses.iterator();
+
+            while(subClassIter.hasNext()) {
+                String subClassName = subClassIter.next();
+                StringBuilder insertStatement = new StringBuilder();
+                insertStatement.append("INSERT INTO ")
+                        .append(CLASSIFICATIONTABLE)
+                        .append(" VALUES (")
+                        .append(id++)
+                        .append(", '")
+                        .append(className)
+                        .append("', '")
+                        .append(subClassName)
+                        .append("');");
+            
+                PreparedStatement stmt = null;
+                try {
+                    stmt = connection.prepareStatement(insertStatement.toString());
+                    stmt.execute();
+                } catch (SQLException ex) {
+                    logger.print(1, ex.getLocalizedMessage(), true);
+                    logger.print(1, insertStatement.toString());
+                } finally {
+                  if (stmt != null) {
+                    stmt.close();
+                  }
+                }
+            }
+            
+        }
     }
   }
 

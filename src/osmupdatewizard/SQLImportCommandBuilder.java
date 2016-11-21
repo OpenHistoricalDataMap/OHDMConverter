@@ -235,7 +235,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       }
     } else {
         StringBuilder sqlRelMember = new StringBuilder();
-        sqlRelMember.append("(id bigint, ")
+        sqlRelMember.append("(classcode bigint PRIMARY KEY, ")
           .append("classname character varying, ")
           .append("subclassname character varying);");
 

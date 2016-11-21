@@ -14,14 +14,25 @@ import org.xml.sax.SAXException;
  * @author thsc
  */
 public class OSMUpdateWizard {
+    private static final String CONFIG_FILE_NAME = "config.xml";
+    private static final String WHITELIST_FILE_NAME = "whitelist.xml";
 
   public static void main(String[] args) {
     try {
       SAXParserFactory spf = SAXParserFactory.newInstance();
       SAXParser newSAXParser = spf.newSAXParser();
+      
+      String configDir = "conf/";
+      if(args.length > 0) {
+          configDir = args[0];
+      }
 
-      newSAXParser.parse(new File("conf/config.xml"), Config.getInstance());
-      newSAXParser.parse(new File("conf/whitelist.xml"), Whitelist.getInstance());
+      String configFileName = configDir +  CONFIG_FILE_NAME;
+      String whiteListFileName = configDir +  WHITELIST_FILE_NAME;
+      
+      newSAXParser.parse(new File(configFileName), Config.getInstance());
+      newSAXParser.parse(new File(whiteListFileName), Whitelist.getInstance());
+      
       MyLogger.getInstance().print(0, "+++ OSM Update WIzard +++", true);
       newSAXParser.parse(new File(Config.getInstance().getValue("osm_sourceFile")), new OSMImporter());
     } catch (ParserConfigurationException ex) {

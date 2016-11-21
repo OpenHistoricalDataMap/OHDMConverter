@@ -167,6 +167,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
        * ************ Knowledge base tables ****************************
        */
       this.loadClassification();
+      
       StringBuilder sqlWay = new StringBuilder();
       sqlWay.append(" (osm_id bigint PRIMARY KEY, ")
               .append("tag bigint REFERENCES ").append(CLASSIFICATIONTABLE).append(" (classcode), ")
@@ -174,6 +175,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
               .append("ohdm_object bigint, ")
               .append("valid boolean);");
       this.setupTable(WAYTABLE, sqlWay.toString());
+      
       StringBuilder sqlNode = new StringBuilder();
       sqlNode.append(" (osm_id bigint PRIMARY KEY, ")
               .append("long character varying(").append(MAX_ID_SIZE).append("), ")
@@ -184,12 +186,14 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
               .append("id_way bigint REFERENCES ").append(WAYTABLE).append(" (osm_id), ")
               .append("valid boolean);");
       this.setupTable(NODETABLE, sqlNode.toString());
+      
       StringBuilder sqlRelation = new StringBuilder();
       sqlRelation.append(" (osm_id bigint PRIMARY KEY, ")
               .append("tag bigint REFERENCES ").append(CLASSIFICATIONTABLE).append(" (classcode), ")
               .append("ohdm_id bigint, ")
               .append("ohdm_object bigint, ")
               .append("valid boolean);");
+      
       this.setupTable(RELATIONTABLE, sqlRelation.toString());
       StringBuilder sqlRelMember = new StringBuilder();
       sqlRelMember.append(" (relation_id bigint REFERENCES ").append(RELATIONTABLE).append(" (osm_id) NOT NULL, ")
@@ -204,7 +208,8 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   }
 
   private void loadClassification() {
-    if (config.getValue("db_classificationTable").equals("useExisting")) {
+      String db_classificationTable = config.getValue("db_classificationTable");
+    if (db_classificationTable.equalsIgnoreCase("useExisting")) {
       Statement stmt = null;
       try {
         stmt = connection.createStatement();

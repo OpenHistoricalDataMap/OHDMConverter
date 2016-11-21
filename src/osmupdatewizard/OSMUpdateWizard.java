@@ -16,25 +16,38 @@ import org.xml.sax.SAXException;
 public class OSMUpdateWizard {
     private static final String CONFIG_FILE_NAME = "config.xml";
     private static final String WHITELIST_FILE_NAME = "whitelist.xml";
+    private static final String SUBDIR_SEPARATER = "\\";
+    private static final String DEFAULT_CONFIG_DIR = "conf/";
+    private static final String DEFAULT_OSM_FILENAME = "sample.osm";
+    
 
   public static void main(String[] args) {
     try {
       SAXParserFactory spf = SAXParserFactory.newInstance();
       SAXParser newSAXParser = spf.newSAXParser();
       
-      String configDir = "conf/";
+      String configDir = DEFAULT_CONFIG_DIR;
       if(args.length > 0) {
           configDir = args[0];
       }
-
-      String configFileName = configDir +  CONFIG_FILE_NAME;
-      String whiteListFileName = configDir +  WHITELIST_FILE_NAME;
+      
+      String configFileName = configDir + SUBDIR_SEPARATER + CONFIG_FILE_NAME;
+      String whiteListFileName = configDir + SUBDIR_SEPARATER + WHITELIST_FILE_NAME;
       
       newSAXParser.parse(new File(configFileName), Config.getInstance());
       newSAXParser.parse(new File(whiteListFileName), Whitelist.getInstance());
       
+      String osmFileName = DEFAULT_OSM_FILENAME;
+      if(args.length > 1) {
+          osmFileName = args[1];
+      }
+      
+      File osmFile = new File(osmFileName);
+
       MyLogger.getInstance().print(0, "+++ OSM Update WIzard +++", true);
-      newSAXParser.parse(new File(Config.getInstance().getValue("osm_sourceFile")), new OSMImporter());
+      
+      newSAXParser.parse(osmFile, new OSMImporter());
+      
     } catch (ParserConfigurationException ex) {
       Logger.getLogger(OSMUpdateWizard.class.getName()).log(Level.SEVERE, null, ex);
     } catch (SAXException ex) {

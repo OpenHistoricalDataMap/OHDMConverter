@@ -170,7 +170,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
      * @return -1 if no known class and sub class name, a non-negative number 
      * otherwise
      */
-    private int getClassID(String className, String subClassName) {
+    private int getOHDMClassID(String className, String subClassName) {
         String fullClassName = this.createFullClassName(className, subClassName);
         
         // find entry
@@ -429,7 +429,12 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
         return className + "_" + subclassname;
     }
   
-    private int getClassID(OSMElement osmElement) {
+    /**
+     * TODO: Add here translation of unused OSM types to OHDM types etc.
+     * @param osmElement
+     * @return 
+     */
+    private int getOHDMClassID(OSMElement osmElement) {
       // a node can have tags which can describe geometrie feature classe
         HashSet<TagElement> tags = osmElement.getTags();
         if(tags == null) return -1;
@@ -450,7 +455,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
                     String value = tag.attributes.get(key);
 
                     // find id of class / subclass
-                    return this.getClassID(key, value);
+                    return this.getOHDMClassID(key, value);
                 }
             }
         }
@@ -465,7 +470,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     StringBuilder sql = new StringBuilder("INSERT INTO ");
     sql.append(NODETABLE).append(" (osm_id, longitude, latitude, classcode, valid) VALUES");
     for (Map.Entry<String, NodeElement> entry : nodes.entrySet()) {
-        int classID = this.getClassID(entry.getValue());
+        int classID = this.getOHDMClassID(entry.getValue());
         
 //        if (entry.getValue().getTags() == null) {
         if (classID > -1) {
@@ -498,7 +503,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private void saveNodeElement(NodeElement node) {
     StringBuilder sb = new StringBuilder("INSERT INTO ");
-    int classID = this.getClassID(node);
+    int classID = this.getOHDMClassID(node);
     if (classID > -1) {
       sb.append(NODETABLE).append(" (osm_id, longitude, latitude, valid) VALUES (?, ?, ?, true);");
     } else {
@@ -649,7 +654,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     sb.append(WAYTABLE).append("(osm_id, classcode, valid) VALUES");
     StringBuilder sqlUpdateNodes = new StringBuilder();
     ways.entrySet().stream().filter((entry) -> (entry.getValue().getTags() != null)).forEach((entry) -> {
-        int classID = this.getClassID(entry.getValue());
+        int classID = this.getOHDMClassID(entry.getValue());
         
       sb.append(" (").append(entry.getKey()).append(", ")
               .append(classID).append(", ")
@@ -679,7 +684,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   }
 
   private void saveWayElement(WayElement way) {
-      int classID = this.getClassID(way);
+      int classID = this.getOHDMClassID(way);
     StringBuilder sb = new StringBuilder("INSERT INTO ");
     if (classID < 0) {
       sb.append(WAYTABLE).append(" (osm_id, valid) VALUES (?, true);");
@@ -873,7 +878,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     StringBuilder sqlMapRel = new StringBuilder("INSERT INTO ");
     sqlMapRel.append(RELATIONMEMBER).append(" (relation_id, member_rel_id) VALUES");
     for (Map.Entry<String, RelationElement> entry : rels.entrySet()) {
-        int classID = this.getClassID(entry.getValue());
+        int classID = this.getOHDMClassID(entry.getValue());
         
       sb.append(" (").append(entry.getKey()).append(", ")
               .append(classID).append(", ")

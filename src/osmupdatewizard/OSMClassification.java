@@ -47,7 +47,7 @@ class OSMClassification {
         subClasses.add("canopy"); // lines
         subClasses.add("goods"); // lines
         
-        osmFeatureClasses.put("Aerialway", subClasses);
+        osmFeatureClasses.put("aerialway", subClasses);
         
         // Aeroway
         subClasses = new ArrayList<>();
@@ -66,7 +66,7 @@ class OSMClassification {
         subClasses.add("terminal");
         subClasses.add("windsock");
         
-        osmFeatureClasses.put("Aeroway", subClasses);        
+        osmFeatureClasses.put("aeroway", subClasses);        
         
         // Barrier (but only cable_barrier, city_wall, ditch, fence, retaining_wall, tank_trap, wall)
         subClasses = new ArrayList<>();
@@ -82,7 +82,7 @@ class OSMClassification {
         subClasses.add("tank_trap");
         subClasses.add("wall");
         
-        osmFeatureClasses.put("Barrier", subClasses);                
+        osmFeatureClasses.put("barrier", subClasses);                
         
         // Boundary
         subClasses = new ArrayList<>();
@@ -98,7 +98,7 @@ class OSMClassification {
         subClasses.add("religious_administration");
         subClasses.add("protected_area");
         
-        osmFeatureClasses.put("Boundary", subClasses);        
+        osmFeatureClasses.put("boundary", subClasses);        
         
         // Building
         subClasses = new ArrayList<>();
@@ -156,7 +156,7 @@ class OSMClassification {
         subClasses.add("kiosk");
         subClasses.add("ruins");
         
-        osmFeatureClasses.put("Building", subClasses);        
+        osmFeatureClasses.put("building", subClasses);        
         
         // Craft
         subClasses = new ArrayList<>();
@@ -167,7 +167,7 @@ class OSMClassification {
         
         // TODO: add others
         
-        osmFeatureClasses.put("Craft", subClasses);        
+        osmFeatureClasses.put("craft", subClasses);        
         
         // Geological
         subClasses = new ArrayList<>();
@@ -178,7 +178,7 @@ class OSMClassification {
         subClasses.add("outcrop");
         subClasses.add("palaeontological_site");
         
-        osmFeatureClasses.put("Geological", subClasses);        
+        osmFeatureClasses.put("geological", subClasses);        
         
         // Highway
         subClasses = new ArrayList<>();
@@ -188,7 +188,7 @@ class OSMClassification {
         subClasses.add("motorway");
         
         // TODO add others
-        osmFeatureClasses.put("Highway", subClasses);        
+        osmFeatureClasses.put("highway", subClasses);        
         
         // Historic (of course :) )
         subClasses = new ArrayList<>();
@@ -223,7 +223,7 @@ class OSMClassification {
         subClasses.add("wayside_shrine");
         subClasses.add("wreck");
         
-        osmFeatureClasses.put("Historic", subClasses);        
+        osmFeatureClasses.put("historic", subClasses);        
         
         // Landuse
         subClasses = new ArrayList<>();
@@ -233,7 +233,7 @@ class OSMClassification {
         subClasses.add("allotments");
         
         // TODO add others
-        osmFeatureClasses.put("Landuse", subClasses);        
+        osmFeatureClasses.put("landuse", subClasses);        
 
         // Man Made
         subClasses = new ArrayList<>();
@@ -253,7 +253,7 @@ class OSMClassification {
         subClasses.add("airfield");
              
         // TODO add others
-        osmFeatureClasses.put("Military", subClasses);        
+        osmFeatureClasses.put("military", subClasses);        
 
         // Natural
         subClasses = new ArrayList<>();
@@ -263,7 +263,7 @@ class OSMClassification {
         subClasses.add("wood");
              
         // TODO add others
-        osmFeatureClasses.put("Natural", subClasses);        
+        osmFeatureClasses.put("natural", subClasses);        
 
         // Office
         subClasses = new ArrayList<>();
@@ -273,7 +273,7 @@ class OSMClassification {
         subClasses.add("accountant");
              
         // TODO add others
-        osmFeatureClasses.put("Office", subClasses);        
+        osmFeatureClasses.put("office", subClasses);        
 
         // Places
         subClasses = new ArrayList<>();
@@ -283,7 +283,7 @@ class OSMClassification {
         subClasses.add("country");
              
         // TODO add others
-        osmFeatureClasses.put("Places", subClasses);        
+        osmFeatureClasses.put("places", subClasses);        
 
         // Power
         subClasses = new ArrayList<>();
@@ -293,7 +293,7 @@ class OSMClassification {
         subClasses.add("plant");
              
         // TODO add others
-        osmFeatureClasses.put("Power", subClasses);        
+        osmFeatureClasses.put("power", subClasses);        
 
         // Public Transport
         subClasses = new ArrayList<>();
@@ -333,7 +333,7 @@ class OSMClassification {
         subClasses.add("river");
              
         // TODO add others
-        osmFeatureClasses.put("Waterway", subClasses);   
+        osmFeatureClasses.put("waterway", subClasses);   
         
         // Historic person            
         subClasses = new ArrayList<>();

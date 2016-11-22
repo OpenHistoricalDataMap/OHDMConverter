@@ -7,5 +7,4 @@ package osmupdatewizard;
 public interface ElementStorage {
 
     public NodeElement getNodeByID(String id);
-    
 }

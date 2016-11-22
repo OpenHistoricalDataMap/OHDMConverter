@@ -24,8 +24,9 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   public static final String NODETABLE = "Nodes";
   public static final String WAYTABLE = "Ways";
   public static final String RELATIONTABLE = "Relations";
-  public static final String MAPTABLE = "RelationMember";
+  public static final String RELATIONMEMBER = "RelationMember";
   public static final String CLASSIFICATIONTABLE = "Classification";
+  public static final String WAYMEMBER = "WayNodes";
   public static final String MAX_ID_SIZE = "10485760";
 
   private boolean n = true;
@@ -111,15 +112,17 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private List<String> createTablesList() {
     List<String> l = new ArrayList<>();
-    l.add(MAPTABLE); // dependencies to way, node and relations
+    l.add(RELATIONMEMBER); // dependencies to way, node and relations
     l.add(WAYTABLE); // dependencies to node
     l.add(NODETABLE);
     l.add(RELATIONTABLE);
+    l.add(CLASSIFICATIONTABLE);
+    l.add(WAYMEMBER);
     return l;
   }
 
   private void dropTables() throws SQLException {
-    if (config.getValue("db_dropTables").equalsIgnoreCase("yes")) {
+//    if (config.getValue("db_dropTables").equalsIgnoreCase("yes")) {
       StringBuilder sqlDel = new StringBuilder("DROP TABLE ");
       PreparedStatement delStmt = null;
       List<String> tables = this.createTablesList();
@@ -138,7 +141,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
           delStmt.close();
         }
       }
-    }
+//    }
   }
 
   private void setupTable(String table, String sqlCreate) throws SQLException {
@@ -158,6 +161,36 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       }
     }
   }
+  
+    private boolean isClassName(String key) {
+        return OSMClassification.getOSMClassification().osmFeatureClasses.keySet().contains(key);
+    }
+  
+    /**
+     * @return -1 if no known class and sub class name, a non-negative number 
+     * otherwise
+     */
+    private int getClassID(String className, String subClassName) {
+        String fullClassName = this.createFullClassName(className, subClassName);
+        
+        // find entry
+        Integer id = this.classIDs.get(fullClassName);
+        if(id != null) {
+            return id;
+        }
+        
+        // try undefined
+        fullClassName = this.createFullClassName(className, OSMClassification.UNDEFINED);
+        id = this.classIDs.get(fullClassName);
+        if(id != null) {
+            return id;
+        }
+        
+//        System.out.println("not found: " + this.createFullClassName(className, subClassName));
+        
+        // else
+        return -1;
+    }
 
   private void setupKB() {
     logger.print(4, "--- setting up tables ---", true);
@@ -171,6 +204,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       StringBuilder sqlWay = new StringBuilder();
       sqlWay.append(" (osm_id bigint PRIMARY KEY, ")
               .append("classcode bigint REFERENCES ").append(CLASSIFICATIONTABLE).append(" (classcode), ")
+              .append("serializedTags character varying, ")
               .append("ohdm_id bigint, ")
               .append("ohdm_object bigint, ")
               .append("valid boolean);");
@@ -179,34 +213,47 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       StringBuilder sqlNode = new StringBuilder();
       sqlNode.append(" (osm_id bigint PRIMARY KEY, ")
               .append("classcode bigint REFERENCES ").append(CLASSIFICATIONTABLE).append(" (classcode), ")
+              .append("serializedTags character varying, ")
               .append("longitude character varying(").append(MAX_ID_SIZE).append("), ")
               .append("latitude character varying(").append(MAX_ID_SIZE).append("), ")
               .append("ohdm_id bigint, ")
               .append("ohdm_object bigint, ")
-              .append("id_way bigint REFERENCES ").append(WAYTABLE).append(" (osm_id), ")
+//              .append("id_way bigint REFERENCES ").append(WAYTABLE).append(" (osm_id), ")
+              .append("id_way bigint, ")
               .append("valid boolean);");
       this.setupTable(NODETABLE, sqlNode.toString());
 
       StringBuilder sqlRelation = new StringBuilder();
       sqlRelation.append(" (osm_id bigint PRIMARY KEY, ")
               .append("classcode bigint REFERENCES ").append(CLASSIFICATIONTABLE).append(" (classcode), ")
+              .append("serializedTags character varying, ")
               .append("ohdm_id bigint, ")
               .append("ohdm_object bigint, ")
               .append("valid boolean);");
       this.setupTable(RELATIONTABLE, sqlRelation.toString());
       
+      StringBuilder sqlWayMember = new StringBuilder();
+      sqlWayMember.append(" (way_id bigint, ")
+              .append("node_id bigint);");
+      this.setupTable(WAYMEMBER, sqlWayMember.toString());
+      
       StringBuilder sqlRelMember = new StringBuilder();
       sqlRelMember.append(" (relation_id bigint REFERENCES ").append(RELATIONTABLE).append(" (osm_id) NOT NULL, ")
-              .append("way_id bigint REFERENCES ").append(WAYTABLE).append(" (osm_id), ")
-              .append("node_id bigint REFERENCES ").append(NODETABLE).append(" (osm_id), ")
-              .append("member_rel_id bigint REFERENCES ").append(RELATIONTABLE).append(" (osm_id));");
-      this.setupTable(MAPTABLE, sqlRelMember.toString());
+//              .append("way_id bigint REFERENCES ").append(WAYTABLE).append(" (osm_id), ")
+              .append("way_id bigint, ")
+//              .append("node_id bigint REFERENCES ").append(NODETABLE).append(" (osm_id), ")
+              .append("node_id bigint, ")
+//              .append("member_rel_id bigint REFERENCES ").append(RELATIONTABLE).append(" (osm_id));");
+              .append("member_rel_id bigint);");
+      this.setupTable(RELATIONMEMBER, sqlRelMember.toString());
       
     } catch (SQLException e) {
       System.err.println("error while setting up tables: " + e.getLocalizedMessage());
     }
     logger.print(4, "--- finished setting up tables ---", true);
   }
+  
+  private HashMap<String, Integer> classIDs = new HashMap<>();
 
   private void loadClassification() throws SQLException {
       String db_classificationTable = config.getValue("db_classificationTable");
@@ -245,7 +292,27 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
         // fill that table
         // set up classification table from scratch
         OSMClassification osmClassification = new OSMClassification();
+        
+        // init first line: unknown classification
+        StringBuilder insertStatement = new StringBuilder();
+        insertStatement.append("INSERT INTO ")
+                .append(CLASSIFICATIONTABLE)
+                .append(" VALUES (-1, 'no_class', 'no_subclass');");
 
+        PreparedStatement stmt = null;
+        try {
+            stmt = connection.prepareStatement(insertStatement.toString());
+            stmt.execute();
+        } catch (SQLException ex) {
+            logger.print(1, ex.getLocalizedMessage(), true);
+            logger.print(1, insertStatement.toString());
+        } finally {
+          if (stmt != null) {
+            stmt.close();
+          }
+        }
+
+        // no fill append real data
         int id = 0;
 
         // create classification table
@@ -259,7 +326,15 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
             while(subClassIter.hasNext()) {
                 String subClassName = subClassIter.next();
-                StringBuilder insertStatement = new StringBuilder();
+                
+                // keep in memory
+                Integer idInteger = id;
+                String fullClassName = this.createFullClassName(className, subClassName);
+                
+                this.classIDs.put(fullClassName, idInteger);
+                
+                // add to database
+                insertStatement = new StringBuilder();
                 insertStatement.append("INSERT INTO ")
                         .append(CLASSIFICATIONTABLE)
                         .append(" VALUES (")
@@ -270,7 +345,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
                         .append(subClassName)
                         .append("');");
             
-                PreparedStatement stmt = null;
+                stmt = null;
                 try {
                     stmt = connection.prepareStatement(insertStatement.toString());
                     stmt.execute();
@@ -349,26 +424,63 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   }
 
   private Map<String, NodeElement> nodes = new HashMap<>();
+  
+    private String createFullClassName(String className, String subclassname) {
+        return className + "_" + subclassname;
+    }
+  
+    private int getClassID(OSMElement osmElement) {
+      // a node can have tags which can describe geometrie feature classe
+        HashSet<TagElement> tags = osmElement.getTags();
+        if(tags == null) return -1;
+        
+        Iterator<TagElement> tagIter = tags.iterator();
+        if(tagIter == null) return -1;
+        
+        while(tagIter.hasNext()) {
+            TagElement tag = tagIter.next();
 
+            // get attributes of that tag
+            Iterator<String> keyIter = tag.attributes.keySet().iterator();
+            while(keyIter.hasNext()) {
+                String key = keyIter.next();
+
+                // is this key name of a feature class?
+                if(this.isClassName(key)) {
+                    String value = tag.attributes.get(key);
+
+                    // find id of class / subclass
+                    return this.getClassID(key, value);
+                }
+            }
+        }
+
+        // there is no class description - sorry
+        return -1;
+    }
+  
   private void saveNodeElements() {
     StringBuilder sqlWO = new StringBuilder("INSERT INTO ");
     sqlWO.append(NODETABLE).append(" (osm_id, longitude, latitude, valid) VALUES");
     StringBuilder sql = new StringBuilder("INSERT INTO ");
     sql.append(NODETABLE).append(" (osm_id, longitude, latitude, classcode, valid) VALUES");
     for (Map.Entry<String, NodeElement> entry : nodes.entrySet()) {
-      if (entry.getValue().getTags() == null) {
-        sqlWO.append(" (").append(entry.getKey()).append(", ")
-                .append(entry.getValue().getLatitude()).append(", ")
-                .append(entry.getValue().getLongitude()).append(", ")
-                .append("true").append("),");
-      } else {
-        sql.append(" (").append(entry.getKey()).append(", ")
-                .append(entry.getValue().getLatitude()).append(", ")
-                .append(entry.getValue().getLongitude()).append(", ")
-                .append(entry.getValue().getTagId()).append(", ")
-                .append("true").append("),");
+        int classID = this.getClassID(entry.getValue());
+        
+//        if (entry.getValue().getTags() == null) {
+        if (classID > -1) {
+          sqlWO.append(" (").append(entry.getKey()).append(", ")
+                  .append(entry.getValue().getLatitude()).append(", ")
+                  .append(entry.getValue().getLongitude()).append(", ")
+                  .append("true").append("),");
+        } else {
+          sql.append(" (").append(entry.getKey()).append(", ")
+                  .append(entry.getValue().getLatitude()).append(", ")
+                  .append(entry.getValue().getLongitude()).append(", ")
+                  .append(classID).append(", ")
+                  .append("true").append("),");
+        }
       }
-    }
     try (PreparedStatement stmt = connection.prepareStatement(sqlWO.deleteCharAt(sqlWO.length() - 1).append(";").toString())) {
       stmt.execute();
     } catch (SQLException e) {
@@ -386,7 +498,8 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private void saveNodeElement(NodeElement node) {
     StringBuilder sb = new StringBuilder("INSERT INTO ");
-    if (node.getTagId() == null) {
+    int classID = this.getClassID(node);
+    if (classID > -1) {
       sb.append(NODETABLE).append(" (osm_id, longitude, latitude, valid) VALUES (?, ?, ?, true);");
     } else {
       sb.append(NODETABLE).append(" (osm_id, longitude, latitude, classcode, valid) VALUES (?, ?, ?, ?, true);");
@@ -395,8 +508,8 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       stmt.setLong(1, node.getID());
       stmt.setString(2, node.getLongitude());
       stmt.setString(3, node.getLatitude());
-      if (node.getTagId() != null) {
-        stmt.setInt(4, node.getTagId());
+      if (classID > -1) {
+        stmt.setInt(4, classID);
       }
       stmt.execute();
     } catch (SQLException e) {
@@ -536,8 +649,10 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     sb.append(WAYTABLE).append("(osm_id, classcode, valid) VALUES");
     StringBuilder sqlUpdateNodes = new StringBuilder();
     ways.entrySet().stream().filter((entry) -> (entry.getValue().getTags() != null)).forEach((entry) -> {
+        int classID = this.getClassID(entry.getValue());
+        
       sb.append(" (").append(entry.getKey()).append(", ")
-              .append(entry.getValue().getTagId()).append(", ")
+              .append(classID).append(", ")
               .append("true").append("),");
       sqlUpdateNodes.append("UPDATE ").append(NODETABLE)
               .append(" SET id_way = ").append(entry.getKey())
@@ -564,8 +679,9 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   }
 
   private void saveWayElement(WayElement way) {
+      int classID = this.getClassID(way);
     StringBuilder sb = new StringBuilder("INSERT INTO ");
-    if (way.getTagId() == null) {
+    if (classID < 0) {
       sb.append(WAYTABLE).append(" (osm_id, valid) VALUES (?, true);");
     } else {
       sb.append(WAYTABLE).append(" (osm_id, classcode, valid) VALUES (?, ?, true);");
@@ -574,8 +690,8 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     try {
       stmt = connection.prepareStatement(sb.toString());
       stmt.setLong(1, way.getID());
-      if (way.getTagId() != null) {
-        stmt.setInt(2, way.getTagId());
+      if (classID > -1) {
+        stmt.setInt(2, classID);
       }
       stmt.execute();
     } catch (SQLException e) {
@@ -749,16 +865,18 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     sb.append(RELATIONTABLE).append(" (osm_id, classcode, valid) VALUES");
     boolean nodeInside = false;
     StringBuilder sqlMapNode = new StringBuilder("INSERT INTO ");
-    sqlMapNode.append(MAPTABLE).append(" (relation_id, node_id) VALUES");
+    sqlMapNode.append(RELATIONMEMBER).append(" (relation_id, node_id) VALUES");
     boolean wayInside = false;
     StringBuilder sqlMapWay = new StringBuilder("INSERT INTO ");
-    sqlMapWay.append(MAPTABLE).append(" (relation_id, way_id) VALUES");
+    sqlMapWay.append(RELATIONMEMBER).append(" (relation_id, way_id) VALUES");
     boolean relInside = false;
     StringBuilder sqlMapRel = new StringBuilder("INSERT INTO ");
-    sqlMapRel.append(MAPTABLE).append(" (relation_id, member_rel_id) VALUES");
+    sqlMapRel.append(RELATIONMEMBER).append(" (relation_id, member_rel_id) VALUES");
     for (Map.Entry<String, RelationElement> entry : rels.entrySet()) {
+        int classID = this.getClassID(entry.getValue());
+        
       sb.append(" (").append(entry.getKey()).append(", ")
-              .append(entry.getValue().getTagId()).append(", ")
+              .append(classID).append(", ")
               .append("true").append("),");
       for (MemberElement member : entry.getValue().getMember()) {
         switch (member.getType()) {

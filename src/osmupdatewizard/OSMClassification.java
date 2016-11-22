@@ -12,6 +12,15 @@ class OSMClassification {
     HashMap<String, List<String>> osmFeatureClasses = new HashMap();
     
     static final String UNDEFINED = "undefined";
+    private static OSMClassification osmClassification = null;
+    
+    static OSMClassification getOSMClassification() {
+        if(OSMClassification.osmClassification == null) {
+            OSMClassification.osmClassification = new OSMClassification();
+        }
+        
+        return OSMClassification.osmClassification;
+    }
     
     OSMClassification() {
         // that's not really good style.. anyway create that map here in code

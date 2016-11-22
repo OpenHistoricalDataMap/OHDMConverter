@@ -11,10 +11,8 @@ public class OSMElement {
 
   protected final HashMap<String, String> attributes;
   private HashSet<TagElement> tags = null;
-  private Integer tagId = null;
 
   private long id = 0;
-  private ElementStorage storage;
 
   OSMElement(HashMap<String, String> attributes) {
     this(attributes, null);
@@ -25,7 +23,6 @@ public class OSMElement {
   }
 
   OSMElement(ElementStorage storage, HashMap<String, String> attributes, HashSet<TagElement> tags) {
-    this.storage = storage;
     this.attributes = attributes;
     this.tags = tags;
     try {
@@ -37,10 +34,6 @@ public class OSMElement {
         }
       }
     } catch (NumberFormatException e) {
-    }
-    if (this.id != 0) {
-
-      this.findClassificationTag();
     }
   }
 
@@ -54,32 +47,7 @@ public class OSMElement {
     return this.id;
   }
 
-  ElementStorage getStorage() {
-    return this.storage;
-  }
-
   public HashSet<TagElement> getTags() {
     return this.tags;
-  }
-
-  /**
-   * Searches for a valid attribute, that is listed in the classification table.
-   * If there is no valid one, null is returned, otherwiese the classcode (id)
-   * of it.
-   *
-   * @return
-   */
-  private void findClassificationTag() {
-    if (this.tags != null) {
-      this.tags.stream().forEach((t) -> {
-        t.attributes.entrySet().stream().filter((entry) -> (Classification.getInstance().getClasscode(entry.getKey(), entry.getValue()) != null)).forEach((entry) -> {
-          this.tagId = Classification.getInstance().getClasscode(entry.getKey(), entry.getValue());
-        });
-      });
-    }
-  }
-
-  public Integer getTagId() {
-    return this.tagId;
   }
 }

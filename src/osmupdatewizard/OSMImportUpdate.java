@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -18,7 +17,7 @@ import org.xml.sax.SAXException;
  *
  * @author thsc
  */
-public class OSMUpdateWizard {
+public class OSMImportUpdate {
     private static final String CONFIG_FILE_NAME = "config.xml";
     private static final String WHITELIST_FILE_NAME = "whitelist.xml";
     private static final String SUBDIR_SEPARATER = "\\";
@@ -54,13 +53,13 @@ public class OSMUpdateWizard {
       newSAXParser.parse(osmFile, new OSMImporter());
       
     } catch (ParserConfigurationException ex) {
-      Logger.getLogger(OSMUpdateWizard.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(OSMImportUpdate.class.getName()).log(Level.SEVERE, null, ex);
     } catch (SAXException ex) {
-      Logger.getLogger(OSMUpdateWizard.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(OSMImportUpdate.class.getName()).log(Level.SEVERE, null, ex);
     } catch (IOException ex) {
-      Logger.getLogger(OSMUpdateWizard.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(OSMImportUpdate.class.getName()).log(Level.SEVERE, null, ex);
     } catch (Exception ex) {
-      Logger.getLogger(OSMUpdateWizard.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(OSMImportUpdate.class.getName()).log(Level.SEVERE, null, ex);
     }
     MyLogger.getInstance().print(0, "+++ OSM Update Wizard finished import +++", true);
     

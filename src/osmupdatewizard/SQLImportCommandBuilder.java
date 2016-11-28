@@ -708,7 +708,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
             sqlQueue.append("INSERT INTO ");
             sqlQueue.append(WAYTABLE);
-            sqlQueue.append("(osm_id, classcode, valid) VALUES");
+            sqlQueue.append("(osm_id, classcode, serializedtags, valid) VALUES");
             
             /*
             StringBuilder sb = new StringBuilder("INSERT INTO ");
@@ -724,13 +724,17 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
             String wayOSMID = wayElementEntry.getKey();
 
+            String sTags = wayElement.getSerializedTags();
+            
             // lets add values to sql statement
 
             sqlQueue.append(" (");
             sqlQueue.append(wayOSMID);
             sqlQueue.append(", "); // osm_id
             sqlQueue.append(wayID);
-            sqlQueue.append(", ");
+            sqlQueue.append(", '");
+            sqlQueue.append(sTags);
+            sqlQueue.append("', ");
             sqlQueue.append("true");
             sqlQueue.append(");"); // it's a valid way... it's still in OSM
 

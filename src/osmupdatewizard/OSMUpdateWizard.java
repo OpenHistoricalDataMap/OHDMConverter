@@ -2,6 +2,11 @@ package osmupdatewizard;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.parsers.ParserConfigurationException;
@@ -58,6 +63,32 @@ public class OSMUpdateWizard {
       Logger.getLogger(OSMUpdateWizard.class.getName()).log(Level.SEVERE, null, ex);
     }
     MyLogger.getInstance().print(0, "+++ OSM Update Wizard finished import +++", true);
-  }
+    
+        // let's fill OHDM database
+        MyLogger logger = MyLogger.getInstance();
 
+        // connect to OHDM rendering database
+        String serverName = "localhost";
+        String portNumber = "5432";
+        String path = "";
+        String user = "";
+        String pwd = "";
+
+        try {
+            Properties connProps = new Properties();
+            connProps.put("user", user);
+            connProps.put("password", pwd);
+            Connection connection = DriverManager.getConnection(
+                    "jdbc:postgresql://" + serverName
+                    + ":" + portNumber + "/" + path, connProps);
+          
+            Intermediate2OHDMRendering renderDBFiller = 
+                    new Intermediate2OHDMRendering(connection);
+            
+            renderDBFiller.go();
+  
+        } catch (SQLException e) {
+          logger.print(0, "cannot connect to database: " + e.getLocalizedMessage());
+        }
+    }
 }

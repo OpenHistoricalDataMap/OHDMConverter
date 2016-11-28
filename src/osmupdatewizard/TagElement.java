@@ -12,4 +12,8 @@ public class TagElement extends OSMElement {
         super(attributes);
     }
     
+    @Override
+    String getSerializedTags() {
+        return this.getSerializeAttributes();
+    }
 }

@@ -219,7 +219,6 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
               .append("ohdm_id bigint, ")
               .append("ohdm_object bigint, ")
 //              .append("id_way bigint REFERENCES ").append(WAYTABLE).append(" (osm_id), ")
-              .append("id_way bigint, ")
               .append("valid boolean);");
       this.setupTable(NODETABLE, sqlNode.toString());
 
@@ -650,26 +649,41 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     private final HashMap<String, WayElement> ways = new HashMap<>();
 
     private void saveWayElements() {
-        // StringBuilder sqlUpdateNodes = new StringBuilder();
-
+        // set up a sql queue
+        SQLStatementQueue sqlQueue = new SQLStatementQueue(this.connection, this.logger);
+        
           // figure out classification id.. which describes the
           // type of geometry (building, highway, those kind of things
         Iterator<Map.Entry<String, WayElement>> wayElementIter = ways.entrySet().iterator();
 
         int counter = 0;
         int rows = 0;
-        logger.print(4, "saving ways.. set a star after 100 saved ways; max 50 stars each line");
+        logger.print(4, "saving ways.. set a star after 20 saved ways when flushing; max 50 stars each line");
         while(wayElementIter.hasNext()) {
-            if(counter++ >= 100) {
+            // NOTE FLUSH on sql queue is essentiell!! rest of the code is for debugging
+            if(counter++ >= 50) {
+                // IMPORTANT:
+                sqlQueue.flush();
+                
+                // debugging
                 System.out.print("*");
                 counter = 0;
+                System.out.flush();
+                
                 if(rows++ >= 50) {
                     System.out.print("\n");
+                    rows = 0;
                 }
             }
+
+            sqlQueue.append("INSERT INTO ");
+            sqlQueue.append(WAYTABLE);
+            sqlQueue.append("(osm_id, classcode, valid) VALUES");
             
+            /*
             StringBuilder sb = new StringBuilder("INSERT INTO ");
             sb.append(WAYTABLE).append("(osm_id, classcode, valid) VALUES");
+            */
 
             Map.Entry<String, WayElement> wayElementEntry = wayElementIter.next();
 
@@ -682,16 +696,33 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
             // lets add values to sql statement
 
+            sqlQueue.append(" (");
+            sqlQueue.append(wayOSMID);
+            sqlQueue.append(", "); // osm_id
+            sqlQueue.append(wayID);
+            sqlQueue.append(", ");
+            sqlQueue.append("true");
+            sqlQueue.append(");"); // it's a valid way... it's still in OSM
+
+            /*
             sb.append(" (").append(wayOSMID).append(", "); // osm_id
             sb.append(wayID).append(", ");
             sb.append("true").append(");"); // it's a valid way... it's still in OSM
+            */
+            
+            // execute sql statement
+            /*
+            sqlQueue.exec(sb.toString());
+            */
 
+            /*
             try (PreparedStatement stmt = connection.prepareStatement(sb.toString())) {
               stmt.execute();
             } catch (SQLException ex) {
               logger.print(1, ex.getLocalizedMessage(), true);
               logger.print(4, sb.toString());
             }
+            */
 
             // add related nodes to way_node table
             // iterate nodes
@@ -699,9 +730,9 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
                 // set up first part of sql statement
                 String sqlStart = "INSERT INTO " + WAYMEMBER 
                         + "(way_id, node_id) VALUES ( " + wayOSMID + ", ";
-                
-                // set up a sql queue
-                SQLStatementQueue sqlQueue = new SQLStatementQueue(this.connection, this.logger);
+//                
+//                // set up a sql queue
+//                SQLStatementQueue sqlQueue = new SQLStatementQueue(this.connection, this.logger);
 
                 Iterator<NodeElement> wayNodeIter = wayElement.getNodes().iterator();
                 while(wayNodeIter.hasNext()) {
@@ -709,13 +740,19 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
                     long nodeOSMID = wayNode.getID();
 
-                    // set up sqp statement
+                    // set up sql statement - use queue for performace reasons
+                    sqlQueue.append(sqlStart);
+                    sqlQueue.append(nodeOSMID); // add node ID
+                    sqlQueue.append(");"); // finish statement
+                    
+                    /*
                     sb = new StringBuilder(sqlStart);
                     sb.append(nodeOSMID); // add node ID
                     sb.append(");"); // finish statement
+                    */
                     
                     // run it (in queue)
-                    sqlQueue.exec(sb.toString());
+                    // sqlQueue.exec(sb.toString()); use append variant for performance reasons
                     
 //                    try (PreparedStatement stmt = connection.prepareStatement(sb.toString())) {
 //                      stmt.execute();
@@ -724,10 +761,12 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 //                      logger.print(4, sb.toString());
 //                    }
                 }
-                // flush remaining sql statements
-                sqlQueue.flush();
+//                // flush remaining sql statements
+//                sqlQueue.flush();
             }
         }
+        // flush sql statements (required when using append variant)
+        sqlQueue.flush();
         this.ways.clear();
     }
 

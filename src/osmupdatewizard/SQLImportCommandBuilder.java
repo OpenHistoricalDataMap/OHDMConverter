@@ -647,41 +647,89 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     return state;
   }
 
-  private final HashMap<String, WayElement> ways = new HashMap<>();
+    private final HashMap<String, WayElement> ways = new HashMap<>();
 
-  private void saveWayElements() {
-    StringBuilder sb = new StringBuilder("INSERT INTO ");
-    sb.append(WAYTABLE).append("(osm_id, classcode, valid) VALUES");
-    StringBuilder sqlUpdateNodes = new StringBuilder();
-    ways.entrySet().stream().filter((entry) -> (entry.getValue().getTags() != null)).forEach((entry) -> {
-        int classID = this.getOHDMClassID(entry.getValue());
-        
-      sb.append(" (").append(entry.getKey()).append(", ")
-              .append(classID).append(", ")
-              .append("true").append("),");
-      sqlUpdateNodes.append("UPDATE ").append(NODETABLE)
-              .append(" SET id_way = ").append(entry.getKey())
-              .append(", valid = true WHERE osm_id IN (");
-      entry.getValue().getNodes().stream().forEach((nd) -> {
-        sqlUpdateNodes.append(String.valueOf(nd.getID())).append(", ");
-      });
-      sqlUpdateNodes.delete(sqlUpdateNodes.length() - 2, sqlUpdateNodes.length() - 1).append(");\n");
-    });
-    sb.deleteCharAt(sb.length() - 1).append(";");
-    try (PreparedStatement stmt = connection.prepareStatement(sb.toString())) {
-      stmt.execute();
-    } catch (SQLException ex) {
-      logger.print(1, ex.getLocalizedMessage(), true);
-      logger.print(4, sb.toString());
+    private void saveWayElements() {
+        // StringBuilder sqlUpdateNodes = new StringBuilder();
+
+          // figure out classification id.. which describes the
+          // type of geometry (building, highway, those kind of things
+        Iterator<Map.Entry<String, WayElement>> wayElementIter = ways.entrySet().iterator();
+
+        int counter = 0;
+        int rows = 0;
+        logger.print(4, "saving ways.. set a star after 100 saved ways; max 50 stars each line");
+        while(wayElementIter.hasNext()) {
+            if(counter++ >= 100) {
+                System.out.print("*");
+                counter = 0;
+                if(rows++ >= 50) {
+                    System.out.print("\n");
+                }
+            }
+            
+            StringBuilder sb = new StringBuilder("INSERT INTO ");
+            sb.append(WAYTABLE).append("(osm_id, classcode, valid) VALUES");
+
+            Map.Entry<String, WayElement> wayElementEntry = wayElementIter.next();
+
+            WayElement wayElement = wayElementEntry.getValue();
+
+            // figure out geometry class (highway, building or such a thing
+            int wayID = this.getOHDMClassID(wayElement);
+
+            String wayOSMID = wayElementEntry.getKey();
+
+            // lets add values to sql statement
+
+            sb.append(" (").append(wayOSMID).append(", "); // osm_id
+            sb.append(wayID).append(", ");
+            sb.append("true").append(");"); // it's a valid way... it's still in OSM
+
+            try (PreparedStatement stmt = connection.prepareStatement(sb.toString())) {
+              stmt.execute();
+            } catch (SQLException ex) {
+              logger.print(1, ex.getLocalizedMessage(), true);
+              logger.print(4, sb.toString());
+            }
+
+            // add related nodes to way_node table
+            // iterate nodes
+            if(wayElement.getNodes() != null) {
+                // set up first part of sql statement
+                String sqlStart = "INSERT INTO " + WAYMEMBER 
+                        + "(way_id, node_id) VALUES ( " + wayOSMID + ", ";
+                
+                // set up a sql queue
+                SQLStatementQueue sqlQueue = new SQLStatementQueue(this.connection, this.logger);
+
+                Iterator<NodeElement> wayNodeIter = wayElement.getNodes().iterator();
+                while(wayNodeIter.hasNext()) {
+                    NodeElement wayNode = wayNodeIter.next();
+
+                    long nodeOSMID = wayNode.getID();
+
+                    // set up sqp statement
+                    sb = new StringBuilder(sqlStart);
+                    sb.append(nodeOSMID); // add node ID
+                    sb.append(");"); // finish statement
+                    
+                    // run it (in queue)
+                    sqlQueue.exec(sb.toString());
+                    
+//                    try (PreparedStatement stmt = connection.prepareStatement(sb.toString())) {
+//                      stmt.execute();
+//                    } catch (SQLException ex) {
+//                      logger.print(1, ex.getLocalizedMessage(), true);
+//                      logger.print(4, sb.toString());
+//                    }
+                }
+                // flush remaining sql statements
+                sqlQueue.flush();
+            }
+        }
+        this.ways.clear();
     }
-    try (PreparedStatement stmtUpdate = connection.prepareStatement(sqlUpdateNodes.toString())) {
-      stmtUpdate.execute();
-    } catch (SQLException e) {
-      logger.print(1, e.getLocalizedMessage(), true);
-      logger.print(4, sqlUpdateNodes.toString());
-    }
-    ways.clear();
-  }
 
   private void saveWayElement(WayElement way) {
       int classID = this.getOHDMClassID(way);

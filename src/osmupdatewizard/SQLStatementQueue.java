@@ -29,6 +29,10 @@ public class SQLStatementQueue {
         this(connection, DEFAULT_MAX_SQL_STATEMENTS, logger);
     }
     
+    public SQLStatementQueue(Connection connection) {
+        this(connection, DEFAULT_MAX_SQL_STATEMENTS, null);
+    }
+    
     /**
      * when using only this method, flush *must* be called.
      * @param a 
@@ -68,8 +72,12 @@ public class SQLStatementQueue {
         try (PreparedStatement stmt = connection.prepareStatement(this.sqlQueue.toString())) {
           stmt.execute();
         } catch (SQLException ex) {
-          logger.print(1, ex.getLocalizedMessage(), true);
-          logger.print(4, this.sqlQueue.toString());
+            if(this.logger != null) {
+                logger.print(1, ex.getLocalizedMessage(), true);
+                logger.print(4, this.sqlQueue.toString());
+            } else {
+                System.err.println(ex.getLocalizedMessage());
+            }
         }
         
         this.sqlQueue = null;

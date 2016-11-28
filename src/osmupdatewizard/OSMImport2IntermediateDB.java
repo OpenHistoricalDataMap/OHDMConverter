@@ -17,7 +17,7 @@ import org.xml.sax.SAXException;
  *
  * @author thsc
  */
-public class OSMImportUpdate {
+public class OSMImport2IntermediateDB {
     private static final String CONFIG_FILE_NAME = "config.xml";
     private static final String WHITELIST_FILE_NAME = "whitelist.xml";
     private static final String SUBDIR_SEPARATER = "\\";
@@ -53,41 +53,14 @@ public class OSMImportUpdate {
       newSAXParser.parse(osmFile, new OSMImporter());
       
     } catch (ParserConfigurationException ex) {
-      Logger.getLogger(OSMImportUpdate.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(OSMImport2IntermediateDB.class.getName()).log(Level.SEVERE, null, ex);
     } catch (SAXException ex) {
-      Logger.getLogger(OSMImportUpdate.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(OSMImport2IntermediateDB.class.getName()).log(Level.SEVERE, null, ex);
     } catch (IOException ex) {
-      Logger.getLogger(OSMImportUpdate.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(OSMImport2IntermediateDB.class.getName()).log(Level.SEVERE, null, ex);
     } catch (Exception ex) {
-      Logger.getLogger(OSMImportUpdate.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(OSMImport2IntermediateDB.class.getName()).log(Level.SEVERE, null, ex);
     }
     MyLogger.getInstance().print(0, "+++ OSM Update Wizard finished import +++", true);
-    
-        // let's fill OHDM database
-        MyLogger logger = MyLogger.getInstance();
-
-        // connect to OHDM rendering database
-        String serverName = "localhost";
-        String portNumber = "5432";
-        String path = "";
-        String user = "";
-        String pwd = "";
-
-        try {
-            Properties connProps = new Properties();
-            connProps.put("user", user);
-            connProps.put("password", pwd);
-            Connection connection = DriverManager.getConnection(
-                    "jdbc:postgresql://" + serverName
-                    + ":" + portNumber + "/" + path, connProps);
-          
-            Intermediate2OHDMRendering renderDBFiller = 
-                    new Intermediate2OHDMRendering(connection);
-            
-            renderDBFiller.go();
-  
-        } catch (SQLException e) {
-          logger.print(0, "cannot connect to database: " + e.getLocalizedMessage());
-        }
     }
 }

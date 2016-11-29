@@ -234,8 +234,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       
       StringBuilder sqlWayMember = new StringBuilder();
       sqlWayMember.append(" (way_id bigint, ");
-      sqlWayMember.append("node_id bigint, ");
-      sqlWayMember.append("node_position integer");
+      sqlWayMember.append("node_id bigint");
       sqlWayMember.append(");");
       this.setupTable(WAYMEMBER, sqlWayMember.toString());
       
@@ -293,7 +292,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
         // fill that table
         // set up classification table from scratch
-        OSMClassification osmClassification = new OSMClassification();
+        OSMClassification osmClassification = OSMClassification.getOSMClassification();
         
         // init first line: unknown classification
         StringBuilder insertStatement = new StringBuilder();
@@ -314,7 +313,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
           }
         }
 
-        // no fill append real data
+        // no append real data
         int id = 0;
 
         // create classification table
@@ -478,7 +477,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       
     for (Map.Entry<String, NodeElement> entry : nodes.entrySet()) {
         NodeElement node = entry.getValue();
-        int classID = this.getOHDMClassID(node);
+        int classID = OSMClassification.getOSMClassification().getOHDMClassID(node);
         String sTags = node.getSerializedTags();
         
 //        StringBuilder sq = new StringBuilder();
@@ -535,7 +534,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private void saveNodeElement(NodeElement node) {
     StringBuilder sb = new StringBuilder("INSERT INTO ");
-    int classID = this.getOHDMClassID(node);
+    int classID = OSMClassification.getOSMClassification().getOHDMClassID(node);
     if (classID > -1) {
       sb.append(NODETABLE).append(" (osm_id, longitude, latitude, valid) VALUES (?, ?, ?, true);");
     } else {
@@ -723,7 +722,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
             WayElement wayElement = wayElementEntry.getValue();
 
             // figure out geometry class (highway, building or such a thing
-            int wayID = this.getOHDMClassID(wayElement);
+            int wayID = OSMClassification.getOSMClassification().getOHDMClassID(wayElement);
 
             String wayOSMID = wayElementEntry.getKey();
 
@@ -766,9 +765,8 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
             if(wayElement.getNodes() != null) {
                 // set up first part of sql statement
                 String sqlStart = "INSERT INTO " + WAYMEMBER 
-                        + "(way_id, node_id, node_position) VALUES ( " + wayOSMID + ", ";
+                        + "(way_id, node_id) VALUES ( " + wayOSMID + ", ";
 
-                int position = 0;
                 Iterator<NodeElement> wayNodeIter = wayElement.getNodes().iterator();
                 while(wayNodeIter.hasNext()) {
                     NodeElement wayNode = wayNodeIter.next();
@@ -778,8 +776,6 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
                     // set up sql statement - use queue for performace reasons
                     sqlQueue.append(sqlStart);
                     sqlQueue.append(nodeOSMID); // add node ID
-                    sqlQueue.append(", "); // add node ID
-                    sqlQueue.append(position++); // add node ID
                     sqlQueue.append(");"); // finish statement
                     
                 }
@@ -793,7 +789,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     }
 
   private void saveWayElement(WayElement way) {
-      int classID = this.getOHDMClassID(way);
+      int classID = OSMClassification.getOSMClassification().getOHDMClassID(way);
     StringBuilder sb = new StringBuilder("INSERT INTO ");
     if (classID < 0) {
       sb.append(WAYTABLE).append(" (osm_id, valid) VALUES (?, true);");
@@ -990,7 +986,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
         
         RelationElement relationElement = entry.getValue();
         
-        int classID = this.getOHDMClassID(relationElement);
+        int classID = OSMClassification.getOSMClassification().getOHDMClassID(relationElement);
         
         String sTags = relationElement.getSerializedTags();
         

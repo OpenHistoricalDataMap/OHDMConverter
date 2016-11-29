@@ -47,8 +47,4 @@ public class OSMElement extends AbstractElement {
   public long getID() {
     return this.id;
   }
-
-  public ArrayList<TagElement> getTags() {
-    return this.tags;
-  }
 }

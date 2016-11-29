@@ -2,7 +2,6 @@ package osmupdatewizard;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
@@ -12,7 +11,9 @@ import java.util.StringTokenizer;
  */
 abstract class OHDMElement extends AbstractElement {
     private final BigDecimal osmID;
-    private final BigDecimal classCode;
+    private final int classCode;
+    private int subClassCode;
+    
     private final BigDecimal ohdmID;
     private final BigDecimal ohdmObjectID;
     private final boolean valid;
@@ -21,13 +22,14 @@ abstract class OHDMElement extends AbstractElement {
     private ArrayList<String> nodeIDList;
     
     private final String nodeIDs;
+    protected boolean isPolygone;
 
     OHDMElement(BigDecimal osmID, BigDecimal classCode, String sAttributes, String sTags, String nodeIDs, BigDecimal ohdmID, BigDecimal ohdmObjectID, boolean valid) {
         super(sAttributes, sTags);
         
         this.nodeIDs = nodeIDs;
         this.osmID = osmID;
-        this.classCode = classCode;
+        this.classCode = classCode.intValue();
         this.ohdmID = ohdmID;
         this.ohdmObjectID = ohdmObjectID;
         this.valid = valid;
@@ -51,12 +53,26 @@ abstract class OHDMElement extends AbstractElement {
                     this.nodeIDList.add(st.nextToken());
                 }
             }
+            
+            // is it a ring
+            String firstElement = this.nodeIDList.get(0);
+            String lastElement = this.nodeIDList.get(this.nodeIDList.size()-1);
+            
+            if(firstElement.equalsIgnoreCase(lastElement)) {
+                this.isPolygone = true;
+            }
         }
         
         BigDecimal nodeOSMID = node.getOSMID();
         String idString = nodeOSMID.toString();
         
         int position = this.nodeIDList.indexOf(idString);
+        
+        /* pay attention! a node can be appeare more than once on a string!
+         indexof would produce the smallest index each time. Thus, we have
+        to overwrite each entry after its usage
+        */
+        this.nodeIDList.set(position, "-1");
         
         if(position > -1) {
             if(position > this.nodes.size()-1) {
@@ -74,5 +90,46 @@ abstract class OHDMElement extends AbstractElement {
         if(this.nodes == null) return null;
         
         return this.nodes.iterator();
+    }
+    
+    String validSince() {
+        return "1970-01-01";
+    }
+
+    String validUntil() {
+        return "2020-01-01";
+    }
+    
+    int getClassCode() {
+        return this.classCode;
+    }
+    
+    private String className = null;
+    private String subClassName = null;
+    
+    String getClassName() {
+        if(className == null) {
+            String fullClassName = OSMClassification.getOSMClassification().
+                    getFullClassName(this.classCode);
+        
+            StringTokenizer st = new StringTokenizer(fullClassName, "_");
+            this.className = st.nextToken();
+            
+            if(st.hasMoreTokens()) {
+                this.subClassName = st.nextToken();
+            } else {
+                this.subClassName = "undefined";
+            }
+        }
+        
+        return this.className;
+    }
+  
+    String getSubClassName() {
+        if(this.subClassName == null) {
+            this.getClassName();
+        }
+        
+        return this.subClassName;
     }
 }

@@ -2,7 +2,6 @@ package osmupdatewizard;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
@@ -175,5 +174,37 @@ abstract class AbstractElement {
         catch(RuntimeException e) {
             return null;
         }
+    }
+    
+    private String name;
+    String getName() {
+        if(this.name == null) {
+            // check tags for a name
+            this.name = this.findValueInTags("name");
+            if(this.name == null) this.name = "";
+        }
+        
+        return this.name;
+    }
+    
+    String findValueInTags(String key) {
+        String nix = null;
+        
+        if(this.tags == null || tags.isEmpty()) return nix;
+        
+        Iterator<TagElement> iterator = this.tags.iterator();
+        
+        for (TagElement tag : this.tags) {
+            if(tag.attributes != null) {
+                String elementName = tag.attributes.get("name");
+                if(elementName != null) return elementName;
+            }
+        }        
+        
+        return nix;
+    }
+    
+    public ArrayList<TagElement> getTags() {
+      return this.tags;
     }
 }

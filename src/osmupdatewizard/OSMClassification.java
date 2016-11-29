@@ -1,8 +1,12 @@
 package osmupdatewizard;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.StringTokenizer;
+import static osmupdatewizard.SQLImportCommandBuilder.CLASSIFICATIONTABLE;
 
 /**
  *
@@ -22,7 +26,7 @@ class OSMClassification {
         return OSMClassification.osmClassification;
     }
     
-    OSMClassification() {
+    private OSMClassification() {
         // that's not really good style.. anyway create that map here in code
         List<String> subClasses = new ArrayList<>();
         
@@ -186,6 +190,32 @@ class OSMClassification {
         // fill with all known subclasses
         subClasses.add(UNDEFINED);
         subClasses.add("motorway");
+        subClasses.add("trunk");
+        subClasses.add("primary");
+        subClasses.add("secondary");
+        subClasses.add("tertiary");
+        subClasses.add("unclassified");
+        subClasses.add("service");
+        subClasses.add("motorway_link");
+        subClasses.add("trunk_link");
+        subClasses.add("primary_link");
+        subClasses.add("secondary_link");
+        subClasses.add("tertiary_link");
+        subClasses.add("living_street");
+        subClasses.add("pedestrian");
+        subClasses.add("track");
+        subClasses.add("bus_guideway");
+        subClasses.add("escape");
+        subClasses.add("raceway");
+        subClasses.add("road");
+        subClasses.add("footway");
+        subClasses.add("bridleway");
+        subClasses.add("steps");
+        subClasses.add("path");
+        subClasses.add("cycleway");
+        subClasses.add("proposed");
+        subClasses.add("construction");
+        subClasses.add("bus_stop");
         
         // TODO add others
         osmFeatureClasses.put("highway", subClasses);        
@@ -342,6 +372,117 @@ class OSMClassification {
         subClasses.add(UNDEFINED);
              
         // TODO add others
-        osmFeatureClasses.put("historic_person", subClasses);   
+        osmFeatureClasses.put("historic_person", subClasses);  
+        
+        this.setupClassIDs_Names();
+    }
+    
+    private HashMap<String, Integer> classIDs = new HashMap<>();
+    private ArrayList<String> fullClassNames = new ArrayList<>();
+    
+    private void setupClassIDs_Names() {
+        // no append real data
+        int id = 0;
+
+        // create classification table
+        // iterate classes
+        Iterator<String> classIter = this.osmFeatureClasses.keySet().iterator();
+
+        while(classIter.hasNext()) {
+            String className = classIter.next();
+            List<String> subClasses = this.osmFeatureClasses.get(className);
+            Iterator<String> subClassIter = subClasses.iterator();
+
+            while(subClassIter.hasNext()) {
+                String subClassName = subClassIter.next();
+                
+                // keep in memory
+                String fullClassName = this.createFullClassName(className, subClassName);
+                
+                this.classIDs.put(fullClassName, id++);
+                this.fullClassNames.add(fullClassName);
+            }
+        }
+    }
+    
+    private String createFullClassName(String className, String subclassname) {
+        return className + "_" + subclassname;
+    }
+    
+    String getFullClassName(int classCode) {
+        String nothing = "undefined";
+        
+        if(classCode > -1 && this.fullClassNames.size() > classCode) {
+            return this.fullClassNames.get(classCode);
+        }
+        
+        return nothing;
+    }
+    
+    /**
+     * TODO: Add here translation of unused OSM types to OHDM types etc.
+     * @param osmElement
+     * @return 
+     */
+    int getOHDMClassID(AbstractElement osmElement) {
+      // a node can have tags which can describe geometrie feature classe
+        ArrayList<TagElement> tags = osmElement.getTags();
+        if(tags == null) return -1;
+        
+        Iterator<TagElement> tagIter = tags.iterator();
+        if(tagIter == null) return -1;
+        
+        while(tagIter.hasNext()) {
+            TagElement tag = tagIter.next();
+
+            // get attributes of that tag
+            Iterator<String> keyIter = tag.attributes.keySet().iterator();
+            while(keyIter.hasNext()) {
+                String key = keyIter.next();
+
+                // is this key name of a feature class?
+                if(this.isClassName(key)) {
+                    String value = tag.attributes.get(key);
+
+                    // find id of class / subclass
+                    return this.getOHDMClassID(key, value);
+                }
+            }
+        }
+
+        // there is no class description - sorry
+        return -1;
+        
+    }
+    
+    /**
+     * @return -1 if no known class and sub class name, a non-negative number 
+     * otherwise
+     */
+    int getOHDMClassID(String className, String subClassName) {
+        String fullClassName = this.createFullClassName(className, subClassName);
+        
+        // find entry
+        Integer id = this.classIDs.get(fullClassName);
+        if(id != null) {
+            return id;
+        }
+        
+        // try undefined
+        fullClassName = this.createFullClassName(className, OSMClassification.UNDEFINED);
+        id = this.classIDs.get(fullClassName);
+        if(id != null) {
+            return id;
+        }
+        
+//        System.out.println("not found: " + this.createFullClassName(className, subClassName));
+        
+        // else
+        return -1;
+    }
+    
+    
+    private boolean isClassName(String key) {
+        return this.getOSMClassification().osmFeatureClasses.keySet().contains(key);
     }
 }

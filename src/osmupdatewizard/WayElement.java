@@ -3,8 +3,6 @@ package osmupdatewizard;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  *
@@ -12,20 +10,20 @@ import java.util.List;
  */
 class WayElement extends OSMElement {
 
-  private final HashSet<NodeElement> nds;
+  private final ArrayList<NodeElement> nds;
 
-  public WayElement(HashMap<String, String> attributes, HashSet<NodeElement> nds, HashSet<TagElement> tags) {
+  public WayElement(HashMap<String, String> attributes, ArrayList<NodeElement> nds, ArrayList<TagElement> tags) {
     super(attributes, tags);
     this.nds = nds;
   }
 
   public WayElement(ElementStorage storage, HashMap<String, String> attributes,
-          HashSet<NodeElement> nds, HashSet<TagElement> tags) {
+          ArrayList<NodeElement> nds, ArrayList<TagElement> tags) {
     super(storage, attributes, tags);
     this.nds = nds;
   }
 
-  public HashSet<NodeElement> getNodes(){
+  public ArrayList<NodeElement> getNodes(){
     return this.nds;
   }
   

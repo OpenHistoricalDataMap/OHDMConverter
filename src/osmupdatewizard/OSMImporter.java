@@ -1,5 +1,6 @@
 package osmupdatewizard;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import org.xml.sax.Attributes;
@@ -10,9 +11,9 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class OSMImporter extends DefaultHandler {
 
-  private HashSet<NodeElement> nds = null;
-  private HashSet<TagElement> tags = null;
-  private HashSet<MemberElement> members = null;
+  private ArrayList<NodeElement> nds = null;
+  private ArrayList<TagElement> tags = null;
+  private ArrayList<MemberElement> members = null;
 
   private HashMap<String, String> attributes = null;
   private int nA = 0;
@@ -102,7 +103,7 @@ public class OSMImporter extends DefaultHandler {
   private void addTag(HashMap<String, String> a) {
     TagElement newTag = new TagElement(a);
     if (this.tags == null) {
-      this.tags = new HashSet<>();
+      this.tags = new ArrayList<>();
     }
     this.tags.add(newTag);
   }
@@ -110,7 +111,7 @@ public class OSMImporter extends DefaultHandler {
   private void addND(HashMap<String, String> a) {
     NodeElement node = new NodeElement(a, null);
     if (this.nds == null) {
-      this.nds = new HashSet<>();
+      this.nds = new ArrayList<>();
     }
     this.nds.add(node);
   }
@@ -118,7 +119,7 @@ public class OSMImporter extends DefaultHandler {
   private void addMember(HashMap<String, String> a) {
     MemberElement member = new MemberElement(a);
     if (this.members == null) {
-      this.members = new HashSet<>();
+      this.members = new ArrayList<>();
     }
     this.members.add(member);
   }

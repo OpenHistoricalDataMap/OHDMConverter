@@ -1,11 +1,15 @@
 package osmupdatewizard;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 import static osmupdatewizard.SQLImportCommandBuilder.WAYTABLE;
 import static osmupdatewizard.SQLImportCommandBuilder.NODETABLE;
+import static osmupdatewizard.SQLImportCommandBuilder.WAYMEMBER;
 
 /**
  * Fill OHDM rendering data base from intermediate data base.
@@ -14,14 +18,16 @@ import static osmupdatewizard.SQLImportCommandBuilder.NODETABLE;
  * @author thsc
  */
 public class Intermediate2OHDMRendering {
-    private final Connection connection;
+    private final Connection sourceConnection;
+    private final Connection targetConnection;
     
-    Intermediate2OHDMRendering(Connection connection) {
-        this.connection = connection;
+    Intermediate2OHDMRendering(Connection sourceConnection, Connection targetConnection) {
+        this.sourceConnection = sourceConnection;
+        this.targetConnection = targetConnection;
     }
     
     void dropHighways() {
-        SQLStatementQueue sq = new SQLStatementQueue(this.connection);
+        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
         
         sq.append("DROP SEQUENCE public.highway_lines_seq;");
         sq.append("DROP TABLE public.highway_lines;");
@@ -31,7 +37,7 @@ public class Intermediate2OHDMRendering {
     }
     
     void setupHighways() {
-        SQLStatementQueue sq = new SQLStatementQueue(this.connection);
+        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
         
         sq.append("CREATE SEQUENCE public.highway_lines_seq ");
         sq.append("INCREMENT 1 ");
@@ -54,27 +60,90 @@ public class Intermediate2OHDMRendering {
     }
     
     
-    public void go() {
-        // extract ways
-        this.extractWays();
-    }
-    
-    
     public void doHighways() {
+        /*
         this.dropHighways();
         this.setupHighways();
-    }
-
-    private void extractWays() {
-        // open ways table
-
+        */
         
-    StringBuilder sqlWay = new StringBuilder("SELECT * FROM ");
-    sqlWay.append(WAYTABLE).append(" WHERE osm_id = ? ;");
-    StringBuilder sqlNodes = new StringBuilder("SELECT * FROM ");
-    sqlNodes.append(NODETABLE).append(" WHERE id_way = ?;");
+        this.doConvert2RenderingDB();
         
     }
+
+    private void doConvert2RenderingDB() {
+        // open ways table and iterate ways
+        
+        StringBuilder sql = new StringBuilder("SELECT * FROM ");
+        sql.append(WAYTABLE).append(";");
+        
+        try {
+            PreparedStatement stmt = this.sourceConnection.prepareStatement(sql.toString());
+            ResultSet qResult = stmt.executeQuery();
+            qResult.next();
+            
+            OHDMWay way = this.createOHDMWay(qResult);
+            
+            // find all associated nodes and add to that way
+            /* SQL Query is like this
+                select * from nodes_table where osm_id IN 
+                (SELECT node_id FROM waynodes_table where way_id = ID_of_way);            
+            */        
+            
+            sql = new StringBuilder("select * from ");
+            sql.append(NODETABLE);
+            sql.append(" where osm_id IN (SELECT node_id FROM ");            
+            sql.append(WAYMEMBER);
+            sql.append(" where way_id = ");            
+            sql.append(way.getOSMID());
+            sql.append(");");  
+            
+            stmt = this.sourceConnection.prepareStatement(sql.toString());
+            qResult = stmt.executeQuery();
+            
+            while(qResult.next()) {
+                OHDMNode node = this.createOHDMNode(qResult);
+                way.addNode(node);
+            }
+            
+            String wayGeometryWKT = way.getWKTGeometry();
+            int i = 42; // just to have a break for the debugger.
+            
+        } catch (SQLException ex) {
+            System.err.println(ex.getLocalizedMessage());
+        }
+    }
+    
+    private OHDMWay createOHDMWay(ResultSet qResult) throws SQLException {
+        // get all data to create an ohdm way object
+        BigDecimal osmIDBig = qResult.getBigDecimal("osm_id");
+        BigDecimal classCodeBig = qResult.getBigDecimal("classcode");
+        String sTags = qResult.getString("serializedtags");
+        BigDecimal ohdmIDBig = qResult.getBigDecimal("ohdm_id");
+        BigDecimal ohdmObjectIDBig = qResult.getBigDecimal("ohdm_object");
+        String nodeIDs = qResult.getString("node_ids");
+        boolean valid = qResult.getBoolean("valid");
+
+        OHDMWay way = new OHDMWay(osmIDBig, classCodeBig, sTags, nodeIDs, ohdmIDBig, ohdmObjectIDBig, valid);
+
+        return way;
+    }
+    
+    private OHDMNode createOHDMNode(ResultSet qResult) throws SQLException {
+        BigDecimal osmIDBig = qResult.getBigDecimal("osm_id");
+        BigDecimal classCodeBig = qResult.getBigDecimal("classcode");
+        String sTags = qResult.getString("serializedtags");
+        String longitude = qResult.getString("longitude");
+        String latitude = qResult.getString("latitude");
+        BigDecimal ohdmIDBig = qResult.getBigDecimal("ohdm_id");
+        BigDecimal ohdmObjectIDBig = qResult.getBigDecimal("ohdm_object");
+        boolean valid = qResult.getBoolean("valid");
+
+        OHDMNode node = new OHDMNode(osmIDBig, classCodeBig, sTags, longitude, latitude, ohdmIDBig, ohdmObjectIDBig, valid);
+
+        return node;
+    }
+    
+    
     
     public static void main(String args[]) {
     
@@ -96,7 +165,7 @@ public class Intermediate2OHDMRendering {
                     + ":" + portNumber + "/" + path, connProps);
           
             Intermediate2OHDMRendering renderDBFiller = 
-                    new Intermediate2OHDMRendering(connection);
+                    new Intermediate2OHDMRendering(connection, null);
             
             renderDBFiller.doHighways();
   

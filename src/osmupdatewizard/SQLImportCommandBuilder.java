@@ -207,6 +207,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
               .append("serializedTags character varying, ")
               .append("ohdm_id bigint, ")
               .append("ohdm_object bigint, ")
+              .append("node_ids character varying, ")
               .append("valid boolean);");
       this.setupTable(WAYTABLE, sqlWay.toString());
 
@@ -232,8 +233,10 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
       this.setupTable(RELATIONTABLE, sqlRelation.toString());
       
       StringBuilder sqlWayMember = new StringBuilder();
-      sqlWayMember.append(" (way_id bigint, ")
-              .append("node_id bigint);");
+      sqlWayMember.append(" (way_id bigint, ");
+      sqlWayMember.append("node_id bigint, ");
+      sqlWayMember.append("node_position integer");
+      sqlWayMember.append(");");
       this.setupTable(WAYMEMBER, sqlWayMember.toString());
       
       StringBuilder sqlRelMember = new StringBuilder();
@@ -435,7 +438,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
      */
     private int getOHDMClassID(OSMElement osmElement) {
       // a node can have tags which can describe geometrie feature classe
-        HashSet<TagElement> tags = osmElement.getTags();
+        ArrayList<TagElement> tags = osmElement.getTags();
         if(tags == null) return -1;
         
         Iterator<TagElement> tagIter = tags.iterator();
@@ -600,7 +603,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
   }
 
   @Override
-  public void addNode(HashMap<String, String> attributes, HashSet<TagElement> tags) {
+  public void addNode(HashMap<String, String> attributes, ArrayList<TagElement> tags) {
     NodeElement newNode = new NodeElement(this, attributes, tags);
     if (importMode.equalsIgnoreCase("update")) {
       NodeElement dbNode = selectNodeById(newNode.getID());
@@ -708,7 +711,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
             sqlQueue.append("INSERT INTO ");
             sqlQueue.append(WAYTABLE);
-            sqlQueue.append("(osm_id, classcode, serializedtags, valid) VALUES");
+            sqlQueue.append("(osm_id, classcode, serializedtags, node_ids, valid) VALUES");
             
             /*
             StringBuilder sb = new StringBuilder("INSERT INTO ");
@@ -726,6 +729,24 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
             String sTags = wayElement.getSerializedTags();
             
+            // serialize node ids
+            StringBuilder nodeString = new StringBuilder();
+            if(wayElement.getNodes() != null) {
+                Iterator<NodeElement> wayNodeIter = wayElement.getNodes().iterator();
+                boolean first = true;
+                while(wayNodeIter.hasNext()) {
+                    NodeElement wayNode = wayNodeIter.next();
+                    
+                    if(first) {
+                        first = false;
+                    } else {
+                        nodeString.append(",");
+                    }
+
+                    nodeString.append(wayNode.getID());
+                }
+            }
+            
             // lets add values to sql statement
 
             sqlQueue.append(" (");
@@ -734,40 +755,20 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
             sqlQueue.append(wayID);
             sqlQueue.append(", '");
             sqlQueue.append(sTags);
+            sqlQueue.append("', '");
+            sqlQueue.append(nodeString.toString());
             sqlQueue.append("', ");
             sqlQueue.append("true");
             sqlQueue.append(");"); // it's a valid way... it's still in OSM
-
-            /*
-            sb.append(" (").append(wayOSMID).append(", "); // osm_id
-            sb.append(wayID).append(", ");
-            sb.append("true").append(");"); // it's a valid way... it's still in OSM
-            */
             
-            // execute sql statement
-            /*
-            sqlQueue.exec(sb.toString());
-            */
-
-            /*
-            try (PreparedStatement stmt = connection.prepareStatement(sb.toString())) {
-              stmt.execute();
-            } catch (SQLException ex) {
-              logger.print(1, ex.getLocalizedMessage(), true);
-              logger.print(4, sb.toString());
-            }
-            */
-
             // add related nodes to way_node table
             // iterate nodes
             if(wayElement.getNodes() != null) {
                 // set up first part of sql statement
                 String sqlStart = "INSERT INTO " + WAYMEMBER 
-                        + "(way_id, node_id) VALUES ( " + wayOSMID + ", ";
-//                
-//                // set up a sql queue
-//                SQLStatementQueue sqlQueue = new SQLStatementQueue(this.connection, this.logger);
+                        + "(way_id, node_id, node_position) VALUES ( " + wayOSMID + ", ";
 
+                int position = 0;
                 Iterator<NodeElement> wayNodeIter = wayElement.getNodes().iterator();
                 while(wayNodeIter.hasNext()) {
                     NodeElement wayNode = wayNodeIter.next();
@@ -777,23 +778,10 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
                     // set up sql statement - use queue for performace reasons
                     sqlQueue.append(sqlStart);
                     sqlQueue.append(nodeOSMID); // add node ID
+                    sqlQueue.append(", "); // add node ID
+                    sqlQueue.append(position++); // add node ID
                     sqlQueue.append(");"); // finish statement
                     
-                    /*
-                    sb = new StringBuilder(sqlStart);
-                    sb.append(nodeOSMID); // add node ID
-                    sb.append(");"); // finish statement
-                    */
-                    
-                    // run it (in queue)
-                    // sqlQueue.exec(sb.toString()); use append variant for performance reasons
-                    
-//                    try (PreparedStatement stmt = connection.prepareStatement(sb.toString())) {
-//                      stmt.execute();
-//                    } catch (SQLException ex) {
-//                      logger.print(1, ex.getLocalizedMessage(), true);
-//                      logger.print(4, sb.toString());
-//                    }
                 }
 //                // flush remaining sql statements
 //                sqlQueue.flush();
@@ -840,7 +828,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
    * @param tags
    */
   @Override
-  public void addWay(HashMap<String, String> attributes, HashSet<NodeElement> nds, HashSet<TagElement> tags) {
+  public void addWay(HashMap<String, String> attributes, ArrayList<NodeElement> nds, ArrayList<TagElement> tags) {
     if (nds == null || nds.isEmpty()) {
       return; // a way without nodes makes no sense.
     }
@@ -910,7 +898,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     PreparedStatement stmtNodes = null;
     PreparedStatement stmtWay = null;
     HashMap<String, String> attrWay = new HashMap<>();
-    HashSet<NodeElement> nds = new HashSet<>();
+    ArrayList<NodeElement> nds = new ArrayList<>();
     try {
       stmtNodes = connection.prepareStatement(sqlNodes.toString());
       stmtNodes.setLong(1, osm_id);
@@ -988,7 +976,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   private void saveRelElements() {
     StringBuilder sb = new StringBuilder("INSERT INTO ");
-    sb.append(RELATIONTABLE).append(" (osm_id, classcode, valid) VALUES");
+    sb.append(RELATIONTABLE).append(" (osm_id, classcode, serializedtags, valid) VALUES");
     boolean nodeInside = false;
     StringBuilder sqlMapNode = new StringBuilder("INSERT INTO ");
     sqlMapNode.append(RELATIONMEMBER).append(" (relation_id, node_id) VALUES");
@@ -999,11 +987,23 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
     StringBuilder sqlMapRel = new StringBuilder("INSERT INTO ");
     sqlMapRel.append(RELATIONMEMBER).append(" (relation_id, member_rel_id) VALUES");
     for (Map.Entry<String, RelationElement> entry : rels.entrySet()) {
-        int classID = this.getOHDMClassID(entry.getValue());
         
-      sb.append(" (").append(entry.getKey()).append(", ")
-              .append(classID).append(", ")
-              .append("true").append("),");
+        RelationElement relationElement = entry.getValue();
+        
+        int classID = this.getOHDMClassID(relationElement);
+        
+        String sTags = relationElement.getSerializedTags();
+        
+        sb.append(" (").append(entry.getKey()).append(", ")
+                  .append(classID);
+
+        sb.append(", '");
+        sb.append(sTags);
+        sb.append("', ");
+
+        sb.append("true").append("),");
+      
+      
       for (MemberElement member : entry.getValue().getMember()) {
         switch (member.getType()) {
           case "node":
@@ -1072,7 +1072,7 @@ class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
    * @param tags
    */
   @Override
-  public void addRelation(HashMap<String, String> attributes, HashSet<MemberElement> members, HashSet<TagElement> tags
+  public void addRelation(HashMap<String, String> attributes, ArrayList<MemberElement> members, ArrayList<TagElement> tags
   ) {
     if (members == null || members.isEmpty() || tags == null) {
       return; // empty relations makes no sense;

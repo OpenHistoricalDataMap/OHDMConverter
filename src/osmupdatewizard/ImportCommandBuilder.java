@@ -1,5 +1,6 @@
 package osmupdatewizard;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -9,11 +10,11 @@ import java.util.HashSet;
  */
 public interface ImportCommandBuilder {
 
-  public void addNode(HashMap<String, String> attributes, HashSet<TagElement> tags);
+  public void addNode(HashMap<String, String> attributes, ArrayList<TagElement> tags);
 
-  public void addWay(HashMap<String, String> attributes, HashSet<NodeElement> nds, HashSet<TagElement> tags);
+  public void addWay(HashMap<String, String> attributes, ArrayList<NodeElement> nds, ArrayList<TagElement> tags);
 
-  public void addRelation(HashMap<String, String> attributes, HashSet<MemberElement> members, HashSet<TagElement> tags);
+  public void addRelation(HashMap<String, String> attributes, ArrayList<MemberElement> members, ArrayList<TagElement> tags);
 
   public void flush();
   

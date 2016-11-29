@@ -13,7 +13,7 @@ public class TagElement extends OSMElement {
     }
     
     @Override
-    String getSerializedTags() {
+    protected String getSerializedTags() {
         return this.getSerializeAttributes();
     }
 }

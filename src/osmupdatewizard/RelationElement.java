@@ -1,5 +1,6 @@
 package osmupdatewizard;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -9,15 +10,15 @@ import java.util.HashSet;
  */
 class RelationElement extends OSMElement {
 
-  private final HashSet<MemberElement> members;
+  private final ArrayList<MemberElement> members;
   
   public RelationElement(HashMap<String, String> attributes,
-          HashSet<MemberElement> members, HashSet<TagElement> tags) {
+          ArrayList<MemberElement> members, ArrayList<TagElement> tags) {
     super(attributes, tags);
     this.members = members;
   }
 
-  public HashSet<MemberElement> getMember() {
+  public ArrayList<MemberElement> getMember() {
     return members;
   }
 }

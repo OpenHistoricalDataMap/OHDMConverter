@@ -1,5 +1,6 @@
 package osmupdatewizard;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -9,11 +10,11 @@ import java.util.HashSet;
  */
 public class NodeElement extends OSMElement {
 
-  NodeElement(HashMap<String, String> attributes, HashSet<TagElement> tags) {
+  NodeElement(HashMap<String, String> attributes, ArrayList<TagElement> tags) {
     super(attributes, tags);
   }
 
-  NodeElement(ElementStorage storage, HashMap<String, String> attributes, HashSet<TagElement> tags) {
+  NodeElement(ElementStorage storage, HashMap<String, String> attributes, ArrayList<TagElement> tags) {
     super(storage, attributes, tags);
   }
 

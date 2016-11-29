@@ -1,7 +1,5 @@
 package exportfromintermediate;
 
-import exportfromintermediate.Export;
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -20,10 +18,10 @@ import static osmupdatewizard.SQLImportCommandBuilder.WAYMEMBER;
  * to be part of the productive system
  * @author thsc
  */
-public class Intermediate2OHDMRendering extends Export {
+public class Intermediate2OHDMRendering extends Export2OHDM {
     
     Intermediate2OHDMRendering(Connection sourceConnection, Connection targetConnection) {
-        super(sourceConnection, targetConnection);
+        super(sourceConnection, targetConnection, null);
     }
     
     void dropHighways() {

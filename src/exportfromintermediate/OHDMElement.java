@@ -134,4 +134,24 @@ abstract class OHDMElement extends AbstractElement {
         
         return this.subClassName;
     }
+    
+    /**
+     * return osm user id
+     * @return 
+     */
+    String getUserID() {
+        String uidString = this.attributes.get("uid");
+        
+        if(uidString == null) return "-1";
+        
+        return uidString;
+    }
+    
+    String getUsername() {
+        String uidString = this.attributes.get("user");
+        
+        if(uidString == null) return "unknown";
+        
+        return uidString;
+    }
 }

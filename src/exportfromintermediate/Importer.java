@@ -6,10 +6,10 @@ package exportfromintermediate;
  */
 public interface Importer {
 
-    public void importWay(OHDMWay way);
+    public boolean importWay(OHDMWay way);
 
-    public void importRelation(OHDMRelation relation);
+    public boolean importRelation(OHDMRelation relation);
 
-    public void importNode(OHDMNode node);
+    public boolean importNode(OHDMNode node);
     
 }

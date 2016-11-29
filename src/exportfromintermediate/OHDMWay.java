@@ -1,4 +1,4 @@
-package osmupdatewizard;
+package exportfromintermediate;
 
 import java.math.BigDecimal;
 import java.util.Iterator;

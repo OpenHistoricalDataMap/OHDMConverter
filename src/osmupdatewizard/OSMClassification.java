@@ -1,24 +1,21 @@
 package osmupdatewizard;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.StringTokenizer;
-import static osmupdatewizard.SQLImportCommandBuilder.CLASSIFICATIONTABLE;
 
 /**
  *
  * @author thsc
  */
-class OSMClassification {
+public class OSMClassification {
     HashMap<String, List<String>> osmFeatureClasses = new HashMap();
     
     static final String UNDEFINED = "undefined";
     private static OSMClassification osmClassification = null;
     
-    static OSMClassification getOSMClassification() {
+    public static OSMClassification getOSMClassification() {
         if(OSMClassification.osmClassification == null) {
             OSMClassification.osmClassification = new OSMClassification();
         }
@@ -409,7 +406,7 @@ class OSMClassification {
         return className + "_" + subclassname;
     }
     
-    String getFullClassName(int classCode) {
+    public String getFullClassName(int classCode) {
         String nothing = "undefined";
         
         if(classCode > -1 && this.fullClassNames.size() > classCode) {
@@ -424,7 +421,7 @@ class OSMClassification {
      * @param osmElement
      * @return 
      */
-    int getOHDMClassID(AbstractElement osmElement) {
+    public int getOHDMClassID(AbstractElement osmElement) {
       // a node can have tags which can describe geometrie feature classe
         ArrayList<TagElement> tags = osmElement.getTags();
         if(tags == null) return -1;
@@ -459,7 +456,7 @@ class OSMClassification {
      * @return -1 if no known class and sub class name, a non-negative number 
      * otherwise
      */
-    int getOHDMClassID(String className, String subClassName) {
+    public int getOHDMClassID(String className, String subClassName) {
         String fullClassName = this.createFullClassName(className, subClassName);
         
         // find entry

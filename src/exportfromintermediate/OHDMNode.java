@@ -1,4 +1,4 @@
-package osmupdatewizard;
+package exportfromintermediate;
 
 import java.math.BigDecimal;
 
@@ -23,7 +23,13 @@ public class OHDMNode extends OHDMElement {
     
     @Override
     String getWKTGeometry() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        StringBuilder sb = new StringBuilder("POINT(");
+        sb.append(this.getLongitude());
+        sb.append(" ");
+        sb.append(this.getLatitude());
+        sb.append(")");
+        
+        return sb.toString();
     }
     
     String getLongitude() {

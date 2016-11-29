@@ -18,7 +18,7 @@ import java.util.Properties;
  *
  * @author thsc, Sven Petsche
  */
-class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
+public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
   public static final String TAGTABLE = "Tags";
   public static final String NODETABLE = "Nodes";

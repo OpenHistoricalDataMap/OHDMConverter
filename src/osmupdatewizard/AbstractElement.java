@@ -9,16 +9,16 @@ import java.util.StringTokenizer;
  *
  * @author thsc
  */
-abstract class AbstractElement {
+public abstract class AbstractElement {
     protected HashMap<String, String> attributes;
     protected ArrayList<TagElement> tags = null;
     
-    AbstractElement(HashMap<String, String> attributes, ArrayList<TagElement> tags) {
+    public AbstractElement(HashMap<String, String> attributes, ArrayList<TagElement> tags) {
         this.attributes = attributes;
         this.tags = tags;
     }
 
-    AbstractElement(String serializedAttributes, String serializedTags) {
+    public AbstractElement(String serializedAttributes, String serializedTags) {
         this.attributes = this.deserializeAttributes(serializedAttributes);
         this.tags = this.deserializeTags(serializedTags);
     }
@@ -177,7 +177,7 @@ abstract class AbstractElement {
     }
     
     private String name;
-    String getName() {
+    public String getName() {
         if(this.name == null) {
             // check tags for a name
             this.name = this.findValueInTags("name");
@@ -187,7 +187,7 @@ abstract class AbstractElement {
         return this.name;
     }
     
-    String findValueInTags(String key) {
+    public String findValueInTags(String key) {
         String nix = null;
         
         if(this.tags == null || tags.isEmpty()) return nix;

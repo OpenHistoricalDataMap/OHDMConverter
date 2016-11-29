@@ -1,5 +1,6 @@
-package osmupdatewizard;
+package exportfromintermediate;
 
+import exportfromintermediate.Export;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -7,6 +8,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
+import osmupdatewizard.OSMClassification;
+import osmupdatewizard.SQLStatementQueue;
 import static osmupdatewizard.SQLImportCommandBuilder.WAYTABLE;
 import static osmupdatewizard.SQLImportCommandBuilder.NODETABLE;
 import static osmupdatewizard.SQLImportCommandBuilder.WAYMEMBER;
@@ -17,13 +20,10 @@ import static osmupdatewizard.SQLImportCommandBuilder.WAYMEMBER;
  * to be part of the productive system
  * @author thsc
  */
-public class Intermediate2OHDMRendering {
-    private final Connection sourceConnection;
-    private final Connection targetConnection;
+public class Intermediate2OHDMRendering extends Export {
     
     Intermediate2OHDMRendering(Connection sourceConnection, Connection targetConnection) {
-        this.sourceConnection = sourceConnection;
-        this.targetConnection = targetConnection;
+        super(sourceConnection, targetConnection);
     }
     
     void dropHighways() {
@@ -159,37 +159,6 @@ INSERT INTO highway_lines(
         
         return true;
     }
-    
-    private OHDMWay createOHDMWay(ResultSet qResult) throws SQLException {
-        // get all data to create an ohdm way object
-        BigDecimal osmIDBig = qResult.getBigDecimal("osm_id");
-        BigDecimal classCodeBig = qResult.getBigDecimal("classcode");
-        String sTags = qResult.getString("serializedtags");
-        BigDecimal ohdmIDBig = qResult.getBigDecimal("ohdm_id");
-        BigDecimal ohdmObjectIDBig = qResult.getBigDecimal("ohdm_object");
-        String nodeIDs = qResult.getString("node_ids");
-        boolean valid = qResult.getBoolean("valid");
-
-        OHDMWay way = new OHDMWay(osmIDBig, classCodeBig, sTags, nodeIDs, ohdmIDBig, ohdmObjectIDBig, valid);
-
-        return way;
-    }
-    
-    private OHDMNode createOHDMNode(ResultSet qResult) throws SQLException {
-        BigDecimal osmIDBig = qResult.getBigDecimal("osm_id");
-        BigDecimal classCodeBig = qResult.getBigDecimal("classcode");
-        String sTags = qResult.getString("serializedtags");
-        String longitude = qResult.getString("longitude");
-        String latitude = qResult.getString("latitude");
-        BigDecimal ohdmIDBig = qResult.getBigDecimal("ohdm_id");
-        BigDecimal ohdmObjectIDBig = qResult.getBigDecimal("ohdm_object");
-        boolean valid = qResult.getBoolean("valid");
-
-        OHDMNode node = new OHDMNode(osmIDBig, classCodeBig, sTags, longitude, latitude, ohdmIDBig, ohdmObjectIDBig, valid);
-
-        return node;
-    }
-    
     
     
     public static void main(String args[]) {

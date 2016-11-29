@@ -1,9 +1,11 @@
-package osmupdatewizard;
+package exportfromintermediate;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.StringTokenizer;
+import osmupdatewizard.AbstractElement;
+import osmupdatewizard.OSMClassification;
 
 /**
  *

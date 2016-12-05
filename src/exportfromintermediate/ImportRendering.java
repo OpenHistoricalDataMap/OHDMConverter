@@ -166,12 +166,19 @@ INSERT INTO this.HIGWAYTABLE_NAME(
                     "jdbc:postgresql://" + sourceServerName
                     + ":" + sourcePortNumber + "/" + sourcePath, sourceConnProps);
             
-            // connect to target OHDM DB
+            // connect to target OHDM DB - local
             String targetServerName = "localhost";
             String targetPortNumber = "5432";
             String targetUser = "admin";
             String targetPWD = "root";
             String targetPath = "ohdm_full";
+        
+            // connect to target OHDM DB - ohm
+//            String targetServerName = "ohm.f4.htw-berlin.de";
+//            String targetPortNumber = "5432";
+//            String targetUser = "...";
+//            String targetPWD = "...";
+//            String targetPath = "ohdm_rendering";
         
             Properties targetConnProps = new Properties();
             targetConnProps.put("user", targetUser);

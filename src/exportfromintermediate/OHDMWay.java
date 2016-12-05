@@ -24,7 +24,7 @@ public class OHDMWay extends OHDMElement {
         if(this.isPolygone) {
             // it is a polygone: e.g. POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))
             // it cannot have an inner a hole - that's described by relations
-            wkt.append("POLYGONE((");
+            wkt.append("POLYGON((");
             this.appendAllLongLat(wkt);
             // we don't store last duplicate node internally. Add it to the end
             OHDMNode firstNode = this.nodes.get(0);

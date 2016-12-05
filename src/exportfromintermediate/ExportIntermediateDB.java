@@ -18,6 +18,10 @@ public class ExportIntermediateDB {
     private final Importer importer;
     private final Connection sourceConnection;
     
+    private int numberNodes = 0;
+    private int numberWays = 0;
+    private int numberRelations = 0;
+    
     ExportIntermediateDB(Connection sourceConnection, Importer importer) {
         this.sourceConnection = sourceConnection;
         this.importer = importer;
@@ -39,7 +43,9 @@ public class ExportIntermediateDB {
                 OHDMNode node = this.createOHDMNode(qResultNode);
                 
                 // now process that stuff
-                this.importer.importNode(node);
+                if(this.importer.importNode(node)) {
+                    this.numberNodes++;
+                }
                 
             }
         } catch (SQLException ex) {
@@ -86,7 +92,9 @@ public class ExportIntermediateDB {
                 }
                 
                 // process that stuff
-                this.importer.importWay(way);
+                if(this.importer.importWay(way)) {
+                    this.numberWays++;
+                }
                 
             }
         } catch (SQLException ex) {
@@ -133,7 +141,9 @@ public class ExportIntermediateDB {
                 // TODO
 
                 // process that stuff
-                this.importer.importRelation(relation);
+                if(this.importer.importRelation(relation)) {
+                    this.numberRelations++;
+                }
                 
             }
         } catch (SQLException ex) {
@@ -142,6 +152,20 @@ public class ExportIntermediateDB {
         
         System.out.println("Checked ways: " + number);
         
+    }
+    
+    public String getStatistics() {
+        StringBuilder sb = new StringBuilder();
+        
+        sb.append("imported: ");
+        sb.append(this.numberNodes);
+        sb.append(" nodes | ");
+        sb.append(this.numberWays);
+        sb.append(" ways | ");
+        sb.append(this.numberRelations);
+        sb.append(" relations | ");
+        
+        return sb.toString();
     }
     
     ///////////////////////////////////////////////////////////////////////

@@ -2,11 +2,9 @@ package exportfromintermediate;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Properties;
 import static osmupdatewizard.SQLImportCommandBuilder.RELATIONTABLE;
 import static osmupdatewizard.SQLImportCommandBuilder.WAYMEMBER;
 import static osmupdatewizard.SQLImportCommandBuilder.WAYTABLE;
@@ -16,11 +14,12 @@ import static osmupdatewizard.SQLImportCommandBuilder.NODETABLE;
  *
  * @author thsc
  */
-public class Export2OHDM extends Transfer {
+public class ExportIntermediateDB {
     private final Importer importer;
+    private final Connection sourceConnection;
     
-    Export2OHDM(Connection sourceConnection, Connection targetConnection, Importer importer) {
-        super(sourceConnection, targetConnection);
+    ExportIntermediateDB(Connection sourceConnection, Importer importer) {
+        this.sourceConnection = sourceConnection;
         this.importer = importer;
     }
     
@@ -143,40 +142,6 @@ public class Export2OHDM extends Transfer {
         
         System.out.println("Checked ways: " + number);
         
-    }
-    
-    public static void main(String args[]) {
-        // let's fill OHDM database
-
-        // connect to OHDM source (intermediate database)
-        String serverName = "localhost";
-        String portNumber = "5432";
-        String user = "admin";
-        String pwd = "root";
-        String path = "ohdm";
-        
-        // TODO connect to target OHDM DB
-
-        try {
-            Properties connProps = new Properties();
-            connProps.put("user", user);
-            connProps.put("password", pwd);
-            Connection connection = DriverManager.getConnection(
-                    "jdbc:postgresql://" + serverName
-                    + ":" + portNumber + "/" + path, connProps);
-            
-            Importer i = new OHDMImporter(connection, connection);
-          
-            Export2OHDM ohdmExporter = 
-                    new Export2OHDM(connection, connection, i);
-            
-            ohdmExporter.processNodes();
-            ohdmExporter.processWays();
-            ohdmExporter.processRelations();
-  
-        } catch (SQLException e) {
-          System.err.println("cannot connect to database: " + e.getLocalizedMessage());
-        }
     }
     
     ///////////////////////////////////////////////////////////////////////

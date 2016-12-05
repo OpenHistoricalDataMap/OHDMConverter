@@ -1,23 +1,26 @@
 package exportfromintermediate;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import osmupdatewizard.SQLStatementQueue;
 import osmupdatewizard.TagElement;
 
 /**
- *
+ * That class imports (and updates) data from intermediate database to OHDM.
+ * It changes both, ohdm data and intermediate data.
+ * 
  * @author thsc
  */
-public class OHDMImporter extends Transfer implements Importer {
+public class ImportOHDM extends Importer {
     
-    public OHDMImporter(Connection sourceConnection, Connection targetConnection) {
+    public ImportOHDM(Connection sourceConnection, Connection targetConnection) {
         super(sourceConnection, targetConnection);
     }
 
@@ -79,7 +82,7 @@ public class OHDMImporter extends Transfer implements Importer {
                 this.idExternalSystemOSM = result.getInt(1);
 
             } catch (SQLException ex) {
-                Logger.getLogger(OHDMImporter.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ImportOHDM.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         
@@ -157,18 +160,38 @@ public class OHDMImporter extends Transfer implements Importer {
         return true;
     }
     
-    private ResultSet executeQueryOnTarget(String sql) throws SQLException {
-        PreparedStatement stmt = this.targetConnection.prepareStatement(sql);
-        ResultSet result = stmt.executeQuery();
-        result.next();
-        
-        return result;
-    }
-    
-    private void executeOnTarget(String sql) throws SQLException {
-        PreparedStatement stmt = this.targetConnection.prepareStatement(sql);
-        stmt.execute();
-    }
-    
+    public static void main(String args[]) {
+        // let's fill OHDM database
 
+        // connect to OHDM source (intermediate database)
+        String serverName = "localhost";
+        String portNumber = "5432";
+        String user = "admin";
+        String pwd = "root";
+        String path = "ohdm";
+        
+        // TODO connect to target OHDM DB
+
+        try {
+            Properties connProps = new Properties();
+            connProps.put("user", user);
+            connProps.put("password", pwd);
+            Connection connection = DriverManager.getConnection(
+                    "jdbc:postgresql://" + serverName
+                    + ":" + portNumber + "/" + path, connProps);
+            
+            Importer i = new ImportOHDM(connection, connection);
+          
+            ExportIntermediateDB exporter = 
+                    new ExportIntermediateDB(connection, i);
+            
+            exporter.processNodes();
+            exporter.processWays();
+            exporter.processRelations();
+  
+        } catch (SQLException e) {
+          System.err.println("cannot connect to database: " + e.getLocalizedMessage());
+        }
+    }
+    
 }

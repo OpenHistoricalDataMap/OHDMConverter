@@ -162,10 +162,22 @@ public class ImportOHDM extends Importer {
     //                          CREATE STRUCTURES                         //
     ////////////////////////////////////////////////////////////////////////
 
+    // ids are defined identically in each table
+    static protected String getCreateTableBegin(String schema, String tableName) {
+        StringBuilder sb = new StringBuilder();
+        
+        sb.append("CREATE TABLE ");
+        sb.append(ImportOHDM.getFullTableName(schema, tableName));
+        sb.append(" (");
+        sb.append(ImportOHDM.getCreatePrimaryKeyDescription(schema, tableName));
+        
+        return sb.toString();
+    }
+    
     // primary key are created identically
     static protected String getCreatePrimaryKeyDescription(String schema, String tableName) {
         return "id bigint NOT NULL DEFAULT nextval('"
-                + ImportOHDM.getSequenceName(ImportOHDM.getFull_TableName(schema, tableName))
+                + ImportOHDM.getSequenceName(ImportOHDM.getFullTableName(schema, tableName))
                 + "'::regclass),"
                 + " CONSTRAINT "
                 + tableName
@@ -176,7 +188,7 @@ public class ImportOHDM extends Importer {
         SQLStatementQueue sq = new SQLStatementQueue(targetConnection);
         
         sq.append("CREATE SEQUENCE "); 
-        sq.append(ImportOHDM.getSequenceName(ImportOHDM.getFull_TableName(schema, tableName)));
+        sq.append(ImportOHDM.getSequenceName(ImportOHDM.getFullTableName(schema, tableName)));
         sq.append(" INCREMENT 1 MINVALUE 1 MAXVALUE 9223372036854775807 START 1 CACHE 1;");
         sq.flush();
     }
@@ -184,13 +196,15 @@ public class ImportOHDM extends Importer {
     static protected void drop(Connection targetConnection, String schema, String tableName) {
         SQLStatementQueue sq = new SQLStatementQueue(targetConnection);
         
+        String fullTableName = ImportOHDM.getFullTableName(schema, tableName);
+        
         sq.append("DROP SEQUENCE ");
-        sq.append(ImportOHDM.getSequenceName(ImportOHDM.getFull_TableName(schema, tableName)));
+        sq.append(ImportOHDM.getSequenceName(fullTableName));
         sq.append(" CASCADE;");
         sq.flush();
         
         sq.append("DROP TABLE ");
-        sq.append(ImportOHDM.getFull_TableName(schema, tableName));
+        sq.append(fullTableName);
         sq.append(" CASCADE;");
         sq.flush();
     }
@@ -203,19 +217,8 @@ public class ImportOHDM extends Importer {
         return tableName + "_id ";
     }
     
-    static protected String getFull_TableName(String schema, String tableName) {
+    static protected String getFullTableName(String schema, String tableName) {
         return schema + "." + tableName;
-    }
-    
-    static protected String getCreateTableBegin(String schema, String tableName) {
-        StringBuilder sb = new StringBuilder();
-        
-        sb.append("CREATE TABLE ");
-        sb.append(ImportOHDM.getFull_TableName(schema, tableName));
-        sb.append(" (");
-        sb.append(ImportOHDM.getCreatePrimaryKeyDescription(schema, tableName)); // without schema!
-        
-        return sb.toString();
     }
     
     // Table names

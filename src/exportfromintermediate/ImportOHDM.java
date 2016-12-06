@@ -128,12 +128,31 @@ public class ImportOHDM extends Importer {
         }
         
     }
+    
+    int addOHDMObject(OHDMElement ohdmElement) {
+        return -1;
+    }
+    
+    int addGeometry(OHDMElement ohdmElement) {
+        return -1;
+    }
+    
+    void addValidity(OHDMElement ohdmElement, int object_id, int geometry_id) {
+    }
+    
+    void addContentAndURL(OHDMElement ohdmElement, int object_id) {
+    }
+    
+    void updateIntermediateSource(OHDMElement ohdmElement, int object_id, int geometry_id) {
+        
+    }
+    
     @Override
     public boolean importNode(OHDMNode node) {
         ArrayList<TagElement> tags = node.getTags();
         
         /* nodes without tags have no identity and are part of a way or relation
-        and stored with them. We are done here.
+        and stored with them. We are done here and return
         */
         if(tags == null) return false;
         // tag has an identity due to its tags
@@ -142,18 +161,23 @@ public class ImportOHDM extends Importer {
         String externalUserID = node.getUserID();
         String externalUsername = node.getUsername();
         
-        int ohdm_id_ExternalUser = this.getOHDM_ID_ExternalUser(externalUserID, externalUsername);
+        int id_ExternalUser = this.getOHDM_ID_ExternalUser(externalUserID, externalUsername);
         
         // create OHDM object
+        int object_id = this.addOHDMObject(node);
         // HIER WEITERMACHEN... BEKOMMT man bei einem insert den primary key zurück?
         
         // create a geoemtry in OHDM
+        int geometry_id = this.addGeometry(node);
         
         // create entry in object_geometry table
+        addValidity(node, object_id, geometry_id);
         
         // keep some special tags (url etc, see wiki)
+        addContentAndURL(node, object_id);
         
         // remind those actions in intermediate database by setting ohdm_id
+        updateIntermediateSource(node, object_id, geometry_id);
         
         return true;
     }

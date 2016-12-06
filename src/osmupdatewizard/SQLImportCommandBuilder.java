@@ -245,7 +245,8 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
 //              .append("node_id bigint REFERENCES ").append(NODETABLE).append(" (osm_id), ")
               .append("node_id bigint, ")
 //              .append("member_rel_id bigint REFERENCES ").append(RELATIONTABLE).append(" (osm_id));");
-              .append("member_rel_id bigint);");
+              .append("member_rel_id bigint, ")
+              .append("role character varying);");
       this.setupTable(RELATIONMEMBER, sqlRelMember.toString());
       
     } catch (SQLException e) {
@@ -970,95 +971,61 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
 
   private final HashMap<String, RelationElement> rels = new HashMap<>();
 
-  private void saveRelElements() {
-    StringBuilder sb = new StringBuilder("INSERT INTO ");
-    sb.append(RELATIONTABLE).append(" (osm_id, classcode, serializedtags, valid) VALUES");
-    boolean nodeInside = false;
-    StringBuilder sqlMapNode = new StringBuilder("INSERT INTO ");
-    sqlMapNode.append(RELATIONMEMBER).append(" (relation_id, node_id) VALUES");
-    boolean wayInside = false;
-    StringBuilder sqlMapWay = new StringBuilder("INSERT INTO ");
-    sqlMapWay.append(RELATIONMEMBER).append(" (relation_id, way_id) VALUES");
-    boolean relInside = false;
-    StringBuilder sqlMapRel = new StringBuilder("INSERT INTO ");
-    sqlMapRel.append(RELATIONMEMBER).append(" (relation_id, member_rel_id) VALUES");
-    for (Map.Entry<String, RelationElement> entry : rels.entrySet()) {
+    private void saveRelElements() {
+        SQLStatementQueue sq = new SQLStatementQueue(this.connection, this.logger);
         
-        RelationElement relationElement = entry.getValue();
-        
-        int classID = OSMClassification.getOSMClassification().getOHDMClassID(relationElement);
-        
-        String sTags = relationElement.getSerializedTags();
-        
-        sb.append(" (").append(entry.getKey()).append(", ")
-                  .append(classID);
+        for (Map.Entry<String, RelationElement> entry : rels.entrySet()) {
+            RelationElement relationElement = entry.getValue();
 
-        sb.append(", '");
-        sb.append(sTags);
-        sb.append("', ");
+            String osm_id = entry.getKey();
+            int classID = OSMClassification.getOSMClassification().getOHDMClassID(relationElement);
+            String sTags = relationElement.getSerializedTags();
 
-        sb.append("true").append("),");
-      
-      
-      for (MemberElement member : entry.getValue().getMember()) {
-        switch (member.getType()) {
-          case "node":
-            sqlMapNode.append(" (").append(entry.getKey()).append(", ")
-                    .append(member.getId()).append("),");
-            nodeInside = true;
-            break;
-          case "way":
-            sqlMapWay.append(" (").append(entry.getKey()).append(", ")
-                    .append(member.getId()).append("),");
-            wayInside = true;
-            break;
-          case "relation":
-            sqlMapRel.append(" (").append(entry.getKey()).append(", ")
-                    .append(member.getId()).append("),");
-            relInside = true;
-            break;
-          default:
-            logger.print(3, "member with incorrect type");
-            break;
+            sq.append("INSERT INTO ");
+            sq.append(RELATIONTABLE);
+            sq.append(" (osm_id, classcode, serializedtags, valid) VALUES (");
+            sq.append(osm_id);
+            sq.append(", ");
+            sq.append(classID);
+            sq.append(", '");
+            sq.append(sTags);
+            sq.append("', true);");
+            
+//            sq.flush();
+
+        // add entry to member table    
+        for (MemberElement member : entry.getValue().getMember()) {
+            sq.append("INSERT INTO ");
+            sq.append(RELATIONMEMBER);
+            sq.append(" (relation_id, role, ");
+            
+            switch (member.getType()) {
+              case "node":
+                sq.append(" node_id)");  break;
+              case "way":
+                sq.append(" way_id)"); break;
+              case "relation":
+                sq.append(" member_rel_id)"); break;
+              default:
+                logger.print(3, "member with incorrect type"); break;
+            }
+            
+            // add values
+            sq.append(" VALUES (");
+            sq.append(osm_id);
+            sq.append(", '");
+            sq.append(member.getRole());
+            sq.append("', ");
+            sq.append(member.getId());
+            sq.append(");");
+            
+            // sq.flush();
+            
+            // member.getId();
+          }
+        sq.flush(); // after each relation
         }
-        member.getId();
-      }
     }
-    try (PreparedStatement stmt = connection.prepareStatement(
-            sb.deleteCharAt(sb.length() - 1).append(";").toString())) {
-      stmt.execute();
-    } catch (SQLException e) {
-      logger.print(1, e.getLocalizedMessage(), true);
-      logger.print(4, sb.toString());
-    }
-    if (nodeInside) {
-      try (PreparedStatement stmt = connection.prepareStatement(
-              sqlMapNode.deleteCharAt(sqlMapNode.length() - 1).append(";").toString())) {
-        stmt.execute();
-      } catch (SQLException e) {
-        logger.print(1, e.getLocalizedMessage(), true);
-        logger.print(4, sqlMapNode.toString());
-      }
-    }
-    if (wayInside) {
-      try (PreparedStatement stmt = connection.prepareStatement(
-              sqlMapWay.deleteCharAt(sqlMapWay.length() - 1).append(";").toString())) {
-        stmt.execute();
-      } catch (SQLException e) {
-        logger.print(1, e.getLocalizedMessage(), true);
-        logger.print(4, sqlMapWay.toString());
-      }
-    }
-    if (relInside) {
-      try (PreparedStatement stmt = connection.prepareStatement(
-              sqlMapRel.deleteCharAt(sqlMapRel.length() - 1).append(";").toString())) {
-        stmt.execute();
-      } catch (SQLException e) {
-        logger.print(1, e.getLocalizedMessage(), true);
-        logger.print(4, sqlMapRel.toString());
-      }
-    }
-  }
 
   /**
    * OSM Relations are defined here: http://wiki.openstreetmap.org/wiki/Relation

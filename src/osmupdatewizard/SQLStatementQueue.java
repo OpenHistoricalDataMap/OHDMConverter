@@ -76,7 +76,7 @@ public class SQLStatementQueue {
                 logger.print(1, ex.getLocalizedMessage(), true);
                 logger.print(4, this.sqlQueue.toString());
             } else {
-                System.err.println(ex.getLocalizedMessage());
+                System.err.println(ex.getMessage());
             }
         }
         

@@ -1,12 +1,10 @@
 package exportfromintermediate;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import osmupdatewizard.SQLStatementQueue;
@@ -160,34 +158,308 @@ public class ImportOHDM extends Importer {
         return true;
     }
     
+    ////////////////////////////////////////////////////////////////////////
+    //                          CREATE STRUCTURES                         //
+    ////////////////////////////////////////////////////////////////////////
+
+    // sequences have same parameters for each associated table
+    static protected String getCreateSequenceStatement(String tableName) {
+        return "CREATE SEQUENCE " 
+                + ImportOHDM.getSequenceName(tableName)
+                + " INCREMENT 1 "
+                + "MINVALUE 1 "
+                + "MAXVALUE 9223372036854775807 " 
+                + "START 1 "
+                + "CACHE 1"
+                + ";";
+    }
+    
+    // primary key are created identically
+    static protected String getCreatePrimaryKeyDescription(String schema, String tableName) {
+        return "id bigint NOT NULL DEFAULT nextval('"
+                + ImportOHDM.getSequenceName(ImportOHDM.getFull_TableName(schema, tableName))
+                + "'::regclass),"
+                + " CONSTRAINT "
+                + tableName
+                + "_pkey PRIMARY KEY (id)";
+    }
+    
+    static protected void createSequence(Connection targetConnection, String schema, String tableName) {
+        SQLStatementQueue sq = new SQLStatementQueue(targetConnection);
+        
+        String fullTableName = ImportOHDM.getFull_TableName(schema, tableName);
+        
+        String sequenceStatement = ImportOHDM.getCreateSequenceStatement(fullTableName);
+        sq.append(sequenceStatement);
+        sq.flush();
+    }
+    
+    static protected void drop(Connection targetConnection, String tableName) {
+        SQLStatementQueue sq = new SQLStatementQueue(targetConnection);
+        
+        sq.append("DROP SEQUENCE ");
+        sq.append(ImportOHDM.getSequenceName(tableName));
+        sq.append(" CASCADE;");
+        sq.flush();
+        
+        sq.append("DROP TABLE ");
+        sq.append(tableName);
+        sq.append(" CASCADE;");
+        sq.flush();
+    }
+    
+    ////////////////////////////////////////////////////////////////////////
+    //                                names                               //
+    ////////////////////////////////////////////////////////////////////////
+    
+    static protected String getSequenceName(String tableName) {
+        return tableName + "_id ";
+    }
+    
+    static protected String getFull_TableName(String schema, String tableName) {
+        return schema + "." + tableName;
+    }
+    
+    static protected String getCreateTableBegin(String schema, String tableName) {
+        StringBuilder sb = new StringBuilder();
+        
+        sb.append("CREATE TABLE ");
+        sb.append(ImportOHDM.getFull_TableName(schema, tableName));
+        sb.append(" (");
+        sb.append(ImportOHDM.getCreatePrimaryKeyDescription(schema, tableName)); // without schema!
+        
+        return sb.toString();
+    }
+    
+    // Table names
+    static final String EXTERNAL_SYSTEMS = "external_systems";
+    static final String EXTERNAL_USERS = "external_users";
+    static final String CLASSIFICATION = "classification";
+    static final String CONTENT = "content";
+    static final String GEOOBJECT = "geoobject";
+    static final String GEOOBJECT_CONTENT = "geoobject_content";
+    static final String GEOOBJECT_GEOMETRY = "geoobject_geometry";
+    static final String GEOOBJECT_URL = "geoobject_url";
+    static final String LINES = "lines";
+    static final String POINTS = "points";
+    static final String POLYGONS = "polygons";
+    static final String URL = "url";
+    
+    
+    void dropOHDMTables(Connection targetConnection, String schema) {
+        // drop
+        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, EXTERNAL_SYSTEMS));
+        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, EXTERNAL_USERS));
+        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, CLASSIFICATION));
+        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, CONTENT));
+        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, GEOOBJECT));
+        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, GEOOBJECT_CONTENT));
+        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, GEOOBJECT_GEOMETRY));
+        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, GEOOBJECT_URL));
+        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, LINES));
+        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, POINTS));
+        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, POLYGONS));
+        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, URL));
+    }
+    
+    void createOHDMTables(Connection targetConnection, String schema) {
+        SQLStatementQueue sq;
+        
+        // EXTERNAL SYSTEMS
+        // sequence
+        ImportOHDM.createSequence(targetConnection, schema, EXTERNAL_SYSTEMS);
+        // table
+        sq = new SQLStatementQueue(targetConnection);
+        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.EXTERNAL_SYSTEMS));
+        // add table specifics
+        sq.append(",");
+        sq.append("name character varying,");
+        sq.append("description character varying");
+        sq.append(");");
+        sq.flush();
+        
+        // EXTERNAL_USERS
+        // sequence
+        ImportOHDM.createSequence(targetConnection, schema, EXTERNAL_USERS);
+        // table
+        sq = new SQLStatementQueue(targetConnection);
+        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.EXTERNAL_USERS));
+        // add table specifics:
+        sq.append(",");
+        sq.append("userid bigint,");
+        sq.append("username character varying,");
+        sq.append("external_system_id bigint NOT NULL");
+        // TODO: add foreign key constraints
+        sq.append(");");
+        sq.flush();
+        
+        // CLASSIFICATION
+        // sequence
+        ImportOHDM.createSequence(targetConnection, schema, CLASSIFICATION);
+        // table
+        sq = new SQLStatementQueue(targetConnection);
+        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.CLASSIFICATION));
+        // add table specifics:
+        sq.append(",");
+        sq.append("class character varying,");
+        sq.append("subclass character varying");
+        sq.append(");");
+        sq.flush();
+        
+        // CONTENT
+        // sequence
+        ImportOHDM.createSequence(targetConnection, schema, CONTENT);
+        // table
+        sq = new SQLStatementQueue(targetConnection);
+        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.CONTENT));
+        // add table specifics:
+        sq.append(",");
+        sq.append("name character varying,");
+        sq.append("value bytea NOT NULL,");
+        sq.append("mimetype character varying");
+        sq.append(");");
+        sq.flush();
+        
+        // GEOOBJECT
+        // sequence
+        ImportOHDM.createSequence(targetConnection, schema, GEOOBJECT);
+        // table
+        sq = new SQLStatementQueue(targetConnection);
+        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.GEOOBJECT));
+        // add table specifics:
+        sq.append(",");
+        sq.append("name character varying,");
+        sq.append("classification_id bigint NOT NULL,");
+        sq.append("source_user_id bigint NOT NULL");
+        sq.append(");");
+        sq.flush();
+        
+        // GEOOBJECT_CONTENT
+        // sequence
+        ImportOHDM.createSequence(targetConnection, schema, GEOOBJECT_CONTENT);
+        // table
+        sq = new SQLStatementQueue(targetConnection);
+        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.GEOOBJECT_CONTENT));
+        // add table specifics:
+        sq.append(",");
+        sq.append("valid_since date NOT NULL,");
+        sq.append("valid_until date NOT NULL,");
+        sq.append("valid_since_offset bigint DEFAULT 0,");
+        sq.append("valid_until_offset bigint DEFAULT 0,");
+        sq.append("geoobject_id bigint NOT NULL,");
+        sq.append("content_id bigint NOT NULL");
+        sq.append(");");
+        sq.flush();
+        
+        // GEOOBJECT_GEOMETRY
+        // sequence
+        ImportOHDM.createSequence(targetConnection, schema, GEOOBJECT_GEOMETRY);
+        // table
+        sq = new SQLStatementQueue(targetConnection);
+        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.GEOOBJECT_GEOMETRY));
+        // add table specifics:
+        sq.append(",");
+        sq.append("id_point bigint,");
+        sq.append("id_line bigint,");
+        sq.append("id_polygon bigint,");
+        sq.append("id_geoobject_target bigint,");
+        sq.append("id_geoobject_source bigint NOT NULL,");
+        sq.append("valid_since date NOT NULL,");
+        sq.append("valid_until date NOT NULL,");
+        sq.append("valid_since_offset bigint DEFAULT 0,");
+        sq.append("valid_until_offset bigint DEFAULT 0");
+        sq.append(");");
+        sq.flush();
+        
+        // GEOOBJECT_URL
+        // sequence
+        ImportOHDM.createSequence(targetConnection, schema, GEOOBJECT_URL);
+        // table
+        sq = new SQLStatementQueue(targetConnection);
+        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.GEOOBJECT_URL));
+        // add table specifics:
+        sq.append(",");
+        sq.append("geoobject_id bigint NOT NULL,");
+        sq.append("url_id bigint NOT NULL,");
+        sq.append("valid_since date NOT NULL,");
+        sq.append("valid_until date NOT NULL,");
+        sq.append("valid_since_offset bigint DEFAULT 0,");
+        sq.append("valid_until_offset bigint DEFAULT 0");
+        sq.append(");");
+        sq.flush();
+        
+        // LINES
+        // sequence
+        ImportOHDM.createSequence(targetConnection, schema, LINES);
+        // table
+        sq = new SQLStatementQueue(targetConnection);
+        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.LINES));
+        // add table specifics:
+        sq.append(",");
+        sq.append("line geometry,");
+        sq.append("source_user_id bigint");
+        sq.append(");");
+        sq.flush();
+        
+        // POINTS
+        // sequence
+        ImportOHDM.createSequence(targetConnection, schema, POINTS);
+        // table
+        sq = new SQLStatementQueue(targetConnection);
+        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.POINTS));
+        // add table specifics:
+        sq.append(",");
+        sq.append("point geometry,");
+        sq.append("source_user_id bigint");
+        sq.append(");");
+        sq.flush();
+        
+        // POLYGONS
+        // sequence
+        ImportOHDM.createSequence(targetConnection, schema, POLYGONS);
+        // table
+        sq = new SQLStatementQueue(targetConnection);
+        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.POLYGONS));
+        // add table specifics:
+        sq.append(",");
+        sq.append("polygone geometry,");
+        sq.append("source_user_id bigint");
+        sq.append(");");
+        sq.flush();
+        
+        // URL
+        // sequence
+        ImportOHDM.createSequence(targetConnection, schema, URL);
+        // table
+        sq = new SQLStatementQueue(targetConnection);
+        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.URL));
+        // add table specifics:
+        sq.append(",");
+        sq.append("url character varying");
+        sq.append(");");
+        sq.flush();
+        
+    }
+    
     public static void main(String args[]) {
         // let's fill OHDM database
-
-        // connect to OHDM source (intermediate database)
-        String serverName = "localhost";
-        String portNumber = "5432";
-        String user = "admin";
-        String pwd = "root";
-        String path = "ohdm";
-        
-        // TODO connect to target OHDM DB
-
         try {
-            Properties connProps = new Properties();
-            connProps.put("user", user);
-            connProps.put("password", pwd);
-            Connection connection = DriverManager.getConnection(
-                    "jdbc:postgresql://" + serverName
-                    + ":" + portNumber + "/" + path, connProps);
+            Connection sourceConnection = Importer.createLocalTestSourceConnection();
+            Connection targetConnection = Importer.createLocalTestTargetConnection();
             
-            Importer i = new ImportOHDM(connection, connection);
-          
+            ImportOHDM ohdmImporter = new ImportOHDM(sourceConnection, targetConnection);
+            
+            ohdmImporter.dropOHDMTables(targetConnection, "ohdm");
+            ohdmImporter.createOHDMTables(targetConnection, "ohdm");
+
+            /*
             ExportIntermediateDB exporter = 
-                    new ExportIntermediateDB(connection, i);
+                    new ExportIntermediateDB(sourceConnection, ohdmImporter);
             
             exporter.processNodes();
             exporter.processWays();
             exporter.processRelations();
+            */
   
         } catch (SQLException e) {
           System.err.println("cannot connect to database: " + e.getLocalizedMessage());

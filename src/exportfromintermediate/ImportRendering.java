@@ -1,9 +1,7 @@
 package exportfromintermediate;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Properties;
 import osmupdatewizard.SQLStatementQueue;
 
 /**
@@ -152,40 +150,8 @@ INSERT INTO this.HIGWAYTABLE_NAME(
         // let's fill OHDM database
 
         try {
-            // connect to OHDM source (intermediate database)
-            String sourceServerName = "localhost";
-            String sourcePortNumber = "5432";
-            String sourceUser = "admin";
-            String sourcePWD = "root";
-            String sourcePath = "ohdm";
-        
-            Properties sourceConnProps = new Properties();
-            sourceConnProps.put("user", sourceUser);
-            sourceConnProps.put("password", sourcePWD);
-            Connection sourceConnection = DriverManager.getConnection(
-                    "jdbc:postgresql://" + sourceServerName
-                    + ":" + sourcePortNumber + "/" + sourcePath, sourceConnProps);
-            
-            // connect to target OHDM DB - local
-            String targetServerName = "localhost";
-            String targetPortNumber = "5432";
-            String targetUser = "admin";
-            String targetPWD = "root";
-            String targetPath = "ohdm_full";
-        
-            // connect to target OHDM DB - ohm
-//            String targetServerName = "ohm.f4.htw-berlin.de";
-//            String targetPortNumber = "5432";
-//            String targetUser = "...";
-//            String targetPWD = "...";
-//            String targetPath = "ohdm_rendering";
-        
-            Properties targetConnProps = new Properties();
-            targetConnProps.put("user", targetUser);
-            targetConnProps.put("password", targetPWD);
-            Connection targetConnection = DriverManager.getConnection(
-                    "jdbc:postgresql://" + targetServerName
-                    + ":" + targetPortNumber + "/" + targetPath, targetConnProps);
+            Connection sourceConnection = Importer.createLocalTestSourceConnection();
+            Connection targetConnection = Importer.createLocalTestTargetConnection();
             
 //            Transfer i = new ImportRendering(sourceConnection, targetConnection, false);
             ImportRendering i = new ImportRendering(sourceConnection, targetConnection, true);

@@ -162,18 +162,6 @@ public class ImportOHDM extends Importer {
     //                          CREATE STRUCTURES                         //
     ////////////////////////////////////////////////////////////////////////
 
-    // sequences have same parameters for each associated table
-    static protected String getCreateSequenceStatement(String tableName) {
-        return "CREATE SEQUENCE " 
-                + ImportOHDM.getSequenceName(tableName)
-                + " INCREMENT 1 "
-                + "MINVALUE 1 "
-                + "MAXVALUE 9223372036854775807 " 
-                + "START 1 "
-                + "CACHE 1"
-                + ";";
-    }
-    
     // primary key are created identically
     static protected String getCreatePrimaryKeyDescription(String schema, String tableName) {
         return "id bigint NOT NULL DEFAULT nextval('"
@@ -187,23 +175,22 @@ public class ImportOHDM extends Importer {
     static protected void createSequence(Connection targetConnection, String schema, String tableName) {
         SQLStatementQueue sq = new SQLStatementQueue(targetConnection);
         
-        String fullTableName = ImportOHDM.getFull_TableName(schema, tableName);
-        
-        String sequenceStatement = ImportOHDM.getCreateSequenceStatement(fullTableName);
-        sq.append(sequenceStatement);
+        sq.append("CREATE SEQUENCE "); 
+        sq.append(ImportOHDM.getSequenceName(ImportOHDM.getFull_TableName(schema, tableName)));
+        sq.append(" INCREMENT 1 MINVALUE 1 MAXVALUE 9223372036854775807 START 1 CACHE 1;");
         sq.flush();
     }
     
-    static protected void drop(Connection targetConnection, String tableName) {
+    static protected void drop(Connection targetConnection, String schema, String tableName) {
         SQLStatementQueue sq = new SQLStatementQueue(targetConnection);
         
         sq.append("DROP SEQUENCE ");
-        sq.append(ImportOHDM.getSequenceName(tableName));
+        sq.append(ImportOHDM.getSequenceName(ImportOHDM.getFull_TableName(schema, tableName)));
         sq.append(" CASCADE;");
         sq.flush();
         
         sq.append("DROP TABLE ");
-        sq.append(tableName);
+        sq.append(ImportOHDM.getFull_TableName(schema, tableName));
         sq.append(" CASCADE;");
         sq.flush();
     }
@@ -248,18 +235,18 @@ public class ImportOHDM extends Importer {
     
     void dropOHDMTables(Connection targetConnection, String schema) {
         // drop
-        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, EXTERNAL_SYSTEMS));
-        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, EXTERNAL_USERS));
-        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, CLASSIFICATION));
-        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, CONTENT));
-        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, GEOOBJECT));
-        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, GEOOBJECT_CONTENT));
-        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, GEOOBJECT_GEOMETRY));
-        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, GEOOBJECT_URL));
-        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, LINES));
-        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, POINTS));
-        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, POLYGONS));
-        ImportOHDM.drop(targetConnection, ImportOHDM.getFull_TableName(schema, URL));
+        ImportOHDM.drop(targetConnection, schema, EXTERNAL_SYSTEMS);
+        ImportOHDM.drop(targetConnection, schema, EXTERNAL_USERS);
+        ImportOHDM.drop(targetConnection, schema, CLASSIFICATION);
+        ImportOHDM.drop(targetConnection, schema, CONTENT);
+        ImportOHDM.drop(targetConnection, schema, GEOOBJECT);
+        ImportOHDM.drop(targetConnection, schema, GEOOBJECT_CONTENT);
+        ImportOHDM.drop(targetConnection, schema, GEOOBJECT_GEOMETRY);
+        ImportOHDM.drop(targetConnection, schema, GEOOBJECT_URL);
+        ImportOHDM.drop(targetConnection, schema, LINES);
+        ImportOHDM.drop(targetConnection, schema, POINTS);
+        ImportOHDM.drop(targetConnection, schema, POLYGONS);
+        ImportOHDM.drop(targetConnection, schema, URL);
     }
     
     void createOHDMTables(Connection targetConnection, String schema) {

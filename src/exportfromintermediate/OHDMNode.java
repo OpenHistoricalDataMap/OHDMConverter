@@ -39,4 +39,9 @@ public class OHDMNode extends OHDMElement {
     String getLatitude() {
         return this.latitude;
     }
+
+    @Override
+    GeometryType getGeometryType() {
+        return GeometryType.POINT;
+    }
 }

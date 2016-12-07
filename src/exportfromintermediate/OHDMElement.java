@@ -25,6 +25,8 @@ abstract class OHDMElement extends AbstractElement {
     
     private final String nodeIDs;
     protected boolean isPolygone;
+    
+    public static enum GeometryType {POINT, LINESTRING, POLYGON};
 
     OHDMElement(BigDecimal osmID, BigDecimal classCode, String sAttributes, String sTags, String nodeIDs, BigDecimal ohdmID, BigDecimal ohdmObjectID, boolean valid) {
         super(sAttributes, sTags);
@@ -41,6 +43,8 @@ abstract class OHDMElement extends AbstractElement {
     }
     
     abstract String getWKTGeometry();
+    
+    abstract GeometryType getGeometryType();
 
     BigDecimal getOSMID() {
         return osmID;

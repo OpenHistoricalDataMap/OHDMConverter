@@ -169,55 +169,159 @@ public class ImportOHDM extends Importer {
         
     }
     
-    int addOHDMObject(OHDMElement ohdmElement, int externalUserID) {
-        return -1;
+    int addOHDMObject(OHDMElement ohdmElement, int externalUserID) throws SQLException {
+        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
+        
+        String name = ohdmElement.getName();
+        int classID = ohdmElement.getClassCode();
+        
+        sq.append("INSERT INTO ");
+        sq.append(ImportOHDM.getFullTableName(this.targetSchema, ImportOHDM.GEOOBJECT));
+        sq.append(" (name, classification_id, source_user_id) VALUES ('");
+        sq.append(name);
+        sq.append("', ");
+        sq.append(classID);
+        sq.append(", ");
+        sq.append(externalUserID);
+        sq.append(") RETURNING id;");
+        
+        ResultSet result = sq.executeQueryOnTarget();
+        result.next();
+        return result.getInt(1);
     }
     
-    int addGeometry(OHDMElement ohdmElement, int externalUserID) {
-        return -1;
+    int addGeometry(OHDMElement ohdmElement, int externalUserID) throws SQLException {
+        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
+        
+        sq.append("INSERT INTO ");
+        
+        String fullTableName;
+        
+        switch(ohdmElement.getGeometryType()) {
+            case POINT: 
+                fullTableName = ImportOHDM.getFullTableName(this.targetSchema, ImportOHDM.POINTS);
+                sq.append(fullTableName);
+                sq.append(" (point, ");
+                break;
+            case LINESTRING: 
+                fullTableName = ImportOHDM.getFullTableName(this.targetSchema, ImportOHDM.LINES);
+                sq.append(fullTableName);
+                sq.append(" (line, ");
+                break;
+            case POLYGON: 
+                fullTableName = ImportOHDM.getFullTableName(this.targetSchema, ImportOHDM.POLYGONS);
+                sq.append(fullTableName);
+                sq.append(" (polygon, ");
+                break;
+        }
+        
+        sq.append(" source_user_id) VALUES ('");
+        
+        String wkt = ohdmElement.getWKTGeometry();
+        sq.append(wkt);
+        sq.append("', ");
+        sq.append(externalUserID);
+        sq.append(") RETURNING id;");
+        
+        ResultSet result = sq.executeQueryOnTarget();
+        result.next();
+        return result.getInt(1);
     }
     
     void addValidity(OHDMElement ohdmElement, int object_id, int geometry_id) {
+        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
+        
+        sq.append("INSERT INTO ");
+        sq.append(ImportOHDM.getFullTableName(this.targetSchema, ImportOHDM.GEOOBJECT_GEOMETRY));
+        sq.append(" (id_geoobject_source, valid_since, valid_until, ");
+        
+        switch(ohdmElement.getGeometryType()) {
+            case POINT: 
+                sq.append(" id_point) VALUES (");
+                break;
+            case LINESTRING: 
+                sq.append(" id_line) VALUES (");
+                break;
+            case POLYGON: 
+                sq.append(" id_polygon) VALUES (");
+                break;
+        }
+        
+        sq.append(object_id);
+        sq.append(", ");
+        sq.append("'01-01-1970', "); // since
+        sq.append("'01-01-2017', "); // until
+        sq.append(geometry_id);
+        sq.append(");");
+        
+        sq.flush();
     }
     
     void addContentAndURL(OHDMElement ohdmElement, int object_id) {
+        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
     }
     
     void updateIntermediateSource(OHDMElement ohdmElement, int object_id, int geometry_id) {
+        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
         
+    }
+    
+    private boolean elementHasIdentity(OHDMElement ohdmElement) {
+        String name = ohdmElement.getName();
+        
+        // must have a name
+        if(name == null || name.length() < 1) return false;
+        
+        // name must not be a single number
+        try {
+            Integer.parseInt(name);
+            
+            // it's a number and only a number
+            return false;
+        }
+        catch(NumberFormatException e) {
+            // that's ok - no number.. go ahead
+        }
+        
+        return true;
     }
     
     @Override
     public boolean importNode(OHDMNode node) {
         ArrayList<TagElement> tags = node.getTags();
         
-        /* nodes without tags have no identity and are part of a way or relation
-        and stored with them. We are done here and return
-        */
-        if(tags == null) return false;
-        // tag has an identity due to its tags
+        try {
+            /* nodes without tags have no identity and are part of a way or relation
+            and stored with them. We are done here and return
+            */
+            if(!this.elementHasIdentity(node)) {
+                return false;
+            }
 
-        // create user entry or find user primary key
-        String externalUserID = node.getUserID();
-        String externalUsername = node.getUsername();
-        
-        int id_ExternalUser = this.getOHDM_ID_ExternalUser(externalUserID, externalUsername);
-        
-        // create OHDM object
-        int object_id = this.addOHDMObject(node, id_ExternalUser);
-        // HIER WEITERMACHEN... 
-        
-        // create a geoemtry in OHDM
-        int geometry_id = this.addGeometry(node, id_ExternalUser);
-        
-        // create entry in object_geometry table
-        addValidity(node, object_id, geometry_id);
-        
-        // keep some special tags (url etc, see wiki)
-        addContentAndURL(node, object_id);
-        
-        // remind those actions in intermediate database by setting ohdm_id
-        updateIntermediateSource(node, object_id, geometry_id);
+            // create user entry or find user primary key
+            String externalUserID = node.getUserID();
+            String externalUsername = node.getUsername();
+
+            int id_ExternalUser = this.getOHDM_ID_ExternalUser(externalUserID, externalUsername);
+
+            // create OHDM object
+            int object_id = this.addOHDMObject(node, id_ExternalUser);
+
+            // create a geoemtry in OHDM
+            int geometry_id = this.addGeometry(node, id_ExternalUser);
+
+            // create entry in object_geometry table
+            addValidity(node, object_id, geometry_id);
+
+            // keep some special tags (url etc, see wiki)
+            addContentAndURL(node, object_id);
+
+            // remind those actions in intermediate database by setting ohdm_id
+            updateIntermediateSource(node, object_id, geometry_id);
+        }
+        catch(Exception e) {
+            System.err.println("failure during node import: " + e.getMessage());
+        }
         
         return true;
     }
@@ -489,7 +593,7 @@ public class ImportOHDM extends Importer {
         sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.POLYGONS));
         // add table specifics:
         sq.append(",");
-        sq.append("polygone geometry,");
+        sq.append("polygon geometry,");
         sq.append("source_user_id bigint");
         sq.append(");");
         sq.flush();

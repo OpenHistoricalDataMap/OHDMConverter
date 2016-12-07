@@ -66,4 +66,13 @@ public class OHDMWay extends OHDMElement {
             wkt.append(" ");
             wkt.append(node.getLatitude());
     }
+
+    @Override
+    GeometryType getGeometryType() {
+        if(this.isPolygone) {
+            return GeometryType.POLYGON;
+        } else {
+            return GeometryType.LINESTRING;
+        }
+    }
 }

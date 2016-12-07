@@ -10,8 +10,8 @@ import java.util.StringTokenizer;
  * @author thsc
  */
 public abstract class AbstractElement {
-    protected HashMap<String, String> attributes;
-    protected ArrayList<TagElement> tags = null;
+    public final HashMap<String, String> attributes;
+    public ArrayList<TagElement> tags = null;
     
     public AbstractElement(HashMap<String, String> attributes, ArrayList<TagElement> tags) {
         this.attributes = attributes;

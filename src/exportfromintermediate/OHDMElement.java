@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 import osmupdatewizard.AbstractElement;
-import osmupdatewizard.OSMClassification;
+import osm.OSMClassification;
 
 /**
  *

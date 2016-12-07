@@ -1,18 +1,24 @@
-package osmupdatewizard;
+package osm;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import osmupdatewizard.AbstractElement;
+import osmupdatewizard.SQLStatementQueue;
+import osmupdatewizard.TagElement;
 
 /**
  *
  * @author thsc
  */
 public class OSMClassification {
-    HashMap<String, List<String>> osmFeatureClasses = new HashMap();
+    public HashMap<String, List<String>> osmFeatureClasses = new HashMap();
     
-    static final String UNDEFINED = "undefined";
+    public static final String UNDEFINED = "undefined";
     private static OSMClassification osmClassification = null;
     
     public static OSMClassification getOSMClassification() {
@@ -478,8 +484,54 @@ public class OSMClassification {
         return -1;
     }
     
-    
     private boolean isClassName(String key) {
         return this.getOSMClassification().osmFeatureClasses.keySet().contains(key);
+    }
+    
+    public void write2Table(Connection targetConnection, String classificationTableName) throws SQLException {
+        
+        SQLStatementQueue sq = new SQLStatementQueue(targetConnection);
+        
+        // init first line: unknown classification
+        sq.append("INSERT INTO ");
+        sq.append(classificationTableName);
+        sq.append(" VALUES (-1, 'no_class', 'no_subclass');");
+
+        sq.flush();
+        
+        // now append real data
+        int n = 0;
+
+        // create classification table
+        // iterate classes
+        Iterator<String> classIter = this.osmClassification.osmFeatureClasses.keySet().iterator();
+
+        while(classIter.hasNext()) {
+            String className = classIter.next();
+            List<String> subClasses = this.osmClassification.osmFeatureClasses.get(className);
+            Iterator<String> subClassIter = subClasses.iterator();
+
+            while(subClassIter.hasNext()) {
+                String subClassName = subClassIter.next();
+                
+                // add to database
+                sq.append("INSERT INTO ");
+                sq.append(classificationTableName);
+                sq.append(" (class, subclass) VALUES ('");
+                sq.append(className);
+                sq.append("', '");
+                sq.append(subClassName);
+                sq.append("') RETURNING id;");
+                
+                ResultSet insertResult = sq.executeQueryOnTarget();
+                insertResult.next();
+                int classID = insertResult.getInt(1);
+                
+                // keep in memory
+                String fullClassName = this.createFullClassName(className, subClassName);
+                
+                this.classIDs.put(fullClassName, classID);
+            }
+        }
     }
 }

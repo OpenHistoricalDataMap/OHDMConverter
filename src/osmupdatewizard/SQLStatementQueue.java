@@ -2,6 +2,7 @@ package osmupdatewizard;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
@@ -69,8 +70,11 @@ public class SQLStatementQueue {
     public void flush() {
         if(this.sqlQueue == null) return;
         
-        try (PreparedStatement stmt = connection.prepareStatement(this.sqlQueue.toString())) {
-          stmt.execute();
+        PreparedStatement stmt;
+        try {
+            stmt = connection.prepareStatement(this.sqlQueue.toString());
+            stmt.execute();
+            stmt.close();
         } catch (SQLException ex) {
             if(this.logger != null) {
                 logger.print(1, ex.getLocalizedMessage(), true);
@@ -81,5 +85,20 @@ public class SQLStatementQueue {
         }
         
         this.sqlQueue = null;
+    }
+    
+    public ResultSet executeQueryOnTarget() throws SQLException {
+        PreparedStatement stmt = this.connection.prepareStatement(this.sqlQueue.toString());
+        
+        try {
+            ResultSet result = stmt.executeQuery();
+            this.sqlQueue = null;
+        
+            return result;
+        }
+        catch(SQLException e) {
+            this.sqlQueue = null;
+            throw e;
+        }
     }
 }

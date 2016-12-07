@@ -1,5 +1,6 @@
 package osmupdatewizard;
 
+import osm.OSMClassification;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -199,7 +200,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
       /**
        * ************ Knowledge base tables ****************************
        */
-      this.loadClassification();
+    this.loadClassification();
       
       StringBuilder sqlWay = new StringBuilder();
       sqlWay.append(" (osm_id bigint PRIMARY KEY, ")
@@ -257,7 +258,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
   
   private HashMap<String, Integer> classIDs = new HashMap<>();
 
-  private void loadClassification() throws SQLException {
+  private void loadClassification() throws SQLException {      
       String db_classificationTable = config.getValue("db_classificationTable");
     if (db_classificationTable!= null && db_classificationTable.equalsIgnoreCase("useExisting")) {
       Statement stmt = null;

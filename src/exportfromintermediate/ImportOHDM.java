@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import osm.OSMClassification;
 import osmupdatewizard.SQLStatementQueue;
 import osmupdatewizard.TagElement;
 
@@ -315,7 +316,7 @@ public class ImportOHDM extends Importer {
         ImportOHDM.drop(targetConnection, this.targetSchema, URL);
     }
     
-    void createOHDMTables(Connection targetConnection) {
+    void createOHDMTables(Connection targetConnection) throws SQLException {
         String schema = this.targetSchema;
         
         SQLStatementQueue sq;
@@ -365,6 +366,12 @@ public class ImportOHDM extends Importer {
         sq.append("subclass character varying");
         sq.append(");");
         sq.flush();
+        
+        // fill classification
+        OSMClassification.getOSMClassification().write2Table(
+                targetConnection, 
+                ImportOHDM.getFullTableName(schema, ImportOHDM.CLASSIFICATION)
+            );
         
         // CONTENT
         // sequence

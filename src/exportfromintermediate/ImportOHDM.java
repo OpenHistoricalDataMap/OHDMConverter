@@ -125,10 +125,7 @@ public class ImportOHDM extends Importer {
             // SELECT id from external_users where userid = '43566';
             StringBuilder sb = new StringBuilder();
             sb.append("SELECT id from ");
-
-            
             sb.append(ImportOHDM.getFullTableName(this.targetSchema, ImportOHDM.EXTERNAL_USERS));
-
             sb.append(" where userid = '");
             sb.append(externalUserID);
             sb.append("' AND external_system_id = '");
@@ -171,11 +168,11 @@ public class ImportOHDM extends Importer {
         
     }
     
-    int addOHDMObject(OHDMElement ohdmElement) {
+    int addOHDMObject(OHDMElement ohdmElement, int externalUserID) {
         return -1;
     }
     
-    int addGeometry(OHDMElement ohdmElement) {
+    int addGeometry(OHDMElement ohdmElement, int externalUserID) {
         return -1;
     }
     
@@ -206,11 +203,11 @@ public class ImportOHDM extends Importer {
         int id_ExternalUser = this.getOHDM_ID_ExternalUser(externalUserID, externalUsername);
         
         // create OHDM object
-        int object_id = this.addOHDMObject(node);
-        // HIER WEITERMACHEN... BEKOMMT man bei einem insert den primary key zurück?
+        int object_id = this.addOHDMObject(node, id_ExternalUser);
+        // HIER WEITERMACHEN... 
         
         // create a geoemtry in OHDM
-        int geometry_id = this.addGeometry(node);
+        int geometry_id = this.addGeometry(node, id_ExternalUser);
         
         // create entry in object_geometry table
         addValidity(node, object_id, geometry_id);
@@ -498,7 +495,8 @@ public class ImportOHDM extends Importer {
         sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.URL));
         // add table specifics:
         sq.append(",");
-        sq.append("url character varying");
+        sq.append("url character varying,");
+        sq.append("source_user_id bigint");
         sq.append(");");
         sq.flush();
         

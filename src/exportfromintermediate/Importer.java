@@ -23,7 +23,6 @@ public abstract class Importer {
     protected ResultSet executeQueryOnTarget(String sql) throws SQLException {
         PreparedStatement stmt = this.targetConnection.prepareStatement(sql);
         ResultSet result = stmt.executeQuery();
-        result.next();
         
         return result;
     }

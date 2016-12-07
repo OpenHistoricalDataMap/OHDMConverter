@@ -86,24 +86,57 @@ public abstract class AbstractElement {
         }
         return t;
     }
+    
+    public static String[] relevantAttributeKeys = new String[] {"uid", "user"};
+    
+    protected HashMap<String, String> relevantAttributes = null;
+    HashMap<String, String> getRelevantAttributes() {
+        if(this.relevantAttributes != null) {
+            return this.relevantAttributes;
+        }
+        
+        this.relevantAttributes = new HashMap<>();
+    
+        for (String key : AbstractElement.relevantAttributeKeys) {
+            String value = this.attributes.get(key);
+            
+            if(value != null) {
+                this.relevantAttributes.put(key, value);
+            }
+        }
+        
+        return this.relevantAttributes;
+    }
   
-    protected String getSerializedTags() {
-        if(this.tags == null || this.tags.isEmpty()) {
+    protected String getSerializedTagsAndAttributes() {
+        StringBuilder sTagAttr = new StringBuilder();
+        
+        // attributes first - take only relevant attributes
+        HashMap<String, String> relAttributes = this.getRelevantAttributes();
+        if(relAttributes != null && !relAttributes.isEmpty()) {
+            String sAttributes = this.serializeAttributes(relAttributes);
+            sTagAttr.append(this.getStringWithLength(sAttributes));
+        }
+        
+        // now tags
+        if(this.tags != null && !this.tags.isEmpty()) {
+            Iterator<TagElement> tagIter = this.tags.iterator();
+
+            while(tagIter.hasNext()) {
+                TagElement tag = tagIter.next();
+
+                String sAttributes = this.serializeAttributes(tag.attributes);
+
+                sTagAttr.append(this.getStringWithLength(sAttributes));
+            }
+        }
+
+        if(sTagAttr.length() < 1) {
             return this.getStringWithLength(null);
-        }
-
-        Iterator<TagElement> tagIter = this.tags.iterator();
-        StringBuilder sTag = new StringBuilder();
-
-        while(tagIter.hasNext()) {
-            TagElement tag = tagIter.next();
-
-            String sAttributes = this.serializeAttributes(tag.attributes);
-
-            sTag.append(this.getStringWithLength(sAttributes));
-        }
-
-        return sTag.toString();
+        } 
+        
+        // else: non empty tag / attr list
+        return sTagAttr.toString();
     }
   
     protected String getStringWithLength(String s) {
@@ -196,10 +229,10 @@ public abstract class AbstractElement {
         
         for (TagElement tag : this.tags) {
             if(tag.attributes != null) {
-                String elementName = tag.attributes.get("name");
+                String elementName = tag.attributes.get(key);
                 if(elementName != null) return elementName;
             }
-        }        
+        }
         
         return nix;
     }

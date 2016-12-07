@@ -10,6 +10,7 @@ import java.util.Iterator;
 public class OHDMWay extends OHDMElement {
 
     OHDMWay(BigDecimal osmID, BigDecimal classCode, String sTags, String nodeIDs, BigDecimal ohdmID, BigDecimal ohdmObjectID, boolean valid) {
+        // handle tags as attributes..
         super(osmID, classCode, null, sTags, nodeIDs, ohdmID, ohdmObjectID, valid);
     }
 

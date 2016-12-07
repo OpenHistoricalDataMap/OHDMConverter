@@ -29,6 +29,9 @@ abstract class OHDMElement extends AbstractElement {
     OHDMElement(BigDecimal osmID, BigDecimal classCode, String sAttributes, String sTags, String nodeIDs, BigDecimal ohdmID, BigDecimal ohdmObjectID, boolean valid) {
         super(sAttributes, sTags);
         
+        // TODO: extract uid and username here..
+        this.getUserID();
+        this.getUsername();
         this.nodeIDs = nodeIDs;
         this.osmID = osmID;
         this.classCode = classCode.intValue();
@@ -135,23 +138,38 @@ abstract class OHDMElement extends AbstractElement {
         return this.subClassName;
     }
     
+    private String uid = null;
     /**
      * return osm user id
      * @return 
      */
-    String getUserID() {
-        String uidString = this.attributes.get("uid");
+    final String getUserID() {
+        if(this.uid == null) {
+            this.uid = this.findValueInTags("uid");
+            if(this.uid == null) {
+                this.uid = this.attributes.get("uid");
+            }
+
+            if(this.uid == null) {
+                this.uid = "-1";
+            }
+        }
         
-        if(uidString == null) return "-1";
-        
-        return uidString;
+        return this.uid;
     }
     
-    String getUsername() {
-        String uidString = this.attributes.get("user");
-        
-        if(uidString == null) return "unknown";
-        
-        return uidString;
+    private String username = null;
+    final String getUsername() {
+        if(this.username == null) {
+            this.username = this.findValueInTags("user");
+            if(this.username == null) {
+                this.username = this.attributes.get("user");
+            }
+
+            if(this.username == null) {
+                this.username = "unknown";
+            }
+        }
+        return this.username;
     }
 }

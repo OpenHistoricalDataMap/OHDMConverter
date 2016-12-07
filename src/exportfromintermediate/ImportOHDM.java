@@ -17,9 +17,15 @@ import osmupdatewizard.TagElement;
  * @author thsc
  */
 public class ImportOHDM extends Importer {
+    private final String sourceSchema;
+    private final String targetSchema;
     
-    public ImportOHDM(Connection sourceConnection, Connection targetConnection) {
+    public ImportOHDM(Connection sourceConnection, Connection targetConnection, 
+            String sourceSchema, String targetSchema) {
         super(sourceConnection, targetConnection);
+        
+        this.sourceSchema = sourceSchema;
+        this.targetSchema = targetSchema;
     }
 
     @Override
@@ -74,9 +80,14 @@ public class ImportOHDM extends Importer {
     private int getOHDM_ID_externalSystemOSM() {
         if(this.idExternalSystemOSM == -1) {
             try {
+                StringBuilder sb = new StringBuilder();
+                sb.append("SELECT id FROM ");
+                sb.append(ImportOHDM.getFullTableName(targetSchema, ImportOHDM.EXTERNAL_SYSTEMS));
+                sb.append(" where name = 'OSM' OR name = 'osm';");
                 ResultSet result = 
-                        this.executeQueryOnTarget("SELECT id FROM external_systems where name = 'OSM';");
-
+                        this.executeQueryOnTarget(sb.toString());
+                
+                result.next();
                 this.idExternalSystemOSM = result.getInt(1);
 
             } catch (SQLException ex) {
@@ -86,46 +97,77 @@ public class ImportOHDM extends Importer {
         
         return this.idExternalSystemOSM;
     }
+
+    boolean validUserID(String userID) {
+        if(userID.equalsIgnoreCase("-1")) { 
+            return false; 
+        }
+        
+        return true;
+    }
+    
+    static final int UNKNOWN_USER_ID = -1;
     
     private final HashMap<String, Integer> idExternalUsers = new HashMap<>();
     private int getOHDM_ID_ExternalUser(String externalUserID, String externalUserName) {
+        if(!this.validUserID(externalUserID)) return ImportOHDM.UNKNOWN_USER_ID;
+        
         Integer idInteger = this.idExternalUsers.get(externalUserID);
         if(idInteger != null) { // already in memory
             return idInteger;
         }
         
+        int osm_id = this.getOHDM_ID_externalSystemOSM();
+        
+        int ohdmID = -1; // -1 means failure
         try {
             // search in db
             // SELECT id from external_users where userid = '43566';
-            ResultSet result = this.executeQueryOnTarget
-                    ("SELECT id from external_users where userid = '" +
-                                    externalUserID + "';");
+            StringBuilder sb = new StringBuilder();
+            sb.append("SELECT id from ");
 
-            int ohdmID = result.getInt(1);
             
-            // keep it
-            this.idExternalUsers.put(externalUserID, ohdmID);
+            sb.append(ImportOHDM.getFullTableName(this.targetSchema, ImportOHDM.EXTERNAL_USERS));
+
+            sb.append(" where userid = '");
+            sb.append(externalUserID);
+            sb.append("' AND external_system_id = '");
+            sb.append(osm_id);
+            sb.append("';");
             
-            return ohdmID;
-                // create entry
-    /*
-    INSERT INTO external_users(userid, username, external_system_id)
-        VALUES ('43566', 'anbr', 1);            
-                */
+            ResultSet result = this.executeQueryOnTarget(sb.toString());
+            
+            if(result.next()) {
+                // there is an entry
+                ohdmID = result.getInt(1);
+
+                // keep it
+                this.idExternalUsers.put(externalUserID, ohdmID);
+            } else {
+                // there is no entry
+                StringBuilder s = new StringBuilder();
+                //SQLStatementQueue s = new SQLStatementQueue(this.targetConnection);
+                s.append("INSERT INTO ");
+                s.append(ImportOHDM.getFullTableName(this.targetSchema, ImportOHDM.EXTERNAL_USERS));
+                s.append(" (userid, username, external_system_id) VALUES ('");
+                s.append(externalUserID);
+                s.append("', '");
+                s.append(externalUserName);
+                s.append("', ");
+                s.append(this.getOHDM_ID_externalSystemOSM());
+                s.append(") RETURNING id;");
+                //s.flush();
+                
+                ResultSet insertResult = this.executeQueryOnTarget(s.toString());
+                insertResult.next();
+                ohdmID = insertResult.getInt(1);
+            }
         } catch (SQLException ex) {
-            SQLStatementQueue s = new SQLStatementQueue(this.targetConnection);
-            s.append("INSERT INTO external_users(userid, username, external_system_id) VALUES ('");
-            s.append(externalUserID);
-            s.append("', '");
-            s.append(externalUserName);
-            s.append("', ");
-            s.append(this.getOHDM_ID_externalSystemOSM());
-            s.append(");");
-            s.flush();
-            
-            // again - it is now in database
-            return this.getOHDM_ID_ExternalUser(externalUserID, externalUserName);
+            // TODO serious probleme
+            System.err.println("thats a serious problem, cannot insert/select external user id: " + ex.getMessage());
         }
+        
+        return ohdmID;
         
     }
     
@@ -260,23 +302,25 @@ public class ImportOHDM extends Importer {
     static final String URL = "url";
     
     
-    void dropOHDMTables(Connection targetConnection, String schema) {
+    void dropOHDMTables(Connection targetConnection) {
         // drop
-        ImportOHDM.drop(targetConnection, schema, EXTERNAL_SYSTEMS);
-        ImportOHDM.drop(targetConnection, schema, EXTERNAL_USERS);
-        ImportOHDM.drop(targetConnection, schema, CLASSIFICATION);
-        ImportOHDM.drop(targetConnection, schema, CONTENT);
-        ImportOHDM.drop(targetConnection, schema, GEOOBJECT);
-        ImportOHDM.drop(targetConnection, schema, GEOOBJECT_CONTENT);
-        ImportOHDM.drop(targetConnection, schema, GEOOBJECT_GEOMETRY);
-        ImportOHDM.drop(targetConnection, schema, GEOOBJECT_URL);
-        ImportOHDM.drop(targetConnection, schema, LINES);
-        ImportOHDM.drop(targetConnection, schema, POINTS);
-        ImportOHDM.drop(targetConnection, schema, POLYGONS);
-        ImportOHDM.drop(targetConnection, schema, URL);
+        ImportOHDM.drop(targetConnection, this.targetSchema, EXTERNAL_SYSTEMS);
+        ImportOHDM.drop(targetConnection, this.targetSchema, EXTERNAL_USERS);
+        ImportOHDM.drop(targetConnection, this.targetSchema, CLASSIFICATION);
+        ImportOHDM.drop(targetConnection, this.targetSchema, CONTENT);
+        ImportOHDM.drop(targetConnection, this.targetSchema, GEOOBJECT);
+        ImportOHDM.drop(targetConnection, this.targetSchema, GEOOBJECT_CONTENT);
+        ImportOHDM.drop(targetConnection, this.targetSchema, GEOOBJECT_GEOMETRY);
+        ImportOHDM.drop(targetConnection, this.targetSchema, GEOOBJECT_URL);
+        ImportOHDM.drop(targetConnection, this.targetSchema, LINES);
+        ImportOHDM.drop(targetConnection, this.targetSchema, POINTS);
+        ImportOHDM.drop(targetConnection, this.targetSchema, POLYGONS);
+        ImportOHDM.drop(targetConnection, this.targetSchema, URL);
     }
     
-    void createOHDMTables(Connection targetConnection, String schema) {
+    void createOHDMTables(Connection targetConnection) {
+        String schema = this.targetSchema;
+        
         SQLStatementQueue sq;
         
         // EXTERNAL SYSTEMS
@@ -290,6 +334,11 @@ public class ImportOHDM extends Importer {
         sq.append("name character varying,");
         sq.append("description character varying");
         sq.append(");");
+        
+        // insert osm as external system !!
+        sq.append("INSERT INTO ");
+        sq.append(ImportOHDM.getFullTableName(schema, ImportOHDM.EXTERNAL_SYSTEMS));
+        sq.append(" (name, description) VALUES ('osm', 'Open Street Map');");
         sq.flush();
         
         // EXTERNAL_USERS
@@ -461,16 +510,17 @@ public class ImportOHDM extends Importer {
             Connection sourceConnection = Importer.createLocalTestSourceConnection();
             Connection targetConnection = Importer.createLocalTestTargetConnection();
             
-            ImportOHDM ohdmImporter = new ImportOHDM(sourceConnection, targetConnection);
+            ImportOHDM ohdmImporter = new ImportOHDM(sourceConnection, targetConnection,
+                "public", "ohdm");
             
-            ohdmImporter.dropOHDMTables(targetConnection, "ohdm");
-            ohdmImporter.createOHDMTables(targetConnection, "ohdm");
+            ohdmImporter.dropOHDMTables(targetConnection);
+            ohdmImporter.createOHDMTables(targetConnection);
 
-            /*
             ExportIntermediateDB exporter = 
                     new ExportIntermediateDB(sourceConnection, ohdmImporter);
             
             exporter.processNodes();
+            /*
             exporter.processWays();
             exporter.processRelations();
             */

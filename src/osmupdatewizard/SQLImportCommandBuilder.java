@@ -479,7 +479,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
     for (Map.Entry<String, NodeElement> entry : nodes.entrySet()) {
         NodeElement node = entry.getValue();
         int classID = OSMClassification.getOSMClassification().getOHDMClassID(node);
-        String sTags = node.getSerializedTags();
+        String sTags = node.getSerializedTagsAndAttributes();
         
 //        StringBuilder sq = new StringBuilder();
         
@@ -727,7 +727,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
 
             String wayOSMID = wayElementEntry.getKey();
 
-            String sTags = wayElement.getSerializedTags();
+            String sTags = wayElement.getSerializedTagsAndAttributes();
             
             // serialize node ids
             StringBuilder nodeString = new StringBuilder();
@@ -979,7 +979,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
 
             String osm_id = entry.getKey();
             int classID = OSMClassification.getOSMClassification().getOHDMClassID(relationElement);
-            String sTags = relationElement.getSerializedTags();
+            String sTags = relationElement.getSerializedTagsAndAttributes();
 
             sq.append("INSERT INTO ");
             sq.append(RELATIONTABLE);

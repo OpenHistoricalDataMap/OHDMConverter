@@ -69,9 +69,9 @@ public abstract class Importer {
             // connect to target OHDM DB - ohm
 //            String targetServerName = "ohm.f4.htw-berlin.de";
 //            String targetPortNumber = "5432";
-//            String targetUser = "...";
-//            String targetPWD = "...";
-//            String targetPath = "ohdm_rendering";
+//            String targetUser = "..";
+//            String targetPWD = "..";
+//            String targetPath = "ohdm_test";
         
             Properties targetConnProps = new Properties();
             targetConnProps.put("user", targetUser);

@@ -101,7 +101,7 @@ public class ExportIntermediateDB {
             System.err.println(ex.getLocalizedMessage());
         }
         
-        System.out.println("Checked ways / inserted ways: " + waynumber + " / " + insertedHighways);
+        System.out.println("Checked ways: " + waynumber);
     }
     
     void processRelations() {

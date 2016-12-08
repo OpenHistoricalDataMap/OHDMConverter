@@ -11,7 +11,7 @@ import osm.OSMClassification;
  *
  * @author thsc
  */
-abstract class OHDMElement extends AbstractElement {
+public abstract class OHDMElement extends AbstractElement {
     private final BigDecimal osmID;
     private final int classCode;
     private int subClassCode;

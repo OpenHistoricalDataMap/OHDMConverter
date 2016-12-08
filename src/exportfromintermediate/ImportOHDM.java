@@ -31,45 +31,7 @@ public class ImportOHDM extends Importer {
 
     @Override
     public boolean importWay(OHDMWay way) {
-//        String className = way.getClassName();
-//        if(!className.equalsIgnoreCase(featureClass)) return false;
-//        
-//        // right class
-//        String wayGeometryWKT = way.getWKTGeometry();
-//
-//        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
-//            
-//            /* insert like this:
-//INSERT INTO highway_lines(
-//            line, subclassname, name, valid_since, valid_until)
-//    VALUES ('WKT', 2, 'name', '1970-01-01', '2016-01-01');            
-//                    */
-//            
-//        sq.append("INSERT INTO highway_lines(\n");
-//        sq.append("line, subclassname, name, valid_since, valid_until)");
-//        sq.append(" VALUES (");
-//        
-//        sq.append("'");
-//        sq.append(way.getWKTGeometry()); // geometry
-//        sq.append("', '");
-//        
-//        sq.append(way.getSubClassName()); // feature sub class
-//
-//        sq.append("', '");
-//        
-//        sq.append(way.getName()); // feature sub class
-//
-//        sq.append("', '");
-//        sq.append(way.validSince());
-//
-//        sq.append("', '");
-//        sq.append(way.validUntil());
-//        
-//        sq.append("');");
-//        
-//        sq.flush();
-//        
-        return true;
+        return this.importOHDMElement(way);
     }
 
     @Override
@@ -286,44 +248,48 @@ public class ImportOHDM extends Importer {
         return true;
     }
     
-    @Override
-    public boolean importNode(OHDMNode node) {
-        ArrayList<TagElement> tags = node.getTags();
+    public boolean importOHDMElement(OHDMElement ohdmElement) {
+        ArrayList<TagElement> tags = ohdmElement.getTags();
         
         try {
             /* nodes without tags have no identity and are part of a way or relation
             and stored with them. We are done here and return
             */
-            if(!this.elementHasIdentity(node)) {
+            if(!this.elementHasIdentity(ohdmElement)) {
                 return false;
             }
 
             // create user entry or find user primary key
-            String externalUserID = node.getUserID();
-            String externalUsername = node.getUsername();
+            String externalUserID = ohdmElement.getUserID();
+            String externalUsername = ohdmElement.getUsername();
 
             int id_ExternalUser = this.getOHDM_ID_ExternalUser(externalUserID, externalUsername);
 
             // create OHDM object
-            int object_id = this.addOHDMObject(node, id_ExternalUser);
+            int object_id = this.addOHDMObject(ohdmElement, id_ExternalUser);
 
             // create a geoemtry in OHDM
-            int geometry_id = this.addGeometry(node, id_ExternalUser);
+            int geometry_id = this.addGeometry(ohdmElement, id_ExternalUser);
 
             // create entry in object_geometry table
-            addValidity(node, object_id, geometry_id);
+            addValidity(ohdmElement, object_id, geometry_id);
 
             // keep some special tags (url etc, see wiki)
-            addContentAndURL(node, object_id);
+            addContentAndURL(ohdmElement, object_id);
 
             // remind those actions in intermediate database by setting ohdm_id
-            updateIntermediateSource(node, object_id, geometry_id);
+            updateIntermediateSource(ohdmElement, object_id, geometry_id);
         }
         catch(Exception e) {
             System.err.println("failure during node import: " + e.getMessage());
         }
         
         return true;
+    }
+    
+    @Override
+    public boolean importNode(OHDMNode node) {
+        return this.importOHDMElement(node);
     }
     
     ////////////////////////////////////////////////////////////////////////
@@ -629,10 +595,12 @@ public class ImportOHDM extends Importer {
                     new ExportIntermediateDB(sourceConnection, ohdmImporter);
             
             exporter.processNodes();
-            /*
             exporter.processWays();
+            /*
             exporter.processRelations();
             */
+            
+            System.out.println(exporter.getStatistics());
   
         } catch (SQLException e) {
           System.err.println("cannot connect to database: " + e.getLocalizedMessage());

@@ -501,6 +501,7 @@ public class ImportOHDM extends Importer {
         sq.append("id_polygon bigint,");
         sq.append("id_geoobject_target bigint,");
         sq.append("id_geoobject_source bigint NOT NULL,");
+        sq.append("type character varying,");
         sq.append("valid_since date NOT NULL,");
         sq.append("valid_until date NOT NULL,");
         sq.append("valid_since_offset bigint DEFAULT 0,");

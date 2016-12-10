@@ -189,31 +189,40 @@ public class ImportOHDM extends Importer {
         result.next();
         return result.getInt(1);
     }
-    
-    void addValidity(OHDMElement ohdmElement, int object_id, int geometry_id) {
+
+    private final String defaultSince = "01-01-1970";
+    private final String defaultUntil = "01-01-2017";
+            
+    void addValidity(OHDMElement ohdmElement, int object_id, int geometry_id, int externalUserID) {
         SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
         
         sq.append("INSERT INTO ");
         sq.append(ImportOHDM.getFullTableName(this.targetSchema, ImportOHDM.GEOOBJECT_GEOMETRY));
-        sq.append(" (id_geoobject_source, valid_since, valid_until, ");
-        
+        sq.append(" (type_target, id_geoobject_source, id_target, valid_since, valid_until, source_user_id) VALUES (");
+
+        // what table is reference by id_geometry
         switch(ohdmElement.getGeometryType()) {
             case POINT: 
-                sq.append(" id_point) VALUES (");
+                sq.append(ImportOHDM.TARGET_POINT);
                 break;
             case LINESTRING: 
-                sq.append(" id_line) VALUES (");
+                sq.append(ImportOHDM.TARGET_LINESTRING);
                 break;
             case POLYGON: 
-                sq.append(" id_polygon) VALUES (");
+                sq.append(ImportOHDM.TARGET_POLYGON);
                 break;
         }
         
+        sq.append(", ");
         sq.append(object_id);
         sq.append(", ");
-        sq.append("'01-01-1970', "); // since
-        sq.append("'01-01-2017', "); // until
         sq.append(geometry_id);
+        sq.append(", '");
+        sq.append(this.defaultSince);
+        sq.append("', '"); 
+        sq.append(this.defaultUntil);
+        sq.append("', "); // until
+        sq.append(externalUserID);
         sq.append(");");
         
         sq.flush();
@@ -272,7 +281,7 @@ public class ImportOHDM extends Importer {
             int geometry_id = this.addGeometry(ohdmElement, id_ExternalUser);
 
             // create entry in object_geometry table
-            addValidity(ohdmElement, object_id, geometry_id);
+            addValidity(ohdmElement, object_id, geometry_id, id_ExternalUser);
 
             // keep some special tags (url etc, see wiki)
             addContentAndURL(ohdmElement, object_id);
@@ -369,6 +378,11 @@ public class ImportOHDM extends Importer {
     static final String POLYGONS = "polygons";
     static final String URL = "url";
     
+    // Geometry Types 
+    static int TARGET_POINT = 1;
+    static int TARGET_LINESTRING = 2;
+    static int TARGET_POLYGON = 3;
+    static int TARGET_GEOOBJECT = 0;
     
     void dropOHDMTables(Connection targetConnection) {
         // drop
@@ -496,16 +510,15 @@ public class ImportOHDM extends Importer {
         sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.GEOOBJECT_GEOMETRY));
         // add table specifics:
         sq.append(",");
-        sq.append("id_point bigint,");
-        sq.append("id_line bigint,");
-        sq.append("id_polygon bigint,");
-        sq.append("id_geoobject_target bigint,");
+        sq.append("id_target bigint,");
+        sq.append("type_target bigint,");
         sq.append("id_geoobject_source bigint NOT NULL,");
         sq.append("role character varying,");
         sq.append("valid_since date NOT NULL,");
         sq.append("valid_until date NOT NULL,");
         sq.append("valid_since_offset bigint DEFAULT 0,");
-        sq.append("valid_until_offset bigint DEFAULT 0");
+        sq.append("valid_until_offset bigint DEFAULT 0,");
+        sq.append("source_user_id bigint");
         sq.append(");");
         sq.flush();
         

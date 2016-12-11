@@ -9,6 +9,8 @@ import static osmupdatewizard.SQLImportCommandBuilder.RELATIONTABLE;
 import static osmupdatewizard.SQLImportCommandBuilder.WAYMEMBER;
 import static osmupdatewizard.SQLImportCommandBuilder.WAYTABLE;
 import static osmupdatewizard.SQLImportCommandBuilder.NODETABLE;
+import static osmupdatewizard.SQLImportCommandBuilder.RELATIONMEMBER;
+import osmupdatewizard.SQLStatementQueue;
 
 /**
  *
@@ -103,7 +105,7 @@ public class ExportIntermediateDB {
         System.out.println("Checked / imported ways:  " + waynumber + " / " + this.numberWays);
     }
     
-    void processRelations() {
+    void processRelations() throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT * FROM ");
         sql.append(RELATIONTABLE).append(";");
         
@@ -120,25 +122,72 @@ public class ExportIntermediateDB {
                 
                 // TODO: that a copy from way...
                 sql = new StringBuilder("select * from ");
-                sql.append(NODETABLE);
-                sql.append(" where osm_id IN (SELECT node_id FROM ");            
-                sql.append(WAYMEMBER);
-                sql.append(" where way_id = ");            
+                sql.append(RELATIONMEMBER);
+                sql.append(" where relation_id = ");            
                 sql.append(relation.getOSMID());
                 sql.append(");");  
 
                 stmt = this.sourceConnection.prepareStatement(sql.toString());
-                ResultSet qResultNode = stmt.executeQuery();
+                ResultSet qResultRelation = stmt.executeQuery();
 
-                while(qResultNode.next()) {
-                    OHDMNode node = this.createOHDMNode(qResultNode);
-                    //relation.addNode(node);
+                while(qResultRelation.next()) {
+                    String roleString =  qResultRelation.getString("role");
+
+                    // extract member objects from their tables
+                    int id;
+                    OHDMElement.GeometryType type = null;
+                    
+                    SQLStatementQueue sq = new SQLStatementQueue(this.sourceConnection);
+                    sq.append("SELECT * FROM ");
+                    
+                    id = qResultRelation.getInt("node_id");
+                    if(id != 0) {
+                        sq.append(NODETABLE);
+                        type = OHDMElement.GeometryType.POINT;
+                    } else {
+                        id = qResultRelation.getInt("way_id");
+                        if(id != 0) {
+                            sq.append(WAYTABLE);
+                            type = OHDMElement.GeometryType.LINESTRING;
+                        } else {
+                            qResultRelation.getInt("member_rel_id");
+                            if(id != 0) {
+                                sq.append(RELATIONTABLE);
+                                type = OHDMElement.GeometryType.RELATION;
+                            } else {
+                                // we have a serious problem here.. or no member
+                                id = -1;
+                            }
+                        }
+                    }
+                    sq.append(" where id = ");
+                    sq.append(id);
+                    sq.append(";");
+                    
+                    ResultSet memberResult = sq.executeQueryOnTarget();
+                    OHDMElement memberElement = null;
+                    switch(type) {
+                        case POINT: 
+                            memberElement = this.createOHDMNode(memberResult);
+                            break;
+                        case LINESTRING:
+                            memberElement = this.createOHDMWay(memberResult);
+                            break;
+                        case RELATION:
+                            // to we really need the relation object??
+                            memberElement = this.createOHDMRelation(memberResult);
+                            break;
+                    }
+                    relation.addMember(memberElement, roleString);
+                    
+                    // find all associated ways and add to that relation
+
+                    // TODO
+
+                
+                    
                 }
                 
-                // find all associated ways and add to that relation
-                
-                // TODO
-
                 // process that stuff
                 if(this.importer.importRelation(relation)) {
                     this.numberRelations++;
@@ -171,7 +220,18 @@ public class ExportIntermediateDB {
     ///////////////////////////////////////////////////////////////////////
     
     protected OHDMRelation createOHDMRelation(ResultSet qResult) throws SQLException {
-        return null; // TODO
+        // get all data to create an ohdm way object
+        BigDecimal osmIDBig = qResult.getBigDecimal("osm_id");
+        BigDecimal classCodeBig = qResult.getBigDecimal("classcode");
+        String sTags = qResult.getString("serializedtags");
+        BigDecimal ohdmIDBig = qResult.getBigDecimal("ohdm_id");
+        BigDecimal ohdmObjectIDBig = qResult.getBigDecimal("ohdm_object");
+        String memberIDs = qResult.getString("member_ids");
+        boolean valid = qResult.getBoolean("valid");
+
+        OHDMRelation relation = new OHDMRelation(osmIDBig, classCodeBig, sTags, memberIDs, ohdmIDBig, ohdmObjectIDBig, valid);
+        
+        return relation;
     }
     
     protected OHDMWay createOHDMWay(ResultSet qResult) throws SQLException {

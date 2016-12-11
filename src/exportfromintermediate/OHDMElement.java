@@ -20,7 +20,7 @@ public abstract class OHDMElement extends AbstractElement {
     
     protected boolean isPolygone;
     
-    public static enum GeometryType {POINT, LINESTRING, POLYGON};
+    public static enum GeometryType {POINT, LINESTRING, POLYGON, RELATION};
 
     OHDMElement(BigDecimal osmID, BigDecimal classCode, String sAttributes, String sTags, BigDecimal ohdmID, BigDecimal ohdmObjectID, boolean valid) {
         super(sAttributes, sTags);

@@ -230,6 +230,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
               .append("serializedTags character varying, ")
               .append("ohdm_id bigint, ")
               .append("ohdm_object bigint, ")
+              .append("member_ids character varying, ")
               .append("valid boolean);");
       this.setupTable(RELATIONTABLE, sqlRelation.toString());
       
@@ -981,15 +982,37 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
             String osm_id = entry.getKey();
             int classID = OSMClassification.getOSMClassification().getOHDMClassID(relationElement);
             String sTags = relationElement.getSerializedTagsAndAttributes();
+    
+            String memberIDs = "";
+            
+            if(relationElement.getMember() != null) {
+                // create member_ids
+                StringBuilder memberIDsb = new StringBuilder();
+
+                boolean first = true;
+                for (MemberElement member : entry.getValue().getMember()) {
+                    if(first) {
+                        first = false;
+                    } else {
+                        memberIDsb.append(",");
+                    }
+
+                    memberIDsb.append(member.getID());
+                }
+                
+                memberIDs = memberIDsb.toString();
+            }
 
             sq.append("INSERT INTO ");
             sq.append(RELATIONTABLE);
-            sq.append(" (osm_id, classcode, serializedtags, valid) VALUES (");
+            sq.append(" (osm_id, classcode, serializedtags, member_ids, valid) VALUES (");
             sq.append(osm_id);
             sq.append(", ");
             sq.append(classID);
             sq.append(", '");
             sq.append(sTags);
+            sq.append("', '");
+            sq.append(memberIDs);
             sq.append("', true);");
             
 //            sq.flush();

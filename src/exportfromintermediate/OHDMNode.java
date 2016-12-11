@@ -11,7 +11,7 @@ public class OHDMNode extends OHDMElement {
     private String latitude;
 
     OHDMNode(BigDecimal osmID, BigDecimal classCode, String sTags, BigDecimal ohdmID, BigDecimal ohdmObjectID, boolean valid) {
-        super(osmID, classCode, null, sTags, null, ohdmID, ohdmObjectID, valid);
+        super(osmID, classCode, null, sTags, ohdmID, ohdmObjectID, valid);
     }
 
     OHDMNode(BigDecimal osmIDBig, BigDecimal classCodeBig, String sTags, String longitude, String latitude, BigDecimal ohdmIDBig, BigDecimal ohdmObjectIDBig, boolean valid) {

@@ -52,7 +52,7 @@ public class ExportIntermediateDB {
             System.err.println(ex.getLocalizedMessage());
         }
         
-        System.out.println("Checked nodes: " + number);
+        System.out.println("Checked / imported nodes: " + number + " / " + this.numberNodes);
     }
     
     void processWays() {
@@ -60,7 +60,6 @@ public class ExportIntermediateDB {
         sql.append(WAYTABLE).append(";");
         
         int waynumber = 0;
-        int insertedHighways = 0;
         try {
             PreparedStatement stmt = this.sourceConnection.prepareStatement(sql.toString());
             ResultSet qResultWay = stmt.executeQuery();
@@ -101,7 +100,7 @@ public class ExportIntermediateDB {
             System.err.println(ex.getLocalizedMessage());
         }
         
-        System.out.println("Checked ways: " + waynumber);
+        System.out.println("Checked / imported ways:  " + waynumber + " / " + this.numberWays);
     }
     
     void processRelations() {
@@ -133,7 +132,7 @@ public class ExportIntermediateDB {
 
                 while(qResultNode.next()) {
                     OHDMNode node = this.createOHDMNode(qResultNode);
-                    relation.addNode(node);
+                    //relation.addNode(node);
                 }
                 
                 // find all associated ways and add to that relation
@@ -150,8 +149,7 @@ public class ExportIntermediateDB {
             System.err.println(ex.getLocalizedMessage());
         }
         
-        System.out.println("Checked ways: " + number);
-        
+        System.out.println("Checked / imported relations: " + number + " / " + this.numberRelations);
     }
     
     public String getStatistics() {

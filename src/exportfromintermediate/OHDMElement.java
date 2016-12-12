@@ -47,6 +47,13 @@ public abstract class OHDMElement extends AbstractElement {
         this.intermediateDB.setOHDM_ID(this, ohdmID);
     }
     
+    /**
+     * Remove this object from intermediate db .. use carefully!
+     */
+    void remove() {
+        this.intermediateDB.remove(this);
+    }
+    
     BigDecimal getOSMID() {
         return osmID;
     }

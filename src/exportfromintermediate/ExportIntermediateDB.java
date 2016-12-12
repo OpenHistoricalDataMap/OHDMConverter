@@ -106,96 +106,105 @@ public class ExportIntermediateDB extends IntermediateDB {
             OHDMNode node = this.createOHDMNode(qResultNode);
             way.addNode(node);
         }
+        
+        qResultNode.close();
     }
     
     void processRelations() throws SQLException {
-        StringBuilder sql = new StringBuilder("SELECT * FROM ");
-        sql.append(RELATIONTABLE).append(";");
+        SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
+        
+        sql.append("SELECT * FROM ");
+        sql.append(RELATIONTABLE);
+        sql.append(";");
         
         int number = 0;
         try {
-            PreparedStatement stmt = this.sourceConnection.prepareStatement(sql.toString());
-            ResultSet qResultRelations = stmt.executeQuery();
+            ResultSet qResultRelations = sql.executeWithResult();
             
             while(qResultRelations.next()) {
                 number++;
                 OHDMRelation relation = this.createOHDMRelation(qResultRelations);
 
                 // find all associated nodes and add to that relation
-                
-                // TODO: that a copy from way...
-                sql = new StringBuilder("select * from ");
+                sql.append("select * from ");
                 sql.append(RELATIONMEMBER);
                 sql.append(" where relation_id = ");            
                 sql.append(relation.getOSMID());
-                sql.append(");");  
+                sql.append(";");  
 
-                stmt = this.sourceConnection.prepareStatement(sql.toString());
-                ResultSet qResultRelation = stmt.executeQuery();
+                ResultSet qResultRelation = sql.executeWithResult();
 
+                boolean relationMemberComplete = true; // assume we find all member
+                
                 while(qResultRelation.next()) {
                     String roleString =  qResultRelation.getString("role");
 
                     // extract member objects from their tables
-                    int id;
+                    BigDecimal id;
                     OHDMElement.GeometryType type = null;
                     
-                    SQLStatementQueue sq = new SQLStatementQueue(this.sourceConnection);
-                    sq.append("SELECT * FROM ");
+                    sql.append("SELECT * FROM ");
                     
-                    id = qResultRelation.getInt("node_id");
-                    if(id != 0) {
-                        sq.append(NODETABLE);
+                    id = qResultRelation.getBigDecimal("node_id");
+                    if(id != null) {
+                        sql.append(NODETABLE);
                         type = OHDMElement.GeometryType.POINT;
                     } else {
-                        id = qResultRelation.getInt("way_id");
-                        if(id != 0) {
-                            sq.append(WAYTABLE);
+                        id = qResultRelation.getBigDecimal("way_id");
+                        if(id != null) {
+                            sql.append(WAYTABLE);
                             type = OHDMElement.GeometryType.LINESTRING;
                         } else {
-                            qResultRelation.getInt("member_rel_id");
-                            if(id != 0) {
-                                sq.append(RELATIONTABLE);
+                            qResultRelation.getBigDecimal("member_rel_id");
+                            if(id != null) {
+                                sql.append(RELATIONTABLE);
                                 type = OHDMElement.GeometryType.RELATION;
                             } else {
                                 // we have a serious problem here.. or no member
-                                id = -1;
                             }
                         }
                     }
-                    sq.append(" where id = ");
-                    sq.append(id);
-                    sq.append(";");
+                    sql.append(" where osm_id = ");
+                    sql.append(id);
+                    sql.append(";");
                     
-                    ResultSet memberResult = sq.executeWithResult();
-                    OHDMElement memberElement = null;
-                    switch(type) {
-                        case POINT: 
-                            memberElement = this.createOHDMNode(memberResult);
-                            break;
-                        case LINESTRING:
-                            memberElement = this.createOHDMWay(memberResult);
-                            break;
-                        case RELATION:
-                            // to we really need the relation object??
-                            memberElement = this.createOHDMRelation(memberResult);
-                            break;
+                    ResultSet memberResult = sql.executeWithResult();
+                    if(!memberResult.next()) {
+                        /* this call can fail
+                        a) if this program is buggy - which is most likely :) OR
+                        b) intermediate DB has not imported whole world. In that
+                        case, relation can refer to data which are not actually 
+                        stored in intermediate db tables.. 
+                        in that case .. remove whole relation: parts of it are 
+                        outside our current scope
+                        */
+                        OHDMElement memberElement = null;
+                        switch(type) {
+                            case POINT: 
+                                memberElement = this.createOHDMNode(memberResult);
+                                break;
+                            case LINESTRING:
+                                memberElement = this.createOHDMWay(memberResult);
+                                break;
+                            case RELATION:
+                                // to we really need the relation object??
+                                memberElement = this.createOHDMRelation(memberResult);
+                                break;
+                        }
+                        relation.addMember(memberElement, roleString);
+                    } else {
+                        relation.remove(); // see comments above
+                        relationMemberComplete = false; 
                     }
-                    relation.addMember(memberElement, roleString);
+                    memberResult.close();
                     
-                    // find all associated ways and add to that relation
-
-                    // TODO
-
-                
-                    
+                    if(!relationMemberComplete) break;
                 }
                 
                 // process that stuff
-                if(this.importer.importRelation(relation)) {
+                if(relationMemberComplete && this.importer.importRelation(relation)) {
                     this.numberRelations++;
                 }
-                
             }
         } catch (SQLException ex) {
             System.err.println(ex.getLocalizedMessage());

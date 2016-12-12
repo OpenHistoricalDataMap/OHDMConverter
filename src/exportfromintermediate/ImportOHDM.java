@@ -40,7 +40,8 @@ public class ImportOHDM extends Importer {
 
     @Override
     public boolean importRelation(OHDMRelation relation) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        // TODO
+        return false;
     }
     
     private int idExternalSystemOSM = -1;
@@ -611,8 +612,8 @@ public class ImportOHDM extends Importer {
             
             exporter.processNodes();
             exporter.processWays();
-            /*
             exporter.processRelations();
+            /*
             */
             
             System.out.println(exporter.getStatistics());

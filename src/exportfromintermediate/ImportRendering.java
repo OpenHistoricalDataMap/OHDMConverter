@@ -12,12 +12,12 @@ public class ImportRendering extends Importer {
     
     public final String HIGWAYTABLE_NAME = "public.highway_lines_osw";
 
-    public ImportRendering(Connection sourceConnection, Connection targetConnection) {
+    public ImportRendering(Connection sourceConnection, Connection targetConnection) throws SQLException {
         this(sourceConnection, targetConnection, false);
     }
     
     public ImportRendering(Connection sourceConnection, Connection targetConnection, 
-            boolean dropAndCreate) {
+            boolean dropAndCreate) throws SQLException {
         
         super(sourceConnection, targetConnection);
         if(dropAndCreate) {
@@ -26,12 +26,12 @@ public class ImportRendering extends Importer {
         }
     }
     
-    private void init() {
+    private void init() throws SQLException {
         this.dropHighways();
         this.setupHighways();
     }
     
-    void dropHighways() {
+    void dropHighways() throws SQLException {
         SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
         
         sq.append("DROP SEQUENCE ");
@@ -45,7 +45,7 @@ public class ImportRendering extends Importer {
         sq.forceExecute();
     }
     
-    void setupHighways() {
+    void setupHighways() throws SQLException {
         SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
         
         sq.append("CREATE SEQUENCE ");
@@ -77,7 +77,7 @@ public class ImportRendering extends Importer {
     private int numberWays = 0;
     
     @Override
-    public boolean importWay(OHDMWay way) {
+    public boolean importWay(OHDMWay way) throws SQLException {
         if(way.isPolygone) {
             // dont' import a circle in this app
             return false;

@@ -1,6 +1,7 @@
 package exportfromintermediate;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.StringTokenizer;
 import osmupdatewizard.AbstractElement;
 import osm.OSMClassification;
@@ -43,14 +44,14 @@ public abstract class OHDMElement extends AbstractElement {
     
     abstract GeometryType getGeometryType();
     
-    void setOHDM_ID(int ohdmID) {
+    void setOHDM_ID(int ohdmID) throws SQLException {
         this.intermediateDB.setOHDM_ID(this, ohdmID);
     }
     
     /**
      * Remove this object from intermediate db .. use carefully!
      */
-    void remove() {
+    void remove() throws SQLException {
         this.intermediateDB.remove(this);
     }
     

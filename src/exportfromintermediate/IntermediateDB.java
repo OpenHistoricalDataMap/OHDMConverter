@@ -1,6 +1,7 @@
 package exportfromintermediate;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import static osmupdatewizard.SQLImportCommandBuilder.NODETABLE;
 import static osmupdatewizard.SQLImportCommandBuilder.RELATIONMEMBER;
 import static osmupdatewizard.SQLImportCommandBuilder.RELATIONTABLE;
@@ -29,7 +30,7 @@ public class IntermediateDB {
         } 
     }
     
-    public void setOHDM_ID(OHDMElement element, int ohdmID) {
+    public void setOHDM_ID(OHDMElement element, int ohdmID) throws SQLException {
         if(element == null) return;
         
         /*
@@ -48,7 +49,7 @@ public class IntermediateDB {
         sq.forceExecute();
     }
     
-    void remove(OHDMElement element) {
+    void remove(OHDMElement element) throws SQLException {
         SQLStatementQueue sq = new SQLStatementQueue(this.sourceConnection);
         
         /*

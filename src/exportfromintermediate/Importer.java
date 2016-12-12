@@ -81,9 +81,9 @@ public abstract class Importer {
                     + ":" + targetPortNumber + "/" + targetPath, targetConnProps);
     }
     
-    public abstract boolean importWay(OHDMWay way);
+    public abstract boolean importWay(OHDMWay way) throws SQLException;
 
-    public abstract boolean importRelation(OHDMRelation relation);
+    public abstract boolean importRelation(OHDMRelation relation) throws SQLException;
 
-    public abstract boolean importNode(OHDMNode node);
+    public abstract boolean importNode(OHDMNode node) throws SQLException;
 }

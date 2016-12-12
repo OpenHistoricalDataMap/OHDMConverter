@@ -468,7 +468,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
         return -1;
     }
   
-  private void saveNodeElements() {
+  private void saveNodeElements() throws SQLException {
       /*
       Iterator<NodeElement> nodeIter = this.nodes.values().iterator();
       while(nodeIter.hasNext()) {
@@ -605,7 +605,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
   }
 
   @Override
-  public void addNode(HashMap<String, String> attributes, ArrayList<TagElement> tags) {
+  public void addNode(HashMap<String, String> attributes, ArrayList<TagElement> tags) throws SQLException {
     NodeElement newNode = new NodeElement(this, attributes, tags);
     if (importMode.equalsIgnoreCase("update")) {
       NodeElement dbNode = selectNodeById(newNode.getID());
@@ -683,7 +683,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
 
     private final HashMap<String, WayElement> ways = new HashMap<>();
 
-    private void saveWayElements() {
+    private void saveWayElements() throws SQLException {
         // set up a sql queue
         SQLStatementQueue sqlQueue = new SQLStatementQueue(this.connection, this.logger);
         
@@ -827,7 +827,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
    * @param tags
    */
   @Override
-  public void addWay(HashMap<String, String> attributes, ArrayList<NodeElement> nds, ArrayList<TagElement> tags) {
+  public void addWay(HashMap<String, String> attributes, ArrayList<NodeElement> nds, ArrayList<TagElement> tags) throws SQLException {
     if (nds == null || nds.isEmpty()) {
       return; // a way without nodes makes no sense.
     }
@@ -973,7 +973,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
 
   private final HashMap<String, RelationElement> rels = new HashMap<>();
 
-    private void saveRelElements() {
+    private void saveRelElements() throws SQLException {
         SQLStatementQueue sq = new SQLStatementQueue(this.connection, this.logger);
         
         for (Map.Entry<String, RelationElement> entry : rels.entrySet()) {
@@ -1060,7 +1060,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
    */
   @Override
   public void addRelation(HashMap<String, String> attributes, ArrayList<MemberElement> members, ArrayList<TagElement> tags
-  ) {
+  ) throws SQLException {
     if (members == null || members.isEmpty() || tags == null) {
       return; // empty relations makes no sense;
     }
@@ -1098,7 +1098,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
   }
 
   @Override
-  public void flush() {
+  public void flush() throws SQLException {
     if (!nodes.isEmpty()) {
       this.saveNodeElements();
     }

@@ -92,7 +92,7 @@ public class SQLStatementQueue {
             stmt.close();
         }
         
-        this.sqlQueue = null;
+        this.resetStatement();
     }
     
     public ResultSet executeWithResult() throws SQLException {
@@ -100,16 +100,22 @@ public class SQLStatementQueue {
         
         try {
             ResultSet result = stmt.executeQuery();
-            this.sqlQueue = null;
+            this.resetStatement();
         
             return result;
         }
         catch(SQLException e) {
-            this.sqlQueue = null;
+            this.resetStatement();
             throw e;
         }
         finally {
             stmt.closeOnCompletion();
         }
+    }
+    
+    private String debugLastStatement;
+    private void resetStatement() {
+        this.debugLastStatement = this.sqlQueue.toString();
+        this.sqlQueue = null;
     }
 }

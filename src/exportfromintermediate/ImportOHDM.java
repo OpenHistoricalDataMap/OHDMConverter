@@ -198,7 +198,7 @@ public class ImportOHDM extends Importer {
     private final String defaultSince = "01-01-1970";
     private final String defaultUntil = "01-01-2017";
             
-    void addValidity(OHDMElement ohdmElement, int object_id, int geometry_id, int externalUserID) {
+    void addValidity(OHDMElement ohdmElement, int object_id, int geometry_id, int externalUserID) throws SQLException {
         SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
         
         sq.append("INSERT INTO ");
@@ -327,7 +327,7 @@ public class ImportOHDM extends Importer {
                 + "_pkey PRIMARY KEY (id)";
     }
     
-    static protected void createSequence(Connection targetConnection, String schema, String tableName) {
+    static protected void createSequence(Connection targetConnection, String schema, String tableName) throws SQLException {
         SQLStatementQueue sq = new SQLStatementQueue(targetConnection);
         
         sq.append("CREATE SEQUENCE "); 
@@ -336,7 +336,7 @@ public class ImportOHDM extends Importer {
         sq.forceExecute();
     }
     
-    static protected void drop(Connection targetConnection, String schema, String tableName) {
+    static protected void drop(Connection targetConnection, String schema, String tableName) throws SQLException {
         SQLStatementQueue sq = new SQLStatementQueue(targetConnection);
         
         String fullTableName = ImportOHDM.getFullTableName(schema, tableName);
@@ -384,7 +384,7 @@ public class ImportOHDM extends Importer {
     static int TARGET_POLYGON = 3;
     static int TARGET_GEOOBJECT = 0;
     
-    void dropOHDMTables(Connection targetConnection) {
+    void dropOHDMTables(Connection targetConnection) throws SQLException {
         // drop
         ImportOHDM.drop(targetConnection, this.targetSchema, EXTERNAL_SYSTEMS);
         ImportOHDM.drop(targetConnection, this.targetSchema, EXTERNAL_USERS);
@@ -612,8 +612,8 @@ public class ImportOHDM extends Importer {
             
             exporter.processNodes();
             exporter.processWays();
-            exporter.processRelations();
             /*
+            exporter.processRelations();
             */
             
             System.out.println(exporter.getStatistics());

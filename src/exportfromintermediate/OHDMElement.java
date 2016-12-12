@@ -19,13 +19,17 @@ public abstract class OHDMElement extends AbstractElement {
     private final boolean valid;
     
     protected boolean isPolygone;
+    private final IntermediateDB intermediateDB;
     
     public static enum GeometryType {POINT, LINESTRING, POLYGON, RELATION};
 
-    OHDMElement(BigDecimal osmID, BigDecimal classCode, String sAttributes, String sTags, BigDecimal ohdmID, BigDecimal ohdmObjectID, boolean valid) {
-        super(sAttributes, sTags);
+    OHDMElement(IntermediateDB intermediateDB, BigDecimal osmID, 
+            BigDecimal classCode, String sAttributes, String sTags, 
+            BigDecimal ohdmID, BigDecimal ohdmObjectID, boolean valid) {
         
-        // TODO: extract uid and username here..
+        super(sAttributes, sTags);
+
+        this.intermediateDB = intermediateDB;
         this.getUserID();
         this.getUsername();
         this.osmID = osmID;
@@ -38,11 +42,14 @@ public abstract class OHDMElement extends AbstractElement {
     abstract String getWKTGeometry();
     
     abstract GeometryType getGeometryType();
-
+    
+    void setOHDM_ID(int ohdmID) {
+        this.intermediateDB.setOHDM_ID(this, ohdmID);
+    }
+    
     BigDecimal getOSMID() {
         return osmID;
     }
-
     
     String validSince() {
         return "1970-01-01";

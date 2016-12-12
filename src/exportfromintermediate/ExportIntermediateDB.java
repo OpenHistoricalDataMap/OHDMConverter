@@ -16,16 +16,16 @@ import osmupdatewizard.SQLStatementQueue;
  *
  * @author thsc
  */
-public class ExportIntermediateDB {
+public class ExportIntermediateDB extends IntermediateDB {
     private final Importer importer;
-    private final Connection sourceConnection;
     
     private int numberNodes = 0;
     private int numberWays = 0;
     private int numberRelations = 0;
     
     ExportIntermediateDB(Connection sourceConnection, Importer importer) {
-        this.sourceConnection = sourceConnection;
+        super(sourceConnection);
+        
         this.importer = importer;
     }
     
@@ -69,40 +69,43 @@ public class ExportIntermediateDB {
             while(qResultWay.next()) {
                 waynumber++;
                 OHDMWay way = this.createOHDMWay(qResultWay);
-
-                // find all associated nodes and add to that way
-                /* SQL Query is like this
-                    select * from nodes_table where osm_id IN 
-                    (SELECT node_id FROM waynodes_table where way_id = ID_of_way);            
-                */        
-
-                sql = new StringBuilder("select * from ");
-                sql.append(NODETABLE);
-                sql.append(" where osm_id IN (SELECT node_id FROM ");            
-                sql.append(WAYMEMBER);
-                sql.append(" where way_id = ");            
-                sql.append(way.getOSMID());
-                sql.append(");");  
-
-                stmt = this.sourceConnection.prepareStatement(sql.toString());
-                ResultSet qResultNode = stmt.executeQuery();
-
-                while(qResultNode.next()) {
-                    OHDMNode node = this.createOHDMNode(qResultNode);
-                    way.addNode(node);
-                }
                 
+                this.addNodes2OHDMWay(way);
+
                 // process that stuff
                 if(this.importer.importWay(way)) {
                     this.numberWays++;
                 }
-                
             }
         } catch (SQLException ex) {
             System.err.println(ex.getLocalizedMessage());
         }
         
         System.out.println("Checked / imported ways:  " + waynumber + " / " + this.numberWays);
+    }
+    
+    void addNodes2OHDMWay(OHDMWay way) throws SQLException {
+        // find all associated nodes and add to that way
+        /* SQL Query is like this
+            select * from nodes_table where osm_id IN 
+            (SELECT node_id FROM waynodes_table where way_id = ID_of_way);            
+        */ 
+        SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
+
+        sql.append("select * from ");
+        sql.append(NODETABLE);
+        sql.append(" where osm_id IN (SELECT node_id FROM ");            
+        sql.append(WAYMEMBER);
+        sql.append(" where way_id = ");            
+        sql.append(way.getOSMID().intValue());
+        sql.append(");");  
+
+        ResultSet qResultNode = sql.executeWithResult();
+
+        while(qResultNode.next()) {
+            OHDMNode node = this.createOHDMNode(qResultNode);
+            way.addNode(node);
+        }
     }
     
     void processRelations() throws SQLException {
@@ -164,7 +167,7 @@ public class ExportIntermediateDB {
                     sq.append(id);
                     sq.append(";");
                     
-                    ResultSet memberResult = sq.executeQueryOnTarget();
+                    ResultSet memberResult = sq.executeWithResult();
                     OHDMElement memberElement = null;
                     switch(type) {
                         case POINT: 
@@ -229,7 +232,7 @@ public class ExportIntermediateDB {
         String memberIDs = qResult.getString("member_ids");
         boolean valid = qResult.getBoolean("valid");
 
-        OHDMRelation relation = new OHDMRelation(osmIDBig, classCodeBig, sTags, memberIDs, ohdmIDBig, ohdmObjectIDBig, valid);
+        OHDMRelation relation = new OHDMRelation(this, osmIDBig, classCodeBig, sTags, memberIDs, ohdmIDBig, ohdmObjectIDBig, valid);
         
         return relation;
     }
@@ -244,7 +247,7 @@ public class ExportIntermediateDB {
         String nodeIDs = qResult.getString("node_ids");
         boolean valid = qResult.getBoolean("valid");
 
-        OHDMWay way = new OHDMWay(osmIDBig, classCodeBig, sTags, nodeIDs, ohdmIDBig, ohdmObjectIDBig, valid);
+        OHDMWay way = new OHDMWay(this, osmIDBig, classCodeBig, sTags, nodeIDs, ohdmIDBig, ohdmObjectIDBig, valid);
 
         return way;
     }
@@ -259,9 +262,8 @@ public class ExportIntermediateDB {
         BigDecimal ohdmObjectIDBig = qResult.getBigDecimal("ohdm_object");
         boolean valid = qResult.getBoolean("valid");
 
-        OHDMNode node = new OHDMNode(osmIDBig, classCodeBig, sTags, longitude, latitude, ohdmIDBig, ohdmObjectIDBig, valid);
+        OHDMNode node = new OHDMNode(this, osmIDBig, classCodeBig, sTags, longitude, latitude, ohdmIDBig, ohdmObjectIDBig, valid);
 
         return node;
     }
-    
 }

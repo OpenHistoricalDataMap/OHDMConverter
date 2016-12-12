@@ -9,8 +9,8 @@ import java.math.BigDecimal;
 public class OHDMRelation extends OHDMElement {
     private final String memberIDs;
     
-    OHDMRelation(BigDecimal osmID, BigDecimal classCode, String sTags, String memberIDs, BigDecimal ohdmID, BigDecimal ohdmObjectID, boolean valid) {
-        super(osmID, classCode, null, sTags, ohdmID, ohdmObjectID, valid);
+    OHDMRelation(IntermediateDB intermediateDB, BigDecimal osmID, BigDecimal classCode, String sTags, String memberIDs, BigDecimal ohdmID, BigDecimal ohdmObjectID, boolean valid) {
+        super(intermediateDB, osmID, classCode, null, sTags, ohdmID, ohdmObjectID, valid);
         this.memberIDs = memberIDs;
     }
 

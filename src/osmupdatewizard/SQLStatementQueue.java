@@ -1,5 +1,7 @@
 package osmupdatewizard;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -50,6 +52,10 @@ public class SQLStatementQueue {
         this.sqlQueue.append(Integer.toString(a));
     }
     
+    public void append(BigDecimal a) {
+        this.sqlQueue.append(a);
+    }
+    
     public void append(long a) {
         this.sqlQueue.append(Long.toString(a));
     }
@@ -63,11 +69,11 @@ public class SQLStatementQueue {
         }
         
         if(++this.number >= this.maxLength) {
-            this.flush();
+            this.forceExecute();
         }
     }
     
-    public void flush() {
+    public void forceExecute() {
         if(this.sqlQueue == null) return;
         
         PreparedStatement stmt;
@@ -87,7 +93,7 @@ public class SQLStatementQueue {
         this.sqlQueue = null;
     }
     
-    public ResultSet executeQueryOnTarget() throws SQLException {
+    public ResultSet executeWithResult() throws SQLException {
         PreparedStatement stmt = this.connection.prepareStatement(this.sqlQueue.toString());
         
         try {

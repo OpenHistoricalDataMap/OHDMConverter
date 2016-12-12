@@ -14,9 +14,9 @@ public class OHDMWay extends OHDMElement {
     private ArrayList<String> nodeIDList;
     private final String nodeIDs;
 
-    OHDMWay(BigDecimal osmID, BigDecimal classCode, String sTags, String nodeIDs, BigDecimal ohdmID, BigDecimal ohdmObjectID, boolean valid) {
+    OHDMWay(IntermediateDB intermediateDB, BigDecimal osmID, BigDecimal classCode, String sTags, String nodeIDs, BigDecimal ohdmID, BigDecimal ohdmObjectID, boolean valid) {
         // handle tags as attributes..
-        super(osmID, classCode, null, sTags, ohdmID, ohdmObjectID, valid);
+        super(intermediateDB, osmID, classCode, null, sTags, ohdmID, ohdmObjectID, valid);
         this.nodeIDs = nodeIDs;
     }
 

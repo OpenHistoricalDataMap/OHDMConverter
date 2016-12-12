@@ -42,7 +42,7 @@ public class ImportRendering extends Importer {
         sq.append(this.HIGWAYTABLE_NAME);
         sq.append(" CASCADE;");
         
-        sq.flush();
+        sq.forceExecute();
     }
     
     void setupHighways() {
@@ -56,7 +56,7 @@ public class ImportRendering extends Importer {
         sq.append("MAXVALUE 9223372036854775807 ");
         sq.append("START 1 ");
         sq.append("CACHE 1;");
-        sq.flush();
+        sq.forceExecute();
         
         sq.append("CREATE TABLE ");
         sq.append(this.HIGWAYTABLE_NAME);
@@ -71,7 +71,7 @@ public class ImportRendering extends Importer {
         sq.append("valid_until date NOT NULL,");
         sq.append("PRIMARY KEY (id));");
         
-        sq.flush();
+        sq.forceExecute();
     }
 
     private int numberWays = 0;
@@ -121,7 +121,7 @@ INSERT INTO this.HIGWAYTABLE_NAME(
         
         sq.append("');");
         
-        sq.flush();
+        sq.forceExecute();
         
         // count
         this.numberWays++;

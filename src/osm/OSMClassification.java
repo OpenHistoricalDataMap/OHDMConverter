@@ -497,7 +497,7 @@ public class OSMClassification {
         sq.append(classificationTableName);
         sq.append(" VALUES (-1, 'no_class', 'no_subclass');");
 
-        sq.flush();
+        sq.forceExecute();
         
         // now append real data
         int n = 0;
@@ -523,7 +523,7 @@ public class OSMClassification {
                 sq.append(subClassName);
                 sq.append("') RETURNING id;");
                 
-                ResultSet insertResult = sq.executeQueryOnTarget();
+                ResultSet insertResult = sq.executeWithResult();
                 insertResult.next();
                 int classID = insertResult.getInt(1);
                 

@@ -10,12 +10,12 @@ public class OHDMNode extends OHDMElement {
     private String longitude;
     private String latitude;
 
-    OHDMNode(BigDecimal osmID, BigDecimal classCode, String sTags, BigDecimal ohdmID, BigDecimal ohdmObjectID, boolean valid) {
-        super(osmID, classCode, null, sTags, ohdmID, ohdmObjectID, valid);
+    OHDMNode(IntermediateDB intermediateDB, BigDecimal osmID, BigDecimal classCode, String sTags, BigDecimal ohdmID, BigDecimal ohdmObjectID, boolean valid) {
+        super(intermediateDB, osmID, classCode, null, sTags, ohdmID, ohdmObjectID, valid);
     }
 
-    OHDMNode(BigDecimal osmIDBig, BigDecimal classCodeBig, String sTags, String longitude, String latitude, BigDecimal ohdmIDBig, BigDecimal ohdmObjectIDBig, boolean valid) {
-        this(osmIDBig, classCodeBig, sTags, ohdmIDBig, ohdmObjectIDBig, valid);
+    OHDMNode(IntermediateDB intermediateDB, BigDecimal osmIDBig, BigDecimal classCodeBig, String sTags, String longitude, String latitude, BigDecimal ohdmIDBig, BigDecimal ohdmObjectIDBig, boolean valid) {
+        this(intermediateDB, osmIDBig, classCodeBig, sTags, ohdmIDBig, ohdmObjectIDBig, valid);
         
         this.longitude = longitude;
         this.latitude = latitude;

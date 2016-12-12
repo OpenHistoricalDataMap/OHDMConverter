@@ -530,7 +530,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
         */
     }
     
-    sq.flush();
+    sq.forceExecute();
       
     nodes.clear();
   }
@@ -698,7 +698,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
             // NOTE FLUSH on sql queue is essentiell!! rest of the code is for debugging
             if(counter++ >= 50) {
                 // IMPORTANT:
-                sqlQueue.flush();
+                sqlQueue.forceExecute();
                 
                 // debugging
                 System.out.print("*");
@@ -787,7 +787,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
             }
         }
         // flush sql statements (required when using append variant)
-        sqlQueue.flush();
+        sqlQueue.forceExecute();
         this.ways.clear();
     }
 
@@ -1047,7 +1047,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
             
             // member.getId();
           }
-        sq.flush(); // after each relation
+        sq.forceExecute(); // after each relation
         }
     }
 

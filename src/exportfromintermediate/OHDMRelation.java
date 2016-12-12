@@ -1,7 +1,11 @@
 package exportfromintermediate;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -19,9 +23,81 @@ public class OHDMRelation extends OHDMElement {
         this.memberIDs = memberIDs;
     }
 
+    private String wkt = null;
     @Override
     String getWKTGeometry() {
-        return null;
+        if(!this.isPolygon()) return null;
+        
+        if(this.wkt != null) return this.wkt;
+        
+        // create a polygon with hole
+        // POLYGON ((10 10, 110 10, 110 110, 10 110), (20 20, 20 30, 30 30, 30 20), (40 20, 40 30, 50 30, 50 20))
+        
+        ArrayList<OHDMWay> outerWays = new ArrayList<>();
+        ArrayList<OHDMWay> innerWays = new ArrayList<>();
+        
+        try {
+            for(int i = 0; i < memberRoles.size(); i++) {
+                OHDMElement way = members.get(i);
+                
+                // fill nodes
+                this.intermediateDB.addNodes2OHDMWay((OHDMWay)way);
+                
+                if(memberRoles.get(i).equalsIgnoreCase(OHDMRelation.INNER_ROLE)) {
+                    innerWays.add((OHDMWay)way);
+                } else {
+                    outerWays.add((OHDMWay)way);
+                }
+            }
+            
+            // create wkt
+            StringBuilder sb = new StringBuilder();
+            sb.append("POLYGON ( (");
+            
+            this.addPoints(outerWays, sb);
+            
+            Iterator<OHDMWay> innerWaysIter = innerWays.iterator();
+            while(innerWaysIter.hasNext()) {
+                sb.append(","); // separate between ring(s)
+                OHDMWay innerWay = innerWaysIter.next();
+                if(innerWay.isPolygon()) {
+                    sb.append(innerWay.getWKTPointsOnly());
+                } else { // should not happen.. remove ','
+                    System.err.println("inner ring is no polygon, osmid: " + innerWay.getOSMID());
+                    sb.deleteCharAt(sb.length() - 1);
+                }
+            }
+            
+            sb.append(")"); // close polygon
+
+            this.wkt = sb.toString();
+            
+//            System.err.println(this.wkt);
+            
+        } catch (SQLException ex) {
+            // 
+        }
+        
+        return this.wkt;
+    }
+    
+    private void addPoints(ArrayList<OHDMWay> wayList, StringBuilder sb) {
+        Iterator<OHDMWay> wayIter = wayList.iterator();
+        boolean first = true;
+        while(wayIter.hasNext()) {
+            OHDMWay way = wayIter.next();
+            if(way.isPolygon()) {
+                if(first) {
+                    first = false;
+                } else {
+                    sb.append(", ");
+                }
+                sb.append(way.getWKTPointsOnly());
+            } else { // should not happen.. remove ','
+                System.err.println("ring is no polygon, osmid: " + way.getOSMID());
+                sb.deleteCharAt(sb.length() - 1);
+            }
+        }
     }
 
     @Override
@@ -50,17 +126,24 @@ public class OHDMRelation extends OHDMElement {
     public static final String INNER_ROLE = "inner";
     public static final String OUTER_ROLE = "outer";
     
+    private boolean polygonChecked = false;
+    
     @Override
     boolean isPolygon() {
+        if(this.polygonChecked) return this.isPolygon;
+        
+        this.isPolygon = true;
+        
         // check roles
         for (String roleName : this.memberRoles) {
             if( !roleName.equalsIgnoreCase(OHDMRelation.INNER_ROLE)
                     && !roleName.equalsIgnoreCase(OHDMRelation.OUTER_ROLE)
-            )
-                return false;
+            ) {
+                this.isPolygon = false;
+            }
         }
         
-        return true;
+        this.polygonChecked = true;
+        return this.isPolygon;
     }
-        
 }

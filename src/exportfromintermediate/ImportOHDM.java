@@ -209,10 +209,16 @@ public class ImportOHDM extends Importer {
         sq.append("', ");
         sq.append(externalUserID);
         sq.append(") RETURNING id;");
-        
-        ResultSet result = sq.executeWithResult();
-        result.next();
-        return result.getInt(1);
+
+        try {
+            ResultSet result = sq.executeWithResult();
+            result.next();
+            return result.getInt(1);
+        }
+        catch(SQLException e) {
+            System.err.println("failure when inserting geometry, wkt:\n" + wkt + "\nosm_id: " + ohdmElement.getOSMID());
+            throw e;
+        }
     }
 
     private final String defaultSince = "01-01-1970";
@@ -634,11 +640,11 @@ public class ImportOHDM extends Importer {
             ExportIntermediateDB exporter = 
                     new ExportIntermediateDB(sourceConnection, ohdmImporter);
             
-            /*
-            */
             exporter.processNodes();
             exporter.processWays();
+            /*
             exporter.processRelations();
+            */
             
             System.out.println(exporter.getStatistics());
   

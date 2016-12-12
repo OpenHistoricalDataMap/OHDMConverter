@@ -21,7 +21,7 @@ public abstract class OHDMElement extends AbstractElement {
     private final boolean valid;
     
     protected boolean isPolygon = false;
-    private final IntermediateDB intermediateDB;
+    protected final IntermediateDB intermediateDB;
     
     public static enum GeometryType {POINT, LINESTRING, POLYGON, RELATION};
 

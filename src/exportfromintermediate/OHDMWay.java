@@ -3,7 +3,6 @@ package exportfromintermediate;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.StringTokenizer;
 
 /**
  *
@@ -28,7 +27,7 @@ public class OHDMWay extends OHDMElement {
         
         StringBuilder wkt = new StringBuilder();
         
-        if(this.isPolygone) {
+        if(this.isPolygon) {
             // it is a polygone: e.g. POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))
             // it cannot have an inner a hole - that's described by relations
             wkt.append("POLYGON((");
@@ -81,7 +80,7 @@ public class OHDMWay extends OHDMElement {
 
     @Override
     GeometryType getGeometryType() {
-        if(this.isPolygone) {
+        if(this.isPolygon) {
             return GeometryType.POLYGON;
         } else {
             return GeometryType.LINESTRING;
@@ -91,37 +90,19 @@ public class OHDMWay extends OHDMElement {
     void addNode(OHDMNode node) {
         if (this.nodes == null) {
             this.nodes = new ArrayList<>();
+            
             // setup position list
-            this.nodeIDList = new ArrayList<>();
-            if (this.nodeIDs != null) {
-                StringTokenizer st = new StringTokenizer(this.nodeIDs, ",");
-                while (st.hasMoreTokens()) {
-                    this.nodeIDList.add(st.nextToken());
-                }
-            }
-            // is it a ring
+            this.nodeIDList = this.setupIDList(this.nodeIDs);
+            
+            // is it a ring?
             String firstElement = this.nodeIDList.get(0);
             String lastElement = this.nodeIDList.get(this.nodeIDList.size() - 1);
             if (firstElement.equalsIgnoreCase(lastElement)) {
-                this.isPolygone = true;
+                this.isPolygon = true;
             }
         }
-        BigDecimal nodeOSMID = node.getOSMID();
-        String idString = nodeOSMID.toString();
-        int position = this.nodeIDList.indexOf(idString);
-        /* pay attention! a node can be appeare more than once on a string!
-        indexof would produce the smallest index each time. Thus, we have
-        to overwrite each entry after its usage
-         */
-        this.nodeIDList.set(position, "-1");
-        if (position > -1) {
-            if (position > this.nodes.size() - 1) {
-                this.nodes.add(node);
-            } else {
-                this.nodes.add(position, node);
-            }
-        } else {
-            // TODO!
-        }
+
+        this.addMember(node, this.nodes, this.nodeIDList);
+
     }
 }

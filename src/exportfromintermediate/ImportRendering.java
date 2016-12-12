@@ -78,7 +78,7 @@ public class ImportRendering extends Importer {
     
     @Override
     public boolean importWay(OHDMWay way) throws SQLException {
-        if(way.isPolygone) {
+        if(way.isPolygon) {
             // dont' import a circle in this app
             return false;
         }

@@ -2,6 +2,7 @@ package exportfromintermediate;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.StringTokenizer;
 import osmupdatewizard.AbstractElement;
 import osm.OSMClassification;
@@ -19,7 +20,7 @@ public abstract class OHDMElement extends AbstractElement {
     private final BigDecimal ohdmObjectID;
     private final boolean valid;
     
-    protected boolean isPolygone;
+    protected boolean isPolygon = false;
     private final IntermediateDB intermediateDB;
     
     public static enum GeometryType {POINT, LINESTRING, POLYGON, RELATION};
@@ -134,4 +135,44 @@ public abstract class OHDMElement extends AbstractElement {
         }
         return this.username;
     }
+    
+    protected ArrayList<String> setupIDList(String idString) {
+        ArrayList<String> idList = new ArrayList<>();
+        if (idString != null) {
+            StringTokenizer st = new StringTokenizer(idString, ",");
+            while (st.hasMoreTokens()) {
+                idList.add(st.nextToken());
+            }
+        }
+        
+        return idList;
+    }
+    
+    protected int addMember(OHDMElement newElement, ArrayList memberList, ArrayList<String> idList) {
+        BigDecimal nodeOSMID = newElement.getOSMID();
+        String idString = nodeOSMID.toString();
+        
+        int position = idList.indexOf(idString);
+        /* pay attention! a node can be appeare more than once on a string!
+        indexof would produce the smallest index each time. Thus, we have
+        to overwrite each entry after its usage
+         */
+        idList.set(position, "-1");
+        if (position > -1) {
+            if (position > memberList.size() - 1) {
+                memberList.add(newElement);
+            } else {
+                memberList.add(position, newElement);
+            }
+        } else {
+            // TODO!
+        }
+        
+        return position;
+    }
+    
+    boolean isPolygon() {
+        return this.isPolygon;
+    }
+    
 }

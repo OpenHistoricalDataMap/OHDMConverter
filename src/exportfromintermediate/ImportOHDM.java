@@ -40,8 +40,26 @@ public class ImportOHDM extends Importer {
 
     @Override
     public boolean importRelation(OHDMRelation relation) {
-        // TODO
-        return false;
+        /* there are two options: 
+        a) that relation represents a multigeometry (in most cases)
+        b) it represents a polygon with a whole
+        */
+        
+        // in either case.. create an ohdm object
+        this.importOHDMElement(relation);
+        
+        /* previous message has already stored geometry
+          option b) is already handled so far
+        */
+        
+        // handle option a)
+        if(!relation.isPolygon()) {
+            // get all ohdm ids and store it int
+            
+            // GO AHEAD HERE
+        }
+
+        return true;
     }
     
     private int idExternalSystemOSM = -1;
@@ -158,6 +176,9 @@ public class ImportOHDM extends Importer {
     }
     
     int addGeometry(OHDMElement ohdmElement, int externalUserID) throws SQLException {
+        String wkt = ohdmElement.getWKTGeometry();
+        if(wkt == null || wkt.length() < 1) return -1;
+        
         SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
         
         sq.append("INSERT INTO ");
@@ -184,7 +205,6 @@ public class ImportOHDM extends Importer {
         
         sq.append(" source_user_id) VALUES ('");
         
-        String wkt = ohdmElement.getWKTGeometry();
         sq.append(wkt);
         sq.append("', ");
         sq.append(externalUserID);
@@ -272,7 +292,8 @@ public class ImportOHDM extends Importer {
             String externalUserID = ohdmElement.getUserID();
             String externalUsername = ohdmElement.getUsername();
 
-            int id_ExternalUser = this.getOHDM_ID_ExternalUser(externalUserID, externalUsername);
+            int id_ExternalUser = this.getOHDM_ID_ExternalUser(externalUserID, 
+                    externalUsername);
 
             // create OHDM object
             int ohdm_object_id = this.addOHDMObject(ohdmElement, id_ExternalUser);
@@ -280,8 +301,11 @@ public class ImportOHDM extends Importer {
             // create a geoemtry in OHDM
             int ohdm_geometry_id = this.addGeometry(ohdmElement, id_ExternalUser);
 
-            // create entry in object_geometry table
-            addValidity(ohdmElement, ohdm_object_id, ohdm_geometry_id, id_ExternalUser);
+            if(ohdm_geometry_id != -1 && ohdm_object_id != -1) {
+                // create entry in object_geometry table
+                addValidity(ohdmElement, ohdm_object_id, ohdm_geometry_id, 
+                        id_ExternalUser);
+            }
 
             // keep some special tags (url etc, see wiki)
             addContentAndURL(ohdmElement, ohdm_object_id);
@@ -610,11 +634,11 @@ public class ImportOHDM extends Importer {
             ExportIntermediateDB exporter = 
                     new ExportIntermediateDB(sourceConnection, ohdmImporter);
             
+            /*
+            */
             exporter.processNodes();
             exporter.processWays();
-            /*
             exporter.processRelations();
-            */
             
             System.out.println(exporter.getStatistics());
   

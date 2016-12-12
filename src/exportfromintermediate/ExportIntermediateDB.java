@@ -155,7 +155,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                             sql.append(WAYTABLE);
                             type = OHDMElement.GeometryType.LINESTRING;
                         } else {
-                            qResultRelation.getBigDecimal("member_rel_id");
+                            id = qResultRelation.getBigDecimal("member_rel_id");
                             if(id != null) {
                                 sql.append(RELATIONTABLE);
                                 type = OHDMElement.GeometryType.RELATION;
@@ -169,15 +169,8 @@ public class ExportIntermediateDB extends IntermediateDB {
                     sql.append(";");
                     
                     ResultSet memberResult = sql.executeWithResult();
-                    if(!memberResult.next()) {
-                        /* this call can fail
-                        a) if this program is buggy - which is most likely :) OR
-                        b) intermediate DB has not imported whole world. In that
-                        case, relation can refer to data which are not actually 
-                        stored in intermediate db tables.. 
-                        in that case .. remove whole relation: parts of it are 
-                        outside our current scope
-                        */
+                    if(memberResult.next()) {
+                        // this call can fail, see else branch
                         OHDMElement memberElement = null;
                         switch(type) {
                             case POINT: 
@@ -193,7 +186,15 @@ public class ExportIntermediateDB extends IntermediateDB {
                         }
                         relation.addMember(memberElement, roleString);
                     } else {
-                        relation.remove(); // see comments above
+                        /* this call can fail
+                        a) if this program is buggy - which is most likely :) OR
+                        b) intermediate DB has not imported whole world. In that
+                        case, relation can refer to data which are not actually 
+                        stored in intermediate db tables.. 
+                        in that case .. remove whole relation: parts of it are 
+                        outside our current scope
+                        */
+                        relation.remove();
                         relationMemberComplete = false; 
                     }
                     memberResult.close();

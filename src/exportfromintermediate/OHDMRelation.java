@@ -1,5 +1,6 @@
 package exportfromintermediate;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -32,62 +33,74 @@ public class OHDMRelation extends OHDMElement {
     }
 
     private String wkt = null;
+    /**
+     * See also http://wiki.openstreetmap.org/wiki/Relation:multipolygon
+     * type : multipolygon
+     * @return 
+     */
     @Override
     String getWKTGeometry() {
+        // already created wkt?
+        if(this.wkt != null) return this.wkt;
+        
         if(!this.isPolygon()) return null;
         
-        // correct following code...
+        // we only create geometries out of mulitpolygons
+        if(!this.getType().equalsIgnoreCase("multipolygon")) return null;
         
-//        if(this.wkt != null) return this.wkt;
-//        
-//        // create a polygon with hole
-//        // POLYGON ((10 10, 110 10, 110 110, 10 110), (20 20, 20 30, 30 30, 30 20), (40 20, 40 30, 50 30, 50 20))
-//        
-//        ArrayList<OHDMWay> outerWays = new ArrayList<>();
-//        ArrayList<OHDMWay> innerWays = new ArrayList<>();
-//        
-//        try {
-//            for(int i = 0; i < memberRoles.size(); i++) {
-//                OHDMElement way = members.get(i);
-//                
-//                // fill nodes
-//                this.intermediateDB.addNodes2OHDMWay((OHDMWay)way);
-//                
-//                if(memberRoles.get(i).equalsIgnoreCase(OHDMRelation.INNER_ROLE)) {
-//                    innerWays.add((OHDMWay)way);
-//                } else {
-//                    outerWays.add((OHDMWay)way);
-//                }
-//            }
-//            
-//            // create wkt
-//            StringBuilder sb = new StringBuilder();
-//            sb.append("POLYGON ( (");
-//            
-//            this.addPoints(outerWays, sb);
-//            
-//            Iterator<OHDMWay> innerWaysIter = innerWays.iterator();
-//            while(innerWaysIter.hasNext()) {
-//                sb.append(","); // separate between ring(s)
-//                OHDMWay innerWay = innerWaysIter.next();
-//                if(innerWay.isPolygon()) {
-//                    sb.append(innerWay.getWKTPointsOnly());
-//                } else { // should not happen.. remove ','
-//                    System.err.println("inner ring is no polygon, osmid: " + innerWay.getOSMID());
-//                    sb.deleteCharAt(sb.length() - 1);
-//                }
-//            }
-//            
-//            sb.append(")"); // close polygon
-//
-//            this.wkt = sb.toString();
-//            
-////            System.err.println(this.wkt);
-//            
-//        } catch (SQLException ex) {
-//            // 
-//        }
-//        
+        // now... we are going to construct a wkt out of OSM multipolygon... good luck :/
+        
+        // create a polygon with hole
+        // POLYGON ((10 10, 110 10, 110 110, 10 110), (20 20, 20 30, 30 30, 30 20), (40 20, 40 30, 50 30, 50 20))
+
+        // following code don't work.. return until it's fixed
+        if(this.isPolygon()) return null;
+        
+        ArrayList<OHDMWay> outerWays = new ArrayList<>();
+        ArrayList<OHDMWay> innerWays = new ArrayList<>();
+        
+        try {
+            for(int i = 0; i < memberRoles.size(); i++) {
+                OHDMElement way = members.get(i);
+                
+                // fill nodes
+                this.intermediateDB.addNodes2OHDMWay((OHDMWay)way);
+                
+                if(memberRoles.get(i).equalsIgnoreCase(OHDMRelation.INNER_ROLE)) {
+                    innerWays.add((OHDMWay)way);
+                } else {
+                    outerWays.add((OHDMWay)way);
+                }
+            }
+            
+            // create wkt
+            StringBuilder sb = new StringBuilder();
+            sb.append("POLYGON ( (");
+            
+            this.addPoints(outerWays, sb);
+            
+            Iterator<OHDMWay> innerWaysIter = innerWays.iterator();
+            while(innerWaysIter.hasNext()) {
+                sb.append(","); // separate between ring(s)
+                OHDMWay innerWay = innerWaysIter.next();
+                if(innerWay.isPolygon()) {
+                    sb.append(innerWay.getWKTPointsOnly());
+                } else { // should not happen.. remove ','
+                    System.err.println("inner ring is no polygon, osmid: " + innerWay.getOSMIDString());
+                    sb.deleteCharAt(sb.length() - 1);
+                }
+            }
+            
+            sb.append(")"); // close polygon
+
+            this.wkt = sb.toString();
+            
+//            System.err.println(this.wkt);
+            
+        } catch (SQLException ex) {
+            // 
+        }
+        
         return this.wkt;
     }
     

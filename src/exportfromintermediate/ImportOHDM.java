@@ -48,7 +48,7 @@ public class ImportOHDM extends Importer {
         // in either case.. create an ohdm object
         String ohdmIDString = this.importOHDMElement(relation);
         
-        if(ohdmIDString == null) return false; // object has not be written
+        if(ohdmIDString == null) return false; // object has not been written
         
         /* previous message has already stored geometry
           option b) is already handled so far

@@ -125,10 +125,7 @@ public abstract class OHDMElement extends AbstractElement {
      */
     final String getUserID() {
         if(this.uid == null) {
-            this.uid = this.findValueInTags("uid");
-            if(this.uid == null) {
-                this.uid = this.attributes.get("uid");
-            }
+            this.uid = this.findValue("uid");
 
             if(this.uid == null) {
                 this.uid = "-1";
@@ -141,16 +138,24 @@ public abstract class OHDMElement extends AbstractElement {
     private String username = null;
     final String getUsername() {
         if(this.username == null) {
-            this.username = this.findValueInTags("user");
-            if(this.username == null) {
-                this.username = this.attributes.get("user");
-            }
+            this.username = this.findValue("user");
 
             if(this.username == null) {
                 this.username = "unknown";
             }
         }
         return this.username;
+    }
+    
+    final String findValue(String key) {
+        String value = this.findValueInTags(key);
+        if(value != null) return value;
+        
+        return this.attributes.get(key);
+    }
+    
+    final String getType() {
+        return this.findValue("type");
     }
     
     protected ArrayList<String> setupIDList(String idString) {

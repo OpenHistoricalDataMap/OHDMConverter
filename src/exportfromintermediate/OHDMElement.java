@@ -46,9 +46,16 @@ public abstract class OHDMElement extends AbstractElement {
     
     abstract GeometryType getGeometryType();
     
-    void setOHDM_IDs(String ohdmObjectIDString, String ohdmGeomIDString) throws SQLException {
-        this.intermediateDB.setOHDM_IDs(this, ohdmObjectIDString, ohdmGeomIDString);
+    void setOHDM_IDs(String ohdmObjectIDString, String ohdmGeomIDString, boolean persist) throws SQLException {
+        if(persist) {
+            this.intermediateDB.setOHDM_IDs(this, ohdmObjectIDString, ohdmGeomIDString);
+        }
+        
         this.ohdmObjectIDString = ohdmObjectIDString;
+    }
+    
+    void setOHDM_IDs(String ohdmObjectIDString, String ohdmGeomIDString) throws SQLException {
+        this.setOHDM_IDs(ohdmObjectIDString, ohdmGeomIDString, true);
     }
     
     String getOHDMObjectID() {

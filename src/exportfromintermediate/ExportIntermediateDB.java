@@ -180,7 +180,6 @@ public class ExportIntermediateDB extends IntermediateDB {
                                 memberElement = this.createOHDMWay(memberResult);
                                 break;
                             case RELATION:
-                                // to we really need the relation object??
                                 memberElement = this.createOHDMRelation(memberResult);
                                 break;
                         }

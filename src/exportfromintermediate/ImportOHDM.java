@@ -67,17 +67,22 @@ public class ImportOHDM extends Importer {
             
             sq.append("INSERT INTO ");
             sq.append(ImportOHDM.GEOOBJECT_GEOMETRY);
-            sq.append("(id_geoobject_source, id_target, type_target, valid_since,");
-            sq.append(" valid_until VALUES ");
+            sq.append("(id_geoobject_source, id_target, type_target, role,");
+            sq.append(" valid_since, valid_until) VALUES ");
             
             boolean notFirstSet = false;
             for(int i = 0; i < relation.getMemberSize(); i++) {
                 OHDMElement member = relation.getMember(i);
-                String memberOHDMObjectIDString = member.getOHDMObjectID();
-                if(memberOHDMObjectIDString == null) continue; // // TODO: member not yet in ohdm db.
+                String memberOHDMObjectIDString = this.addOHDMObject(member, true);
+                if(memberOHDMObjectIDString == null) continue; // shouldn't happen
+                
+                // get role of that member in that relation
+                String roleName = relation.getRoleName(i);
                 
                 if(notFirstSet) {
                     sq.append(", ");
+                } else {
+                    notFirstSet = true;
                 }
                 
                 sq.append("(");
@@ -92,6 +97,8 @@ public class ImportOHDM extends Importer {
                 } else {
                     sq.append(ImportOHDM.TARGET_GEOOBJECT);
                 }
+                sq.append(", ");
+                sq.append(roleName); // role
                 sq.append(", ");
                 sq.append(this.defaultSince); // since
                 sq.append(", ");
@@ -144,6 +151,16 @@ public class ImportOHDM extends Importer {
     static final int UNKNOWN_USER_ID = -1;
     
     private final HashMap<String, Integer> idExternalUsers = new HashMap<>();
+    
+    private int getOHDM_ID_ExternalUser(OHDMElement ohdmElement) {
+        // create user entry or find user primary key
+        String externalUserID = ohdmElement.getUserID();
+        String externalUsername = ohdmElement.getUsername();
+
+        return this.getOHDM_ID_ExternalUser(externalUserID, 
+                externalUsername);
+    }
+    
     private int getOHDM_ID_ExternalUser(String externalUserID, String externalUserName) {
         if(!this.validUserID(externalUserID)) return ImportOHDM.UNKNOWN_USER_ID;
         
@@ -203,7 +220,46 @@ public class ImportOHDM extends Importer {
         
     }
     
+    String addOHDMObject(OHDMElement ohdmElement, boolean persist) throws SQLException {
+        // already in OHDM DB?
+        String ohdmIDString = ohdmElement.getOHDMObjectID();
+        if(ohdmIDString != null) return ohdmIDString;
+        
+        // add entry in object table
+        try {
+            /* nodes without tags have no identity and are part of a way or relation
+            and stored with them. We are done here and return
+            */
+            if(!this.elementHasIdentity(ohdmElement)) {
+                return null;
+            }
+
+            // create user entry or find user primary key
+            String externalUserID = ohdmElement.getUserID();
+            String externalUsername = ohdmElement.getUsername();
+
+            int id_ExternalUser = this.getOHDM_ID_ExternalUser(externalUserID, 
+                    externalUsername);
+
+            // create OHDM object
+            String ohdmObjectIDString = this.addOHDMObject(ohdmElement, id_ExternalUser);
+            
+            ohdmElement.setOHDM_IDs(ohdmObjectIDString, null, persist);
+        
+            return ohdmObjectIDString;
+        }
+        catch(Exception e) {
+            System.err.println("failure during node import: " + e.getMessage());
+        }
+        
+        return null;
+    }
+    
     String addOHDMObject(OHDMElement ohdmElement, int externalUserID) throws SQLException {
+        // already in OHDM DB?
+        String ohdmIDString = ohdmElement.getOHDMObjectID();
+        if(ohdmIDString != null) return ohdmIDString;
+        
         SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
         
         String name = ohdmElement.getName();
@@ -341,38 +397,40 @@ public class ImportOHDM extends Importer {
         ArrayList<TagElement> tags = ohdmElement.getTags();
         
         try {
-            /* nodes without tags have no identity and are part of a way or relation
-            and stored with them. We are done here and return
+            // don't import anything without an identity
+            if(!this.elementHasIdentity(ohdmElement)) return null;
+
+            // get external user id from ohdm
+            int id_ExternalUser = this.getOHDM_ID_ExternalUser(ohdmElement);
+
+            /* create a geomtry in OHDM 
+                this call fails (produces null) if this element has no geometry,
+                which is a relation that has not only inner / outer member
             */
-            if(!this.elementHasIdentity(ohdmElement)) {
-                return null;
-            }
-
-            // create user entry or find user primary key
-            String externalUserID = ohdmElement.getUserID();
-            String externalUsername = ohdmElement.getUsername();
-
-            int id_ExternalUser = this.getOHDM_ID_ExternalUser(externalUserID, 
-                    externalUsername);
-
-            // create OHDM object
-            String ohdmObjectIDString = this.addOHDMObject(ohdmElement, id_ExternalUser);
-
-            // create a geoemtry in OHDM
             String ohdmGeomIDString = this.addGeometry(ohdmElement, id_ExternalUser);
+            
+            boolean persist = ohdmGeomIDString == null;
+            
+            /* add entry in object table IF this object has an identity
+            perist that object ONLY IF there is no geometry. Reduces db access!
+            */
+            String ohdmObjectIDString = this.addOHDMObject(ohdmElement, persist);
+            
 
+            // refer object and geometry to each other
             if(ohdmGeomIDString != null && ohdmObjectIDString != null) {
                 // create entry in object_geometry table
                 addValidity(ohdmElement, ohdmObjectIDString, ohdmGeomIDString, 
                         id_ExternalUser);
+                
+                /* now make both object and geom id persistent to intermediate db
+                */
+                this.intermediateDB.setOHDM_IDs(ohdmElement, ohdmObjectIDString, ohdmGeomIDString);
             }
 
             // keep some special tags (url etc, see wiki)
             addContentAndURL(ohdmElement, ohdmObjectIDString);
 
-            // remind those actions in intermediate database by setting ohdm_geom_id
-            this.intermediateDB.setOHDM_IDs(ohdmElement, ohdmObjectIDString, ohdmGeomIDString);
-        
             return ohdmObjectIDString;
         }
         catch(Exception e) {

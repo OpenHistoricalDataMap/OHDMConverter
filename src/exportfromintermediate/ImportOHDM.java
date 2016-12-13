@@ -39,14 +39,16 @@ public class ImportOHDM extends Importer {
     }
 
     @Override
-    public boolean importRelation(OHDMRelation relation) {
+    public boolean importRelation(OHDMRelation relation) throws SQLException {
         /* there are two options:
         a) that relation represents a multigeometry (in most cases)
-        b) it represents a polygon with a whole
+        b) it represents a polygon with one or more hole(s)
          */
         
         // in either case.. create an ohdm object
         String ohdmIDString = this.importOHDMElement(relation);
+        
+        if(ohdmIDString == null) return false; // object has not be written
         
         /* previous message has already stored geometry
           option b) is already handled so far
@@ -55,7 +57,7 @@ public class ImportOHDM extends Importer {
         // handle option a)
         if(!relation.isPolygon()) {
             // get all ohdm ids and store it
-            SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
+            StringBuilder sq = new StringBuilder();
             
             /**
              * INSERT INTO [geoobject_geometry] 
@@ -68,16 +70,20 @@ public class ImportOHDM extends Importer {
             sq.append("(id_geoobject_source, id_target, type_target, valid_since,");
             sq.append(" valid_until VALUES ");
             
+            boolean notFirstSet = false;
             for(int i = 0; i < relation.getMemberSize(); i++) {
-                if(i != 0) {
+                OHDMElement member = relation.getMember(i);
+                String memberOHDMObjectIDString = member.getOHDMObjectID();
+                if(memberOHDMObjectIDString == null) continue; // // TODO: member not yet in ohdm db.
+                
+                if(notFirstSet) {
                     sq.append(", ");
                 }
-                OHDMElement member = relation.getMember(i);
                 
                 sq.append("(");
                 sq.append(ohdmIDString); // id source
                 sq.append(", ");
-                sq.append(member.getOHDM_ID()); // id target
+                sq.append(memberOHDMObjectIDString); // id target
                 sq.append(", ");
                 if(member instanceof OHDMNode) { // type_target
                     sq.append(ImportOHDM.TARGET_POINT);
@@ -87,10 +93,22 @@ public class ImportOHDM extends Importer {
                     sq.append(ImportOHDM.TARGET_GEOOBJECT);
                 }
                 sq.append(", ");
+                sq.append(this.defaultSince); // since
+                sq.append(", ");
+                sq.append(this.defaultUntil); // until
+                sq.append(")"); // end that value set
+            }
+            sq.append(";"); // end that value set
+            
+            if(notFirstSet) {
+                // there is at least one value set - excecute
+                SQLStatementQueue sql = new SQLStatementQueue(this.targetConnection);
+                sql.exec(sq.toString());
+                return true;
             }
         }
 
-        return true;
+        return false;
     }
     
     private int idExternalSystemOSM = -1;
@@ -680,9 +698,7 @@ public class ImportOHDM extends Importer {
             
             exporter.processNodes();
             exporter.processWays();
-//            exporter.processRelations();
-            /*
-            */
+            exporter.processRelations();
             
             System.out.println(exporter.getStatistics());
   

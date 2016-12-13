@@ -51,8 +51,12 @@ public abstract class OHDMElement extends AbstractElement {
         this.ohdmObjectIDString = ohdmObjectIDString;
     }
     
-    String getOHDM_ID() {
+    String getOHDMObjectID() {
         return this.ohdmObjectIDString;
+    }
+    
+    String getOHDMGeomID() {
+        return this.ohdmGeomIDString;
     }
     
     /**

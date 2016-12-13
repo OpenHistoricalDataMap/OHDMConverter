@@ -51,10 +51,6 @@ public class SQLStatementQueue {
         this.sqlQueue.append(Integer.toString(a));
     }
     
-    public void append(BigDecimal a) {
-        this.sqlQueue.append(a);
-    }
-    
     public void append(long a) {
         this.sqlQueue.append(Long.toString(a));
     }

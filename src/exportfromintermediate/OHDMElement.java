@@ -12,12 +12,13 @@ import osm.OSMClassification;
  * @author thsc
  */
 public abstract class OHDMElement extends AbstractElement {
-    private final BigDecimal osmID;
-    private final int classCode;
+    private final String osmIDString;
+    private final String classCodeString;
     private int subClassCode;
     
-    private final BigDecimal ohdmID;
-    private final BigDecimal ohdmObjectID;
+    private String ohdmObjectIDString;
+    private String ohdmGeomIDString;
+    
     private final boolean valid;
     
     protected boolean isPolygon = false;
@@ -25,19 +26,19 @@ public abstract class OHDMElement extends AbstractElement {
     
     public static enum GeometryType {POINT, LINESTRING, POLYGON, RELATION};
 
-    OHDMElement(IntermediateDB intermediateDB, BigDecimal osmID, 
-            BigDecimal classCode, String sAttributes, String sTags, 
-            BigDecimal ohdmID, BigDecimal ohdmObjectID, boolean valid) {
+    OHDMElement(IntermediateDB intermediateDB, String osmIDString, 
+            String classCodeString, String sAttributes, String sTags, 
+            String ohdmObjectIDString, String ohdmGeomIDString, boolean valid) {
         
         super(sAttributes, sTags);
 
         this.intermediateDB = intermediateDB;
         this.getUserID();
         this.getUsername();
-        this.osmID = osmID;
-        this.classCode = classCode.intValue();
-        this.ohdmID = ohdmID;
-        this.ohdmObjectID = ohdmObjectID;
+        this.osmIDString = osmIDString;
+        this.classCodeString = classCodeString;
+        this.ohdmObjectIDString = ohdmObjectIDString;
+        this.ohdmGeomIDString = ohdmGeomIDString;
         this.valid = valid;
     }
     
@@ -45,8 +46,13 @@ public abstract class OHDMElement extends AbstractElement {
     
     abstract GeometryType getGeometryType();
     
-    void setOHDM_ID(int ohdmID) throws SQLException {
-        this.intermediateDB.setOHDM_ID(this, ohdmID);
+    void setOHDM_IDs(String ohdmObjectIDString, String ohdmGeomIDString) throws SQLException {
+        this.intermediateDB.setOHDM_IDs(this, ohdmObjectIDString, ohdmGeomIDString);
+        this.ohdmObjectIDString = ohdmObjectIDString;
+    }
+    
+    String getOHDM_ID() {
+        return this.ohdmObjectIDString;
     }
     
     /**
@@ -56,8 +62,8 @@ public abstract class OHDMElement extends AbstractElement {
         this.intermediateDB.remove(this);
     }
     
-    BigDecimal getOSMID() {
-        return osmID;
+    String getOSMIDString() {
+        return osmIDString;
     }
     
     String validSince() {
@@ -68,8 +74,8 @@ public abstract class OHDMElement extends AbstractElement {
         return "2020-01-01";
     }
     
-    int getClassCode() {
-        return this.classCode;
+    String getClassCodeString() {
+        return this.classCodeString;
     }
     
     private String className = null;
@@ -78,7 +84,7 @@ public abstract class OHDMElement extends AbstractElement {
     String getClassName() {
         if(className == null) {
             String fullClassName = OSMClassification.getOSMClassification().
-                    getFullClassName(this.classCode);
+                    getFullClassName(this.classCodeString);
         
             StringTokenizer st = new StringTokenizer(fullClassName, "_");
             this.className = st.nextToken();
@@ -149,8 +155,7 @@ public abstract class OHDMElement extends AbstractElement {
     }
     
     protected int addMember(OHDMElement newElement, ArrayList memberList, ArrayList<String> idList) {
-        BigDecimal nodeOSMID = newElement.getOSMID();
-        String idString = nodeOSMID.toString();
+        String idString = newElement.getOSMIDString();
         
         int position = idList.indexOf(idString);
         /* pay attention! a node can be appeare more than once on a string!

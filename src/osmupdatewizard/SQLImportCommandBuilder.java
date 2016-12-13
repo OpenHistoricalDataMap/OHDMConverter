@@ -206,8 +206,8 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
       sqlWay.append(" (osm_id bigint PRIMARY KEY, ")
               .append("classcode bigint REFERENCES ").append(CLASSIFICATIONTABLE).append(" (classcode), ")
               .append("serializedTags character varying, ")
-              .append("ohdm_id bigint, ")
-              .append("ohdm_object bigint, ")
+              .append("ohdm_geom_id bigint, ")
+              .append("ohdm_object_id bigint, ")
               .append("node_ids character varying, ")
               .append("valid boolean);");
       this.setupTable(WAYTABLE, sqlWay.toString());
@@ -218,8 +218,8 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
               .append("serializedTags character varying, ")
               .append("longitude character varying(").append(MAX_ID_SIZE).append("), ")
               .append("latitude character varying(").append(MAX_ID_SIZE).append("), ")
-              .append("ohdm_id bigint, ")
-              .append("ohdm_object bigint, ")
+              .append("ohdm_geom_id bigint, ")
+              .append("ohdm_object_id bigint, ")
 //              .append("id_way bigint REFERENCES ").append(WAYTABLE).append(" (osm_id), ")
               .append("valid boolean);");
       this.setupTable(NODETABLE, sqlNode.toString());
@@ -228,8 +228,8 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
       sqlRelation.append(" (osm_id bigint PRIMARY KEY, ")
               .append("classcode bigint REFERENCES ").append(CLASSIFICATIONTABLE).append(" (classcode), ")
               .append("serializedTags character varying, ")
-              .append("ohdm_id bigint, ")
-              .append("ohdm_object bigint, ")
+              .append("ohdm_geom_id bigint, ")
+              .append("ohdm_object_id bigint, ")
               .append("member_ids character varying, ")
               .append("valid boolean);");
       this.setupTable(RELATIONTABLE, sqlRelation.toString());

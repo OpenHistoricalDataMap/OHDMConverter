@@ -412,7 +412,8 @@ public class OSMClassification {
         return className + "_" + subclassname;
     }
     
-    public String getFullClassName(int classCode) {
+    public String getFullClassName(String classCodeString) {
+        int classCode = Integer.parseInt(classCodeString);
         String nothing = "undefined";
         
         if(classCode > -1 && this.fullClassNames.size() > classCode) {

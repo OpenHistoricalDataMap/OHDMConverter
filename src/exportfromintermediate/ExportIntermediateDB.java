@@ -97,7 +97,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         sql.append(" where osm_id IN (SELECT node_id FROM ");            
         sql.append(WAYMEMBER);
         sql.append(" where way_id = ");            
-        sql.append(way.getOSMID().intValue());
+        sql.append(way.getOSMIDString());
         sql.append(");");  
 
         ResultSet qResultNode = sql.executeWithResult();
@@ -129,7 +129,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                 sql.append("select * from ");
                 sql.append(RELATIONMEMBER);
                 sql.append(" where relation_id = ");            
-                sql.append(relation.getOSMID());
+                sql.append(relation.getOSMIDString());
                 sql.append(";");  
 
                 ResultSet qResultRelation = sql.executeWithResult();
@@ -165,7 +165,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                         }
                     }
                     sql.append(" where osm_id = ");
-                    sql.append(id);
+                    sql.append(id.toString());
                     sql.append(";");
                     
                     ResultSet memberResult = sql.executeWithResult();

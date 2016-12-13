@@ -32,8 +32,12 @@ public class IntermediateDB {
         } 
     }
     
-    public void setOHDM_ID(OHDMElement element, int ohdmID) throws SQLException {
+    public void setOHDM_IDs(OHDMElement element, String ohdmObjectIDString, 
+            String ohdmGeomIDString) throws SQLException {
+        
         if(element == null) return;
+        
+        if(ohdmObjectIDString == null && ohdmGeomIDString == null) return;
         
         /*
         UPDATE [waysTable] SET ohdm_id=[ohdmID] WHERE osm_id = [osmID];
@@ -43,10 +47,24 @@ public class IntermediateDB {
         
         sq.append(this.getIntermediateTableName(element));
         
-        sq.append(" SET ohdm_id= ");
-        sq.append(ohdmID);
+        sq.append(" SET ");
+        boolean parameterSet = false;
+        if(ohdmObjectIDString != null) {
+            sq.append("ohdm_object_id = ");
+            sq.append(ohdmObjectIDString);
+            parameterSet = true;
+        }
+        
+        if(ohdmGeomIDString != null) {
+            if(parameterSet) {
+                sq.append(", ");
+            }
+            sq.append("ohdm_geom_id = ");
+            sq.append(ohdmGeomIDString);
+        }
+        
         sq.append(" WHERE osm_id = ");
-        sq.append(element.getOSMID());
+        sq.append(element.getOSMIDString());
         sq.append(";");
         sq.forceExecute();
     }
@@ -65,7 +83,7 @@ public class IntermediateDB {
             sq.append(RELATIONMEMBER);
 
             sq.append(" WHERE relation_id = ");
-            sq.append(element.getOSMID());
+            sq.append(element.getOSMIDString());
             sq.append(";");
             sq.forceExecute();
         } else if(element instanceof OHDMWay) {
@@ -75,7 +93,7 @@ public class IntermediateDB {
             sq.append(WAYMEMBER);
 
             sq.append(" WHERE way_id = ");
-            sq.append(element.getOSMID());
+            sq.append(element.getOSMIDString());
             sq.append(";");
             sq.forceExecute();
         }
@@ -89,7 +107,7 @@ public class IntermediateDB {
         sq.append(this.getIntermediateTableName(element));
         
         sq.append(" WHERE osm_id = ");
-        sq.append(element.getOSMID());
+        sq.append(element.getOSMIDString());
         sq.append(";");
         sq.forceExecute();
     }
@@ -107,7 +125,7 @@ public class IntermediateDB {
         sql.append(" where osm_id IN (SELECT node_id FROM ");            
         sql.append(WAYMEMBER);
         sql.append(" where way_id = ");            
-        sql.append(way.getOSMID().intValue());
+        sql.append(way.getOSMIDString());
         sql.append(");");  
 
         ResultSet qResultNode = sql.executeWithResult();
@@ -125,47 +143,56 @@ public class IntermediateDB {
     //                         factory methods                           //
     ///////////////////////////////////////////////////////////////////////
     
+    private String osmIDString;
+    private String classCodeString;
+    private String sTags;
+    private String ohdmObjectIDString;
+    private String ohdmGeomIDString;
+    private String memberIDs;
+    private boolean valid;
+    
+    private void readCommonColumns(ResultSet qResult) throws SQLException {
+        osmIDString = this.extractBigDecimalAsString(qResult, "osm_id");
+        classCodeString = this.extractBigDecimalAsString(qResult, "classcode");
+        sTags = qResult.getString("serializedtags");
+        ohdmObjectIDString = this.extractBigDecimalAsString(qResult, "ohdm_object_id");
+        ohdmGeomIDString = this.extractBigDecimalAsString(qResult, "ohdm_geom_id");
+        valid = qResult.getBoolean("valid");
+    }
+    
+    private String extractBigDecimalAsString(ResultSet qResult, String columnName) throws SQLException {
+        BigDecimal bigDecimal = qResult.getBigDecimal(columnName);
+        if(bigDecimal != null) {
+            return bigDecimal.toString();
+        }
+        return null;
+    }
+    
     protected OHDMRelation createOHDMRelation(ResultSet qResult) throws SQLException {
         // get all data to create an ohdm way object
-        BigDecimal osmIDBig = qResult.getBigDecimal("osm_id");
-        BigDecimal classCodeBig = qResult.getBigDecimal("classcode");
-        String sTags = qResult.getString("serializedtags");
-        BigDecimal ohdmIDBig = qResult.getBigDecimal("ohdm_id");
-        BigDecimal ohdmObjectIDBig = qResult.getBigDecimal("ohdm_object");
-        String memberIDs = qResult.getString("member_ids");
-        boolean valid = qResult.getBoolean("valid");
+        this.readCommonColumns(qResult);
+        memberIDs = qResult.getString("member_ids");
 
-        OHDMRelation relation = new OHDMRelation(this, osmIDBig, classCodeBig, sTags, memberIDs, ohdmIDBig, ohdmObjectIDBig, valid);
+        OHDMRelation relation = new OHDMRelation(this, osmIDString, classCodeString, sTags, memberIDs, ohdmObjectIDString, ohdmGeomIDString, valid);
         
         return relation;
     }
     
     protected OHDMWay createOHDMWay(ResultSet qResult) throws SQLException {
-        // get all data to create an ohdm way object
-        BigDecimal osmIDBig = qResult.getBigDecimal("osm_id");
-        BigDecimal classCodeBig = qResult.getBigDecimal("classcode");
-        String sTags = qResult.getString("serializedtags");
-        BigDecimal ohdmIDBig = qResult.getBigDecimal("ohdm_id");
-        BigDecimal ohdmObjectIDBig = qResult.getBigDecimal("ohdm_object");
+        this.readCommonColumns(qResult);
         String nodeIDs = qResult.getString("node_ids");
-        boolean valid = qResult.getBoolean("valid");
 
-        OHDMWay way = new OHDMWay(this, osmIDBig, classCodeBig, sTags, nodeIDs, ohdmIDBig, ohdmObjectIDBig, valid);
+        OHDMWay way = new OHDMWay(this, osmIDString, classCodeString, sTags, nodeIDs, ohdmObjectIDString, ohdmGeomIDString, valid);
 
         return way;
     }
     
     protected OHDMNode createOHDMNode(ResultSet qResult) throws SQLException {
-        BigDecimal osmIDBig = qResult.getBigDecimal("osm_id");
-        BigDecimal classCodeBig = qResult.getBigDecimal("classcode");
-        String sTags = qResult.getString("serializedtags");
+        this.readCommonColumns(qResult);
         String longitude = qResult.getString("longitude");
         String latitude = qResult.getString("latitude");
-        BigDecimal ohdmIDBig = qResult.getBigDecimal("ohdm_id");
-        BigDecimal ohdmObjectIDBig = qResult.getBigDecimal("ohdm_object");
-        boolean valid = qResult.getBoolean("valid");
 
-        OHDMNode node = new OHDMNode(this, osmIDBig, classCodeBig, sTags, longitude, latitude, ohdmIDBig, ohdmObjectIDBig, valid);
+        OHDMNode node = new OHDMNode(this, osmIDString, classCodeString, sTags, longitude, latitude, ohdmObjectIDString, ohdmGeomIDString, valid);
 
         return node;
     }

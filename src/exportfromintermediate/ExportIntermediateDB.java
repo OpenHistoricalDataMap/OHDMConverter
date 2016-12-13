@@ -84,7 +84,8 @@ public class ExportIntermediateDB extends IntermediateDB {
         System.out.println("Checked / imported ways:  " + waynumber + " / " + this.numberWays);
     }
     
-    void addNodes2OHDMWay(OHDMWay way) throws SQLException {
+    @Override
+    OHDMWay addNodes2OHDMWay(OHDMWay way) throws SQLException {
         // find all associated nodes and add to that way
         /* SQL Query is like this
             select * from nodes_table where osm_id IN 
@@ -108,6 +109,8 @@ public class ExportIntermediateDB extends IntermediateDB {
         }
         
         qResultNode.close();
+        
+        return way;
     }
     
     void processRelations() throws SQLException {

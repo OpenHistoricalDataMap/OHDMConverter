@@ -58,13 +58,20 @@ public class OHDMRelation extends OHDMElement {
         
         ArrayList<OHDMWay> outerWays = new ArrayList<>();
         ArrayList<OHDMWay> innerWays = new ArrayList<>();
+        // iterate member
+        
+        ArrayList<String> polygonIDs = new ArrayList<>();
         
         try {
-            for(int i = 0; i < memberRoles.size(); i++) {
+            int i = 0;
+            while(i < memberRoles.size()) {
                 OHDMElement way = members.get(i);
                 
                 // fill nodes
                 this.intermediateDB.addNodes2OHDMWay((OHDMWay)way);
+                
+                // now we have a complete way
+                
                 
                 if(memberRoles.get(i).equalsIgnoreCase(OHDMRelation.INNER_ROLE)) {
                     innerWays.add((OHDMWay)way);

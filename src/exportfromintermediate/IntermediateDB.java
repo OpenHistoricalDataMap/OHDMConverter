@@ -112,7 +112,7 @@ public class IntermediateDB {
         sq.forceExecute();
     }
     
-    void addNodes2OHDMWay(OHDMWay way) throws SQLException {
+    OHDMWay addNodes2OHDMWay(OHDMWay way) throws SQLException {
         // find all associated nodes and add to that way
         /* SQL Query is like this
             select * from nodes_table where osm_id IN 
@@ -136,6 +136,8 @@ public class IntermediateDB {
         }
         
         qResultNode.close();
+        
+        return way;
     }
     
     

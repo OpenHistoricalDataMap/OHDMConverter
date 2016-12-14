@@ -31,36 +31,13 @@ public class OHDMRelation extends OHDMElement {
     int getMemberSize() {
         return this.members.size();
     }
-
-    private String wkt = null;
-    /**
-     * See also http://wiki.openstreetmap.org/wiki/Relation:multipolygon
-     * type : multipolygon
-     * @return 
-     */
-    @Override
-    String getWKTGeometry() {
-        // already created wkt?
-        if(this.wkt != null) return this.wkt;
-        
-        if(!this.isPolygon()) return null;
-        
-        // we only create geometries out of mulitpolygons
-        if(!this.getType().equalsIgnoreCase("multipolygon")) return null;
-        
-        if(!this.memberRoles.get(0).equalsIgnoreCase(OHDMRelation.OUTER_ROLE)) {
-            System.err.println("multipolygon starts not with outside role");
-            return null; // must start outside
-        }
-        
+    
+    void fillRelatedGeometries(ArrayList<String> polygonIDs, ArrayList<String> polygonWKT) {
         // now... we are going to construct a wkt out of OSM multipolygon... good luck :/
         
         // create a polygon with hole
         // POLYGON ((10 10, 110 10, 110 110, 10 110), (20 20, 20 30, 30 30, 30 20), (40 20, 40 30, 50 30, 50 20))
 
-        ArrayList<String> polygonIDs = new ArrayList<>();
-        ArrayList<String> polygonWKT = new ArrayList<>();
-        
         if(this.getOSMIDString().equalsIgnoreCase("3323434")) {
             int debuggingStop = 42;
         }
@@ -189,7 +166,31 @@ public class OHDMRelation extends OHDMElement {
         }
         System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         
-        return this.wkt;
+    }
+
+    private String wkt = null;
+    /**
+     * See also http://wiki.openstreetmap.org/wiki/Relation:multipolygon
+     * type : multipolygon
+     * @return 
+     */
+    @Override
+    String getWKTGeometry() {
+        // already created wkt?
+        if(this.wkt != null) return this.wkt;
+        
+        if(!this.isPolygon()) return null;
+        
+        // we only create geometries out of mulitpolygons
+        if(!this.getType().equalsIgnoreCase("multipolygon")) return null;
+        
+        if(!this.memberRoles.get(0).equalsIgnoreCase(OHDMRelation.OUTER_ROLE)) {
+            System.err.println("multipolygon starts not with outside role");
+            return null; // must start outside
+        }
+        
+        return null;
+        
     }
     
     private boolean addWayToPolygon(String firstNode, StringBuilder wkt, OHDMWay way) throws SQLException {

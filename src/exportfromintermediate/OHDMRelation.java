@@ -198,9 +198,9 @@ public class OHDMRelation extends OHDMElement {
         Iterator<OHDMNode> nodeIter = way.getNodeIter();
         while(nodeIter.hasNext()) {
             OHDMNode node = nodeIter.next();
-            wkt.append(node.getLongitude());
-            wkt.append(" ");
             wkt.append(node.getLatitude());
+            wkt.append(" ");
+            wkt.append(node.getLongitude());
             
             if(firstNode != null && firstNode.equalsIgnoreCase(node.getWKTGeometry())) {
                 // finished

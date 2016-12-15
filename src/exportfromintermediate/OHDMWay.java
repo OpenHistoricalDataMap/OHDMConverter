@@ -99,9 +99,9 @@ public class OHDMWay extends OHDMElement {
     private void appendAllLongLat(StringBuilder wkt, OHDMNode node) {
             node.getLatitude();
 
-            wkt.append(node.getLongitude());
-            wkt.append(" ");
             wkt.append(node.getLatitude());
+            wkt.append(" ");
+            wkt.append(node.getLongitude());
     }
 
     @Override

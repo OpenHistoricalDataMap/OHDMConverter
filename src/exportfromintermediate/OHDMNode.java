@@ -24,9 +24,9 @@ public class OHDMNode extends OHDMElement {
     @Override
     String getWKTGeometry() {
         StringBuilder sb = new StringBuilder("POINT(");
-        sb.append(this.getLongitude());
-        sb.append(" ");
         sb.append(this.getLatitude());
+        sb.append(" ");
+        sb.append(this.getLongitude());
         sb.append(")");
         
         return sb.toString();

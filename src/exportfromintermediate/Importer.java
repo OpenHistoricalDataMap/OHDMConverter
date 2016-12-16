@@ -71,7 +71,7 @@ public abstract class Importer {
 //            String targetServerName = "ohm.f4.htw-berlin.de";
 //            String targetPortNumber = "5432";
 //            String targetUser = "...";
-//            String targetPWD = "...";
+//            String targetPWD = "..";
 //            String targetPath = "ohdm_rendering";
         
             Properties targetConnProps = new Properties();

@@ -19,7 +19,7 @@ public class CreateRenderingDB {
         String targetPortNumber = "5432";
         String targetUser = "admin";
         String targetPWD = "root";
-        String targetPath = "ohdm_rendering";
+        String targetPath = "ohdm_full";
 
         // connect to target OHDM DB - ohm
 //            String targetServerName = "ohm.f4.htw-berlin.de";
@@ -34,6 +34,9 @@ public class CreateRenderingDB {
         Connection connection = DriverManager.getConnection(
             "jdbc:postgresql://" + targetServerName
                     + ":" + targetPortNumber + "/" + targetPath, targetConnProps);
+        
+        String sourceSchema = "ohdm";
+        String targetSchema = "ohdm_rendering";
 /*
 select l.line, c.subclass, o.name, gg.valid_since, gg.valid_until, gg.valid_since_offset, gg.valid_until_offset into ohdm_rendering.test from
 (SELECT id, classification_id, name from ohdm.geoobject where classification_id = 140) as o,
@@ -45,47 +48,114 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
             
         OSMClassification classification = OSMClassification.getOSMClassification();
         for(String featureClassString : classification.osmFeatureClasses.keySet()) {
+            // each class has several subclass; each has its own class id
+            Iterator<String> classIDs = classification.getClassIDs(featureClassString);
+            
             for(int targetType = 1; targetType < 3; targetType++) {
-                // produce tableName
-                String tableName = /* targetPath + "." + */ featureClassString + "_";
+                
+                // produce tableName [classname]_[geometryType]
+                String tableName = targetSchema + "." + featureClassString + "_";
                 switch(targetType) {
                     case 1: tableName += "points"; break;
                     case 2: tableName += "lines"; break;
                     case 3: tableName += "poylgons"; break;
                 }
-                
-                Iterator<String> classIDs = classification.getClassIDs(featureClassString);
+            
+                /* iterate all subclasses of this class. Create 
+                rendering table in the first loop and fill it
+                with data from other subclasses in following loops
+                */
+                boolean first = true;
                 while(classIDs.hasNext()) {
+
                     SQLStatementQueue sql = new SQLStatementQueue(connection);
-                    sql.append("drop table ");
-//                    sql.append(targetPath);
-//                    sql.append(".");
-                    sql.append(tableName);
-                    sql.append(";");
-                    sql.forceExecute();
-                
-                    sql.append("select l.line, c.subclass, o.name, gg.valid_since, ");
+                    
+                    // drop table in first loop
+                    if(first) {
+                        sql.append("drop table ");
+                        sql.append(tableName);
+                        sql.append(";");
+                        sql.forceExecute();
+                    }
+                    
+                    // add data in following loops
+                    if(!first) {
+                        sql.append("INSERT INTO ");
+                        sql.append(tableName);
+                        sql.append("( ");
+                        switch(targetType) {
+                        case 1: sql.append("point"); break; // select point in geom table
+                        case 2: sql.append("line"); break; // select line in geom table
+                        case 3: sql.append("polygon"); break; // select polygon in geom table
+                        }
+                        sql.append(", subclass, name, valid_since, valid_until, valid_since_offset, valid_until_offset) ");
+                    }
+
+                    sql.append("select g.");
+                    switch(targetType) {
+                    case 1: sql.append("point"); break; // select point in geom table
+                    case 2: sql.append("line"); break; // select line in geom table
+                    case 3: sql.append("polygon"); break; // select polygon in geom table
+                    }
+                    sql.append(", c.subclass, o.name, gg.valid_since, ");
                     sql.append("gg.valid_until, gg.valid_since_offset, ");
-                    sql.append("gg.valid_until_offset into ");
-//                    sql.append(targetPath);
-//                    sql.append(".");
-                    sql.append(tableName);
+                    sql.append("gg.valid_until_offset ");
+
+                    if(first) {
+                        sql.append("into ");
+                        sql.append(tableName);
+                    }
+
                     sql.append(" from");
-                    sql.append(" (SELECT id, classification_id, name from ohdm.geoobject where classification_id = ");
-                
+                    
+                    // geoobject_geoobject
+                    sql.append(" (SELECT id, classification_id, name from ");
+                    sql.append(sourceSchema);
+                    sql.append(".geoobject where classification_id = ");
+
                     String classID = classIDs.next();
                     System.out.println(classID);
                     sql.append(classID);
+
+                    sql.append(") as o, ");
                     
-                    sql.append(") as o,(SELECT id_target, type_target, id_geoobject_source, valid_since, ");
-                    sql.append("valid_until, valid_since_offset, valid_until_offset FROM ohdm.geoobject_geometry) as gg,");
-                    sql.append("(SELECT id, line FROM ohdm.lines) as l,");
-                    sql.append("(SELECT subclass, id FROM ohdm.classification) as c ");
+                    // geoobject_geometry
+                    sql.append("(SELECT id_target, type_target, id_geoobject_source, valid_since, ");
+                    sql.append("valid_until, valid_since_offset, valid_until_offset FROM ");
+                    sql.append(sourceSchema);
+                    sql.append(".geoobject_geometry) as gg,");
+                    
+                    // geometry
+                    sql.append("(SELECT id, ");
+                    switch(targetType) {
+                    case 1: sql.append("point"); break; // select point in geom table
+                    case 2: sql.append("line"); break; // select line in geom table
+                    case 3: sql.append("polygon"); break; // select polygon in geom table
+                    }
+                    sql.append(" FROM ");
+                    sql.append(sourceSchema);
+                    sql.append(".");
+                    switch(targetType) {
+                    case 1: sql.append("points"); break; // select point in geom table
+                    case 2: sql.append("lines"); break; // select line in geom table
+                    case 3: sql.append("polygons"); break; // select polygon in geom table
+                    }
+                    sql.append(") as g,");
+                    
+                    // classification
+                    sql.append("(SELECT subclass, id FROM ");
+                    sql.append(sourceSchema);
+                    sql.append(".classification) as c ");
                     sql.append("where gg.type_target = ");
                     sql.append(targetType);
-                    
-                    sql.append(" AND l.id = gg.id_target AND o.id = gg.id_geoobject_source AND o.classification_id = c.id;");
+
+                    sql.append(" AND g.id = gg.id_target AND o.id = gg.id_geoobject_source AND o.classification_id = c.id");
+//                    if(!first) {
+//                        sql.append(")");
+//                    }
+                    sql.append(";");
                     sql.forceExecute();
+                    first = false;
                 }
             }
         }

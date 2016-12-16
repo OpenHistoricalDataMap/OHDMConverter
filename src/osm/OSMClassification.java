@@ -403,7 +403,7 @@ public class OSMClassification {
     
     private void setupClassIDs_Names() {
         // no append real data
-        int id = 0;
+        int id = 1; // start with 1 as in database
 
         // create classification table
         // iterate classes

@@ -3,7 +3,6 @@ package renderingDB;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Iterator;
 import java.util.Properties;
 import osm.OSMClassification;
 import osmupdatewizard.SQLStatementQueue;
@@ -37,6 +36,7 @@ public class CreateRenderingDB {
         
         String sourceSchema = "ohdm";
         String targetSchema = "ohdm_rendering";
+//        String targetSchema = "osw";
 /*
 select l.line, c.subclass, o.name, gg.valid_since, gg.valid_until, gg.valid_since_offset, gg.valid_until_offset into ohdm_rendering.test from
 (SELECT id, classification_id, name from ohdm.geoobject where classification_id = 140) as o,
@@ -48,17 +48,17 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
             
         OSMClassification classification = OSMClassification.getOSMClassification();
         for(String featureClassString : classification.osmFeatureClasses.keySet()) {
-            // each class has several subclass; each has its own class id
-            Iterator<String> classIDs = classification.getClassIDs(featureClassString);
-            
-            for(int targetType = 1; targetType < 3; targetType++) {
+
+            /* there will be a table for each class and type:
+             * produce tableName [classname]_[geometryType]
+             */
+            for(int targetType = 1; targetType <= 3; targetType++) {
                 
-                // produce tableName [classname]_[geometryType]
                 String tableName = targetSchema + "." + featureClassString + "_";
                 switch(targetType) {
                     case 1: tableName += "points"; break;
                     case 2: tableName += "lines"; break;
-                    case 3: tableName += "poylgons"; break;
+                    case 3: tableName += "polygons"; break;
                 }
             
                 /* iterate all subclasses of this class. Create 
@@ -66,7 +66,10 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                 with data from other subclasses in following loops
                 */
                 boolean first = true;
-                while(classIDs.hasNext()) {
+                
+                // iterate subclasses
+                for(String subClassName : classification.osmFeatureClasses.get(featureClassString)) {
+                    int classID = classification.getOHDMClassID(featureClassString, subClassName);
 
                     SQLStatementQueue sql = new SQLStatementQueue(connection);
                     
@@ -113,8 +116,6 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                     sql.append(sourceSchema);
                     sql.append(".geoobject where classification_id = ");
 
-                    String classID = classIDs.next();
-                    System.out.println(classID);
                     sql.append(classID);
 
                     sql.append(") as o, ");
@@ -146,15 +147,23 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                     sql.append("(SELECT subclass, id FROM ");
                     sql.append(sourceSchema);
                     sql.append(".classification) as c ");
+                    
+                    // WHERE clause
                     sql.append("where gg.type_target = ");
                     sql.append(targetType);
 
-                    sql.append(" AND g.id = gg.id_target AND o.id = gg.id_geoobject_source AND o.classification_id = c.id");
+                    sql.append(" AND g.id = gg.id_target AND o.id = gg.id_geoobject_source AND o.classification_id = ");
+                    sql.append(classID);
+                    sql.append(" AND c.id = ");
+                    sql.append(classID);
 //                    if(!first) {
 //                        sql.append(")");
 //                    }
                     sql.append(";");
                     sql.forceExecute();
+                    
+                    System.out.println("done: " + classID + " " + tableName + "| classes: " + featureClassString + "/" + subClassName);
+                    
                     first = false;
                 }
             }

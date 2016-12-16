@@ -383,24 +383,6 @@ public class OSMClassification {
     private HashMap<String, Integer> classIDs = new HashMap<>();
     private ArrayList<String> fullClassNames = new ArrayList<>();
     
-    /**
-     * Returns iterator of string which are valid ID for
-     * this classname. Each class has subclasses.. there are more
-     * than one id
-     * @param classname
-     * @return 
-     */
-    public Iterator<String> getClassIDs(String classname) {
-        List<String> ids = new ArrayList<>();
-        for(String fullClassName : this.classIDs.keySet()) {
-            if(fullClassName.startsWith(classname)) {
-                ids.add(Integer.toString(this.classIDs.get(fullClassName)));
-            }
-        }
-        
-        return ids.iterator();
-    }
-    
     private void setupClassIDs_Names() {
         // no append real data
         int id = 1; // start with 1 as in database

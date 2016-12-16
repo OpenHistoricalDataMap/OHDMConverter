@@ -104,6 +104,7 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                     sql.append("gg.valid_until, gg.valid_since_offset, ");
                     sql.append("gg.valid_until_offset ");
 
+                    // create and fill in first loop
                     if(first) {
                         sql.append("into ");
                         sql.append(tableName);
@@ -144,22 +145,17 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                     sql.append(") as g,");
                     
                     // classification
-                    sql.append("(SELECT subclass, id FROM ");
+                    sql.append("(SELECT subclass FROM ");
                     sql.append(sourceSchema);
-                    sql.append(".classification) as c ");
+                    sql.append(".classification where id = ");
+                    sql.append(classID);
+                    sql.append(") as c ");
                     
                     // WHERE clause
                     sql.append("where gg.type_target = ");
                     sql.append(targetType);
 
-                    sql.append(" AND g.id = gg.id_target AND o.id = gg.id_geoobject_source AND o.classification_id = ");
-                    sql.append(classID);
-                    sql.append(" AND c.id = ");
-                    sql.append(classID);
-//                    if(!first) {
-//                        sql.append(")");
-//                    }
-                    sql.append(";");
+                    sql.append(" AND g.id = gg.id_target AND o.id = gg.id_geoobject_source;");
                     sql.forceExecute();
                     
                     System.out.println("done: " + classID + " " + tableName + "| classes: " + featureClassString + "/" + subClassName);

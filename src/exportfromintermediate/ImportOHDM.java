@@ -598,10 +598,10 @@ public class ImportOHDM extends Importer {
     static final String URL = "url";
     
     // Geometry Types 
-    static int TARGET_POINT = 1;
-    static int TARGET_LINESTRING = 2;
-    static int TARGET_POLYGON = 3;
-    static int TARGET_GEOOBJECT = 0;
+    public static int TARGET_POINT = 1;
+    public static int TARGET_LINESTRING = 2;
+    public static int TARGET_POLYGON = 3;
+    public static int TARGET_GEOOBJECT = 0;
     
     void dropOHDMTables(Connection targetConnection) throws SQLException {
         // drop

@@ -209,6 +209,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
               .append("ohdm_geom_id bigint, ")
               .append("ohdm_object_id bigint, ")
               .append("node_ids character varying, ")
+              .append("is_part boolean DEFAULT false, ")
               .append("valid boolean);");
       this.setupTable(WAYTABLE, sqlWay.toString());
 
@@ -221,6 +222,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
               .append("ohdm_geom_id bigint, ")
               .append("ohdm_object_id bigint, ")
 //              .append("id_way bigint REFERENCES ").append(WAYTABLE).append(" (osm_id), ")
+              .append("is_part boolean DEFAULT false, ")
               .append("valid boolean);");
       this.setupTable(NODETABLE, sqlNode.toString());
 
@@ -686,6 +688,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
     private void saveWayElements() throws SQLException {
         // set up a sql queue
         SQLStatementQueue sqlQueue = new SQLStatementQueue(this.connection, this.logger);
+        SQLStatementQueue nodeIsPartSql = new SQLStatementQueue(this.connection, this.logger);
         
           // figure out classification id.. which describes the
           // type of geometry (building, highway, those kind of things
@@ -763,14 +766,17 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
             sqlQueue.append("true");
             sqlQueue.append(");"); // it's a valid way... it's still in OSM
             
-            // add related nodes to way_node table
+            // add related nodes to way_node table and mark node to be part of something
+            
             // iterate nodes
             if(wayElement.getNodes() != null) {
                 // set up first part of sql statement
                 String sqlStart = "INSERT INTO " + WAYMEMBER 
                         + "(way_id, node_id) VALUES ( " + wayOSMID + ", ";
-
+                
+                nodeIsPartSql.append("UPDATE nodes SET is_part=true WHERE ");
                 Iterator<NodeElement> wayNodeIter = wayElement.getNodes().iterator();
+                boolean first = true;
                 while(wayNodeIter.hasNext()) {
                     NodeElement wayNode = wayNodeIter.next();
 
@@ -781,11 +787,21 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
                     sqlQueue.append(nodeOSMID); // add node ID
                     sqlQueue.append(");"); // finish statement
                     
+                    // update
+                    if(!first) {
+                        nodeIsPartSql.append(" OR ");
+                    } else {
+                        first = false;
+                    }
+                    nodeIsPartSql.append("osm_id=");
+                    nodeIsPartSql.append(nodeOSMID); // add node ID
                 }
+                nodeIsPartSql.append("; ");
 //                // flush remaining sql statements
 //                sqlQueue.flush();
             }
         }
+        nodeIsPartSql.forceExecute();
         // flush sql statements (required when using append variant)
         sqlQueue.forceExecute();
         this.ways.clear();
@@ -978,7 +994,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
         
         for (Map.Entry<String, RelationElement> entry : rels.entrySet()) {
             RelationElement relationElement = entry.getValue();
-
+            
             String osm_id = entry.getKey();
             int classID = OSMClassification.getOSMClassification().getOHDMClassID(relationElement);
             String sTags = relationElement.getSerializedTagsAndAttributes();
@@ -1017,20 +1033,27 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
             
 //            sq.flush();
 
-        // add entry to member table    
+        // add entry to member table and set flag in nodes or way tables
+        ArrayList<Long> nodeMemberIDs = new ArrayList<>();
+        ArrayList<Long> wayMemberIDs = new ArrayList<>();
+            
         for (MemberElement member : entry.getValue().getMember()) {
             sq.append("INSERT INTO ");
             sq.append(RELATIONMEMBER);
             sq.append(" (relation_id, role, ");
             
             switch (member.getType()) {
-              case "node":
-                sq.append(" node_id)");  break;
-              case "way":
-                sq.append(" way_id)"); break;
-              case "relation":
+            case "node":
+                sq.append(" node_id)");  
+                nodeMemberIDs.add(member.getID());
+                break;
+            case "way":
+                sq.append(" way_id)"); 
+                wayMemberIDs.add(member.getID());
+                break;
+            case "relation":
                 sq.append(" member_rel_id)"); break;
-              default:
+            default:
                 logger.print(3, "member with incorrect type"); break;
             }
             
@@ -1047,7 +1070,39 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
             
             // member.getId();
           }
-        sq.forceExecute(); // after each relation
+            sq.forceExecute(); // after each relation
+
+            // update nodes and ways
+            if(nodeMemberIDs.size() > 0) {
+                sq.append("UPDATE nodes SET is_part=true WHERE ");
+                boolean first = true;
+                for (Long id : nodeMemberIDs) {
+                    if(!first) {
+                        sq.append(" OR ");
+                    } else {
+                        first = false;
+                    }
+                    sq.append("osm_id = ");
+                    sq.append(id);
+                }
+                sq.append("; ");
+            }
+            
+            if(wayMemberIDs.size() > 0) {
+                sq.append("UPDATE ways SET is_part=true WHERE ");
+                boolean first = true;
+                for (Long id : wayMemberIDs) {
+                    if(!first) {
+                        sq.append(" OR ");
+                    } else {
+                        first = false;
+                    }
+                    sq.append("osm_id = ");
+                    sq.append(id);
+                }
+                sq.append("; ");
+            }
+            sq.forceExecute();
         }
     }
 

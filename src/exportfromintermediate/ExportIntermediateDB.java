@@ -45,7 +45,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                 number++;
                 OHDMNode node = this.createOHDMNode(qResultNode);
                 
-                if(!node.isPart()) notPartNumber++;
+                if(!node.isPart() && node.getName() == null) notPartNumber++;
                 
                 // now process that stuff
                 if(this.importer.importNode(node)) {
@@ -57,7 +57,7 @@ public class ExportIntermediateDB extends IntermediateDB {
             System.err.println(ex.getLocalizedMessage());
         }
         
-        System.out.println("Checked / imported nodes / not Part: " + number + " / " + this.numberNodes + " / " + notPartNumber);
+        System.out.println("Checked / imported nodes / not part and no identity: " + number + " / " + this.numberNodes + " / " + notPartNumber);
     }
     
     void processWays() {
@@ -74,7 +74,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                 waynumber++;
                 OHDMWay way = this.createOHDMWay(qResultWay);
                 
-                if(!way.isPart()) notPartNumber++;
+                if(!way.isPart() && way.getName() == null) notPartNumber++;
 
                 this.addNodes2OHDMWay(way);
 
@@ -87,7 +87,7 @@ public class ExportIntermediateDB extends IntermediateDB {
             System.err.println(ex.getLocalizedMessage());
         }
         
-        System.out.println("Checked / imported ways / not Part:  " + waynumber + " / " + this.numberWays + " / " + notPartNumber);
+        System.out.println("Checked / imported ways / not part and identity:  " + waynumber + " / " + this.numberWays + " / " + notPartNumber);
     }
     
     @Override

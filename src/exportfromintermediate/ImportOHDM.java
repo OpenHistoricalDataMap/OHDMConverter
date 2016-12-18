@@ -40,7 +40,12 @@ public class ImportOHDM extends Importer {
 
     @Override
     public boolean importRelation(OHDMRelation relation) throws SQLException {
-        /* there are two options:
+        if(!this.elementHasIdentity(relation)) {
+            // relations without an identity are not imported.
+            return false;
+        }
+        
+        /* now there are two options:
         a) that relation represents a multigeometry (in most cases)
         b) it represents a polygon with one or more hole(s)
          */
@@ -73,7 +78,7 @@ public class ImportOHDM extends Importer {
             boolean notFirstSet = false;
             for(int i = 0; i < relation.getMemberSize(); i++) {
                 OHDMElement member = relation.getMember(i);
-                String memberOHDMObjectIDString = this.addOHDMObject(member, true);
+                String memberOHDMObjectIDString = this.getOHDMObject(member, true);
                 if(memberOHDMObjectIDString == null) continue; // shouldn't happen
                 
                 // get role of that member in that relation
@@ -250,7 +255,7 @@ public class ImportOHDM extends Importer {
         
     }
     
-    String addOHDMObject(OHDMElement ohdmElement, boolean persist) throws SQLException {
+    String getOHDMObject(OHDMElement ohdmElement, boolean persist) throws SQLException {
         // already in OHDM DB?
         String ohdmIDString = ohdmElement.getOHDMObjectID();
         if(ohdmIDString != null) return ohdmIDString;
@@ -261,7 +266,8 @@ public class ImportOHDM extends Importer {
             and stored with them. We are done here and return
             */
             if(!this.elementHasIdentity(ohdmElement)) {
-                return null;
+                // return dummy OSM Object..
+                return this.getOSMDummyObject_OHDM_ID();
             }
 
             // create user entry or find user primary key
@@ -427,9 +433,6 @@ public class ImportOHDM extends Importer {
         ArrayList<TagElement> tags = ohdmElement.getTags();
         
         try {
-            // don't import anything without an identity
-            if(!this.elementHasIdentity(ohdmElement)) return null;
-
             // get external user id from ohdm
             int id_ExternalUser = this.getOHDM_ID_ExternalUser(ohdmElement);
 
@@ -445,7 +448,7 @@ public class ImportOHDM extends Importer {
             /* add entry in object table IF this object has an identity
             perist that object ONLY IF there is no geometry. Reduces db access!
             */
-            String ohdmObjectIDString = this.addOHDMObject(ohdmElement, persist);
+            String ohdmObjectIDString = this.getOHDMObject(ohdmElement, persist);
             
 
             // refer object and geometry to each other
@@ -473,6 +476,11 @@ public class ImportOHDM extends Importer {
     
     @Override
     public boolean importNode(OHDMNode node) {
+        if(!this.elementHasIdentity(node)) {
+            // nodes without an identity are not imported.
+            return false;
+        }
+
         return (this.importOHDMElement(node) != null);
     }
     
@@ -591,6 +599,7 @@ public class ImportOHDM extends Importer {
         sq.append("name character varying,");
         sq.append("description character varying");
         sq.append(");");
+        sq.forceExecute();
         
         // insert osm as external system !!
         sq.append("INSERT INTO ");
@@ -657,6 +666,12 @@ public class ImportOHDM extends Importer {
         sq.append("name character varying,");
         sq.append("source_user_id bigint NOT NULL");
         sq.append(");");
+        sq.forceExecute();
+        
+        // insert osm dummy object.. it has no name.. thats important
+        sq.append("INSERT INTO ");
+        sq.append(ImportOHDM.getFullTableName(schema, ImportOHDM.GEOOBJECT));
+        sq.append("(id, source_user_id) VALUES (0, 1);");
         sq.forceExecute();
         
         // GEOOBJECT_CONTENT
@@ -804,5 +819,11 @@ public class ImportOHDM extends Importer {
         } catch (SQLException e) {
             System.err.println("error from database " + e.getLocalizedMessage());
         }
+    }
+
+    private final String osmDummyObjectOHDM_ID = "0";
+    
+    private String getOSMDummyObject_OHDM_ID() {
+        return this.osmDummyObjectOHDM_ID;
     }
 }

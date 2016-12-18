@@ -38,6 +38,9 @@ public abstract class OHDMElement extends AbstractElement {
         this.osmIDString = osmIDString;
         this.classCodeString = classCodeString;
         this.ohdmObjectIDString = ohdmObjectIDString;
+        if(ohdmObjectIDString != null) {
+            boolean debugStop = true;
+        }
         this.ohdmGeomIDString = ohdmGeomIDString;
         this.valid = valid;
     }

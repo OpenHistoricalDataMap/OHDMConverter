@@ -112,20 +112,19 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
 
                     sql.append(" from");
                     
-                    // geoobject_geoobject
-                    sql.append(" (SELECT id, classification_id, name from ");
+                    // geoobject
+                    sql.append(" (SELECT id, name from ");
                     sql.append(sourceSchema);
-                    sql.append(".geoobject where classification_id = ");
-
-                    sql.append(classID);
-
-                    sql.append(") as o, ");
+                    sql.append(".geoobject) as o, ");
                     
                     // geoobject_geometry
-                    sql.append("(SELECT id_target, type_target, id_geoobject_source, valid_since, ");
+                    sql.append("(SELECT id_target, classification_id, type_target, id_geoobject_source, valid_since, ");
                     sql.append("valid_until, valid_since_offset, valid_until_offset FROM ");
                     sql.append(sourceSchema);
-                    sql.append(".geoobject_geometry) as gg,");
+                    sql.append(".geoobject_geometry where classification_id = ");
+                    sql.append(classID);
+
+                    sql.append(") as gg, ");
                     
                     // geometry
                     sql.append("(SELECT id, ");
@@ -156,6 +155,9 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                     sql.append(targetType);
 
                     sql.append(" AND g.id = gg.id_target AND o.id = gg.id_geoobject_source;");
+                    if(tableName.equalsIgnoreCase("ohdm_rendering.highway_lines")) {
+                        int debuggingStop = 42;
+                    }
                     sql.forceExecute();
                     
                     System.out.println("done: " + classID + " " + tableName + "| classes: " + featureClassString + "/" + subClassName);

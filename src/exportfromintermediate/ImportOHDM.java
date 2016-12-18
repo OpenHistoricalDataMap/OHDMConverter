@@ -342,11 +342,9 @@ public class ImportOHDM extends Importer {
         
         sq.append("INSERT INTO ");
         sq.append(ImportOHDM.getFullTableName(this.targetSchema, ImportOHDM.GEOOBJECT));
-        sq.append(" (name, classification_id, source_user_id) VALUES ('");
+        sq.append(" (name, source_user_id) VALUES ('");
         sq.append(name);
         sq.append("', ");
-        sq.append(classIDString);
-        sq.append(", ");
         sq.append(externalUserID);
         sq.append(") RETURNING id;");
         
@@ -409,7 +407,7 @@ public class ImportOHDM extends Importer {
         
         sq.append("INSERT INTO ");
         sq.append(ImportOHDM.getFullTableName(this.targetSchema, ImportOHDM.GEOOBJECT_GEOMETRY));
-        sq.append(" (type_target, id_geoobject_source, id_target, valid_since, valid_until, source_user_id) VALUES (");
+        sq.append(" (type_target, classification_id, id_geoobject_source, id_target, valid_since, valid_until, source_user_id) VALUES (");
 
         // what table is reference by id_geometry
         switch(ohdmElement.getGeometryType()) {
@@ -424,6 +422,8 @@ public class ImportOHDM extends Importer {
                 break;
         }
         
+        sq.append(", ");
+        sq.append(ohdmElement.getClassCodeString());
         sq.append(", ");
         sq.append(ohdmIDString);
         sq.append(", ");
@@ -485,6 +485,7 @@ public class ImportOHDM extends Importer {
             String ohdmGeomIDString = this.addGeometry(ohdmElement, id_ExternalUser);
             
             boolean persist = ohdmGeomIDString == null;
+//            boolean persist = true;
             
             /* add entry in object table IF this object has an identity
             perist that object ONLY IF there is no geometry. Reduces db access!
@@ -699,7 +700,6 @@ public class ImportOHDM extends Importer {
         // add table specifics:
         sq.append(",");
         sq.append("name character varying,");
-        sq.append("classification_id bigint NOT NULL,");
         sq.append("source_user_id bigint NOT NULL");
         sq.append(");");
         sq.forceExecute();
@@ -733,6 +733,7 @@ public class ImportOHDM extends Importer {
         sq.append("type_target bigint,");
         sq.append("id_geoobject_source bigint NOT NULL,");
         sq.append("role character varying,");
+        sq.append("classification_id bigint NOT NULL,");
         sq.append("valid_since date NOT NULL,");
         sq.append("valid_until date NOT NULL,");
         sq.append("valid_since_offset bigint DEFAULT 0,");
@@ -812,6 +813,14 @@ public class ImportOHDM extends Importer {
         
     }
     
+    void forgetPreviousImport() throws SQLException {
+        SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
+        sql.append("UPDATE ways SET ohdm_geom_id=null, ohdm_object_id=null;");
+        sql.append("UPDATE nodes SET ohdm_geom_id=null, ohdm_object_id=null;");
+        sql.append("UPDATE relations SET ohdm_geom_id=null, ohdm_object_id=null;");
+        sql.forceExecute();
+    }
+    
     public static void main(String args[]) {
         // let's fill OHDM database
         try {
@@ -822,6 +831,8 @@ public class ImportOHDM extends Importer {
             
             ImportOHDM ohdmImporter = new ImportOHDM(iDB, sourceConnection, 
                     targetConnection, "public", "ohdm");
+            
+            ohdmImporter.forgetPreviousImport();
             
             ohdmImporter.dropOHDMTables(targetConnection);
             ohdmImporter.createOHDMTables(targetConnection);
@@ -836,8 +847,7 @@ public class ImportOHDM extends Importer {
             System.out.println(exporter.getStatistics());
   
         } catch (SQLException e) {
-          System.err.println("cannot connect to database: " + e.getLocalizedMessage());
+            System.err.println("error from database " + e.getLocalizedMessage());
         }
     }
-    
 }

@@ -143,51 +143,6 @@ public class ImportOHDM extends Importer {
                     polygonIDs.set(i, geomIDString);
                 }
             }
-            
-            // all geometries are stored - save relation
-//            sq.append("INSERT INTO ");
-//            sq.append(ImportOHDM.GEOOBJECT_GEOMETRY);
-//            sq.append("(id_geoobject_source, id_target, type_target, role,");
-//            sq.append(" valid_since, valid_until) VALUES ");
-            
-            // GO AHEAD HERE...
-            
-//            boolean notFirstSet = false;
-//            for(int i = 0; i < relation.getMemberSize(); i++) {
-//                OHDMElement member = relation.getMember(i);
-//                String memberOHDMObjectIDString = this.addOHDMObject(member, true);
-//                if(memberOHDMObjectIDString == null) continue; // shouldn't happen
-//                
-//                // get role of that member in that relation
-//                String roleName = relation.getRoleName(i);
-//                
-//                if(notFirstSet) {
-//                    sq.append(", ");
-//                } else {
-//                    notFirstSet = true;
-//                }
-//                
-//                sq.append("(");
-//                sq.append(ohdmIDString); // id source
-//                sq.append(", ");
-//                sq.append(memberOHDMObjectIDString); // id target
-//                sq.append(", ");
-//                if(member instanceof OHDMNode) { // type_target
-//                    sq.append(ImportOHDM.TARGET_POINT);
-//                } else if(member instanceof OHDMWay) {
-//                    sq.append(ImportOHDM.TARGET_LINESTRING);
-//                } else {
-//                    sq.append(ImportOHDM.TARGET_GEOOBJECT);
-//                }
-//                sq.append(", ");
-//                sq.append(roleName); // role
-//                sq.append(", ");
-//                sq.append(this.defaultSince); // since
-//                sq.append(", ");
-//                sq.append(this.defaultUntil); // until
-//                sq.append(")"); // end that value set
-//            }
-//            sq.append(";"); // end that value set
         }
 
         return false;

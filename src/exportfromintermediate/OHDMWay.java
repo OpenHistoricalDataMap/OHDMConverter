@@ -12,9 +12,9 @@ public class OHDMWay extends OHDMElement {
     private ArrayList<String> nodeIDList;
     private final String nodeIDs;
 
-    OHDMWay(IntermediateDB intermediateDB, String osmIDString, String classCodeString, String sTags, String nodeIDs, String ohdmObjectIDString, String ohdmGeomIDString, boolean valid) {
+    OHDMWay(IntermediateDB intermediateDB, String osmIDString, String classCodeString, String sTags, String nodeIDs, String ohdmObjectIDString, String ohdmGeomIDString, boolean isPart, boolean valid) {
         // handle tags as attributes..
-        super(intermediateDB, osmIDString, classCodeString, null, sTags, ohdmObjectIDString, ohdmGeomIDString, valid);
+        super(intermediateDB, osmIDString, classCodeString, null, sTags, ohdmObjectIDString, ohdmGeomIDString, isPart, valid);
         this.nodeIDs = nodeIDs;
     }
 

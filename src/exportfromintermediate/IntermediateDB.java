@@ -183,8 +183,9 @@ public class IntermediateDB {
     protected OHDMWay createOHDMWay(ResultSet qResult) throws SQLException {
         this.readCommonColumns(qResult);
         String nodeIDs = qResult.getString("node_ids");
+        boolean isPart = qResult.getBoolean("is_part");
 
-        OHDMWay way = new OHDMWay(this, osmIDString, classCodeString, sTags, nodeIDs, ohdmObjectIDString, ohdmGeomIDString, valid);
+        OHDMWay way = new OHDMWay(this, osmIDString, classCodeString, sTags, nodeIDs, ohdmObjectIDString, ohdmGeomIDString, isPart, valid);
 
         return way;
     }
@@ -193,8 +194,9 @@ public class IntermediateDB {
         this.readCommonColumns(qResult);
         String longitude = qResult.getString("longitude");
         String latitude = qResult.getString("latitude");
-
-        OHDMNode node = new OHDMNode(this, osmIDString, classCodeString, sTags, longitude, latitude, ohdmObjectIDString, ohdmGeomIDString, valid);
+        boolean isPart = qResult.getBoolean("is_part");
+        
+        OHDMNode node = new OHDMNode(this, osmIDString, classCodeString, sTags, longitude, latitude, ohdmObjectIDString, ohdmGeomIDString, isPart, valid);
 
         return node;
     }

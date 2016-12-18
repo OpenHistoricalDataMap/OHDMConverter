@@ -10,12 +10,12 @@ public class OHDMNode extends OHDMElement {
     private String longitude;
     private String latitude;
 
-    OHDMNode(IntermediateDB intermediateDB, String osmIDString, String classCodeString, String sTags, String ohdmObjectIDString, String ohdmGeomIDString, boolean valid) {
-        super(intermediateDB, osmIDString, classCodeString, null, sTags, ohdmObjectIDString, ohdmGeomIDString, valid);
+    OHDMNode(IntermediateDB intermediateDB, String osmIDString, String classCodeString, String sTags, String ohdmObjectIDString, String ohdmGeomIDString, boolean isPart, boolean valid) {
+        super(intermediateDB, osmIDString, classCodeString, null, sTags, ohdmObjectIDString, ohdmGeomIDString, isPart, valid);
     }
 
-    OHDMNode(IntermediateDB intermediateDB, String osmIDString, String classCodeString, String sTags, String longitude, String latitude, String ohdmObjectIDString, String ohdmGeomIDString, boolean valid) {
-        this(intermediateDB, osmIDString, classCodeString, sTags, ohdmObjectIDString, ohdmGeomIDString, valid);
+    OHDMNode(IntermediateDB intermediateDB, String osmIDString, String classCodeString, String sTags, String longitude, String latitude, String ohdmObjectIDString, String ohdmGeomIDString, boolean isPart, boolean valid) {
+        this(intermediateDB, osmIDString, classCodeString, sTags, ohdmObjectIDString, ohdmGeomIDString, isPart,valid);
         
         this.longitude = longitude;
         this.latitude = latitude;

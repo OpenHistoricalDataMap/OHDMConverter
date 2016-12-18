@@ -36,6 +36,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         sql.append(NODETABLE).append(";");
         
         int number = 0;
+        int notPartNumber = 0;
         try {
             PreparedStatement stmt = this.sourceConnection.prepareStatement(sql.toString());
             ResultSet qResultNode = stmt.executeQuery();
@@ -43,6 +44,8 @@ public class ExportIntermediateDB extends IntermediateDB {
             while(qResultNode.next()) {
                 number++;
                 OHDMNode node = this.createOHDMNode(qResultNode);
+                
+                if(!node.isPart()) notPartNumber++;
                 
                 // now process that stuff
                 if(this.importer.importNode(node)) {
@@ -54,7 +57,7 @@ public class ExportIntermediateDB extends IntermediateDB {
             System.err.println(ex.getLocalizedMessage());
         }
         
-        System.out.println("Checked / imported nodes: " + number + " / " + this.numberNodes);
+        System.out.println("Checked / imported nodes / not Part: " + number + " / " + this.numberNodes + " / " + notPartNumber);
     }
     
     void processWays() {
@@ -62,6 +65,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         sql.append(WAYTABLE).append(";");
         
         int waynumber = 0;
+        int notPartNumber = 0;
         try {
             PreparedStatement stmt = this.sourceConnection.prepareStatement(sql.toString());
             ResultSet qResultWay = stmt.executeQuery();
@@ -70,6 +74,8 @@ public class ExportIntermediateDB extends IntermediateDB {
                 waynumber++;
                 OHDMWay way = this.createOHDMWay(qResultWay);
                 
+                if(!way.isPart()) notPartNumber++;
+
                 this.addNodes2OHDMWay(way);
 
                 // process that stuff
@@ -81,7 +87,7 @@ public class ExportIntermediateDB extends IntermediateDB {
             System.err.println(ex.getLocalizedMessage());
         }
         
-        System.out.println("Checked / imported ways:  " + waynumber + " / " + this.numberWays);
+        System.out.println("Checked / imported ways / not Part:  " + waynumber + " / " + this.numberWays + " / " + notPartNumber);
     }
     
     @Override

@@ -17,18 +17,19 @@ public abstract class OHDMElement extends AbstractElement {
     private int subClassCode;
     
     private String ohdmObjectIDString;
-    private String ohdmGeomIDString;
+    private final String ohdmGeomIDString;
     
     private final boolean valid;
     
     protected boolean isPolygon = false;
     protected final IntermediateDB intermediateDB;
+    private final boolean isPart;
     
     public static enum GeometryType {POINT, LINESTRING, POLYGON, RELATION};
 
     OHDMElement(IntermediateDB intermediateDB, String osmIDString, 
             String classCodeString, String sAttributes, String sTags, 
-            String ohdmObjectIDString, String ohdmGeomIDString, boolean valid) {
+            String ohdmObjectIDString, String ohdmGeomIDString, boolean isPart, boolean valid) {
         
         super(sAttributes, sTags);
 
@@ -38,10 +39,8 @@ public abstract class OHDMElement extends AbstractElement {
         this.osmIDString = osmIDString;
         this.classCodeString = classCodeString;
         this.ohdmObjectIDString = ohdmObjectIDString;
-        if(ohdmObjectIDString != null) {
-            boolean debugStop = true;
-        }
         this.ohdmGeomIDString = ohdmGeomIDString;
+        this.isPart = isPart;
         this.valid = valid;
     }
     
@@ -67,6 +66,10 @@ public abstract class OHDMElement extends AbstractElement {
     
     String getOHDMGeomID() {
         return this.ohdmGeomIDString;
+    }
+    
+    boolean isPart() {
+        return this.isPart;
     }
     
     /**

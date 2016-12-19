@@ -7,9 +7,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import osmupdatewizard.AbstractElement;
-import osmupdatewizard.SQLStatementQueue;
-import osmupdatewizard.TagElement;
+import osm2inter.AbstractElement;
+import osm2inter.SQLStatementQueue;
+import osm2inter.TagElement;
 
 /**
  *

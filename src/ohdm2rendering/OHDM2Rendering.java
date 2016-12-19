@@ -12,7 +12,7 @@ import util.Parameter;
  *
  * @author thsc
  */
-public class CreateRenderingDB {
+public class OHDM2Rendering {
     public static void main(String[] args) throws SQLException, IOException {
             String sourceParameterFileName = "ohdm2renderingSource.txt";
             String targetParameterFileName = "ohdm2renderingTarget.txt";

@@ -19,12 +19,12 @@ import util.Parameter;
  * 
  * @author thsc
  */
-public class ImportOHDM extends Importer {
+public class Inter2OHDM extends Importer {
     private final String sourceSchema;
     private final String targetSchema;
     private final IntermediateDB intermediateDB;
     
-    public ImportOHDM(IntermediateDB intermediateDB, 
+    public Inter2OHDM(IntermediateDB intermediateDB, 
             Connection sourceConnection, Connection targetConnection, 
             String sourceSchema, String targetSchema) {
         
@@ -35,7 +35,7 @@ public class ImportOHDM extends Importer {
         this.intermediateDB = intermediateDB;
     }
 
-    public ImportOHDM(IntermediateDB intermediateDB, 
+    public Inter2OHDM(IntermediateDB intermediateDB, 
             String sourceParameterFile, String targetParameterFile,
             String sourceSchema, String targetSchema) throws IOException, SQLException {
         
@@ -84,7 +84,7 @@ public class ImportOHDM extends Importer {
              */
             
             sq.append("INSERT INTO ");
-            sq.append(ImportOHDM.GEOOBJECT_GEOMETRY);
+            sq.append(Inter2OHDM.GEOOBJECT_GEOMETRY);
             sq.append("(id_geoobject_source, id_target, type_target, role,");
             sq.append(" valid_since, valid_until) VALUES ");
             
@@ -109,11 +109,11 @@ public class ImportOHDM extends Importer {
                 sq.append(memberOHDMObjectIDString); // id target
                 sq.append(", ");
                 if(member instanceof OHDMNode) { // type_target
-                    sq.append(ImportOHDM.TARGET_POINT);
+                    sq.append(Inter2OHDM.TARGET_POINT);
                 } else if(member instanceof OHDMWay) {
-                    sq.append(ImportOHDM.TARGET_LINESTRING);
+                    sq.append(Inter2OHDM.TARGET_LINESTRING);
                 } else {
-                    sq.append(ImportOHDM.TARGET_GEOOBJECT);
+                    sq.append(Inter2OHDM.TARGET_GEOOBJECT);
                 }
                 sq.append(", ");
                 sq.append(roleName); // role
@@ -147,7 +147,7 @@ public class ImportOHDM extends Importer {
                 if(pID.equalsIgnoreCase("-1")) {
                     // must create a geometry
                     sq.append("INSERT INTO ");
-                    sq.append(ImportOHDM.POLYGONS);
+                    sq.append(Inter2OHDM.POLYGONS);
                     sq.append("INSERT INTO (polygon, source_user_id) VALUES ('");
                     sq.append(polygonWKT.get(i));
                     sq.append("', ");
@@ -172,7 +172,7 @@ public class ImportOHDM extends Importer {
             try {
                 StringBuilder sb = new StringBuilder();
                 sb.append("SELECT id FROM ");
-                sb.append(ImportOHDM.getFullTableName(targetSchema, ImportOHDM.EXTERNAL_SYSTEMS));
+                sb.append(Inter2OHDM.getFullTableName(targetSchema, Inter2OHDM.EXTERNAL_SYSTEMS));
                 sb.append(" where name = 'OSM' OR name = 'osm';");
                 ResultSet result = 
                         this.executeQueryOnTarget(sb.toString());
@@ -181,7 +181,7 @@ public class ImportOHDM extends Importer {
                 this.idExternalSystemOSM = result.getInt(1);
 
             } catch (SQLException ex) {
-                Logger.getLogger(ImportOHDM.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Inter2OHDM.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         
@@ -210,7 +210,7 @@ public class ImportOHDM extends Importer {
     }
     
     private int getOHDM_ID_ExternalUser(String externalUserID, String externalUserName) {
-        if(!this.validUserID(externalUserID)) return ImportOHDM.UNKNOWN_USER_ID;
+        if(!this.validUserID(externalUserID)) return Inter2OHDM.UNKNOWN_USER_ID;
         
         Integer idInteger = this.idExternalUsers.get(externalUserID);
         if(idInteger != null) { // already in memory
@@ -225,7 +225,7 @@ public class ImportOHDM extends Importer {
             // SELECT id from external_users where userid = '43566';
             StringBuilder sb = new StringBuilder();
             sb.append("SELECT id from ");
-            sb.append(ImportOHDM.getFullTableName(this.targetSchema, ImportOHDM.EXTERNAL_USERS));
+            sb.append(Inter2OHDM.getFullTableName(this.targetSchema, Inter2OHDM.EXTERNAL_USERS));
             sb.append(" where userid = '");
             sb.append(externalUserID);
             sb.append("' AND external_system_id = '");
@@ -245,7 +245,7 @@ public class ImportOHDM extends Importer {
                 StringBuilder s = new StringBuilder();
                 //SQLStatementQueue s = new SQLStatementQueue(this.targetConnection);
                 s.append("INSERT INTO ");
-                s.append(ImportOHDM.getFullTableName(this.targetSchema, ImportOHDM.EXTERNAL_USERS));
+                s.append(Inter2OHDM.getFullTableName(this.targetSchema, Inter2OHDM.EXTERNAL_USERS));
                 s.append(" (userid, username, external_system_id) VALUES ('");
                 s.append(externalUserID);
                 s.append("', '");
@@ -315,7 +315,7 @@ public class ImportOHDM extends Importer {
         String classIDString = ohdmElement.getClassCodeString();
         
         sq.append("INSERT INTO ");
-        sq.append(ImportOHDM.getFullTableName(this.targetSchema, ImportOHDM.GEOOBJECT));
+        sq.append(Inter2OHDM.getFullTableName(this.targetSchema, Inter2OHDM.GEOOBJECT));
         sq.append(" (name, source_user_id) VALUES ('");
         sq.append(name);
         sq.append("', ");
@@ -339,17 +339,17 @@ public class ImportOHDM extends Importer {
         
         switch(ohdmElement.getGeometryType()) {
             case POINT: 
-                fullTableName = ImportOHDM.getFullTableName(this.targetSchema, ImportOHDM.POINTS);
+                fullTableName = Inter2OHDM.getFullTableName(this.targetSchema, Inter2OHDM.POINTS);
                 sq.append(fullTableName);
                 sq.append(" (point, ");
                 break;
             case LINESTRING: 
-                fullTableName = ImportOHDM.getFullTableName(this.targetSchema, ImportOHDM.LINES);
+                fullTableName = Inter2OHDM.getFullTableName(this.targetSchema, Inter2OHDM.LINES);
                 sq.append(fullTableName);
                 sq.append(" (line, ");
                 break;
             case POLYGON: 
-                fullTableName = ImportOHDM.getFullTableName(this.targetSchema, ImportOHDM.POLYGONS);
+                fullTableName = Inter2OHDM.getFullTableName(this.targetSchema, Inter2OHDM.POLYGONS);
                 sq.append(fullTableName);
                 sq.append(" (polygon, ");
                 break;
@@ -380,19 +380,19 @@ public class ImportOHDM extends Importer {
         SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
         
         sq.append("INSERT INTO ");
-        sq.append(ImportOHDM.getFullTableName(this.targetSchema, ImportOHDM.GEOOBJECT_GEOMETRY));
+        sq.append(Inter2OHDM.getFullTableName(this.targetSchema, Inter2OHDM.GEOOBJECT_GEOMETRY));
         sq.append(" (type_target, classification_id, id_geoobject_source, id_target, valid_since, valid_until, source_user_id) VALUES (");
 
         // what table is reference by id_geometry
         switch(ohdmElement.getGeometryType()) {
             case POINT: 
-                sq.append(ImportOHDM.TARGET_POINT);
+                sq.append(Inter2OHDM.TARGET_POINT);
                 break;
             case LINESTRING: 
-                sq.append(ImportOHDM.TARGET_LINESTRING);
+                sq.append(Inter2OHDM.TARGET_LINESTRING);
                 break;
             case POLYGON: 
-                sq.append(ImportOHDM.TARGET_POLYGON);
+                sq.append(Inter2OHDM.TARGET_POLYGON);
                 break;
         }
         
@@ -506,9 +506,9 @@ public class ImportOHDM extends Importer {
         StringBuilder sb = new StringBuilder();
         
         sb.append("CREATE TABLE ");
-        sb.append(ImportOHDM.getFullTableName(schema, tableName));
+        sb.append(Inter2OHDM.getFullTableName(schema, tableName));
         sb.append(" (");
-        sb.append(ImportOHDM.getCreatePrimaryKeyDescription(schema, tableName));
+        sb.append(Inter2OHDM.getCreatePrimaryKeyDescription(schema, tableName));
         
         return sb.toString();
     }
@@ -516,7 +516,7 @@ public class ImportOHDM extends Importer {
     // primary key are created identically
     static protected String getCreatePrimaryKeyDescription(String schema, String tableName) {
         return "id bigint NOT NULL DEFAULT nextval('"
-                + ImportOHDM.getSequenceName(ImportOHDM.getFullTableName(schema, tableName))
+                + Inter2OHDM.getSequenceName(Inter2OHDM.getFullTableName(schema, tableName))
                 + "'::regclass),"
                 + " CONSTRAINT "
                 + tableName
@@ -527,7 +527,7 @@ public class ImportOHDM extends Importer {
         SQLStatementQueue sq = new SQLStatementQueue(targetConnection);
         
         sq.append("CREATE SEQUENCE "); 
-        sq.append(ImportOHDM.getSequenceName(ImportOHDM.getFullTableName(schema, tableName)));
+        sq.append(Inter2OHDM.getSequenceName(Inter2OHDM.getFullTableName(schema, tableName)));
         sq.append(" INCREMENT 1 MINVALUE 1 MAXVALUE 9223372036854775807 START 1 CACHE 1;");
         sq.forceExecute();
     }
@@ -535,10 +535,10 @@ public class ImportOHDM extends Importer {
     static protected void drop(Connection targetConnection, String schema, String tableName) throws SQLException {
         SQLStatementQueue sq = new SQLStatementQueue(targetConnection);
         
-        String fullTableName = ImportOHDM.getFullTableName(schema, tableName);
+        String fullTableName = Inter2OHDM.getFullTableName(schema, tableName);
         
         sq.append("DROP SEQUENCE ");
-        sq.append(ImportOHDM.getSequenceName(fullTableName));
+        sq.append(Inter2OHDM.getSequenceName(fullTableName));
         sq.append(" CASCADE;");
         sq.forceExecute();
         
@@ -582,18 +582,18 @@ public class ImportOHDM extends Importer {
     
     void dropOHDMTables(Connection targetConnection) throws SQLException {
         // drop
-        ImportOHDM.drop(targetConnection, this.targetSchema, EXTERNAL_SYSTEMS);
-        ImportOHDM.drop(targetConnection, this.targetSchema, EXTERNAL_USERS);
-        ImportOHDM.drop(targetConnection, this.targetSchema, CLASSIFICATION);
-        ImportOHDM.drop(targetConnection, this.targetSchema, CONTENT);
-        ImportOHDM.drop(targetConnection, this.targetSchema, GEOOBJECT);
-        ImportOHDM.drop(targetConnection, this.targetSchema, GEOOBJECT_CONTENT);
-        ImportOHDM.drop(targetConnection, this.targetSchema, GEOOBJECT_GEOMETRY);
-        ImportOHDM.drop(targetConnection, this.targetSchema, GEOOBJECT_URL);
-        ImportOHDM.drop(targetConnection, this.targetSchema, LINES);
-        ImportOHDM.drop(targetConnection, this.targetSchema, POINTS);
-        ImportOHDM.drop(targetConnection, this.targetSchema, POLYGONS);
-        ImportOHDM.drop(targetConnection, this.targetSchema, URL);
+        Inter2OHDM.drop(targetConnection, this.targetSchema, EXTERNAL_SYSTEMS);
+        Inter2OHDM.drop(targetConnection, this.targetSchema, EXTERNAL_USERS);
+        Inter2OHDM.drop(targetConnection, this.targetSchema, CLASSIFICATION);
+        Inter2OHDM.drop(targetConnection, this.targetSchema, CONTENT);
+        Inter2OHDM.drop(targetConnection, this.targetSchema, GEOOBJECT);
+        Inter2OHDM.drop(targetConnection, this.targetSchema, GEOOBJECT_CONTENT);
+        Inter2OHDM.drop(targetConnection, this.targetSchema, GEOOBJECT_GEOMETRY);
+        Inter2OHDM.drop(targetConnection, this.targetSchema, GEOOBJECT_URL);
+        Inter2OHDM.drop(targetConnection, this.targetSchema, LINES);
+        Inter2OHDM.drop(targetConnection, this.targetSchema, POINTS);
+        Inter2OHDM.drop(targetConnection, this.targetSchema, POLYGONS);
+        Inter2OHDM.drop(targetConnection, this.targetSchema, URL);
     }
     
     void createOHDMTables(Connection targetConnection) throws SQLException {
@@ -603,10 +603,10 @@ public class ImportOHDM extends Importer {
         
         // EXTERNAL SYSTEMS
         // sequence
-        ImportOHDM.createSequence(targetConnection, schema, EXTERNAL_SYSTEMS);
+        Inter2OHDM.createSequence(targetConnection, schema, EXTERNAL_SYSTEMS);
         // table
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.EXTERNAL_SYSTEMS));
+        sq.append(Inter2OHDM.getCreateTableBegin(schema, Inter2OHDM.EXTERNAL_SYSTEMS));
         // add table specifics
         sq.append(",");
         sq.append("name character varying,");
@@ -616,16 +616,16 @@ public class ImportOHDM extends Importer {
         
         // insert osm as external system !!
         sq.append("INSERT INTO ");
-        sq.append(ImportOHDM.getFullTableName(schema, ImportOHDM.EXTERNAL_SYSTEMS));
+        sq.append(Inter2OHDM.getFullTableName(schema, Inter2OHDM.EXTERNAL_SYSTEMS));
         sq.append(" (name, description) VALUES ('osm', 'Open Street Map');");
         sq.forceExecute();
         
         // EXTERNAL_USERS
         // sequence
-        ImportOHDM.createSequence(targetConnection, schema, EXTERNAL_USERS);
+        Inter2OHDM.createSequence(targetConnection, schema, EXTERNAL_USERS);
         // table
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.EXTERNAL_USERS));
+        sq.append(Inter2OHDM.getCreateTableBegin(schema, Inter2OHDM.EXTERNAL_USERS));
         // add table specifics:
         sq.append(",");
         sq.append("userid bigint,");
@@ -637,10 +637,10 @@ public class ImportOHDM extends Importer {
         
         // CLASSIFICATION
         // sequence
-        ImportOHDM.createSequence(targetConnection, schema, CLASSIFICATION);
+        Inter2OHDM.createSequence(targetConnection, schema, CLASSIFICATION);
         // table
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.CLASSIFICATION));
+        sq.append(Inter2OHDM.getCreateTableBegin(schema, Inter2OHDM.CLASSIFICATION));
         // add table specifics:
         sq.append(",");
         sq.append("class character varying,");
@@ -649,17 +649,16 @@ public class ImportOHDM extends Importer {
         sq.forceExecute();
         
         // fill classification
-        OSMClassification.getOSMClassification().write2Table(
-                targetConnection, 
-                ImportOHDM.getFullTableName(schema, ImportOHDM.CLASSIFICATION)
+        OSMClassification.getOSMClassification().write2Table(targetConnection, 
+                Inter2OHDM.getFullTableName(schema, Inter2OHDM.CLASSIFICATION)
             );
         
         // CONTENT
         // sequence
-        ImportOHDM.createSequence(targetConnection, schema, CONTENT);
+        Inter2OHDM.createSequence(targetConnection, schema, CONTENT);
         // table
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.CONTENT));
+        sq.append(Inter2OHDM.getCreateTableBegin(schema, Inter2OHDM.CONTENT));
         // add table specifics:
         sq.append(",");
         sq.append("name character varying,");
@@ -670,10 +669,10 @@ public class ImportOHDM extends Importer {
         
         // GEOOBJECT
         // sequence
-        ImportOHDM.createSequence(targetConnection, schema, GEOOBJECT);
+        Inter2OHDM.createSequence(targetConnection, schema, GEOOBJECT);
         // table
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.GEOOBJECT));
+        sq.append(Inter2OHDM.getCreateTableBegin(schema, Inter2OHDM.GEOOBJECT));
         // add table specifics:
         sq.append(",");
         sq.append("name character varying,");
@@ -683,16 +682,16 @@ public class ImportOHDM extends Importer {
         
         // insert osm dummy object.. it has no name.. thats important
         sq.append("INSERT INTO ");
-        sq.append(ImportOHDM.getFullTableName(schema, ImportOHDM.GEOOBJECT));
+        sq.append(Inter2OHDM.getFullTableName(schema, Inter2OHDM.GEOOBJECT));
         sq.append("(id, source_user_id) VALUES (0, 1);");
         sq.forceExecute();
         
         // GEOOBJECT_CONTENT
         // sequence
-        ImportOHDM.createSequence(targetConnection, schema, GEOOBJECT_CONTENT);
+        Inter2OHDM.createSequence(targetConnection, schema, GEOOBJECT_CONTENT);
         // table
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.GEOOBJECT_CONTENT));
+        sq.append(Inter2OHDM.getCreateTableBegin(schema, Inter2OHDM.GEOOBJECT_CONTENT));
         // add table specifics:
         sq.append(",");
         sq.append("valid_since date NOT NULL,");
@@ -706,10 +705,10 @@ public class ImportOHDM extends Importer {
         
         // GEOOBJECT_GEOMETRY
         // sequence
-        ImportOHDM.createSequence(targetConnection, schema, GEOOBJECT_GEOMETRY);
+        Inter2OHDM.createSequence(targetConnection, schema, GEOOBJECT_GEOMETRY);
         // table
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.GEOOBJECT_GEOMETRY));
+        sq.append(Inter2OHDM.getCreateTableBegin(schema, Inter2OHDM.GEOOBJECT_GEOMETRY));
         // add table specifics:
         sq.append(",");
         sq.append("id_target bigint,");
@@ -727,10 +726,10 @@ public class ImportOHDM extends Importer {
         
         // GEOOBJECT_URL
         // sequence
-        ImportOHDM.createSequence(targetConnection, schema, GEOOBJECT_URL);
+        Inter2OHDM.createSequence(targetConnection, schema, GEOOBJECT_URL);
         // table
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.GEOOBJECT_URL));
+        sq.append(Inter2OHDM.getCreateTableBegin(schema, Inter2OHDM.GEOOBJECT_URL));
         // add table specifics:
         sq.append(",");
         sq.append("geoobject_id bigint NOT NULL,");
@@ -744,10 +743,10 @@ public class ImportOHDM extends Importer {
         
         // LINES
         // sequence
-        ImportOHDM.createSequence(targetConnection, schema, LINES);
+        Inter2OHDM.createSequence(targetConnection, schema, LINES);
         // table
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.LINES));
+        sq.append(Inter2OHDM.getCreateTableBegin(schema, Inter2OHDM.LINES));
         // add table specifics:
         sq.append(",");
         sq.append("line geometry,");
@@ -757,10 +756,10 @@ public class ImportOHDM extends Importer {
         
         // POINTS
         // sequence
-        ImportOHDM.createSequence(targetConnection, schema, POINTS);
+        Inter2OHDM.createSequence(targetConnection, schema, POINTS);
         // table
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.POINTS));
+        sq.append(Inter2OHDM.getCreateTableBegin(schema, Inter2OHDM.POINTS));
         // add table specifics:
         sq.append(",");
         sq.append("point geometry,");
@@ -770,10 +769,10 @@ public class ImportOHDM extends Importer {
         
         // POLYGONS
         // sequence
-        ImportOHDM.createSequence(targetConnection, schema, POLYGONS);
+        Inter2OHDM.createSequence(targetConnection, schema, POLYGONS);
         // table
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.POLYGONS));
+        sq.append(Inter2OHDM.getCreateTableBegin(schema, Inter2OHDM.POLYGONS));
         // add table specifics:
         sq.append(",");
         sq.append("polygon geometry,");
@@ -783,10 +782,10 @@ public class ImportOHDM extends Importer {
         
         // URL
         // sequence
-        ImportOHDM.createSequence(targetConnection, schema, URL);
+        Inter2OHDM.createSequence(targetConnection, schema, URL);
         // table
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(ImportOHDM.getCreateTableBegin(schema, ImportOHDM.URL));
+        sq.append(Inter2OHDM.getCreateTableBegin(schema, Inter2OHDM.URL));
         // add table specifics:
         sq.append(",");
         sq.append("url character varying,");
@@ -832,7 +831,7 @@ public class ImportOHDM extends Importer {
             String sourceSchema = sourceParameter.getSchema();
             String targetSchema = targetParameter.getSchema();
             
-            ImportOHDM ohdmImporter = new ImportOHDM(iDB, sourceConnection, 
+            Inter2OHDM ohdmImporter = new Inter2OHDM(iDB, sourceConnection, 
                     targetConnection, sourceSchema, targetSchema);
             
             try {

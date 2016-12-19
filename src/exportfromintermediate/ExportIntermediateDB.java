@@ -22,10 +22,12 @@ public class ExportIntermediateDB extends IntermediateDB {
     private int numberNodes = 0;
     private int numberWays = 0;
     private int numberRelations = 0;
+    private final String schema;
     
-    ExportIntermediateDB(Connection sourceConnection, Importer importer) {
-        super(sourceConnection);
+    ExportIntermediateDB(Connection sourceConnection, String schema, Importer importer) {
+        super(sourceConnection, schema);
         
+        this.schema = schema;
         this.importer = importer;
     }
     
@@ -33,7 +35,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         // go through node table and do what has to be done.
         
         StringBuilder sql = new StringBuilder("SELECT * FROM ");
-        sql.append(NODETABLE).append(";");
+        sql.append(Importer.getFullTableName(this.schema, NODETABLE)).append(";");
         
         int number = 0;
         int notPartNumber = 0;
@@ -62,7 +64,7 @@ public class ExportIntermediateDB extends IntermediateDB {
     
     void processWays() {
         StringBuilder sql = new StringBuilder("SELECT * FROM ");
-        sql.append(WAYTABLE).append(";");
+        sql.append(Importer.getFullTableName(this.schema, WAYTABLE)).append(";");
         
         int waynumber = 0;
         int notPartNumber = 0;
@@ -100,9 +102,9 @@ public class ExportIntermediateDB extends IntermediateDB {
         SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
 
         sql.append("select * from ");
-        sql.append(NODETABLE);
+        sql.append(Importer.getFullTableName(this.schema, NODETABLE));
         sql.append(" where osm_id IN (SELECT node_id FROM ");            
-        sql.append(WAYMEMBER);
+        sql.append(Importer.getFullTableName(this.schema, WAYMEMBER));
         sql.append(" where way_id = ");            
         sql.append(way.getOSMIDString());
         sql.append(");");  
@@ -123,7 +125,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
         
         sql.append("SELECT * FROM ");
-        sql.append(RELATIONTABLE);
+        sql.append(Importer.getFullTableName(this.schema, RELATIONTABLE));
         sql.append(";");
         
         int number = 0;
@@ -136,7 +138,7 @@ public class ExportIntermediateDB extends IntermediateDB {
 
                 // find all associated nodes and add to that relation
                 sql.append("select * from ");
-                sql.append(RELATIONMEMBER);
+                sql.append(Importer.getFullTableName(this.schema, RELATIONMEMBER));
                 sql.append(" where relation_id = ");            
                 sql.append(relation.getOSMIDString());
                 sql.append(";");  
@@ -156,17 +158,17 @@ public class ExportIntermediateDB extends IntermediateDB {
                     
                     id = qResultRelation.getBigDecimal("node_id");
                     if(id != null) {
-                        sql.append(NODETABLE);
+                        sql.append(Importer.getFullTableName(this.schema, NODETABLE));
                         type = OHDMElement.GeometryType.POINT;
                     } else {
                         id = qResultRelation.getBigDecimal("way_id");
                         if(id != null) {
-                            sql.append(WAYTABLE);
+                            sql.append(Importer.getFullTableName(this.schema, WAYTABLE));
                             type = OHDMElement.GeometryType.LINESTRING;
                         } else {
                             id = qResultRelation.getBigDecimal("member_rel_id");
                             if(id != null) {
-                                sql.append(RELATIONTABLE);
+                                sql.append(Importer.getFullTableName(this.schema, RELATIONTABLE));
                                 type = OHDMElement.GeometryType.RELATION;
                             } else {
                                 // we have a serious problem here.. or no member

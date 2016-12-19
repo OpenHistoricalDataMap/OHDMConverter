@@ -8,6 +8,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.SAXException;
+import util.Parameter;
 
 /**
  *
@@ -20,6 +21,7 @@ public class OSMImport2IntermediateDB {
     private static final String DEFAULT_CONFIG_DIR = "conf/";
     private static final String DEFAULT_OSM_FILENAME = "sample.osm";
     
+    private static final String INTER_DB_SETTINGS_FILENAME = "osmScanTarget.txt";
 
   public static void main(String[] args) {
     try {
@@ -46,7 +48,9 @@ public class OSMImport2IntermediateDB {
 
       MyLogger.getInstance().print(0, "+++ OSM Update WIzard +++", true);
       
-      newSAXParser.parse(osmFile, new OSMImporter());
+      Parameter dbConnectionSettings = new Parameter(INTER_DB_SETTINGS_FILENAME);
+      
+      newSAXParser.parse(osmFile, new OSMImporter(dbConnectionSettings));
       
     } catch (ParserConfigurationException ex) {
       Logger.getLogger(OSMImport2IntermediateDB.class.getName()).log(Level.SEVERE, null, ex);

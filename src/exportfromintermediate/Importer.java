@@ -1,12 +1,13 @@
 package exportfromintermediate;
 
-import java.math.BigDecimal;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
+import util.Parameter;
 
 /**
  *
@@ -19,6 +20,43 @@ public abstract class Importer {
     Importer(Connection sourceConnection, Connection targetConnection) {
         this.sourceConnection = sourceConnection;
         this.targetConnection = targetConnection;
+    }
+    
+    Importer(String sourceParameterFile, String targetParameterFile) throws IOException, SQLException {
+        Parameter sourceParameter = new Parameter(sourceParameterFile);
+        Parameter targetParameter = new Parameter(targetParameterFile);
+        
+        this.sourceConnection = this.createConnection(sourceParameter);
+        this.targetConnection = this.createConnection(targetParameter);
+    }
+    
+    public final static Connection createConnection(Parameter parameter) throws SQLException {
+        
+        String user, pwd, servername, path, port;
+        
+        user = parameter.getUserName();
+        if(user == null) return null;
+        
+        pwd = parameter.getPWD();
+        if(pwd == null) return null;
+        
+        servername = parameter.getServerName();
+        if(servername == null) return null;
+        
+        path = parameter.getdbName();
+        if(path == null) return null;
+        
+        port = parameter.getPortNumber();
+        if(port == null) return null;
+        
+        Properties connectionProperties = new Properties();
+        connectionProperties.put("user", user);
+        connectionProperties.put("password", pwd);
+        
+        return DriverManager.getConnection(
+                "jdbc:postgresql://" + servername
+                + ":" + port + "/" + path, connectionProperties);
+        
     }
     
     protected ResultSet executeQueryOnTarget(String sql) throws SQLException {
@@ -80,6 +118,10 @@ public abstract class Importer {
             return DriverManager.getConnection(
                     "jdbc:postgresql://" + targetServerName
                     + ":" + targetPortNumber + "/" + targetPath, targetConnProps);
+    }
+    
+    static protected String getFullTableName(String schema, String tableName) {
+        return schema + "." + tableName;
     }
     
     public abstract boolean importWay(OHDMWay way) throws SQLException;

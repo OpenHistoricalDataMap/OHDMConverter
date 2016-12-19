@@ -17,18 +17,20 @@ import osmupdatewizard.SQLStatementQueue;
  */
 public class IntermediateDB {
     protected final Connection sourceConnection;
+    private final String schema;
     
-    IntermediateDB(Connection sourceConnection) {
+    IntermediateDB(Connection sourceConnection, String schema) {
         this.sourceConnection = sourceConnection;
+        this.schema = schema;
     }
     
     protected String getIntermediateTableName(OHDMElement element) {
         if(element instanceof OHDMNode) {
-            return(NODETABLE);
+            return(Importer.getFullTableName(this.schema, NODETABLE));
         } else if(element instanceof OHDMWay) {
-            return(WAYTABLE);
+            return(Importer.getFullTableName(this.schema, WAYTABLE));
         } else {
-            return(RELATIONTABLE);
+            return(Importer.getFullTableName(this.schema, RELATIONTABLE));
         } 
     }
     
@@ -80,7 +82,7 @@ public class IntermediateDB {
             // remove line from relationsmember
             sq.append("DELETE FROM ");
 
-            sq.append(RELATIONMEMBER);
+            sq.append(Importer.getFullTableName(this.schema, RELATIONMEMBER));
 
             sq.append(" WHERE relation_id = ");
             sq.append(element.getOSMIDString());
@@ -90,7 +92,7 @@ public class IntermediateDB {
             // remove line from relationsmember
             sq.append("DELETE FROM ");
 
-            sq.append(WAYMEMBER);
+            sq.append(Importer.getFullTableName(this.schema, WAYMEMBER));
 
             sq.append(" WHERE way_id = ");
             sq.append(element.getOSMIDString());
@@ -121,9 +123,9 @@ public class IntermediateDB {
         SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
 
         sql.append("select * from ");
-        sql.append(NODETABLE);
+        sql.append(Importer.getFullTableName(this.schema, NODETABLE));
         sql.append(" where osm_id IN (SELECT node_id FROM ");            
-        sql.append(WAYMEMBER);
+        sql.append(Importer.getFullTableName(this.schema, WAYMEMBER));
         sql.append(" where way_id = ");            
         sql.append(way.getOSMIDString());
         sql.append(");");  

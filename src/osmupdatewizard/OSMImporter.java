@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.DefaultHandler;
+import util.Parameter;
 
 /**
  * @author thsc
@@ -28,8 +29,8 @@ public class OSMImporter extends DefaultHandler {
 
   ImportCommandBuilder builder;
 
-  public OSMImporter() throws Exception {
-    this.builder = SQLImportCommandBuilder.getInstance();
+  public OSMImporter(Parameter parameter) throws Exception {
+    this.builder = SQLImportCommandBuilder.getInstance(parameter);
   }
 
   private HashMap<String, String> parseTagAttributes(Attributes attributes) {

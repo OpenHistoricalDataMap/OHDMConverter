@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import util.Parameter;
 
 /**
  *
@@ -54,7 +55,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
   private String portNumber;
   private String path;
   private String schema;
-  private Connection connection;
+  private Connection targetConnection;
 
   private String importMode;
   private Integer tmpStorageSize;
@@ -65,36 +66,47 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
 
   private static SQLImportCommandBuilder instance = null;
 
-  public static SQLImportCommandBuilder getInstance() {
+  public static SQLImportCommandBuilder getInstance(Parameter parameter) {
     if (instance == null) {
-      instance = new SQLImportCommandBuilder();
+      instance = new SQLImportCommandBuilder(parameter);
     }
     return instance;
   }
+    private final Parameter parameter;
 
-  private SQLImportCommandBuilder() {
+  private SQLImportCommandBuilder(Parameter parameter) {
+      this.parameter = parameter;
     this.config = Config.getInstance();
     this.logger = MyLogger.getInstance();
     this.classification = Classification.getInstance();
     importMode = config.getValue("importMode");
     tmpStorageSize = Integer.valueOf(config.getValue("tmpStorageSize")) - 1;
+    
     try {
-      this.user = config.getValue("db_user");
-      this.pwd = config.getValue("db_password");
-      this.serverName = config.getValue("db_serverName");
-      this.portNumber = config.getValue("db_portNumber");
-      this.path = config.getValue("db_path");
-      this.schema = config.getValue("db_schema");
+//      this.user = config.getValue("db_user");
+//      this.pwd = config.getValue("db_password");
+//      this.serverName = config.getValue("db_serverName");
+//      this.portNumber = config.getValue("db_portNumber");
+//      this.path = config.getValue("db_path");
+//      this.schema = config.getValue("db_schema");
+      
+      this.user = this.parameter.getUserName();
+      this.pwd = this.parameter.getPWD();
+      this.serverName = this.parameter.getServerName();
+      this.portNumber = this.parameter.getPortNumber();
+      this.path = this.parameter.getdbName();
+      this.schema = this.parameter.getSchema();
+      
       Properties connProps = new Properties();
       connProps.put("user", this.user);
       connProps.put("password", this.pwd);
-      this.connection = DriverManager.getConnection(
+      this.targetConnection = DriverManager.getConnection(
               "jdbc:postgresql://" + this.serverName
               + ":" + this.portNumber + "/" + this.path, connProps);
       if (!this.schema.equalsIgnoreCase("")) {
         StringBuilder sql = new StringBuilder("SET search_path = ");
         sql.append(this.schema);
-        try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
+        try (PreparedStatement stmt = targetConnection.prepareStatement(sql.toString())) {
           stmt.execute();
           logger.print(4, "schema altered");
         } catch (SQLException e) {
@@ -105,7 +117,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
       logger.print(0, "cannot connect to database: " + e.getLocalizedMessage());
     }
 
-    if (this.connection == null) {
+    if (this.targetConnection == null) {
       System.err.println("cannot connect to database: reason unknown");
     }
     this.setupKB();
@@ -132,7 +144,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
       });
       sqlDel.delete(sqlDel.lastIndexOf(","), sqlDel.length()).replace(sqlDel.length(), sqlDel.length(), ";");
       try {
-        delStmt = connection.prepareStatement(sqlDel.toString());
+        delStmt = targetConnection.prepareStatement(sqlDel.toString());
         delStmt.execute();
         logger.print(4, "tables dropped");
       } catch (SQLException e) {
@@ -151,7 +163,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
     StringBuilder sql = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
     sql.append(table).append(sqlCreate);
     try {
-      stmt = connection.prepareStatement(sql.toString());
+      stmt = targetConnection.prepareStatement(sql.toString());
       stmt.execute();
     } catch (SQLException ex) {
       logger.print(1, ex.getLocalizedMessage(), true);
@@ -266,7 +278,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
     if (db_classificationTable!= null && db_classificationTable.equalsIgnoreCase("useExisting")) {
       Statement stmt = null;
       try {
-        stmt = connection.createStatement();
+        stmt = targetConnection.createStatement();
         StringBuilder sb = new StringBuilder("SELECT * FROM ");
         if (!this.schema.equalsIgnoreCase("")) {
           sb.append(schema).append(".");
@@ -307,7 +319,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
 
         PreparedStatement stmt = null;
         try {
-            stmt = connection.prepareStatement(insertStatement.toString());
+            stmt = targetConnection.prepareStatement(insertStatement.toString());
             stmt.execute();
         } catch (SQLException ex) {
             logger.print(1, ex.getLocalizedMessage(), true);
@@ -353,7 +365,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
             
                 stmt = null;
                 try {
-                    stmt = connection.prepareStatement(insertStatement.toString());
+                    stmt = targetConnection.prepareStatement(insertStatement.toString());
                     stmt.execute();
                 } catch (SQLException ex) {
                     logger.print(1, ex.getLocalizedMessage(), true);
@@ -375,7 +387,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
     // import whitelist to auto create ids
     Statement stmtImport = null;
     try {
-      stmtImport = connection.createStatement();
+      stmtImport = targetConnection.createStatement();
       String sql = Whitelist.getInstance().getSQLImport(SQLImportCommandBuilder.TAGTABLE);
       stmtImport.execute(sql);
       logger.print(4, "Whitelist imported", true);
@@ -393,7 +405,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
     Map<String, Integer> tagtable = new HashMap<>();
     Statement stmtSelect = null;
     try {
-      stmtSelect = connection.createStatement();
+      stmtSelect = targetConnection.createStatement();
       try (ResultSet rs = stmtSelect.executeQuery("SELECT * FROM " + SQLImportCommandBuilder.TAGTABLE)) {
         while (rs.next()) {
           tagtable.put(rs.getString("key") + "|" + rs.getString("value"), rs.getInt("id"));
@@ -417,7 +429,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
   private void checkIfTableExists(String table) throws SQLException {
     StringBuilder sql = new StringBuilder("SELECT '");
     sql.append(table).append("'::regclass;");
-    PreparedStatement stmt = connection.prepareStatement(sql.toString());
+    PreparedStatement stmt = targetConnection.prepareStatement(sql.toString());
     stmt.execute();
   }
 
@@ -478,7 +490,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
       }
       */
       
-    SQLStatementQueue sq = new SQLStatementQueue(this.connection, this.logger);
+    SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection, this.logger);
       
     for (Map.Entry<String, NodeElement> entry : nodes.entrySet()) {
         NodeElement node = entry.getValue();
@@ -545,7 +557,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
     } else {
       sb.append(NODETABLE).append(" (osm_id, longitude, latitude, classcode, valid) VALUES (?, ?, ?, ?, true);");
     }
-    try (PreparedStatement stmt = connection.prepareStatement(sb.toString())) {
+    try (PreparedStatement stmt = targetConnection.prepareStatement(sb.toString())) {
       stmt.setLong(1, node.getID());
       stmt.setString(2, node.getLongitude());
       stmt.setString(3, node.getLatitude());
@@ -564,7 +576,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
     sb.append(NODETABLE).append(" WHERE osm_id = ? ;");
     PreparedStatement stmt = null;
     try {
-      stmt = connection.prepareStatement(sb.toString());
+      stmt = targetConnection.prepareStatement(sb.toString());
       stmt.setLong(1, osm_id);
       stmt.execute();
     } catch (SQLException e) {
@@ -597,7 +609,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
       sb.append(e.getKey()).append(" = ").append(e.getValue()).append(" ");
     });
     sb.append("WHERE osm_id = ?;");
-    try (PreparedStatement stmt = connection.prepareStatement(sb.toString())) {
+    try (PreparedStatement stmt = targetConnection.prepareStatement(sb.toString())) {
       stmt.setLong(1, id);
       stmt.executeUpdate();
     } catch (SQLException e) {
@@ -643,7 +655,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
     StringBuilder sb = new StringBuilder("SELECT * FROM ");
     sb.append(NODETABLE).append(" WHERE osm_id = ?;");
     HashMap<String, String> attributes = null;
-    try (PreparedStatement stmt = connection.prepareStatement(sb.toString())) {
+    try (PreparedStatement stmt = targetConnection.prepareStatement(sb.toString())) {
       stmt.setLong(1, osm_id);
       ResultSet rs = stmt.executeQuery();
       if (rs.next()) {
@@ -687,8 +699,8 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
 
     private void saveWayElements() throws SQLException {
         // set up a sql queue
-        SQLStatementQueue sqlQueue = new SQLStatementQueue(this.connection, this.logger);
-        SQLStatementQueue nodeIsPartSql = new SQLStatementQueue(this.connection, this.logger);
+        SQLStatementQueue sqlQueue = new SQLStatementQueue(this.targetConnection, this.logger);
+        SQLStatementQueue nodeIsPartSql = new SQLStatementQueue(this.targetConnection, this.logger);
         
           // figure out classification id.. which describes the
           // type of geometry (building, highway, those kind of things
@@ -817,7 +829,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
     }
     PreparedStatement stmt = null;
     try {
-      stmt = connection.prepareStatement(sb.toString());
+      stmt = targetConnection.prepareStatement(sb.toString());
       stmt.setLong(1, way.getID());
       if (classID > -1) {
         stmt.setInt(2, classID);
@@ -915,7 +927,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
     HashMap<String, String> attrWay = new HashMap<>();
     ArrayList<NodeElement> nds = new ArrayList<>();
     try {
-      stmtNodes = connection.prepareStatement(sqlNodes.toString());
+      stmtNodes = targetConnection.prepareStatement(sqlNodes.toString());
       stmtNodes.setLong(1, osm_id);
       ResultSet rsNodes = stmtNodes.executeQuery();
       while (rsNodes.next()) {
@@ -927,7 +939,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
       }
 
       if (!nds.isEmpty()) {
-        stmtWay = connection.prepareStatement(sqlWay.toString());
+        stmtWay = targetConnection.prepareStatement(sqlWay.toString());
         stmtWay.setLong(1, osm_id);
         ResultSet rsWay = stmtWay.executeQuery();
         if (rsWay.next()) {
@@ -990,7 +1002,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
   private final HashMap<String, RelationElement> rels = new HashMap<>();
 
     private void saveRelElements() throws SQLException {
-        SQLStatementQueue sq = new SQLStatementQueue(this.connection, this.logger);
+        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection, this.logger);
         
         for (Map.Entry<String, RelationElement> entry : rels.entrySet()) {
             RelationElement relationElement = entry.getValue();
@@ -1183,7 +1195,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
   }
 
   public Connection getConnection() {
-    return this.connection;
+    return this.targetConnection;
   }
 
   ////////////////////////////////////////////////////////////////////

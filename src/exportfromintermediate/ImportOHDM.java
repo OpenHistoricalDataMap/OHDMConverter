@@ -1,5 +1,6 @@
 package exportfromintermediate;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -10,6 +11,7 @@ import java.util.logging.Logger;
 import osm.OSMClassification;
 import osmupdatewizard.SQLStatementQueue;
 import osmupdatewizard.TagElement;
+import util.Parameter;
 
 /**
  * That class imports (and updates) data from intermediate database to OHDM.
@@ -27,6 +29,17 @@ public class ImportOHDM extends Importer {
             String sourceSchema, String targetSchema) {
         
         super(sourceConnection, targetConnection);
+        
+        this.sourceSchema = sourceSchema;
+        this.targetSchema = targetSchema;
+        this.intermediateDB = intermediateDB;
+    }
+
+    public ImportOHDM(IntermediateDB intermediateDB, 
+            String sourceParameterFile, String targetParameterFile,
+            String sourceSchema, String targetSchema) throws IOException, SQLException {
+        
+        super(sourceParameterFile, targetParameterFile);
         
         this.sourceSchema = sourceSchema;
         this.targetSchema = targetSchema;
@@ -544,7 +557,7 @@ public class ImportOHDM extends Importer {
     }
     
     static protected String getFullTableName(String schema, String tableName) {
-        return schema + "." + tableName;
+        return Importer.getFullTableName(schema, tableName);
     }
     
     // Table names
@@ -785,30 +798,55 @@ public class ImportOHDM extends Importer {
     
     void forgetPreviousImport() throws SQLException {
         SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
-        sql.append("UPDATE ways SET ohdm_geom_id=null, ohdm_object_id=null;");
-        sql.append("UPDATE nodes SET ohdm_geom_id=null, ohdm_object_id=null;");
-        sql.append("UPDATE relations SET ohdm_geom_id=null, ohdm_object_id=null;");
+                
+        sql.append("UPDATE ");
+        sql.append(Importer.getFullTableName(this.sourceSchema, "nodes"));
+        sql.append(" SET ohdm_geom_id=null, ohdm_object_id=null;");
+        
+        sql.append("UPDATE ");
+        sql.append(Importer.getFullTableName(this.sourceSchema, "ways"));
+        sql.append(" SET ohdm_geom_id=null, ohdm_object_id=null;");
+
+        sql.append("UPDATE ");
+        sql.append(Importer.getFullTableName(this.sourceSchema, "relations"));
+        sql.append(" SET ohdm_geom_id=null, ohdm_object_id=null;");
         sql.forceExecute();
     }
     
-    public static void main(String args[]) {
+    public static void main(String args[]) throws IOException {
         // let's fill OHDM database
         try {
-            Connection sourceConnection = Importer.createLocalTestSourceConnection();
-            Connection targetConnection = Importer.createLocalTestTargetConnection();
+            String sourceParameterFileName = "inter2ohdmSource.txt";
+            String targetParameterFileName = "inter2ohdmTarget.txt";
             
-            IntermediateDB iDB = new IntermediateDB(sourceConnection);
+//            Connection sourceConnection = Importer.createLocalTestSourceConnection();
+//            Connection targetConnection = Importer.createLocalTestTargetConnection();
+            Parameter sourceParameter = new Parameter(sourceParameterFileName);
+            Parameter targetParameter = new Parameter(targetParameterFileName);
+            
+            Connection sourceConnection = Importer.createConnection(sourceParameter);
+            Connection targetConnection = Importer.createConnection(targetParameter);
+            
+            IntermediateDB iDB = new IntermediateDB(sourceConnection, sourceParameter.getSchema());
+            
+            String sourceSchema = sourceParameter.getSchema();
+            String targetSchema = targetParameter.getSchema();
             
             ImportOHDM ohdmImporter = new ImportOHDM(iDB, sourceConnection, 
-                    targetConnection, "public", "ohdm");
+                    targetConnection, sourceSchema, targetSchema);
             
-            ohdmImporter.forgetPreviousImport();
+            try {
+                ohdmImporter.forgetPreviousImport();
+                ohdmImporter.dropOHDMTables(targetConnection);
+            }
+            catch(Exception e) {
+                System.err.println("problems during setting old data (non-fatal): " + e.getLocalizedMessage());
+            }
             
-            ohdmImporter.dropOHDMTables(targetConnection);
             ohdmImporter.createOHDMTables(targetConnection);
 
             ExportIntermediateDB exporter = 
-                    new ExportIntermediateDB(sourceConnection, ohdmImporter);
+                    new ExportIntermediateDB(sourceConnection, sourceSchema, ohdmImporter);
             
             exporter.processNodes();
             exporter.processWays();
@@ -816,8 +854,8 @@ public class ImportOHDM extends Importer {
             
             System.out.println(exporter.getStatistics());
   
-        } catch (SQLException e) {
-            System.err.println("error from database " + e.getLocalizedMessage());
+        } catch (Exception e) {
+            System.err.println("fatal: " + e.getLocalizedMessage());
         }
     }
 

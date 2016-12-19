@@ -75,6 +75,116 @@ public class OSMClassification {
         
         osmFeatureClasses.put("aeroway", subClasses);        
         
+        // Amenity
+        subClasses = new ArrayList<>();
+        
+        // fill with all known subclasses
+        subClasses.add(UNDEFINED);
+        subClasses.add("bar");
+        subClasses.add("bbq");
+        subClasses.add("biergarten");
+        subClasses.add("cafe");
+        subClasses.add("drinking_water");
+        subClasses.add("fast_food");
+        subClasses.add("food_court");
+        subClasses.add("ice_cream");
+        subClasses.add("pub");
+        subClasses.add("restaurant");
+        subClasses.add("college");
+        subClasses.add("kindergarten");
+        subClasses.add("library");
+        subClasses.add("public_bookcase");
+        subClasses.add("school");
+        subClasses.add("music_school");
+        subClasses.add("driving_school");
+        subClasses.add("language_school");
+        subClasses.add("university");
+        subClasses.add("bicycle_parking");
+        subClasses.add("bicycle_repair_station");
+        subClasses.add("biycycle_rental");
+        subClasses.add("boat_sharing");
+        subClasses.add("bus_station");
+        subClasses.add("car_rental");
+        subClasses.add("car_sharing");
+        subClasses.add("car_wash");
+        subClasses.add("charging_station");
+        subClasses.add("ferry_terminal");
+        subClasses.add("fuel");
+        subClasses.add("grit_bin");
+        subClasses.add("motorcycle_parking");
+        subClasses.add("parking");
+        subClasses.add("parking_entrance");
+        subClasses.add("parking_space");
+        subClasses.add("taxi");
+        subClasses.add("atm");
+        subClasses.add("bureau_de_change");
+        subClasses.add("baby_hatch");
+        subClasses.add("clinic");
+        subClasses.add("dentist");
+        subClasses.add("doctors");
+        subClasses.add("hospital");
+        subClasses.add("nursing_home");
+        subClasses.add("pharmacy");
+        subClasses.add("social_facility");
+        subClasses.add("veterinary");
+        subClasses.add("blood_donation");
+        subClasses.add("arts_centre");
+        subClasses.add("brothel");
+        subClasses.add("casino");
+        subClasses.add("cinema");
+        subClasses.add("community_centre");
+        subClasses.add("fountain");
+        subClasses.add("gambling");
+        subClasses.add("nightclub");
+        subClasses.add("planetarium");
+        subClasses.add("social_centre");
+        subClasses.add("stripclub");
+        subClasses.add("studio");
+        subClasses.add("swingerclub");
+        subClasses.add("theatre");
+        subClasses.add("animal_boarding");
+        subClasses.add("animal_shelter");
+        subClasses.add("bench");
+        subClasses.add("clock");
+        subClasses.add("courthouse");
+        subClasses.add("coworking_space");
+        subClasses.add("crematorium");
+        subClasses.add("crypt");
+        subClasses.add("dive_centre");
+        subClasses.add("dojo");
+        subClasses.add("embassy");
+        subClasses.add("fire_station");
+        subClasses.add("game_feeding");
+        subClasses.add("grave_yard");
+        subClasses.add("hunting_stand");
+        subClasses.add("internet_cafe");
+        subClasses.add("kneipp_water_cure");
+        subClasses.add("marketplace");
+        subClasses.add("photo_booth");
+        subClasses.add("place_of_worship");
+        subClasses.add("police");
+        subClasses.add("post_box");
+        subClasses.add("post_office");
+        subClasses.add("prison");
+        subClasses.add("ranger_station");
+        subClasses.add("recycling");
+        subClasses.add("rescue_station");
+        subClasses.add("sauna");
+        subClasses.add("shelter");
+        subClasses.add("shower");
+        subClasses.add("table");
+        subClasses.add("telephone");
+        subClasses.add("toilets");
+        subClasses.add("townhall");
+        subClasses.add("vending_machine");
+        subClasses.add("waste_basket");
+        subClasses.add("waste_disposal");
+        subClasses.add("waste_transfer_station");
+        subClasses.add("watering_place");
+        subClasses.add("water_point");
+        
+        osmFeatureClasses.put("amenity", subClasses);                
+        
         // Barrier (but only cable_barrier, city_wall, ditch, fence, retaining_wall, tank_trap, wall)
         subClasses = new ArrayList<>();
         
@@ -171,10 +281,78 @@ public class OSMClassification {
         // fill with all known subclasses
         subClasses.add(UNDEFINED);
         subClasses.add("agricultural_engines");
-        
-        // TODO: add others
+        subClasses.add("bakery");
+        subClasses.add("basket_maker");
+        subClasses.add("beekeeper");
+        subClasses.add("blacksmith");
+        subClasses.add("boatbuilder");
+        subClasses.add("bookbinder");
+        subClasses.add("brewery");
+        subClasses.add("builder");
+        subClasses.add("carpenter");
+        subClasses.add("carpet_layer");
+        subClasses.add("caterer");
+        subClasses.add("chimney_sweeper");
+        subClasses.add("clockmaker");
+        subClasses.add("confectionery");
+        subClasses.add("distillery");
+        subClasses.add("dressmaker");
+        subClasses.add("electrician");
+        subClasses.add("floorer");
+        subClasses.add("gardener");
+        subClasses.add("glaziery");
+        subClasses.add("handicraft");
+        subClasses.add("hvac");
+        subClasses.add("insulation");
+        subClasses.add("jeweller");
+        subClasses.add("locksmith");
+        subClasses.add("metal_construction");
+        subClasses.add("optician");
+        subClasses.add("painter");
+        subClasses.add("parquet_layer");
+        subClasses.add("optician");
+        subClasses.add("photographer");
+        subClasses.add("photographic_laboratory");
+        subClasses.add("piano_tuner");
+        subClasses.add("plasterer");
+        subClasses.add("plumber");
+        subClasses.add("pottery");
+        subClasses.add("rigger");
+        subClasses.add("roofer");
+        subClasses.add("saddler");
+        subClasses.add("sailmaker");
+        subClasses.add("sawmill");
+        subClasses.add("scaffolder");
+        subClasses.add("sculptor");
+        subClasses.add("shoemaker");
+        subClasses.add("stand_builder");
+        subClasses.add("stonemason");
+        subClasses.add("sun_protection");
+        subClasses.add("tailor");
+        subClasses.add("tiler");
+        subClasses.add("tinsmith");
+        subClasses.add("turner");
+        subClasses.add("upholsterer");
+        subClasses.add("watchmaker");
+        subClasses.add("window_construction");
+        subClasses.add("winery");
         
         osmFeatureClasses.put("craft", subClasses);        
+        
+        // Emergency
+        subClasses = new ArrayList<>();
+        
+        // fill with all known subclasses
+        subClasses.add(UNDEFINED);
+        subClasses.add("ambulance_station");
+        subClasses.add("defibrillator");
+        
+        // TODO: continue with Firefighters
+        // http://wiki.openstreetmap.org/wiki/Map_Features
+        
+        osmFeatureClasses.put("emergency", subClasses);        
+        
+
         
         // Geological
         subClasses = new ArrayList<>();

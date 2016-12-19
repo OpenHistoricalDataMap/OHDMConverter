@@ -51,6 +51,12 @@ public class Inter2OHDM extends Importer {
         return (this.importOHDMElement(way) != null);
     }
 
+    /**
+     * TODO handle boundary attribute admin-level!!http://wiki.openstreetmap.org/wiki/Tag:boundary%3Dadministrative#admin_level
+     * @param relation
+     * @return
+     * @throws SQLException 
+     */
     @Override
     public boolean importRelation(OHDMRelation relation) throws SQLException {
         if(!this.elementHasIdentity(relation)) {

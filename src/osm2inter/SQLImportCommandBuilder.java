@@ -286,7 +286,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
         sb.append(CLASSIFICATIONTABLE).append(";");
         try (ResultSet rs = stmt.executeQuery(sb.toString())) {
           while (rs.next()) {
-            this.classification.put(rs.getString("class"), rs.getString("subclass"), rs.getInt("classcode"));
+            this.classification.put(rs.getString("class"), rs.getString("subclassname"), rs.getInt("classcode"));
           }
         }
       } catch (SQLException e) {

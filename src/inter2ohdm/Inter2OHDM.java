@@ -650,7 +650,7 @@ public class Inter2OHDM extends Importer {
         // add table specifics:
         sq.append(",");
         sq.append("class character varying,");
-        sq.append("subclass character varying");
+        sq.append("subclassname character varying");
         sq.append(");");
         sq.forceExecute();
         

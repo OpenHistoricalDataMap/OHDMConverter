@@ -53,11 +53,11 @@ public class OHDM2Rendering {
             
         String sourceSchema = sourceParameter.getSchema();
 /*
-select l.line, c.subclass, o.name, gg.valid_since, gg.valid_until, gg.valid_since_offset, gg.valid_until_offset into ohdm_rendering.test from
+select l.line, c.subclassname, o.name, gg.valid_since, gg.valid_until, gg.valid_since_offset, gg.valid_until_offset into ohdm_rendering.test from
 (SELECT id, classification_id, name from ohdm.geoobject where classification_id = 140) as o,
 (SELECT id_target, type_target, id_geoobject_source, valid_since, valid_until, valid_since_offset, valid_until_offset FROM ohdm.geoobject_geometry) as gg,
 (SELECT id, line FROM ohdm.lines) as l,
-(SELECT subclass, id FROM ohdm.classification) as c
+(SELECT subclassname, id FROM ohdm.classification) as c
 where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_source AND o.classification_id = c.id;
          */
             
@@ -106,7 +106,7 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                         case 2: sql.append("line"); break; // select line in geom table
                         case 3: sql.append("polygon"); break; // select polygon in geom table
                         }
-                        sql.append(", subclass, name, valid_since, valid_until, valid_since_offset, valid_until_offset) ");
+                        sql.append(", subclassname, name, valid_since, valid_until, valid_since_offset, valid_until_offset) ");
                     }
 
                     sql.append("select g.");
@@ -115,7 +115,7 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                     case 2: sql.append("line"); break; // select line in geom table
                     case 3: sql.append("polygon"); break; // select polygon in geom table
                     }
-                    sql.append(", c.subclass, o.name, gg.valid_since, ");
+                    sql.append(", c.subclassname, o.name, gg.valid_since, ");
                     sql.append("gg.valid_until, gg.valid_since_offset, ");
                     sql.append("gg.valid_until_offset ");
 
@@ -159,7 +159,7 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                     sql.append(") as g,");
                     
                     // classification
-                    sql.append("(SELECT subclass FROM ");
+                    sql.append("(SELECT subclassname FROM ");
                     sql.append(sourceSchema);
                     sql.append(".classification where id = ");
                     sql.append(classID);

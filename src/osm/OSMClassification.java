@@ -696,7 +696,7 @@ public class OSMClassification {
                 // add to database
                 sq.append("INSERT INTO ");
                 sq.append(classificationTableName);
-                sq.append(" (class, subclass) VALUES ('");
+                sq.append(" (class, subclassname) VALUES ('");
                 sq.append(className);
                 sq.append("', '");
                 sq.append(subClassName);

@@ -39,6 +39,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         
         int number = 0;
         int notPartNumber = 0;
+        System.out.println("Nodes... printing a star after 100 nodes");
         try {
             PreparedStatement stmt = this.sourceConnection.prepareStatement(sql.toString());
             ResultSet qResultNode = stmt.executeQuery();
@@ -52,6 +53,12 @@ public class ExportIntermediateDB extends IntermediateDB {
                 // now process that stuff
                 if(this.importer.importNode(node)) {
                     this.numberNodes++;
+                    if(this.numberNodes % 100 == 0) {
+                        System.out.print("*");
+                    }
+                    if(this.numberNodes % 1000 == 0) {
+                        System.out.print("\n");
+                    }
                 }
                 
             }
@@ -59,7 +66,7 @@ public class ExportIntermediateDB extends IntermediateDB {
             System.err.println(ex.getLocalizedMessage());
         }
         
-        System.out.println("Checked / imported nodes / not part and no identity: " + number + " / " + this.numberNodes + " / " + notPartNumber);
+        System.out.println("\nChecked / imported nodes / not part and no identity: " + number + " / " + this.numberNodes + " / " + notPartNumber);
     }
     
     void processWays() {
@@ -68,6 +75,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         
         int waynumber = 0;
         int notPartNumber = 0;
+        System.out.println("Ways... printing a star after 100 ways");
         try {
             PreparedStatement stmt = this.sourceConnection.prepareStatement(sql.toString());
             ResultSet qResultWay = stmt.executeQuery();
@@ -83,13 +91,19 @@ public class ExportIntermediateDB extends IntermediateDB {
                 // process that stuff
                 if(this.importer.importWay(way)) {
                     this.numberWays++;
+                    if(this.numberWays % 100 == 0) {
+                        System.out.print("*");
+                    }
+                    if(this.numberWays % 1000 == 0) {
+                        System.out.print("\n");
+                    }
                 }
             }
         } catch (SQLException ex) {
             System.err.println(ex.getLocalizedMessage());
         }
         
-        System.out.println("Checked / imported ways / not part and identity:  " + waynumber + " / " + this.numberWays + " / " + notPartNumber);
+        System.out.println("\nChecked / imported ways / not part and identity:  " + waynumber + " / " + this.numberWays + " / " + notPartNumber);
     }
     
     @Override
@@ -128,6 +142,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         sql.append(Importer.getFullTableName(this.schema, RELATIONTABLE));
         sql.append(";");
         
+        System.out.println("Relations... printing a star after 100 relations");
         int number = 0;
         try {
             ResultSet qResultRelations = sql.executeWithResult();
@@ -215,13 +230,19 @@ public class ExportIntermediateDB extends IntermediateDB {
                 // process that stuff
                 if(relationMemberComplete && this.importer.importRelation(relation)) {
                     this.numberRelations++;
+                    if(this.numberRelations % 100 == 0) {
+                        System.out.print("*");
+                    }
+                    if(this.numberRelations % 1000 == 0) {
+                        System.out.print("\n");
+                    }
                 }
             }
         } catch (SQLException ex) {
             System.err.println(ex.getLocalizedMessage());
         }
         
-        System.out.println("Checked / imported relations: " + number + " / " + this.numberRelations);
+        System.out.println("\nChecked / imported relations: " + number + " / " + this.numberRelations);
     }
     
     public String getStatistics() {

@@ -57,7 +57,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
   private String schema;
   private Connection targetConnection;
 
-  private String importMode;
+  private String importMode = "initial_import";
   private Integer tmpStorageSize;
 
   private final MyLogger logger;
@@ -75,12 +75,13 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
     private final Parameter parameter;
 
   private SQLImportCommandBuilder(Parameter parameter) {
-      this.parameter = parameter;
+    this.parameter = parameter;
     this.config = Config.getInstance();
     this.logger = MyLogger.getInstance();
     this.classification = Classification.getInstance();
-    importMode = config.getValue("importMode");
-    tmpStorageSize = Integer.valueOf(config.getValue("tmpStorageSize")) - 1;
+//    importMode = config.getValue("importMode");
+//    tmpStorageSize = Integer.valueOf(config.getValue("tmpStorageSize")) - 1;
+    tmpStorageSize = 10000 - 1;
     
     try {
 //      this.user = config.getValue("db_user");

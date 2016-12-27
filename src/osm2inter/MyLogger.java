@@ -21,8 +21,8 @@ public class MyLogger {
    * Loads generel information from Config.
    */
   private MyLogger() {
-    this.enabled = Config.getInstance().getValue("logger").equalsIgnoreCase("enabled");
-    this.lvl = Integer.parseInt(Config.getInstance().getValue("logLevel"));
+    this.enabled = true;
+    this.lvl = 3;
   }
 
   /**

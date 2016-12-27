@@ -824,6 +824,14 @@ public class Inter2OHDM extends Importer {
             String sourceParameterFileName = "inter2ohdmSource.txt";
             String targetParameterFileName = "inter2ohdmTarget.txt";
             
+            if(args.length > 0) {
+                sourceParameterFileName = args[0];
+            }
+            
+            if(args.length > 1) {
+                targetParameterFileName = args[1];
+            }
+            
 //            Connection sourceConnection = Importer.createLocalTestSourceConnection();
 //            Connection targetConnection = Importer.createLocalTestTargetConnection();
             Parameter sourceParameter = new Parameter(sourceParameterFileName);

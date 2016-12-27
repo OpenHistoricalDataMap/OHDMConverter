@@ -14,18 +14,26 @@ import util.Parameter;
  */
 public class OHDM2Rendering {
     public static void main(String[] args) throws SQLException, IOException {
-            String sourceParameterFileName = "ohdm2renderingSource.txt";
-            String targetParameterFileName = "ohdm2renderingTarget.txt";
+        String sourceParameterFileName = "ohdm2renderingSource.txt";
+        String targetParameterFileName = "ohdm2renderingTarget.txt";
+
+        if(args.length > 0) {
+            sourceParameterFileName = args[0];
+        }
+
+        if(args.length > 1) {
+            targetParameterFileName = args[1];
+        }
             
 //            Connection sourceConnection = Importer.createLocalTestSourceConnection();
 //            Connection targetConnection = Importer.createLocalTestTargetConnection();
 
-            Parameter sourceParameter = new Parameter(sourceParameterFileName);
-            Parameter targetParameter = new Parameter(targetParameterFileName);
-            
-            Connection connection = Importer.createConnection(targetParameter);
-            
-            String targetSchema = targetParameter.getSchema();
+        Parameter sourceParameter = new Parameter(sourceParameterFileName);
+        Parameter targetParameter = new Parameter(targetParameterFileName);
+
+        Connection connection = Importer.createConnection(targetParameter);
+
+        String targetSchema = targetParameter.getSchema();
         
 //        String targetServerName = "localhost";
 //        String targetPortNumber = "5432";

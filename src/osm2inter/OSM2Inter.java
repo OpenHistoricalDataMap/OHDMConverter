@@ -28,29 +28,35 @@ public class OSM2Inter {
       SAXParserFactory spf = SAXParserFactory.newInstance();
       SAXParser newSAXParser = spf.newSAXParser();
       
-      String configDir = DEFAULT_CONFIG_DIR;
-      if(args.length > 0) {
-          configDir = args[0];
-      }
+//      String configDir = DEFAULT_CONFIG_DIR;
+//      if(args.length > 0) {
+//          configDir = args[0];
+//      }
       
-      String configFileName = configDir + SUBDIR_SEPARATER + CONFIG_FILE_NAME;
-      String whiteListFileName = configDir + SUBDIR_SEPARATER + WHITELIST_FILE_NAME;
-      
-      newSAXParser.parse(new File(configFileName), Config.getInstance());
-      newSAXParser.parse(new File(whiteListFileName), Whitelist.getInstance());
+//      String configFileName = configDir + SUBDIR_SEPARATER + CONFIG_FILE_NAME;
+//      String whiteListFileName = configDir + SUBDIR_SEPARATER + WHITELIST_FILE_NAME;
+//      
+//      newSAXParser.parse(new File(configFileName), Config.getInstance());
+//      newSAXParser.parse(new File(whiteListFileName), Whitelist.getInstance());
       
       String osmFileName = DEFAULT_OSM_FILENAME;
       if(args.length > 1) {
-          osmFileName = args[1];
+          osmFileName = args[0];
       }
       
       File osmFile = new File(osmFileName);
 
       MyLogger.getInstance().print(0, "+++ OSM Update WIzard +++", true);
+  
+    
+    String parameterFile = INTER_DB_SETTINGS_FILENAME;
+    if(args.length > 0) {
+        parameterFile = args[1];
+    }
+    
+    Parameter dbConnectionSettings = new Parameter(parameterFile);
       
-      Parameter dbConnectionSettings = new Parameter(INTER_DB_SETTINGS_FILENAME);
-      
-      newSAXParser.parse(osmFile, new OSMImporter(dbConnectionSettings));
+    newSAXParser.parse(osmFile, new OSMImporter(dbConnectionSettings));
       
     } catch (ParserConfigurationException ex) {
       Logger.getLogger(OSM2Inter.class.getName()).log(Level.SEVERE, null, ex);

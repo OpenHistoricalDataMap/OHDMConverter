@@ -14,8 +14,8 @@ import util.Parameter;
  */
 public class OHDM2Rendering {
     public static void main(String[] args) throws SQLException, IOException {
-        String sourceParameterFileName = "ohdm2renderingSource.txt";
-        String targetParameterFileName = "ohdm2renderingTarget.txt";
+        String sourceParameterFileName = "db_ohdm.txt";
+        String targetParameterFileName = "db_rendering.txt";
 
         if(args.length > 0) {
             sourceParameterFileName = args[0];

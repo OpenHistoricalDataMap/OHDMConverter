@@ -820,9 +820,11 @@ public class Inter2OHDM extends Importer {
     
     public static void main(String args[]) throws IOException {
         // let's fill OHDM database
+        System.out.println("Start importing ODHM data from intermediate DB");
+        
         try {
-            String sourceParameterFileName = "inter2ohdmSource.txt";
-            String targetParameterFileName = "inter2ohdmTarget.txt";
+            String sourceParameterFileName = "db_inter.txt";
+            String targetParameterFileName = "db_ohdm.txt";
             
             if(args.length > 0) {
                 sourceParameterFileName = args[0];

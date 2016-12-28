@@ -46,6 +46,9 @@ public class ExportIntermediateDB extends IntermediateDB {
             
             while(qResultNode.next()) {
                 number++;
+                if(number % 100 == 0) {System.out.print("*");}
+                if(number % 1000 == 0) {System.out.print("\n");}
+                
                 OHDMNode node = this.createOHDMNode(qResultNode);
                 
                 if(!node.isPart() && node.getName() == null) notPartNumber++;
@@ -53,12 +56,6 @@ public class ExportIntermediateDB extends IntermediateDB {
                 // now process that stuff
                 if(this.importer.importNode(node)) {
                     this.numberNodes++;
-                    if(this.numberNodes % 100 == 0) {
-                        System.out.print("*");
-                    }
-                    if(this.numberNodes % 1000 == 0) {
-                        System.out.print("\n");
-                    }
                 }
                 
             }
@@ -73,7 +70,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         StringBuilder sql = new StringBuilder("SELECT * FROM ");
         sql.append(Importer.getFullTableName(this.schema, WAYTABLE)).append(";");
         
-        int waynumber = 0;
+        int number = 0;
         int notPartNumber = 0;
         System.out.println("Ways... printing a star after 100 ways");
         try {
@@ -81,7 +78,9 @@ public class ExportIntermediateDB extends IntermediateDB {
             ResultSet qResultWay = stmt.executeQuery();
             
             while(qResultWay.next()) {
-                waynumber++;
+                number++;
+                if(number % 100 == 0) {System.out.print("*");}
+                if(number % 1000 == 0) {System.out.print("\n");}
                 OHDMWay way = this.createOHDMWay(qResultWay);
                 
                 if(!way.isPart() && way.getName() == null) notPartNumber++;
@@ -91,19 +90,13 @@ public class ExportIntermediateDB extends IntermediateDB {
                 // process that stuff
                 if(this.importer.importWay(way)) {
                     this.numberWays++;
-                    if(this.numberWays % 100 == 0) {
-                        System.out.print("*");
-                    }
-                    if(this.numberWays % 1000 == 0) {
-                        System.out.print("\n");
-                    }
                 }
             }
         } catch (SQLException ex) {
             System.err.println(ex.getLocalizedMessage());
         }
         
-        System.out.println("\nChecked / imported ways / not part and identity:  " + waynumber + " / " + this.numberWays + " / " + notPartNumber);
+        System.out.println("\nChecked / imported ways / not part and identity:  " + number + " / " + this.numberWays + " / " + notPartNumber);
     }
     
     @Override
@@ -149,6 +142,9 @@ public class ExportIntermediateDB extends IntermediateDB {
             
             while(qResultRelations.next()) {
                 number++;
+                if(number % 100 == 0) {System.out.print("*");}
+                if(number % 1000 == 0) {System.out.print("\n");}
+                
                 OHDMRelation relation = this.createOHDMRelation(qResultRelations);
 
                 // find all associated nodes and add to that relation
@@ -230,12 +226,6 @@ public class ExportIntermediateDB extends IntermediateDB {
                 // process that stuff
                 if(relationMemberComplete && this.importer.importRelation(relation)) {
                     this.numberRelations++;
-                    if(this.numberRelations % 100 == 0) {
-                        System.out.print("*");
-                    }
-                    if(this.numberRelations % 1000 == 0) {
-                        System.out.print("\n");
-                    }
                 }
             }
         } catch (SQLException ex) {

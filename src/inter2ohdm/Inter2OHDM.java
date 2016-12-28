@@ -59,20 +59,34 @@ public class Inter2OHDM extends Importer {
      */
     @Override
     public boolean importRelation(OHDMRelation relation) throws SQLException {
-        if(!this.elementHasIdentity(relation)) {
-            // relations without an identity are not imported.
-            return false;
+        // debug
+        if(relation.getOSMIDString().equalsIgnoreCase("5767990")) {
+            int i = 42;
         }
+        
+        String ohdmIDString = null;
+        
+        if(this.elementHasIdentity(relation)) {
+            // save relation with identity.
+            ohdmIDString = this.importOHDMElement(relation);
+            
+        } else {
+            // relations without an identity are not imported with 
+            // some exceptions
+            
+            switch(relation.getClassName()) {
+                case "building":
+                    ohdmIDString = this.getOSMDummyObject_OHDM_ID();
+                    relation.setOHDMObjectID(ohdmIDString);
+            }
+        }
+        
+        if(ohdmIDString == null) return false;
         
         /* now there are two options:
         a) that relation represents a multigeometry (in most cases)
         b) it represents a polygon with one or more hole(s)
          */
-        
-        // in either case.. create an ohdm object
-        String ohdmIDString = this.importOHDMElement(relation);
-        
-        if(ohdmIDString == null) return false; // object has not been written
         
         /* status:
         Object is stored but geometry not.
@@ -88,10 +102,10 @@ public class Inter2OHDM extends Importer {
         
         // handle option 2)
         if(!relation.isPolygon()) {
-            this.saveRelationAsRelatedObjects(relation, ohdmIDString);
+            return this.saveRelationAsRelatedObjects(relation, ohdmIDString);
         } else {
             if(relation.isMultipolygon()) {
-                this.saveRelationAsMultipolygon(relation);
+                return this.saveRelationAsMultipolygon(relation);
             } 
         }
 
@@ -211,9 +225,15 @@ public class Inter2OHDM extends Importer {
             and stored with them. We are done here and return
             */
             if(!this.elementHasIdentity(ohdmElement)) {
-                // return dummy OSM Object..
-                // return this.getOSMDummyObject_OHDM_ID();
-                return null;
+                /*
+                Anonymous way which are *not* part of a relation are
+                refered to the general dummy OHDM object
+                */
+                if(ohdmElement instanceof OHDMWay && !ohdmElement.isPart()) {
+                    return this.getOSMDummyObject_OHDM_ID();
+                } else {
+                    return null;
+                }
             }
 
             // create user entry or find user primary key
@@ -329,7 +349,15 @@ public class Inter2OHDM extends Importer {
         sq.forceExecute();
     }
     
-    void addValidity(SQLStatementQueue sq, int targetType, String classCodeString, String sourceIDString, String targetIDString, int externalUserID) throws SQLException {
+    void addValidity(SQLStatementQueue sq, int targetType, 
+            String classCodeString, String sourceIDString, 
+            String targetIDString, int externalUserID) throws SQLException {
+        
+        if(sourceIDString == null) {
+            // failure
+            System.err.println("source id must not be null");
+        }
+        
         sq.append("INSERT INTO ");
         sq.append(Inter2OHDM.getFullTableName(this.targetSchema, Inter2OHDM.GEOOBJECT_GEOMETRY));
         sq.append(" (type_target, classification_id, id_geoobject_source, id_target, valid_since, valid_until, source_user_id) VALUES (");
@@ -396,7 +424,7 @@ public class Inter2OHDM extends Importer {
 //            boolean persist = true;
             
             /* add entry in object table IF this object has an identity
-            perist that object ONLY IF there is no geometry. Reduces db access!
+                perist that object ONLY IF there is no geometry. Reduces db access!
             */
             String ohdmObjectIDString = this.getOHDMObject(ohdmElement, persist);
             

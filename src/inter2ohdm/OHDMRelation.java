@@ -38,9 +38,9 @@ public class OHDMRelation extends OHDMElement {
         // create a polygon with hole
         // POLYGON ((10 10, 110 10, 110 110, 10 110), (20 20, 20 30, 30 30, 30 20), (40 20, 40 30, 50 30, 50 20))
 
-        if(this.getOSMIDString().equalsIgnoreCase("3323433")) {
-            int debuggingStop = 42;
-        }
+//        if(this.getOSMIDString().equalsIgnoreCase("3323433")) {
+//            int debuggingStop = 42;
+//        }
         
         try {
             StringBuilder wktBuilder = null;
@@ -176,17 +176,16 @@ public class OHDMRelation extends OHDMElement {
                 polygonWKT.add("POLYGON(" + wktBuilder.toString() + ")");
             }
         } catch (SQLException ex) {
-            System.err.println("failure during constructing polygons: " + ex.getMessage());
             return false;
         }
         
-        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        System.out.println("osmid: " + this.getOSMIDString());
-        for(int i=0; i<polygonIDs.size();i++) {
-            System.out.println("id: " + polygonIDs.get(i));
-            System.out.println("wktstring:\n" + polygonWKT.get(i));
-        }
-        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+//        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+//        System.out.println("osmid: " + this.getOSMIDString());
+//        for(int i=0; i<polygonIDs.size();i++) {
+//            System.out.println("id: " + polygonIDs.get(i));
+//            System.out.println("wktstring:\n" + polygonWKT.get(i));
+//        }
+//        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         
         return true;
     }
@@ -196,7 +195,9 @@ public class OHDMRelation extends OHDMElement {
         if(wktBuilder != null) {
             w = wktBuilder.toString();
         }
-        throw new SQLException("malformed polygon:  " + "(" + s + ")" + this.getOSMIDString() + "\n" + w);
+        String s2 = "malformed polygon ( " + s + " ): " + this.getOSMIDString() + "\n" + w;
+        System.err.println(s2);
+        throw new SQLException(s2);
     }
 
     private String wkt = null;
@@ -343,9 +344,9 @@ public class OHDMRelation extends OHDMElement {
         // if first is outer.. ok, next can be outer or inner both ok
         if(this.memberRoles.get(0).equalsIgnoreCase("outer")) return true;
         
-        // first is inner
-        if(this.memberRoles.get(0).equalsIgnoreCase("inner")) {
-            // that's not even a multipolygon!!
+        // first is inner.. second?
+        if(this.memberRoles.get(1).equalsIgnoreCase("inner")) {
+            // after an inner member comes another one.. that not an osm polygon
             this.isMultipolygon = false;
             this.isMultipolygonChecked = true;
             return false;

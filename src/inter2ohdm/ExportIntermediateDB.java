@@ -137,10 +137,12 @@ public class ExportIntermediateDB extends IntermediateDB {
         
         System.out.println("Relations... printing a star after 100 relations");
         int number = 0;
+        boolean debug_alreadyPrinted = false;
         try {
             ResultSet qResultRelations = sql.executeWithResult();
             
             while(qResultRelations.next()) {
+                debug_alreadyPrinted = false;
                 number++;
                 if(number % 100 == 0) {System.out.print("*");}
                 if(number % 1000 == 0) {System.out.print("\n");}
@@ -215,7 +217,9 @@ public class ExportIntermediateDB extends IntermediateDB {
                         in that case .. remove whole relation: parts of it are 
                         outside our current scope
                         */
-                        relation.remove();
+                        System.out.println("would removed relation: " + relation.getOSMIDString());
+                        debug_alreadyPrinted = true;
+                        //relation.remove();
                         relationMemberComplete = false; 
                     }
                     memberResult.close();
@@ -226,6 +230,12 @@ public class ExportIntermediateDB extends IntermediateDB {
                 // process that stuff
                 if(relationMemberComplete && this.importer.importRelation(relation)) {
                     this.numberRelations++;
+                } else {
+                    if(!debug_alreadyPrinted) {
+                        String type = relation.getClassName();
+                        if(type == null) type ="not set";
+                        System.out.println("not imported relation: " + relation.getOSMIDString() + " / classname: " + type);
+                    }
                 }
             }
         } catch (SQLException ex) {

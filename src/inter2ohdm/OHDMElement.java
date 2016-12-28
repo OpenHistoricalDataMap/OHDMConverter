@@ -17,7 +17,7 @@ public abstract class OHDMElement extends AbstractElement {
     private int subClassCode;
     
     private String ohdmObjectIDString;
-    private final String ohdmGeomIDString;
+    private String ohdmGeomIDString;
     
     private final boolean valid;
     
@@ -52,12 +52,26 @@ public abstract class OHDMElement extends AbstractElement {
         if(persist) {
             this.intermediateDB.setOHDM_IDs(this, ohdmObjectIDString, ohdmGeomIDString);
         }
+
+        if(ohdmObjectIDString != null) {
+            this.ohdmObjectIDString = ohdmObjectIDString;
+        }
         
-        this.ohdmObjectIDString = ohdmObjectIDString;
+        if(ohdmGeomIDString != null) {
+            this.ohdmGeomIDString = ohdmGeomIDString;
+        }
     }
     
     void setOHDM_IDs(String ohdmObjectIDString, String ohdmGeomIDString) throws SQLException {
         this.setOHDM_IDs(ohdmObjectIDString, ohdmGeomIDString, true);
+    }
+    
+    void setOHDMObjectID(String ohdmObjectIDString) throws SQLException {
+        this.setOHDM_IDs(ohdmObjectIDString, null, true);
+    }
+    
+    void setOHDMGeometryID(String geometryIDString) throws SQLException {
+        this.setOHDM_IDs(null, geometryIDString, true);
     }
     
     String getOHDMObjectID() {

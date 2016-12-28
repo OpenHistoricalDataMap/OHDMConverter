@@ -74,99 +74,25 @@ public class Inter2OHDM extends Importer {
         
         if(ohdmIDString == null) return false; // object has not been written
         
-        /* previous message has already stored geometry
-          option b) is already handled so far
+        /* status:
+        Object is stored but geometry not.
+        
+        1) Relation is stored as geometry only in two cases:
+        
+        a) that relation is a polygon but made up by several ways
+        b) is a multipolygone with holes
+        
+        2) Otherwise, relation is stored as geoobject wit relations to 
+        other geoobjects.
         */
         
-        // handle option a)
+        // handle option 2)
         if(!relation.isPolygon()) {
-            // get all ohdm ids and store it
-            StringBuilder sq = new StringBuilder();
-            
-            /**
-             * INSERT INTO [geoobject_geometry] 
-             * (id_geoobject_source, id_target, type_target, valid_since, 
-             * valid_until VALUES (..)
-             */
-            
-            sq.append("INSERT INTO ");
-            sq.append(Inter2OHDM.GEOOBJECT_GEOMETRY);
-            sq.append("(id_geoobject_source, id_target, type_target, role,");
-            sq.append(" valid_since, valid_until) VALUES ");
-            
-            boolean notFirstSet = false;
-            for(int i = 0; i < relation.getMemberSize(); i++) {
-                OHDMElement member = relation.getMember(i);
-                String memberOHDMObjectIDString = this.getOHDMObject(member, true);
-                if(memberOHDMObjectIDString == null) continue; // shouldn't happen
-                
-                // get role of that member in that relation
-                String roleName = relation.getRoleName(i);
-                
-                if(notFirstSet) {
-                    sq.append(", ");
-                } else {
-                    notFirstSet = true;
-                }
-                
-                sq.append("(");
-                sq.append(ohdmIDString); // id source
-                sq.append(", ");
-                sq.append(memberOHDMObjectIDString); // id target
-                sq.append(", ");
-                if(member instanceof OHDMNode) { // type_target
-                    sq.append(Inter2OHDM.TARGET_POINT);
-                } else if(member instanceof OHDMWay) {
-                    sq.append(Inter2OHDM.TARGET_LINESTRING);
-                } else {
-                    sq.append(Inter2OHDM.TARGET_GEOOBJECT);
-                }
-                sq.append(", ");
-                sq.append(roleName); // role
-                sq.append(", ");
-                sq.append(this.defaultSince); // since
-                sq.append(", ");
-                sq.append(this.defaultUntil); // until
-                sq.append(")"); // end that value set
-            }
-            sq.append(";"); // end that value set
-            
-            if(notFirstSet) {
-                // there is at least one value set - excecute
-                SQLStatementQueue sql = new SQLStatementQueue(this.targetConnection);
-                sql.exec(sq.toString());
-                return true;
-            }
+            this.saveRelationAsRelatedObjects(relation, ohdmIDString);
         } else {
-            // option b) it is a polygone or probably a multipolygon
-            ArrayList<String> polygonIDs = new ArrayList<>();
-            ArrayList<String> polygonWKT = new ArrayList<>();            
-//            relation.fillRelatedGeometries(polygonIDs, polygonWKT);
-            
-            /* we have two list with either references to existing
-             geometries or to string representing geometries which are 
-            to be stored and referenced.
-            */
-            SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
-            for(int i = 0; i < polygonIDs.size(); i++) {
-                String pID = polygonIDs.get(i);
-                if(pID.equalsIgnoreCase("-1")) {
-                    // must create a geometry
-                    sq.append("INSERT INTO ");
-                    sq.append(Inter2OHDM.POLYGONS);
-                    sq.append("INSERT INTO (polygon, source_user_id) VALUES ('");
-                    sq.append(polygonWKT.get(i));
-                    sq.append("', ");
-                    int ohdmUserID = this.getOHDM_ID_ExternalUser(relation);
-                    sq.append(ohdmUserID);
-                    sq.append(") RETURNING ID;");
-                    
-                    ResultSet polygonInsertResult = sq.executeWithResult();
-                    polygonInsertResult.next();
-                    String geomIDString = polygonInsertResult.getBigDecimal(1).toString();
-                    polygonIDs.set(i, geomIDString);
-                }
-            }
+            if(relation.isMultipolygon()) {
+                this.saveRelationAsMultipolygon(relation);
+            } 
         }
 
         return false;
@@ -286,7 +212,8 @@ public class Inter2OHDM extends Importer {
             */
             if(!this.elementHasIdentity(ohdmElement)) {
                 // return dummy OSM Object..
-                return this.getOSMDummyObject_OHDM_ID();
+                // return this.getOSMDummyObject_OHDM_ID();
+                return null;
             }
 
             // create user entry or find user primary key
@@ -383,31 +310,37 @@ public class Inter2OHDM extends Importer {
     private final String defaultUntil = "01-01-2017";
             
     void addValidity(OHDMElement ohdmElement, String ohdmIDString, String ohdmGeomIDString, int externalUserID) throws SQLException {
-        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
+        // what table is reference by id_geometry
+        int targetType = 0;
+        switch(ohdmElement.getGeometryType()) {
+            case POINT: 
+                targetType = Inter2OHDM.TARGET_POINT;
+                break;
+            case LINESTRING: 
+                targetType = Inter2OHDM.TARGET_LINESTRING;
+                break;
+            case POLYGON: 
+                targetType = Inter2OHDM.TARGET_POLYGON;
+                break;
+        }
         
+        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
+        this.addValidity(sq, targetType, ohdmElement.getClassCodeString(), ohdmIDString, ohdmGeomIDString, externalUserID);
+        sq.forceExecute();
+    }
+    
+    void addValidity(SQLStatementQueue sq, int targetType, String classCodeString, String sourceIDString, String targetIDString, int externalUserID) throws SQLException {
         sq.append("INSERT INTO ");
         sq.append(Inter2OHDM.getFullTableName(this.targetSchema, Inter2OHDM.GEOOBJECT_GEOMETRY));
         sq.append(" (type_target, classification_id, id_geoobject_source, id_target, valid_since, valid_until, source_user_id) VALUES (");
 
-        // what table is reference by id_geometry
-        switch(ohdmElement.getGeometryType()) {
-            case POINT: 
-                sq.append(Inter2OHDM.TARGET_POINT);
-                break;
-            case LINESTRING: 
-                sq.append(Inter2OHDM.TARGET_LINESTRING);
-                break;
-            case POLYGON: 
-                sq.append(Inter2OHDM.TARGET_POLYGON);
-                break;
-        }
-        
+        sq.append(targetType);
         sq.append(", ");
-        sq.append(ohdmElement.getClassCodeString());
+        sq.append(classCodeString);
         sq.append(", ");
-        sq.append(ohdmIDString);
+        sq.append(sourceIDString);
         sq.append(", ");
-        sq.append(ohdmGeomIDString);
+        sq.append(targetIDString);
         sq.append(", '");
         sq.append(this.defaultSince);
         sq.append("', '"); 
@@ -415,8 +348,6 @@ public class Inter2OHDM extends Importer {
         sq.append("', "); // until
         sq.append(externalUserID);
         sq.append(");");
-        
-        sq.forceExecute();
     }
     
     void addContentAndURL(OHDMElement ohdmElement, String ohdmIDString) {
@@ -871,6 +802,7 @@ public class Inter2OHDM extends Importer {
   
         } catch (Exception e) {
             System.err.println("fatal: " + e.getLocalizedMessage());
+            e.printStackTrace(System.err);
         }
     }
 
@@ -879,4 +811,129 @@ public class Inter2OHDM extends Importer {
     private String getOSMDummyObject_OHDM_ID() {
         return this.osmDummyObjectOHDM_ID;
     }
+
+    private boolean saveRelationAsRelatedObjects(OHDMRelation relation, 
+            String ohdmIDString) throws SQLException {
+        
+        // get all ohdm ids and store it
+        StringBuilder sq = new StringBuilder();
+
+        /**
+         * INSERT INTO [geoobject_geometry] 
+         * (id_geoobject_source, id_target, type_target, valid_since, 
+         * valid_until VALUES (..)
+         */
+
+        sq.append("INSERT INTO ");
+        sq.append(Inter2OHDM.GEOOBJECT_GEOMETRY);
+        sq.append("(id_geoobject_source, id_target, type_target, role,");
+        sq.append(" valid_since, valid_until) VALUES ");
+
+        boolean notFirstSet = false;
+        for(int i = 0; i < relation.getMemberSize(); i++) {
+            OHDMElement member = relation.getMember(i);
+            String memberOHDMObjectIDString = this.getOHDMObject(member, true);
+            if(memberOHDMObjectIDString == null) continue; // no identity
+
+            // get role of that member in that relation
+            String roleName = relation.getRoleName(i);
+
+            if(notFirstSet) {
+                sq.append(", ");
+            } else {
+                notFirstSet = true;
+            }
+
+            sq.append("(");
+            sq.append(ohdmIDString); // id source
+            sq.append(", ");
+            sq.append(memberOHDMObjectIDString); // id target
+            sq.append(", ");
+            if(member instanceof OHDMNode) { // type_target
+                sq.append(Inter2OHDM.TARGET_POINT);
+            } else if(member instanceof OHDMWay) {
+                sq.append(Inter2OHDM.TARGET_LINESTRING);
+            } else {
+                sq.append(Inter2OHDM.TARGET_GEOOBJECT);
+            }
+            sq.append(", ");
+            sq.append(roleName); // role
+            sq.append(", ");
+            sq.append(this.defaultSince); // since
+            sq.append(", ");
+            sq.append(this.defaultUntil); // until
+            sq.append(")"); // end that value set
+        }
+        sq.append(";"); // end that value set
+
+        if(notFirstSet) {
+            // there is at least one value set - excecute
+            SQLStatementQueue sql = new SQLStatementQueue(this.targetConnection);
+            sql.exec(sq.toString());
+            return true;
+        }
+        return false;
+    }
+
+    private boolean saveRelationAsMultipolygon(OHDMRelation relation) throws SQLException {
+        /* sometimes (actually quite often) relations contain only an inner
+        and outer member but inner comes first which is not compatible with
+        definition of a multipolygon.. We correct that problem here
+        */
+        
+        /* 
+            if a multipolygon relation has only two member, inner and outer,
+            bring them into right order.
+        */
+        if(!relation.checkMultipolygonMemberOrder()) return false;
+        
+        // option b) it is a polygone or probably a multipolygon
+        ArrayList<String> polygonIDs = new ArrayList<>();
+        ArrayList<String> polygonWKT = new ArrayList<>();
+        
+        if(!relation.fillRelatedGeometries(polygonIDs, polygonWKT)) return false;
+
+        /* we have two list with either references to existing
+         geometries or to string representing geometries which are 
+        to be stored and referenced.
+        */
+        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
+        for(int i = 0; i < polygonIDs.size(); i++) {
+            String pID = polygonIDs.get(i);
+            if(pID.equalsIgnoreCase("-1")) {
+                // this geometry is not yet in the database.. insert that polygon
+                sq.append("INSERT INTO ");
+                sq.append(Inter2OHDM.getFullTableName(this.targetSchema, Inter2OHDM.POLYGONS));
+                sq.append(" (polygon, source_user_id) VALUES ('");
+                sq.append(polygonWKT.get(i));
+                sq.append("', ");
+                int ohdmUserID = this.getOHDM_ID_ExternalUser(relation);
+                sq.append(ohdmUserID);
+                sq.append(") RETURNING ID;");
+                
+//                sq.print("saving polygon wkt");
+                
+                ResultSet polygonInsertResult = sq.executeWithResult();
+                polygonInsertResult.next();
+                String geomIDString = polygonInsertResult.getBigDecimal(1).toString();
+                polygonIDs.set(i, geomIDString);
+            }
+        }
+
+        if(polygonIDs.size() < 1) return false;
+        
+        // add relations
+        int targetType = Inter2OHDM.TARGET_POLYGON; // all targets are polygons
+        String classCodeString = relation.getClassCodeString();
+        String sourceIDString = relation.getOHDMObjectID();
+        int externalUserID = this.getOHDM_ID_ExternalUser(relation);
+        
+        // void addValidity(int targetType, String classCodeString, String sourceIDString, String targetIDString, int externalUserID) throws SQLException {
+        for(String targetIDString : polygonIDs) {
+            this.addValidity(sq, targetType, classCodeString, sourceIDString, targetIDString, externalUserID);
+        }
+        sq.forceExecute();
+        return true;
+    }
 }
+

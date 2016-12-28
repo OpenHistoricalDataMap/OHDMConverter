@@ -32,44 +32,57 @@ public class OHDMRelation extends OHDMElement {
         return this.members.size();
     }
     
-    void fillRelatedGeometries(ArrayList<String> polygonIDs, ArrayList<String> polygonWKT) {
+    boolean fillRelatedGeometries(ArrayList<String> polygonIDs, ArrayList<String> polygonWKT) {
         // now... we are going to construct a wkt out of OSM multipolygon... good luck :/
         
         // create a polygon with hole
         // POLYGON ((10 10, 110 10, 110 110, 10 110), (20 20, 20 30, 30 30, 30 20), (40 20, 40 30, 50 30, 50 20))
 
-        if(this.getOSMIDString().equalsIgnoreCase("3323434")) {
+        if(this.getOSMIDString().equalsIgnoreCase("3323433")) {
             int debuggingStop = 42;
         }
         
         try {
             StringBuilder wktBuilder = null;
-            OHDMWay way;
+            OHDMWay way = null;
             OHDMWay next = (OHDMWay) this.members.get(0);
             this.intermediateDB.addNodes2OHDMWay(next); // fill way with nodes
             
-            int i = 1;
+            int i = 0;
             boolean wayOutside;
             boolean nextOutside = true;
-            String firstNode = null;
+            OHDMNode firstNode = null;
             
-            while(i < memberRoles.size()) {
+            boolean lastLoop = false;
+            
+            while(!lastLoop) {
+                // shift
                 way = next; // shift
                 wayOutside = nextOutside;
-                
-                next = (OHDMWay) members.get(i++);
-                this.intermediateDB.addNodes2OHDMWay(next);
-                
-                nextOutside = this.memberRoles.get(i).equalsIgnoreCase(OHDMRelation.OUTER_ROLE);
+
+                // luck ahead if possible
+                if(++i < memberRoles.size()) {
+                    next = (OHDMWay) members.get(i);
+                    this.intermediateDB.addNodes2OHDMWay(next);
+                    nextOutside = this.memberRoles.get(i).equalsIgnoreCase(OHDMRelation.OUTER_ROLE);
+                } else {
+                    // no more elements in queue - process final one
+                    lastLoop = true;
+                    nextOutside = true;
+                }
                 
                 if(wayOutside) {
                     // just a sequence of a previous non polygon way?
                     if(wktBuilder != null) {
+                        // there a previous points
+                        wktBuilder.append(", ");
                         if(this.addWayToPolygon(firstNode, wktBuilder, way)) {
                             /* added and polygon is finished
                              is there a hole?
                             */
                             firstNode = null; // remember.. polygon is closed
+                            if(lastLoop) break; // done here
+                            
                             if(nextOutside) {
                                 // no hole
                                 polygonIDs.add("-1");
@@ -84,7 +97,7 @@ public class OHDMRelation extends OHDMElement {
                         // no previous ways in wkt
                         if(way.isPolygon()) {
                             // is a polygon by itself.. has it a hole ?
-                            if(nextOutside) { 
+                            if(nextOutside || lastLoop) { 
                                 /* we are done here. It is a polygon followed 
                                 by another one outside with no previous polygons
                                 */
@@ -103,12 +116,17 @@ public class OHDMRelation extends OHDMElement {
                             }
                         } else {
                             /* no polygon but first way outside
-                               start new polygone
+                               start new polygon
                             */
+                            if(lastLoop) {
+                                // unfinished polygon
+                                this.failed(wktBuilder, "2");
+                            }
+                            
                             wktBuilder = new StringBuilder();
                             wktBuilder.append("(");
                             // remember first node of this not yet closed polygon
-                            firstNode = way.getNodeIter().next().getWKTGeometry();
+                            firstNode = way.getNodeIter().next();
                             this.addWayToPolygon(firstNode, wktBuilder, way);
                         }
                     }
@@ -117,11 +135,12 @@ public class OHDMRelation extends OHDMElement {
                     // in any case.. a wkt string builder exist
                     if(firstNode != null) {
                         // this polygon is a sequel.. add it
+                        wktBuilder.append(", ");
                         if(this.addWayToPolygon(firstNode, wktBuilder, way)) {
                             // polygon closed
                             firstNode = null;
                             
-                            if(nextOutside) {
+                            if(nextOutside || lastLoop) {
                                 // whole polygon done
                                 polygonIDs.add("-1");
                                 polygonWKT.add(wktBuilder.toString());
@@ -135,9 +154,12 @@ public class OHDMRelation extends OHDMElement {
                             this.addWayToPolygon(null, wktBuilder, way);
                             wktBuilder.append(") ");
                         } else {
+                            if(lastLoop) { // cannot open a new polygon
+                                this.failed(wktBuilder, "3");
+                            }
                             // start polygon inside
                             wktBuilder.append(", ( ");
-                            firstNode = way.getNodeIter().next().getWKTGeometry();
+                            firstNode = way.getNodeIter().next();
                             this.addWayToPolygon(firstNode, wktBuilder, way);
                         }
                     }
@@ -145,17 +167,17 @@ public class OHDMRelation extends OHDMElement {
             }
             
             if(firstNode != null) {
-                // failure... still a polygon open..
-                throw new SQLException("malformed polygon");
+                this.failed(wktBuilder, "after");
             }
             
             if(wktBuilder != null && wktBuilder.length() > 0) {
                 // save final polygon.. it is a polygon with hole
                 polygonIDs.add("-1");
-                polygonWKT.add(wktBuilder.toString());
+                polygonWKT.add("POLYGON(" + wktBuilder.toString() + ")");
             }
         } catch (SQLException ex) {
             System.err.println("failure during constructing polygons: " + ex.getMessage());
+            return false;
         }
         
         System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
@@ -166,6 +188,15 @@ public class OHDMRelation extends OHDMElement {
         }
         System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         
+        return true;
+    }
+    
+    private void failed(StringBuilder wktBuilder, String s) throws SQLException {
+        String w = "";
+        if(wktBuilder != null) {
+            w = wktBuilder.toString();
+        }
+        throw new SQLException("malformed polygon:  " + "(" + s + ")" + this.getOSMIDString() + "\n" + w);
     }
 
     private String wkt = null;
@@ -193,21 +224,20 @@ public class OHDMRelation extends OHDMElement {
         
     }
     
-    private boolean addWayToPolygon(String firstNode, StringBuilder wkt, OHDMWay way) throws SQLException {
-        // firstNode == null .. just add long / lat
-        Iterator<OHDMNode> nodeIter = way.getNodeIter();
-        while(nodeIter.hasNext()) {
-            OHDMNode node = nodeIter.next();
-            wkt.append(node.getLatitude());
-            wkt.append(" ");
-            wkt.append(node.getLongitude());
-            
-            if(firstNode != null && firstNode.equalsIgnoreCase(node.getWKTGeometry())) {
-                // finished
-                wkt.append(") ");
-                return true;
-            }
+    private boolean addWayToPolygon(OHDMNode firstNode, StringBuilder wkt, OHDMWay way) throws SQLException {
+        // append all way points to wkt
+        wkt.append(way.getWKTPointsOnly());
+        
+        // get last point
+        OHDMNode lastWayNode = way.getLastPoint();
+        
+        if(lastWayNode != null && lastWayNode.identical(firstNode)) {
+            // polygon finished
+            wkt.append(") ");
+            return true;
         }
+        
+        // not closed
         return false;
     }
     
@@ -277,5 +307,65 @@ public class OHDMRelation extends OHDMElement {
         this.polygonChecked = true;
         return this.isPolygon;
     }
+    
+    private boolean isMultipolygon = false;
+    private boolean isMultipolygonChecked = false;
+    
+    boolean isMultipolygon() {
+        if(!this.isMultipolygonChecked) {
+            this.isMultipolygonChecked = true;
+            
+            if(!this.isPolygon()) { // no polygon at all .. false
+                this.isMultipolygon = false;
+            }
+            
+            String relationType = this.getType();
+            if(relationType != null && relationType.equalsIgnoreCase("multipolygon")) {
+                this.isMultipolygon = true;
+            }
+        }
+        
+        return this.isMultipolygon;
+    }
 
+    /** 
+        if a multipolygon relation has only two member, inner and outer,
+        bring them into right order.
+    */
+    boolean checkMultipolygonMemberOrder() {
+        if(!this.isMultipolygon) return false;
+        
+        // only two members?
+        if(this.memberRoles.size() != 2) return true; // hope the best
+        
+        // one is inner, one is outer
+        
+        // if first is outer.. ok, next can be outer or inner both ok
+        if(this.memberRoles.get(0).equalsIgnoreCase("outer")) return true;
+        
+        // first is inner
+        if(this.memberRoles.get(0).equalsIgnoreCase("inner")) {
+            // that's not even a multipolygon!!
+            this.isMultipolygon = false;
+            this.isMultipolygonChecked = true;
+            return false;
+        } 
+        
+        // if only two member.. I can fix it
+        if(this.memberRoles.size() != 2) { // more than two
+            System.err.println("malformed multipolygon: starts with inner member and has more than two member at all: " + this.getOSMIDString());
+            return false;
+        } 
+        
+        // fix it by switching member positions
+        String firstRole = this.memberRoles.get(0);
+        this.memberRoles.set(0, this.memberRoles.get(1));
+        this.memberRoles.set(1, firstRole);
+        
+        OHDMElement firstMember = this.members.get(0);
+        this.members.set(0, this.members.get(1));
+        this.members.set(1, firstMember);
+        
+        return true;
+    }
 }

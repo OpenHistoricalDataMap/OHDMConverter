@@ -131,4 +131,15 @@ public class OHDMWay extends OHDMElement {
         this.addMember(node, this.nodes, this.nodeIDList);
 
     }
+
+    OHDMNode getLastPoint() {
+        if(this.nodes == null || this.nodes.size() < 1) return null;
+        
+        if(this.isPolygon) {
+            // last point is first point in a polygon
+            return this.nodes.get(0);
+        } else {
+            return this.nodes.get(this.nodes.size()-1);
+        }
+    }
 }

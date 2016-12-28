@@ -46,7 +46,7 @@ public class OSM2Inter {
       
       File osmFile = new File(osmFileName);
 
-      MyLogger.getInstance().print(0, "+++ OSM Update WIzard +++", true);
+      MyLogger.getInstance().print(0, "Start importing to intermediate DB from OSM file", true);
   
     
     String parameterFile = INTER_DB_SETTINGS_FILENAME;

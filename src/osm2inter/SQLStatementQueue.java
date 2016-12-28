@@ -114,4 +114,9 @@ public class SQLStatementQueue {
         this.debugLastStatement = this.sqlQueue.toString();
         this.sqlQueue = null;
     }
+
+    public void print(String message) {
+        System.out.println(message);
+        System.out.println(this.sqlQueue.toString());
+    }
 }

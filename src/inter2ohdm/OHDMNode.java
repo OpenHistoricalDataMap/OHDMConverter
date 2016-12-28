@@ -44,4 +44,12 @@ public class OHDMNode extends OHDMElement {
     GeometryType getGeometryType() {
         return GeometryType.POINT;
     }
+
+    boolean identical(OHDMNode node) {
+        if(node == null) return false;
+        return (
+            node.getLatitude().equals(this.getLatitude()) &&
+            node.getLongitude().equals(this.getLongitude())
+        );
+    }
 }

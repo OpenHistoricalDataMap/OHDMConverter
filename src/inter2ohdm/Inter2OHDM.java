@@ -59,8 +59,8 @@ public class Inter2OHDM extends Importer {
      */
     @Override
     public boolean importRelation(OHDMRelation relation) throws SQLException {
-        // debug
-        if(relation.getOSMIDString().equalsIgnoreCase("5767990")) {
+        // debug stop
+        if(relation.getOSMIDString().equalsIgnoreCase("3323434")) {
             int i = 42;
         }
         
@@ -77,11 +77,13 @@ public class Inter2OHDM extends Importer {
             switch(relation.getClassName()) {
                 case "building":
                     ohdmIDString = this.getOSMDummyObject_OHDM_ID();
-                    relation.setOHDMObjectID(ohdmIDString);
             }
         }
         
         if(ohdmIDString == null) return false;
+        
+        // remember it ohdm incarnation...
+        relation.setOHDMObjectID(ohdmIDString);
         
         /* now there are two options:
         a) that relation represents a multigeometry (in most cases)
@@ -230,25 +232,24 @@ public class Inter2OHDM extends Importer {
                 refered to the general dummy OHDM object
                 */
                 if(ohdmElement instanceof OHDMWay && !ohdmElement.isPart()) {
-                    return this.getOSMDummyObject_OHDM_ID();
+                    ohdmIDString = this.getOSMDummyObject_OHDM_ID();
+                    ohdmElement.setOHDMObjectID(ohdmIDString);
+                    return ohdmIDString;
                 } else {
                     return null;
                 }
+            } else {
+                // create user entry or find user primary key
+                String externalUserID = ohdmElement.getUserID();
+                String externalUsername = ohdmElement.getUsername();
+
+                int id_ExternalUser = this.getOHDM_ID_ExternalUser(externalUserID, 
+                        externalUsername);
+
+                ohdmIDString =  this.addOHDMObject(ohdmElement, id_ExternalUser);
             }
-
-            // create user entry or find user primary key
-            String externalUserID = ohdmElement.getUserID();
-            String externalUsername = ohdmElement.getUsername();
-
-            int id_ExternalUser = this.getOHDM_ID_ExternalUser(externalUserID, 
-                    externalUsername);
-
-            // create OHDM object
-            String ohdmObjectIDString = this.addOHDMObject(ohdmElement, id_ExternalUser);
-            
-            ohdmElement.setOHDM_IDs(ohdmObjectIDString, null, persist);
         
-            return ohdmObjectIDString;
+            return ohdmIDString;
         }
         catch(Exception e) {
             System.err.println("failure during node import: " + e.getMessage());
@@ -822,8 +823,8 @@ public class Inter2OHDM extends Importer {
             ExportIntermediateDB exporter = 
                     new ExportIntermediateDB(sourceConnection, sourceSchema, ohdmImporter);
             
-            exporter.processNodes();
-            exporter.processWays();
+//            exporter.processNodes();
+//            exporter.processWays();
             exporter.processRelations();
             
             System.out.println(exporter.getStatistics());
@@ -954,6 +955,10 @@ public class Inter2OHDM extends Importer {
         int targetType = Inter2OHDM.TARGET_POLYGON; // all targets are polygons
         String classCodeString = relation.getClassCodeString();
         String sourceIDString = relation.getOHDMObjectID();
+        if(sourceIDString == null) {
+            // debug stop
+            int i = 42;
+        }
         int externalUserID = this.getOHDM_ID_ExternalUser(relation);
         
         // void addValidity(int targetType, String classCodeString, String sourceIDString, String targetIDString, int externalUserID) throws SQLException {

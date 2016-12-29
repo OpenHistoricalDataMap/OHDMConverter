@@ -39,7 +39,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         
         int number = 0;
         int notPartNumber = 0;
-        System.out.println("Nodes... printing a star after 100 nodes");
+        System.out.println("Nodes... print a star after 100 nodes");
         try {
             PreparedStatement stmt = this.sourceConnection.prepareStatement(sql.toString());
             ResultSet qResultNode = stmt.executeQuery();
@@ -72,7 +72,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         
         int number = 0;
         int notPartNumber = 0;
-        System.out.println("Ways... printing a star after 100 ways");
+        System.out.println("Ways... print a star after 100 ways");
         try {
             PreparedStatement stmt = this.sourceConnection.prepareStatement(sql.toString());
             ResultSet qResultWay = stmt.executeQuery();
@@ -135,7 +135,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         sql.append(Importer.getFullTableName(this.schema, RELATIONTABLE));
         sql.append(";");
         
-        System.out.println("Relations... printing a star after 100 relations");
+        System.out.println("Relations... print a star after 100 relations");
         int number = 0;
         boolean debug_alreadyPrinted = false;
         try {

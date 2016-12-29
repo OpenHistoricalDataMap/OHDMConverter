@@ -190,30 +190,41 @@ public abstract class OHDMElement extends AbstractElement {
         return idList;
     }
     
-    protected int addMember(OHDMElement newElement, ArrayList memberList, ArrayList<String> idList) {
+    protected int addMember(OHDMElement newElement, ArrayList memberList, ArrayList<String> idList, boolean setall) {
         String idString = newElement.getOSMIDString();
         
         int position = idList.indexOf(idString);
-        /* pay attention! a node can be appeare more than once on a string!
-        indexof would produce the smallest index each time. Thus, we have
-        to overwrite each entry after its usage
-         */
-        idList.set(position, "-1");
-        
-        if (position > -1) {
-            // add
-            if (position > memberList.size() - 1) {
-                // list to short?? that's a failure
-                System.err.print("OHDMElement.addMember(): memberList must have same size as memberIDList.. run into exception");
+        while(position > -1) {
+            /* pay attention! a node can be appeare more than once on a string!
+            indexof would produce the smallest index each time. Thus, we have
+            to overwrite each entry after its usage
+             */
+            idList.set(position, "-1");
+
+            if (position > -1) {
+                // add
+                if (position > memberList.size() - 1) {
+                    // list to short?? that's a failure
+                    System.err.print("OHDMElement.addMember(): memberList must have same size as memberIDList.. run into exception");
+                }
+
+                memberList.set(position, newElement);
+            } else {
+                // position not found?? TODO
+                System.err.print("OHDMElement.addMember(): member not found in id list - must not happen");
             }
             
-            memberList.set(position, newElement);
-        } else {
-            // position not found?? TODO
-            System.err.print("OHDMElement.addMember(): member not found in id list - must not happen");
+            // a member can appear more than once.. set all slots?
+            if(setall) {
+                // find next position, if any
+                position = idList.indexOf(idString);
+            } else {
+                // only one insert, we are done here
+                return position;
+            }
         }
         
-        return position;
+        return position; // last position
     }
     
     boolean isPolygon() {

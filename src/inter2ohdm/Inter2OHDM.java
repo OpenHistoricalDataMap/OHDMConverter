@@ -60,7 +60,7 @@ public class Inter2OHDM extends Importer {
     @Override
     public boolean importRelation(OHDMRelation relation) throws SQLException {
         // debug stop
-        if(relation.getOSMIDString().equalsIgnoreCase("1611988")) {
+        if(relation.getOSMIDString().equalsIgnoreCase("2376994")) {
             int i = 42;
         }
         
@@ -410,6 +410,12 @@ public class Inter2OHDM extends Importer {
      * @return ohdm_id as string
      */
     public String importOHDMElement(OHDMElement ohdmElement) {
+        String osmID = ohdmElement.getOSMIDString();
+        if(osmID.equalsIgnoreCase("188276804") || osmID.equalsIgnoreCase("301835391")) {
+            // debug break
+            int i = 42;
+        }
+        
         ArrayList<TagElement> tags = ohdmElement.getTags();
         
         try {
@@ -448,7 +454,7 @@ public class Inter2OHDM extends Importer {
             return ohdmObjectIDString;
         }
         catch(Exception e) {
-            System.err.println("failure during node import: " + e.getMessage());
+            System.err.println("failure during import of intermediate object: " + e.getMessage());
         }
         
         return null;
@@ -824,8 +830,8 @@ public class Inter2OHDM extends Importer {
             ExportIntermediateDB exporter = 
                     new ExportIntermediateDB(sourceConnection, sourceSchema, ohdmImporter);
             
-//            exporter.processNodes();
-//            exporter.processWays();
+            exporter.processNodes();
+            exporter.processWays();
             exporter.processRelations();
             
             System.out.println(exporter.getStatistics());

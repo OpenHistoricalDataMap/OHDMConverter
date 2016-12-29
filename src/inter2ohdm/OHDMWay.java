@@ -123,6 +123,8 @@ public class OHDMWay extends OHDMElement {
             String lastElement = this.nodeIDList.get(this.nodeIDList.size() - 1);
             if (firstElement.equalsIgnoreCase(lastElement)) {
                 this.isPolygon = true;
+                // remove last entry in idlist
+                this.nodeIDList.set(this.nodeIDList.size()-1, "-1");
             }
             
             // setup node list
@@ -136,10 +138,9 @@ public class OHDMWay extends OHDMElement {
             for(int i = 0; i < length; i++) {
                 this.nodes.add(null);
             }
-            
         }
         
-        this.addMember(node, this.nodes, this.nodeIDList);
+        this.addMember(node, this.nodes, this.nodeIDList, true);
     }
 
     OHDMNode getLastPoint() {

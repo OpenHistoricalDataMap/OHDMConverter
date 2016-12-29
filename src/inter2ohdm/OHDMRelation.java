@@ -81,7 +81,6 @@ public class OHDMRelation extends OHDMElement {
                              is there a hole?
                             */
                             firstNode = null; // remember.. polygon is closed
-                            if(lastLoop) break; // done here
                             
                             if(nextOutside) {
                                 // no hole
@@ -92,6 +91,7 @@ public class OHDMRelation extends OHDMElement {
                                 // there is a hole.. start hole wkt
                                 wktBuilder.append(", (");
                             }
+                            if(lastLoop) break; // done here
                         }
                     } else {
                         // no previous ways in wkt
@@ -282,7 +282,7 @@ public class OHDMRelation extends OHDMElement {
             }
         }
 
-        int position = this.addMember(element, this.members, this.memberIDList);
+        int position = this.addMember(element, this.members, this.memberIDList, false);
 
         // remember role of this member
         this.memberRoles.set(position, roleName);

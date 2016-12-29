@@ -90,14 +90,14 @@ public class OHDMWay extends OHDMElement {
             }
 
             OHDMNode node = nodeIter.next();
-            node.getLatitude();
+//            node.getLatitude();
             
             this.appendAllLongLat(wkt, node);
         }
     }
     
     private void appendAllLongLat(StringBuilder wkt, OHDMNode node) {
-            node.getLatitude();
+//            node.getLatitude();
 
             wkt.append(node.getLatitude());
             wkt.append(" ");
@@ -115,21 +115,31 @@ public class OHDMWay extends OHDMElement {
 
     void addNode(OHDMNode node) {
         if (this.nodes == null) {
-            this.nodes = new ArrayList<>();
-            
             // setup position list
             this.nodeIDList = this.setupIDList(this.nodeIDs);
-            
+
             // is it a ring?
             String firstElement = this.nodeIDList.get(0);
             String lastElement = this.nodeIDList.get(this.nodeIDList.size() - 1);
             if (firstElement.equalsIgnoreCase(lastElement)) {
                 this.isPolygon = true;
             }
+            
+            // setup node list
+            /* if this is a polygon, one slot can be spared because copy of
+            first node is not kept in this list
+            */
+            int length = this.isPolygon ? this.nodeIDList.size() - 1 : this.nodeIDList.size();
+            this.nodes = new ArrayList<>(length);
+            
+            // dummy must be added..
+            for(int i = 0; i < length; i++) {
+                this.nodes.add(null);
+            }
+            
         }
-
+        
         this.addMember(node, this.nodes, this.nodeIDList);
-
     }
 
     OHDMNode getLastPoint() {

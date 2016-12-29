@@ -60,7 +60,7 @@ public class Inter2OHDM extends Importer {
     @Override
     public boolean importRelation(OHDMRelation relation) throws SQLException {
         // debug stop
-        if(relation.getOSMIDString().equalsIgnoreCase("3323434")) {
+        if(relation.getOSMIDString().equalsIgnoreCase("1611988")) {
             int i = 42;
         }
         
@@ -76,6 +76,7 @@ public class Inter2OHDM extends Importer {
             
             switch(relation.getClassName()) {
                 case "building":
+                case "landuse":
                     ohdmIDString = this.getOSMDummyObject_OHDM_ID();
             }
         }

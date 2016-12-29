@@ -167,7 +167,7 @@ public class OHDMRelation extends OHDMElement {
             }
             
             if(firstNode != null) {
-                this.failed(wktBuilder, "after");
+                this.failed(wktBuilder, "polygon not closed");
             }
             
             if(wktBuilder != null && wktBuilder.length() > 0) {
@@ -179,13 +179,13 @@ public class OHDMRelation extends OHDMElement {
             return false;
         }
         
-//        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-//        System.out.println("osmid: " + this.getOSMIDString());
-//        for(int i=0; i<polygonIDs.size();i++) {
-//            System.out.println("id: " + polygonIDs.get(i));
-//            System.out.println("wktstring:\n" + polygonWKT.get(i));
-//        }
-//        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        System.out.println("osmid: " + this.getOSMIDString());
+        for(int i=0; i<polygonIDs.size();i++) {
+            System.out.println("id: " + polygonIDs.get(i));
+            System.out.println("wktstring:\n" + polygonWKT.get(i));
+        }
+        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         
         return true;
     }
@@ -268,20 +268,24 @@ public class OHDMRelation extends OHDMElement {
     
     void addMember(OHDMElement element, String roleName) {
         if (this.members == null) {
-            this.members = new ArrayList<>();
-            
             // setup position list
             this.memberIDList = this.setupIDList(this.memberIDs);
-            this.memberRoles = new ArrayList<>();
+            
+            // setup other lists with same size
+            this.memberRoles = new ArrayList<>(this.memberIDList.size());
+            this.members = new ArrayList<>(this.memberIDList.size());
+            
+            // dummys must be added..
+            for(int i = 0; i < this.memberIDList.size(); i++) {
+                this.members.add(null);
+                this.memberRoles.add(null);
+            }
         }
 
         int position = this.addMember(element, this.members, this.memberIDList);
-        
-        if(position > this.memberRoles.size() -1) {
-            this.memberRoles.add(roleName);
-        } else {
-            this.memberRoles.add(position, roleName);
-        }
+
+        // remember role of this member
+        this.memberRoles.set(position, roleName);
     }
     
     public static final String INNER_ROLE = "inner";

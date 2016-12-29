@@ -199,14 +199,18 @@ public abstract class OHDMElement extends AbstractElement {
         to overwrite each entry after its usage
          */
         idList.set(position, "-1");
+        
         if (position > -1) {
+            // add
             if (position > memberList.size() - 1) {
-                memberList.add(newElement);
-            } else {
-                memberList.add(position, newElement);
+                // list to short?? that's a failure
+                System.err.print("OHDMElement.addMember(): memberList must have same size as memberIDList.. run into exception");
             }
+            
+            memberList.set(position, newElement);
         } else {
-            // TODO!
+            // position not found?? TODO
+            System.err.print("OHDMElement.addMember(): member not found in id list - must not happen");
         }
         
         return position;

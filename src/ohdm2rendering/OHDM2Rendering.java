@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import osm.OSMClassification;
-import osm2inter.SQLStatementQueue;
+import util.SQLStatementQueue;
 import util.Parameter;
 
 /**

@@ -10,7 +10,7 @@ import static osm2inter.SQLImportCommandBuilder.WAYMEMBER;
 import static osm2inter.SQLImportCommandBuilder.WAYTABLE;
 import static osm2inter.SQLImportCommandBuilder.NODETABLE;
 import static osm2inter.SQLImportCommandBuilder.RELATIONMEMBER;
-import osm2inter.SQLStatementQueue;
+import util.SQLStatementQueue;
 
 /**
  *

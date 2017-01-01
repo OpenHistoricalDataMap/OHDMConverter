@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import osm2inter.AbstractElement;
-import osm2inter.SQLStatementQueue;
+import util.SQLStatementQueue;
 import osm2inter.TagElement;
 
 /**

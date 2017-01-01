@@ -1,5 +1,6 @@
 package osm2inter;
 
+import util.SQLStatementQueue;
 import osm.OSMClassification;
 import java.sql.Connection;
 import java.sql.DriverManager;

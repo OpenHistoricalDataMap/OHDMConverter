@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import osm.OSMClassification;
-import osm2inter.SQLStatementQueue;
+import util.SQLStatementQueue;
 import osm2inter.TagElement;
 import util.Parameter;
 

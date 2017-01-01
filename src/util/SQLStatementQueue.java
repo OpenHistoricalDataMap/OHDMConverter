@@ -1,10 +1,17 @@
-package osm2inter;
+package util;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import osm2inter.MyLogger;
 
 /**
  *
@@ -20,6 +27,7 @@ public class SQLStatementQueue {
     private StringBuilder sqlQueue;
     
     private int number = 0;
+    private File recordFile = null;
     
     public SQLStatementQueue(Connection connection, int maxStatements, MyLogger logger) {
         this.connection = connection;
@@ -32,7 +40,13 @@ public class SQLStatementQueue {
     }
     
     public SQLStatementQueue(Connection connection) {
+        this(connection, (File)null);
+    }
+    
+    public SQLStatementQueue(Connection connection, File recordFile) {
         this(connection, DEFAULT_MAX_SQL_STATEMENTS, null);
+        
+        this.recordFile = recordFile;
     }
     
     /**
@@ -68,26 +82,54 @@ public class SQLStatementQueue {
         }
     }
     
+    private boolean done = true;
+    public boolean finished() {
+        return this.done;
+    }
+    
+    private SQLExecute execThread = null;
+    
+    public void forceExecute(String recordEntry) 
+            throws SQLException, IOException {
+        
+        this.forceExecute(true, recordEntry);
+    }
+            
+    public void forceExecute(boolean parallel, String recordEntry) 
+            throws SQLException, IOException {
+        
+        if(this.sqlQueue == null || this.sqlQueue.length() < 1) {
+            return;
+        }
+        
+        if(!parallel) {
+            this.forceExecute();
+            // that point is reached if no sql exception has been thrown. write log
+            this.writeLog(recordEntry);
+        } else {
+            // create thread
+            this.execThread = new SQLExecute(this.connection, 
+                    this.sqlQueue, recordEntry, this);
+            
+            this.execThread.start();
+            this.resetStatement();
+        }
+    }
+    
+    void writeLog(String recordEntry) throws FileNotFoundException, IOException {
+        if(this.recordFile == null) return;
+        
+        FileWriter fw = new FileWriter(this.recordFile);
+        fw.write(recordEntry);
+    }
+
+    
     public void forceExecute() throws SQLException {
         if(this.sqlQueue == null) return;
         
-        PreparedStatement stmt = null;
-        try {
-            stmt = connection.prepareStatement(this.sqlQueue.toString());
-            stmt.execute();
-            stmt.close();
-        } catch (SQLException ex) {
-            if(this.logger != null) {
-                logger.print(1, ex.getLocalizedMessage(), true);
-                logger.print(4, this.sqlQueue.toString());
-            } else {
-                System.err.println(ex.getMessage());
-            }
-        }
-        finally {
-            stmt.close();
-        }
-        
+        SQLExecute.doExec(this.connection, this.sqlQueue);
+
+        // no exeption
         this.resetStatement();
     }
     

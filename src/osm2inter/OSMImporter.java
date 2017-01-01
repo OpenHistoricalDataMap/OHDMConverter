@@ -1,5 +1,6 @@
 package osm2inter;
 
+import java.io.File;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,8 +30,8 @@ public class OSMImporter extends DefaultHandler {
 
   ImportCommandBuilder builder;
 
-  public OSMImporter(Parameter parameter) throws Exception {
-    this.builder = SQLImportCommandBuilder.getInstance(parameter);
+  public OSMImporter(Parameter parameter, File recordFile) throws Exception {
+    this.builder = SQLImportCommandBuilder.getInstance(parameter,recordFile);
   }
 
   private HashMap<String, String> parseTagAttributes(Attributes attributes) {
@@ -52,7 +53,7 @@ public class OSMImporter extends DefaultHandler {
   public void endDocument() {
       try {
           builder.flush();
-      } catch (SQLException ex) {
+      } catch (Exception ex) {
           System.err.printf(ex.getMessage());
       }
     builder.printStatus();
@@ -180,7 +181,7 @@ public class OSMImporter extends DefaultHandler {
           //System.out.print("don't import: " + qName + ", ");
         }
       }
-    catch(SQLException e) {
+    catch(Exception e) {
         System.err.println(e.getMessage());
     }
   }

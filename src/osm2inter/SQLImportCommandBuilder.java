@@ -1,5 +1,7 @@
 package osm2inter;
 
+import java.io.File;
+import java.io.IOException;
 import util.SQLStatementQueue;
 import osm.OSMClassification;
 import java.sql.Connection;
@@ -23,105 +25,104 @@ import util.Parameter;
  */
 public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
 
-  public static final String TAGTABLE = "Tags";
-  public static final String NODETABLE = "Nodes";
-  public static final String WAYTABLE = "Ways";
-  public static final String RELATIONTABLE = "Relations";
-  public static final String RELATIONMEMBER = "RelationMember";
-  public static final String CLASSIFICATIONTABLE = "Classification";
-  public static final String WAYMEMBER = "WayNodes";
-  public static final String MAX_ID_SIZE = "10485760";
+    public static final String TAGTABLE = "Tags";
+    public static final String NODETABLE = "Nodes";
+    public static final String WAYTABLE = "Ways";
+    public static final String RELATIONTABLE = "Relations";
+    public static final String RELATIONMEMBER = "RelationMember";
+    public static final String CLASSIFICATIONTABLE = "Classification";
+    public static final String WAYMEMBER = "WayNodes";
+    public static final String MAX_ID_SIZE = "10485760";
 
-  private boolean n = true;
-  private boolean w = true;
-  private boolean r = true;
+    private boolean n = true;
+    private boolean w = true;
+    private boolean r = true;
 
-  private long nodesNew = 0;
-  private long nodesChanged = 0;
-  private long nodesExisting = 0;
+    private long nodesNew = 0;
+    private long nodesChanged = 0;
+    private long nodesExisting = 0;
 
-  private long waysNew = 0;
-  private long waysChanged = 0;
-  private long waysExisting = 0;
+    private long waysNew = 0;
+    private long waysChanged = 0;
+    private long waysExisting = 0;
 
-  private long relNew = 0;
-  private long relChanged = 0;
-  private long relExisting = 0;
+    private long relNew = 0;
+    private long relChanged = 0;
+    private long relExisting = 0;
 
-  private int rCount = 10;
-  private int wCount = 10;
-  private String user;
-  private String pwd;
-  private String serverName;
-  private String portNumber;
-  private String path;
-  private String schema;
-  private Connection targetConnection;
+    private int rCount = 10;
+    private int wCount = 10;
+    private String user;
+    private String pwd;
+    private String serverName;
+    private String portNumber;
+    private String path;
+    private String schema;
+    private Connection targetConnection;
 
-  private String importMode = "initial_import";
-  private Integer tmpStorageSize;
+    private String importMode = "initial_import";
+    private Integer tmpStorageSize;
 
-  private final MyLogger logger;
-  private final Classification classification;
-  private final Config config;
-
-  private static SQLImportCommandBuilder instance = null;
-
-  public static SQLImportCommandBuilder getInstance(Parameter parameter) {
-    if (instance == null) {
-      instance = new SQLImportCommandBuilder(parameter);
-    }
-    return instance;
-  }
+    private final MyLogger logger;
+    private final Classification classification;
+    private final Config config;
+    
     private final Parameter parameter;
+    private final File recordFile;
 
-  private SQLImportCommandBuilder(Parameter parameter) {
-    this.parameter = parameter;
-    this.config = Config.getInstance();
-    this.logger = MyLogger.getInstance();
-    this.classification = Classification.getInstance();
-//    importMode = config.getValue("importMode");
-//    tmpStorageSize = Integer.valueOf(config.getValue("tmpStorageSize")) - 1;
-    tmpStorageSize = 10000 - 1;
+    private static SQLImportCommandBuilder instance = null;
+
+    public static SQLImportCommandBuilder getInstance(Parameter parameter, File recordFile) {
+        if (instance == null) {
+            instance = new SQLImportCommandBuilder(parameter, recordFile);
+        }
+        return instance;
+    }
+
+    private SQLImportCommandBuilder(Parameter parameter, File recordFile) {
+        this.parameter = parameter;
+        this.config = Config.getInstance();
+        this.logger = MyLogger.getInstance();
+        this.classification = Classification.getInstance();
+        this.recordFile = recordFile;
+        
+        // remove that line soon
+        this.tmpStorageSize = 10000 - 1;
     
     try {
-//      this.user = config.getValue("db_user");
-//      this.pwd = config.getValue("db_password");
-//      this.serverName = config.getValue("db_serverName");
-//      this.portNumber = config.getValue("db_portNumber");
-//      this.path = config.getValue("db_path");
-//      this.schema = config.getValue("db_schema");
+        this.user = this.parameter.getUserName();
+        this.pwd = this.parameter.getPWD();
+        this.serverName = this.parameter.getServerName();
+        this.portNumber = this.parameter.getPortNumber();
+        this.path = this.parameter.getdbName();
+        this.schema = this.parameter.getSchema();
       
-      this.user = this.parameter.getUserName();
-      this.pwd = this.parameter.getPWD();
-      this.serverName = this.parameter.getServerName();
-      this.portNumber = this.parameter.getPortNumber();
-      this.path = this.parameter.getdbName();
-      this.schema = this.parameter.getSchema();
-      
-      Properties connProps = new Properties();
-      connProps.put("user", this.user);
-      connProps.put("password", this.pwd);
-      this.targetConnection = DriverManager.getConnection(
-              "jdbc:postgresql://" + this.serverName
-              + ":" + this.portNumber + "/" + this.path, connProps);
-      if (!this.schema.equalsIgnoreCase("")) {
-        StringBuilder sql = new StringBuilder("SET search_path = ");
-        sql.append(this.schema);
-        try (PreparedStatement stmt = targetConnection.prepareStatement(sql.toString())) {
-          stmt.execute();
-          logger.print(4, "schema altered");
-        } catch (SQLException e) {
-          logger.print(4, "failed to alter schema: " + e.getLocalizedMessage());
+        Properties connProps = new Properties();
+        connProps.put("user", this.user);
+        connProps.put("password", this.pwd);
+        this.targetConnection = DriverManager.getConnection(
+                "jdbc:postgresql://" + this.serverName
+                + ":" + this.portNumber + "/" + this.path, connProps);
+        if (!this.schema.equalsIgnoreCase("")) {
+            StringBuilder sql = new StringBuilder("SET search_path = ");
+            sql.append(this.schema);
+            try (PreparedStatement stmt = targetConnection.prepareStatement(sql.toString())) {
+              stmt.execute();
+              logger.print(4, "schema altered");
+            } catch (SQLException e) {
+              logger.print(4, "failed to alter schema: " + e.getLocalizedMessage());
+            }
         }
-      }
     } catch (SQLException e) {
-      logger.print(0, "cannot connect to database: " + e.getLocalizedMessage());
+        logger.print(0, "cannot connect to database: " + e.getLocalizedMessage());
     }
 
     if (this.targetConnection == null) {
-      System.err.println("cannot connect to database: reason unknown");
+        System.err.println("cannot connect to database: reason unknown");
     }
+    
+    this.sqlQueue = new SQLStatementQueue(this.targetConnection);
+    
     this.setupKB();
   }
 
@@ -484,7 +485,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
         return -1;
     }
   
-  private void saveNodeElements() throws SQLException {
+  private void saveNodeElements() throws SQLException, IOException {
       /*
       Iterator<NodeElement> nodeIter = this.nodes.values().iterator();
       while(nodeIter.hasNext()) {
@@ -492,7 +493,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
       }
       */
       
-    SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection, this.logger);
+//    SQLStatementQueue sqlQueue = new SQLStatementQueue(this.targetConnection, this.logger);
       
     for (Map.Entry<String, NodeElement> entry : nodes.entrySet()) {
         NodeElement node = entry.getValue();
@@ -501,23 +502,23 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
         
 //        StringBuilder sq = new StringBuilder();
         
-        sq.append("INSERT INTO ");
-        sq.append(NODETABLE);
-        sq.append(" (osm_id, longitude, latitude, classcode, serializedtags, valid) VALUES");
+        sqlQueue.append("INSERT INTO ");
+        sqlQueue.append(NODETABLE);
+        sqlQueue.append(" (osm_id, longitude, latitude, classcode, serializedtags, valid) VALUES");
 
-        sq.append(" (");
-        sq.append(entry.getKey());
-        sq.append(", ");
-        sq.append(entry.getValue().getLatitude());
-        sq.append(", ");
-        sq.append(entry.getValue().getLongitude());
-        sq.append(", ");
-        sq.append(classID);
-        sq.append(", '");
-        sq.append(sTags);
-        sq.append("', ");
-        sq.append("true");
-        sq.append("); ");
+        sqlQueue.append(" (");
+        sqlQueue.append(entry.getKey());
+        sqlQueue.append(", ");
+        sqlQueue.append(entry.getValue().getLatitude());
+        sqlQueue.append(", ");
+        sqlQueue.append(entry.getValue().getLongitude());
+        sqlQueue.append(", ");
+        sqlQueue.append(classID);
+        sqlQueue.append(", '");
+        sqlQueue.append(sTags);
+        sqlQueue.append("', ");
+        sqlQueue.append("true");
+        sqlQueue.append("); ");
 
 //        sq.flush();
         
@@ -546,7 +547,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
         */
     }
     
-    sq.forceExecute();
+    sqlQueue.forceExecute("nodes");
       
     nodes.clear();
   }
@@ -621,7 +622,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
   }
 
   @Override
-  public void addNode(HashMap<String, String> attributes, ArrayList<TagElement> tags) throws SQLException {
+  public void addNode(HashMap<String, String> attributes, ArrayList<TagElement> tags) throws Exception {
     NodeElement newNode = new NodeElement(this, attributes, tags);
     if (importMode.equalsIgnoreCase("update")) {
       NodeElement dbNode = selectNodeById(newNode.getID());
@@ -698,10 +699,12 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
   }
 
     private final HashMap<String, WayElement> ways = new HashMap<>();
+    private SQLStatementQueue sqlQueue;
 
-    private void saveWayElements() throws SQLException {
+    private boolean waysProcessed = false;
+    private void saveWayElements() throws SQLException, IOException {
         // set up a sql queue
-        SQLStatementQueue sqlQueue = new SQLStatementQueue(this.targetConnection, this.logger);
+//        SQLStatementQueue sqlQueue = new SQLStatementQueue(this.targetConnection, this.logger);
         SQLStatementQueue nodeIsPartSql = new SQLStatementQueue(this.targetConnection, this.logger);
         
           // figure out classification id.. which describes the
@@ -815,9 +818,15 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
 //                sqlQueue.flush();
             }
         }
-        nodeIsPartSql.forceExecute();
+        nodeIsPartSql.forceExecute("is part of statement");
         // flush sql statements (required when using append variant)
-        sqlQueue.forceExecute();
+        
+        if(!this.waysProcessed) {
+            // wait for nodes
+            this.sqlQueue.waitUntilFinished(Thread.currentThread());
+            this.waysProcessed = true;
+        }
+        sqlQueue.forceExecute("ways");
         this.ways.clear();
     }
 
@@ -857,7 +866,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
    * @param tags
    */
   @Override
-  public void addWay(HashMap<String, String> attributes, ArrayList<NodeElement> nds, ArrayList<TagElement> tags) throws SQLException {
+  public void addWay(HashMap<String, String> attributes, ArrayList<NodeElement> nds, ArrayList<TagElement> tags) throws Exception {
     if (nds == null || nds.isEmpty()) {
       return; // a way without nodes makes no sense.
     }
@@ -1005,6 +1014,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
 
     private void saveRelElements() throws SQLException {
         SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection, this.logger);
+        String lastOSMID = null;
         
         for (Map.Entry<String, RelationElement> entry : rels.entrySet()) {
             RelationElement relationElement = entry.getValue();
@@ -1055,7 +1065,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
             sq.append("INSERT INTO ");
             sq.append(RELATIONMEMBER);
             sq.append(" (relation_id, role, ");
-            
+
             switch (member.getType()) {
             case "node":
                 sq.append(" node_id)");  
@@ -1070,7 +1080,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
             default:
                 logger.print(3, "member with incorrect type"); break;
             }
-            
+
             // add values
             sq.append(" VALUES (");
             sq.append(osm_id);
@@ -1079,12 +1089,12 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
             sq.append("', ");
             sq.append(member.getId());
             sq.append(");");
-            
+
             // sq.flush();
-            
+
             // member.getId();
           }
-            sq.forceExecute(); // after each relation
+//            sq.forceExecute(); // after each relation
 
             // update nodes and ways
             if(nodeMemberIDs.size() > 0) {
@@ -1129,7 +1139,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
    */
   @Override
   public void addRelation(HashMap<String, String> attributes, ArrayList<MemberElement> members, ArrayList<TagElement> tags
-  ) throws SQLException {
+  ) throws Exception {
     if (members == null || members.isEmpty() || tags == null) {
       return; // empty relations makes no sense;
     }
@@ -1167,7 +1177,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
   }
 
   @Override
-  public void flush() throws SQLException {
+  public void flush() throws Exception {
     if (!nodes.isEmpty()) {
       this.saveNodeElements();
     }

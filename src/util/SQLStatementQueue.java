@@ -11,6 +11,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import osm2inter.MyLogger;
 
 /**
@@ -82,17 +85,56 @@ public class SQLStatementQueue {
         }
     }
     
-    private boolean done = true;
-    public boolean finished() {
-        return this.done;
+    private ArrayList<Thread> waitThreads = new ArrayList<>();
+    
+    /**
+     * blocks this thread until all other threads initiated by
+     * this sql queue are finished
+     */
+    public synchronized void waitUntilFinished(Thread waitThread) {
+        while(!this.finished()) {
+            try {
+                this.waitThreads.add(waitThread);
+                waitThread.wait();
+            } catch (InterruptedException ex) {
+                // awake again
+                System.out.println("woke up and check out..");
+            }
+        }
+        this.waitThreads.remove(waitThread);
     }
     
-    private SQLExecute execThread = null;
+    public boolean finished() {
+        return this.execThreads.isEmpty();
+    }
+
+    public int numberRunningThread() {
+        return this.execThreads.size();
+    }
     
+    private final ArrayList<SQLExecute> execThreads = new ArrayList<>();
+
+    /**
+     * Parallel execution of sql statement
+     * @param recordEntry
+     * @throws SQLException
+     * @throws IOException 
+     */
     public void forceExecute(String recordEntry) 
             throws SQLException, IOException {
         
         this.forceExecute(true, recordEntry);
+    }
+            
+    public void forceExecute(boolean parallel) 
+            throws SQLException {
+        
+        try {
+            this.forceExecute(parallel, null);
+        }
+        catch(IOException e) {
+            // cannot happen, because nothing is written
+        }
     }
             
     public void forceExecute(boolean parallel, String recordEntry) 
@@ -108,12 +150,28 @@ public class SQLStatementQueue {
             this.writeLog(recordEntry);
         } else {
             // create thread
-            this.execThread = new SQLExecute(this.connection, 
-                    this.sqlQueue, recordEntry, this);
+            SQLExecute se = new SQLExecute(this.connection, this.sqlQueue.toString(), 
+                    recordEntry, this);
             
-            this.execThread.start();
+            this.execThreads.add(se);
+            se.start();
             this.resetStatement();
         }
+    }
+    
+    /**
+     * sequential execution of sql statement
+     * @throws SQLException 
+     */
+    public void forceExecute() throws SQLException {
+        if(this.sqlQueue == null || this.sqlQueue.length() < 1) {
+            return;
+        }
+        
+        SQLExecute.doExec(this.connection, this.sqlQueue.toString());
+
+        // no exeption
+        this.resetStatement();
     }
     
     void writeLog(String recordEntry) throws FileNotFoundException, IOException {
@@ -121,16 +179,7 @@ public class SQLStatementQueue {
         
         FileWriter fw = new FileWriter(this.recordFile);
         fw.write(recordEntry);
-    }
-
-    
-    public void forceExecute() throws SQLException {
-        if(this.sqlQueue == null) return;
-        
-        SQLExecute.doExec(this.connection, this.sqlQueue);
-
-        // no exeption
-        this.resetStatement();
+        fw.close();
     }
     
     public ResultSet executeWithResult() throws SQLException {
@@ -160,5 +209,19 @@ public class SQLStatementQueue {
     public void print(String message) {
         System.out.println(message);
         System.out.println(this.sqlQueue.toString());
+    }
+
+    private synchronized void wakeup() {
+        for(Thread waitThread : this.waitThreads) {
+            waitThread.notify();
+        }
+    }
+    
+    synchronized void done(SQLExecute execThread) {
+        // TODO enter some real code
+        this.execThreads.remove(execThread);
+        
+        // wake wait process if any
+        this.wakeup();
     }
 }

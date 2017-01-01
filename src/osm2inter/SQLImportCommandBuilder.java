@@ -511,7 +511,8 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
         sqlQueue.append("); ");
     }
     
-    sqlQueue.forceExecute("nodes");
+//    sqlQueue.forceExecute("nodes");
+    sqlQueue.forceExecute();
       
     nodes.clear();
   }
@@ -782,15 +783,12 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
 //                sqlQueue.flush();
             }
         }
-        nodeIsPartSql.forceExecute("is part of statement");
+        nodeIsPartSql.forceExecute();
+//        nodeIsPartSql.forceExecute("is part of statement");
         // flush sql statements (required when using append variant)
         
-        if(!this.waysProcessed) {
-            // wait for nodes
-            this.sqlQueue.waitUntilFinished(Thread.currentThread());
-            this.waysProcessed = true;
-        }
-        sqlQueue.forceExecute("ways");
+        sqlQueue.forceExecute();
+//        sqlQueue.forceExecute("ways");
         this.ways.clear();
     }
 

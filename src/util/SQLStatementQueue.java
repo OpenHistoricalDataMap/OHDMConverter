@@ -1,19 +1,14 @@
 package util;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import osm2inter.MyLogger;
 
 /**
@@ -26,6 +21,8 @@ public class SQLStatementQueue {
     private final MyLogger logger;
     
     public static final int DEFAULT_MAX_SQL_STATEMENTS = 100;
+    private final ArrayList<SQLExecute> execThreads = new ArrayList<>();
+    private static final int MAX_EXEC_THREADS = 1;
     
     private StringBuilder sqlQueue;
     
@@ -85,25 +82,6 @@ public class SQLStatementQueue {
         }
     }
     
-    private ArrayList<Thread> waitThreads = new ArrayList<>();
-    
-    /**
-     * blocks this thread until all other threads initiated by
-     * this sql queue are finished
-     */
-    public synchronized void waitUntilFinished(Thread waitThread) {
-        while(!this.finished()) {
-            try {
-                this.waitThreads.add(waitThread);
-                waitThread.wait();
-            } catch (InterruptedException ex) {
-                // awake again
-                System.out.println("woke up and check out..");
-            }
-        }
-        this.waitThreads.remove(waitThread);
-    }
-    
     public boolean finished() {
         return this.execThreads.isEmpty();
     }
@@ -112,8 +90,6 @@ public class SQLStatementQueue {
         return this.execThreads.size();
     }
     
-    private final ArrayList<SQLExecute> execThreads = new ArrayList<>();
-
     /**
      * Parallel execution of sql statement
      * @param recordEntry
@@ -136,8 +112,10 @@ public class SQLStatementQueue {
             // cannot happen, because nothing is written
         }
     }
+    
+    private Thread t = null;
             
-    public void forceExecute(boolean parallel, String recordEntry) 
+    public synchronized void forceExecute(boolean parallel, String recordEntry) 
             throws SQLException, IOException {
         
         if(this.sqlQueue == null || this.sqlQueue.length() < 1) {
@@ -149,12 +127,37 @@ public class SQLStatementQueue {
             // that point is reached if no sql exception has been thrown. write log
             this.writeLog(recordEntry);
         } else {
-            // create thread
-            SQLExecute se = new SQLExecute(this.connection, this.sqlQueue.toString(), 
-                    recordEntry, this);
-            
-            this.execThreads.add(se);
-            se.start();
+            // find thread
+            if(this.execThreads.size() < SQLStatementQueue.MAX_EXEC_THREADS) {
+                // create new thread
+                SQLExecute se = new SQLExecute(this.connection, this.sqlQueue.toString(), 
+                        recordEntry, this);
+                this.execThreads.add(se);
+                se.start();
+            } else {
+                // find idol thread
+                boolean notFound = true;
+                while(notFound) {
+                    for(SQLExecute se : this.execThreads) {
+                        if(se.isDone()) {
+                            se.execNext(this.sqlQueue.toString(), recordEntry);
+                            se.wakeup();
+                            notFound = false;
+                        }
+                    }
+                    // no idol thread found and all thread are already activated.. wait
+                    this.t = Thread.currentThread();
+                    try {
+                        this.t.wait();
+                        System.out.println("caller thread of SQLStatement.force() waits now: " + recordEntry);
+                    }
+                    catch(InterruptedException ie) {
+                        // woke up.. nice go ahead
+                        this.t = null;
+                        System.out.println("caller thread of SQLStatement.force() wakes up" + recordEntry);
+                    }
+                }
+            }
             this.resetStatement();
         }
     }
@@ -211,17 +214,10 @@ public class SQLStatementQueue {
         System.out.println(this.sqlQueue.toString());
     }
 
-    private synchronized void wakeup() {
-        for(Thread waitThread : this.waitThreads) {
-            waitThread.notify();
-        }
-    }
-    
     synchronized void done(SQLExecute execThread) {
-        // TODO enter some real code
-        this.execThreads.remove(execThread);
-        
-        // wake wait process if any
-        this.wakeup();
+        // wake sql queue if necessary
+        if(this.t != null) {
+            this.t.interrupt();
+        }
     }
 }

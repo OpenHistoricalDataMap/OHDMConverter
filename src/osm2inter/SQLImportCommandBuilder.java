@@ -486,21 +486,11 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
     }
   
   private void saveNodeElements() throws SQLException, IOException {
-      /*
-      Iterator<NodeElement> nodeIter = this.nodes.values().iterator();
-      while(nodeIter.hasNext()) {
-          this.saveNodeElement(nodeIter.next());
-      }
-      */
-      
 //    SQLStatementQueue sqlQueue = new SQLStatementQueue(this.targetConnection, this.logger);
-      
     for (Map.Entry<String, NodeElement> entry : nodes.entrySet()) {
         NodeElement node = entry.getValue();
         int classID = OSMClassification.getOSMClassification().getOHDMClassID(node);
         String sTags = node.getSerializedTagsAndAttributes();
-        
-//        StringBuilder sq = new StringBuilder();
         
         sqlQueue.append("INSERT INTO ");
         sqlQueue.append(NODETABLE);
@@ -519,32 +509,6 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
         sqlQueue.append("', ");
         sqlQueue.append("true");
         sqlQueue.append("); ");
-
-//        sq.flush();
-        
-        /*
-        StringBuilder sql = new StringBuilder("INSERT INTO ");
-        sql.append(NODETABLE).append(" (osm_id, longitude, latitude, classcode, valid) VALUES");
-        
-//        if (entry.getValue().getTags() == null) {
-        sql.append(" (").append(entry.getKey()).append(", ")
-                .append(entry.getValue().getLatitude()).append(", ")
-                .append(entry.getValue().getLongitude()).append(", ")
-                .append(classID).append(", ")
-                .append("true").append(");");
-        */
-        /*
-        try (PreparedStatement stmt = connection.prepareStatement(sq.toString())) {
-          stmt.execute();
-        } catch (SQLException e) {
-          logger.print(1, "saveNodeElements() " + e.getLocalizedMessage(), true);
-          logger.print(3, sq.toString());
-        }
-        catch(RuntimeException re) {
-            logger.print(1, "CHAOS with " + sq.toString());
-            logger.print(1, re.getLocalizedMessage());
-        }
-        */
     }
     
     sqlQueue.forceExecute("nodes");

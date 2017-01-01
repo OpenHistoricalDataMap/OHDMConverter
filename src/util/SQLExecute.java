@@ -40,7 +40,6 @@ class SQLExecute extends Thread {
         finally {
             if(e != null) throw e;
         }
-        
     }
     
     private boolean done = false;

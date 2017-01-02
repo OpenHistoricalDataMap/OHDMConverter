@@ -213,7 +213,7 @@ public class SQLStatementQueue {
      * Wait until all pending threads came to end end.. flushes that queue
      */
     public void flushThreads() {
-        System.out.println("sqlQueue: flush called... wait for threads to finish");
+//        System.out.println("sqlQueue: flush called... wait for threads to finish");
         while(!this.execThreads.isEmpty()) {
             try {
                 // each loop we wait for the first thread to finish until

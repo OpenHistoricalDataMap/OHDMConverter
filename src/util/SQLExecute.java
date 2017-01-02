@@ -50,14 +50,15 @@ class SQLExecute extends Thread {
     @Override
     public void run() {
         // do exec
-        System.out.println("exec threat issues sql statement " + this.recordEntry);
+//        System.out.println("exec threat issues sql statement " + this.recordEntry);
         try {
             SQLExecute.doExec(connection, sqlStatement);
 
             // ok, statement executed
             this.recordKeeper.writeLog(this.recordEntry);
             this.recordKeeper.done(this);
-            System.out.println("exec threat successfully issued sql statement: " + this.recordEntry);
+            System.out.print(this.recordEntry + ", ");
+//            System.out.println("exec threat successfully issued sql statement: " + this.recordEntry);
         }
         catch(SQLException e) {
             System.err.println("sql error: (error / statement): \n" + e.getMessage() + "\n" + this.sqlStatement);

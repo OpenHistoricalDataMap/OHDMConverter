@@ -23,7 +23,7 @@ import util.Parameter;
  *
  * @author thsc, Sven Petsche
  */
-public class SQLImportCommandBuilder implements ImportCommandBuilder {
+public class SQLImportCommandBuilder implements OSM2InterBuilder {
 
     public static final String TAGTABLE = "Tags";
     public static final String NODETABLE = "Nodes";
@@ -720,6 +720,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder {
      * @param attributes
      * @param nds
      * @param tags
+     * @throws java.lang.Exception
      */
     @Override
     public void addWay(HashMap<String, String> attributes, ArrayList<NodeElement> nds, ArrayList<TagElement> tags) throws Exception {
@@ -903,31 +904,31 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder {
     this.logLastElement(newRel);
   }
 
-  @Override
-  public void flush() throws Exception {
-    if (!nodes.isEmpty()) {
-        this.saveNodeElements();
+    @Override
+    public void flush() throws Exception {
+        if (!nodes.isEmpty()) {
+            this.saveNodeElements();
+        }
+        if (!ways.isEmpty()) {
+            this.saveWayElements();
+        }
+        if (!rels.isEmpty()) {
+            this.saveRelElements();
+        }
     }
-    if (!ways.isEmpty()) {
-        this.saveWayElements();
-    }
-    if (!rels.isEmpty()) {
-        this.saveRelElements();
-    }
-  }
 
-  @Override
-  public void printStatus() {
-    logger.print(0, "\n\t\t|---------------|---------------|---------------|");
-    logger.print(0, "\t\t| new\t\t| changed\t| existing\t|");
-    logger.print(0, "|---------------|---------------|---------------|---------------|");
-    logger.print(0, "| Nodes\t\t| " + this.nodesNew + "\t\t| " + this.nodesChanged + "\t\t| " + this.nodesExisting + "\t\t|");
-    logger.print(0, "|---------------|---------------|---------------|---------------|");
-    logger.print(0, "| Ways\t\t| " + this.waysNew + "\t\t| " + this.waysChanged + "\t\t| " + this.waysExisting + "\t\t|");
-    logger.print(0, "|---------------|---------------|---------------|---------------|");
-    logger.print(0, "| Relations\t| " + this.relNew + "\t\t| " + this.relChanged + "\t\t| " + this.relExisting + "\t\t|");
-    logger.print(0, "|---------------|---------------|---------------|---------------|");
-  }
+    @Override
+    public void printStatus() {
+        logger.print(0, "\n\t\t|---------------|---------------|---------------|");
+        logger.print(0, "\t\t| new\t\t| changed\t| existing\t|");
+        logger.print(0, "|---------------|---------------|---------------|---------------|");
+        logger.print(0, "| Nodes\t\t| " + this.nodesNew + "\t\t| " + this.nodesChanged + "\t\t| " + this.nodesExisting + "\t\t|");
+        logger.print(0, "|---------------|---------------|---------------|---------------|");
+        logger.print(0, "| Ways\t\t| " + this.waysNew + "\t\t| " + this.waysChanged + "\t\t| " + this.waysExisting + "\t\t|");
+        logger.print(0, "|---------------|---------------|---------------|---------------|");
+        logger.print(0, "| Relations\t| " + this.relNew + "\t\t| " + this.relChanged + "\t\t| " + this.relExisting + "\t\t|");
+        logger.print(0, "|---------------|---------------|---------------|---------------|");
+    }
 
   public void printStatusShort(int level) {
     logger.print(level, "n: " + nodesNew + " w: " + waysNew, true);

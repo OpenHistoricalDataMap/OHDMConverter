@@ -22,13 +22,12 @@ public class OSMImporter extends DefaultHandler {
   private int wA = 0;
   private int rA = 0;
 
-  private enum Status {
+    private enum Status {
+      OUTSIDE, NODE, WAY, RELATION
+    };
+    Status status;
 
-    OUTSIDE, NODE, WAY, RELATION
-  };
-  Status status;
-
-  ImportCommandBuilder builder;
+    OSM2InterBuilder builder;
 
   public OSMImporter(Parameter parameter) throws Exception {
     this.builder = SQLImportCommandBuilder.getInstance(parameter);

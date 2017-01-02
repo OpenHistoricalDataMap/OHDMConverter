@@ -30,8 +30,8 @@ public class OSMImporter extends DefaultHandler {
 
   ImportCommandBuilder builder;
 
-  public OSMImporter(Parameter parameter, File recordFile) throws Exception {
-    this.builder = SQLImportCommandBuilder.getInstance(parameter,recordFile);
+  public OSMImporter(Parameter parameter) throws Exception {
+    this.builder = SQLImportCommandBuilder.getInstance(parameter);
   }
 
   private HashMap<String, String> parseTagAttributes(Attributes attributes) {

@@ -23,7 +23,7 @@ import util.Parameter;
  *
  * @author thsc, Sven Petsche
  */
-public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementStorage {
+public class SQLImportCommandBuilder implements ImportCommandBuilder {
 
     public static final String TAGTABLE = "Tags";
     public static final String NODETABLE = "Nodes";
@@ -52,12 +52,15 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
 
     private int rCount = 10;
     private int wCount = 10;
+    
     private String user;
     private String pwd;
     private String serverName;
     private String portNumber;
     private String path;
     private String schema;
+    private int maxThreads;
+    
     private Connection targetConnection;
 
     private String importMode = "initial_import";
@@ -68,23 +71,22 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
     private final Config config;
     
     private final Parameter parameter;
-    private final File recordFile;
+    private File recordFile = null;
 
     private static SQLImportCommandBuilder instance = null;
 
-    public static SQLImportCommandBuilder getInstance(Parameter parameter, File recordFile) {
+    public static SQLImportCommandBuilder getInstance(Parameter parameter) {
         if (instance == null) {
-            instance = new SQLImportCommandBuilder(parameter, recordFile);
+            instance = new SQLImportCommandBuilder(parameter);
         }
         return instance;
     }
-
-    private SQLImportCommandBuilder(Parameter parameter, File recordFile) {
+    
+    private SQLImportCommandBuilder(Parameter parameter) {
         this.parameter = parameter;
         this.config = Config.getInstance();
         this.logger = MyLogger.getInstance();
         this.classification = Classification.getInstance();
-        this.recordFile = recordFile;
         
         // remove that line soon
         this.tmpStorageSize = 10000 - 1;
@@ -96,6 +98,16 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
         this.portNumber = this.parameter.getPortNumber();
         this.path = this.parameter.getdbName();
         this.schema = this.parameter.getSchema();
+        this.recordFile = new File(this.parameter.getRecordFileName());
+        try {
+            String v = this.parameter.getMaxThread();
+            this.maxThreads = Integer.parseInt(v.trim());
+            this.maxThreads = this.maxThreads > 0 ? this.maxThreads : 1;
+        }
+        catch(NumberFormatException e) {
+            System.err.println("no integer value (run single threaded instead): " + this.parameter.getMaxThread());
+            this.maxThreads = 1;
+        }
       
         Properties connProps = new Properties();
         connProps.put("user", this.user);
@@ -120,8 +132,7 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
     if (this.targetConnection == null) {
         System.err.println("cannot connect to database: reason unknown");
     }
-    
-    this.sqlQueue = new SQLStatementQueue(this.targetConnection);
+    this.sqlQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
     
     this.setupKB();
   }
@@ -276,175 +287,115 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
   
   private HashMap<String, Integer> classIDs = new HashMap<>();
 
-  private void loadClassification() throws SQLException {      
-      String db_classificationTable = config.getValue("db_classificationTable");
-    if (db_classificationTable!= null && db_classificationTable.equalsIgnoreCase("useExisting")) {
-      Statement stmt = null;
-      try {
-        stmt = targetConnection.createStatement();
-        StringBuilder sb = new StringBuilder("SELECT * FROM ");
-        if (!this.schema.equalsIgnoreCase("")) {
-          sb.append(schema).append(".");
-        }
-        sb.append(CLASSIFICATIONTABLE).append(";");
-        try (ResultSet rs = stmt.executeQuery(sb.toString())) {
-          while (rs.next()) {
-            this.classification.put(rs.getString("class"), rs.getString("subclassname"), rs.getInt("classcode"));
-          }
-        }
-      } catch (SQLException e) {
-        logger.print(4, "classification loadingt failed: " + e.getLocalizedMessage(), true);
-      } finally {
-        if (stmt != null) {
-          try {
-            stmt.close();
-          } catch (SQLException e) {
-          }
-        }
-      }
-    } else {
-        StringBuilder sqlRelMember = new StringBuilder();
-        sqlRelMember.append("(classcode bigint PRIMARY KEY, ")
-          .append("classname character varying, ")
-          .append("subclassname character varying);");
-
-        this.setupTable(CLASSIFICATIONTABLE, sqlRelMember.toString());
-
-        // fill that table
-        // set up classification table from scratch
-        OSMClassification osmClassification = OSMClassification.getOSMClassification();
-        
-        // init first line: unknown classification
-        StringBuilder insertStatement = new StringBuilder();
-        insertStatement.append("INSERT INTO ")
-                .append(CLASSIFICATIONTABLE)
-                .append(" VALUES (-1, 'no_class', 'no_subclass');");
-
-        PreparedStatement stmt = null;
-        try {
-            stmt = targetConnection.prepareStatement(insertStatement.toString());
-            stmt.execute();
-        } catch (SQLException ex) {
-            logger.print(1, ex.getLocalizedMessage(), true);
-            logger.print(1, insertStatement.toString());
-        } finally {
-          if (stmt != null) {
-            stmt.close();
-          }
-        }
-
-        // no append real data
-        int id = 0;
-
-        // create classification table
-        // iterate classes
-        Iterator<String> classIter = osmClassification.osmFeatureClasses.keySet().iterator();
-
-        while(classIter.hasNext()) {
-            String className = classIter.next();
-            List<String> subClasses = osmClassification.osmFeatureClasses.get(className);
-            Iterator<String> subClassIter = subClasses.iterator();
-
-            while(subClassIter.hasNext()) {
-                String subClassName = subClassIter.next();
-                
-                // keep in memory
-                Integer idInteger = id;
-                String fullClassName = this.createFullClassName(className, subClassName);
-                
-                this.classIDs.put(fullClassName, idInteger);
-                
-                // add to database
-                insertStatement = new StringBuilder();
-                insertStatement.append("INSERT INTO ")
-                        .append(CLASSIFICATIONTABLE)
-                        .append(" VALUES (")
-                        .append(id++)
-                        .append(", '")
-                        .append(className)
-                        .append("', '")
-                        .append(subClassName)
-                        .append("');");
-            
-                stmt = null;
-                try {
-                    stmt = targetConnection.prepareStatement(insertStatement.toString());
-                    stmt.execute();
-                } catch (SQLException ex) {
-                    logger.print(1, ex.getLocalizedMessage(), true);
-                    logger.print(1, insertStatement.toString());
-                } finally {
-                  if (stmt != null) {
-                    stmt.close();
-                  }
+    private void loadClassification() throws SQLException {      
+        String db_classificationTable = config.getValue("db_classificationTable");
+        if (db_classificationTable!= null && db_classificationTable.equalsIgnoreCase("useExisting")) {
+            Statement stmt = null;
+            try {
+                stmt = targetConnection.createStatement();
+                StringBuilder sb = new StringBuilder("SELECT * FROM ");
+                if (!this.schema.equalsIgnoreCase("")) {
+                    sb.append(schema).append(".");
+                }
+                sb.append(CLASSIFICATIONTABLE).append(";");
+                try (ResultSet rs = stmt.executeQuery(sb.toString())) {
+                    while (rs.next()) {
+                        this.classification.put(rs.getString("class"), rs.getString("subclassname"), rs.getInt("classcode"));
+                    }
+                }
+            } catch (SQLException e) {
+                logger.print(4, "classification loadingt failed: " + e.getLocalizedMessage(), true);
+            } finally {
+                if (stmt != null) {
+                    try {
+                      stmt.close();
+                    } catch (SQLException e) {
+                    }
                 }
             }
-            
+        } else {
+            StringBuilder sqlRelMember = new StringBuilder();
+            sqlRelMember.append("(classcode bigint PRIMARY KEY, ")
+              .append("classname character varying, ")
+              .append("subclassname character varying);");
+
+            this.setupTable(CLASSIFICATIONTABLE, sqlRelMember.toString());
+
+            // fill that table
+            // set up classification table from scratch
+            OSMClassification osmClassification = OSMClassification.getOSMClassification();
+
+            // init first line: unknown classification
+            StringBuilder insertStatement = new StringBuilder();
+            insertStatement.append("INSERT INTO ")
+                    .append(CLASSIFICATIONTABLE)
+                    .append(" VALUES (-1, 'no_class', 'no_subclass');");
+
+            PreparedStatement stmt = null;
+            try {
+                stmt = targetConnection.prepareStatement(insertStatement.toString());
+                stmt.execute();
+            } catch (SQLException ex) {
+                logger.print(1, ex.getLocalizedMessage(), true);
+                logger.print(1, insertStatement.toString());
+            } finally {
+                if (stmt != null) {
+                    stmt.close();
+                }
+            }
+
+            // no append real data
+            int id = 0;
+
+            // create classification table
+            // iterate classes
+            Iterator<String> classIter = osmClassification.osmFeatureClasses.keySet().iterator();
+
+            while(classIter.hasNext()) {
+                String className = classIter.next();
+                List<String> subClasses = osmClassification.osmFeatureClasses.get(className);
+                Iterator<String> subClassIter = subClasses.iterator();
+
+                while(subClassIter.hasNext()) {
+                    String subClassName = subClassIter.next();
+
+                    // keep in memory
+                    Integer idInteger = id;
+                    String fullClassName = this.createFullClassName(className, subClassName);
+
+                    this.classIDs.put(fullClassName, idInteger);
+
+                    // add to database
+                    insertStatement = new StringBuilder();
+                    insertStatement.append("INSERT INTO ")
+                            .append(CLASSIFICATIONTABLE)
+                            .append(" VALUES (")
+                            .append(id++)
+                            .append(", '")
+                            .append(className)
+                            .append("', '")
+                            .append(subClassName)
+                            .append("');");
+
+                    stmt = null;
+                    try {
+                        stmt = targetConnection.prepareStatement(insertStatement.toString());
+                        stmt.execute();
+                    } catch (SQLException ex) {
+                        logger.print(1, ex.getLocalizedMessage(), true);
+                        logger.print(1, insertStatement.toString());
+                    } finally {
+                      if (stmt != null) {
+                        stmt.close();
+                      }
+                    }
+                }
+
+            }
         }
     }
-  }
 
-  // can later be user for config flag db_classificationTable -> createNew
-  @Deprecated
-  private void importWhitelist() {
-    // import whitelist to auto create ids
-    Statement stmtImport = null;
-    try {
-      stmtImport = targetConnection.createStatement();
-      String sql = Whitelist.getInstance().getSQLImport(SQLImportCommandBuilder.TAGTABLE);
-      stmtImport.execute(sql);
-      logger.print(4, "Whitelist imported", true);
-    } catch (SQLException e) {
-      logger.print(4, "whitelist import failed: " + e.getLocalizedMessage(), true);
-    } finally {
-      if (stmtImport != null) {
-        try {
-          stmtImport.close();
-        } catch (SQLException e) {
-        }
-      }
-    }
-    // select tag table to get ids
-    Map<String, Integer> tagtable = new HashMap<>();
-    Statement stmtSelect = null;
-    try {
-      stmtSelect = targetConnection.createStatement();
-      try (ResultSet rs = stmtSelect.executeQuery("SELECT * FROM " + SQLImportCommandBuilder.TAGTABLE)) {
-        while (rs.next()) {
-          tagtable.put(rs.getString("key") + "|" + rs.getString("value"), rs.getInt("id"));
-        }
-      }
-    } catch (SQLException e) {
-      logger.print(4, "select statement failed: " + e.getLocalizedMessage(), true);
-    } finally {
-      if (stmtSelect != null) {
-        try {
-          stmtSelect.close();
-        } catch (SQLException e) {
-        }
-      }
-    }
-    // push ids into whitelistobject
-    Whitelist.getInstance().feedWithId(tagtable);
-  }
-
-  @Deprecated
-  private void checkIfTableExists(String table) throws SQLException {
-    StringBuilder sql = new StringBuilder("SELECT '");
-    sql.append(table).append("'::regclass;");
-    PreparedStatement stmt = targetConnection.prepareStatement(sql.toString());
-    stmt.execute();
-  }
-
-  @Deprecated
-  private void resetSequence(Statement stmt, String sequence) throws SQLException {
-    try {
-      stmt.execute("drop sequence " + sequence + ";");
-    } catch (SQLException ee) { /* ignore */ }
-    stmt.execute("create sequence " + sequence + ";");
-  }
-
-  private Map<String, NodeElement> nodes = new HashMap<>();
+    private Map<String, NodeElement> nodes = new HashMap<>();
   
     private String createFullClassName(String className, String subclassname) {
         return className + "_" + subclassname;
@@ -484,9 +435,12 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
         // there is no class description - sorry
         return -1;
     }
+    
+    String lastOSMID = "-1";
   
-  private void saveNodeElements() throws SQLException, IOException {
+    private void saveNodeElements() throws SQLException, IOException {
 //    SQLStatementQueue sqlQueue = new SQLStatementQueue(this.targetConnection, this.logger);
+      
     for (Map.Entry<String, NodeElement> entry : nodes.entrySet()) {
         NodeElement node = entry.getValue();
         int classID = OSMClassification.getOSMClassification().getOHDMClassID(node);
@@ -511,63 +465,10 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
         sqlQueue.append("); ");
     }
     
-//    sqlQueue.forceExecute("nodes");
-    sqlQueue.forceExecute();
+    sqlQueue.forceExecute(lastOSMID);
+//    sqlQueue.forceExecute();
       
     nodes.clear();
-  }
-
-  private void saveNodeElement(NodeElement node) {
-    StringBuilder sb = new StringBuilder("INSERT INTO ");
-    int classID = OSMClassification.getOSMClassification().getOHDMClassID(node);
-    if (classID > -1) {
-      sb.append(NODETABLE).append(" (osm_id, longitude, latitude, valid) VALUES (?, ?, ?, true);");
-    } else {
-      sb.append(NODETABLE).append(" (osm_id, longitude, latitude, classcode, valid) VALUES (?, ?, ?, ?, true);");
-    }
-    try (PreparedStatement stmt = targetConnection.prepareStatement(sb.toString())) {
-      stmt.setLong(1, node.getID());
-      stmt.setString(2, node.getLongitude());
-      stmt.setString(3, node.getLatitude());
-      if (classID > -1) {
-        stmt.setInt(4, classID);
-      }
-      stmt.execute();
-    } catch (SQLException e) {
-      logger.print(1, "saveNodeElement(NodeElement) " + e.getLocalizedMessage(), true);
-      logger.print(3, sb.toString());
-    }
-  }
-
-  private void deleteNodeById(long osm_id) {
-    StringBuilder sb = new StringBuilder("DELETE FROM ");
-    sb.append(NODETABLE).append(" WHERE osm_id = ? ;");
-    PreparedStatement stmt = null;
-    try {
-      stmt = targetConnection.prepareStatement(sb.toString());
-      stmt.setLong(1, osm_id);
-      stmt.execute();
-    } catch (SQLException e) {
-      logger.print(1, e.getLocalizedMessage(), true);
-    } finally {
-      try {
-        if (stmt != null) {
-          stmt.close();
-        }
-      } catch (SQLException e) {
-      }
-    }
-  }
-
-  private void updateNode(NodeElement newNode, NodeElement dbNode) {
-    HashMap<String, String> map = new HashMap<>();
-    if (!newNode.getLatitude().equals(dbNode.getLatitude())) {
-      map.put("lat", newNode.getLatitude());
-    }
-    if (!newNode.getLongitude().equals(dbNode.getLongitude())) {
-      map.put("lon", newNode.getLongitude());
-    }
-    this.updateNode(newNode.getID(), map);
   }
 
   private void updateNode(long id, HashMap<String, String> map) {
@@ -586,37 +487,20 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
     }
   }
 
-  @Override
-  public void addNode(HashMap<String, String> attributes, ArrayList<TagElement> tags) throws Exception {
-    NodeElement newNode = new NodeElement(this, attributes, tags);
-    if (importMode.equalsIgnoreCase("update")) {
-      NodeElement dbNode = selectNodeById(newNode.getID());
-      switch (matchNodes(newNode, dbNode)) {
-        case 0:
-          this.nodesNew++;
-          this.saveNodeElement(newNode);
-          break;
-        case 1:
-          this.nodesChanged++;
-          this.updateNode(newNode, dbNode);
-          break;
-        case 2:
-          this.nodesExisting++;
-          // todo: set valid to true
-          break;
-        default:
-          break;
-      }
-    } else if (importMode.equalsIgnoreCase("initial_import")) {
-      nodes.put(String.valueOf(newNode.getID()), newNode);
-      if (nodes.size() > this.tmpStorageSize) {
-        nodesNew += nodes.size();
-        this.saveNodeElements();
-        this.printStatusShort(4);
-      }
-    } else {
-      logger.print(1, "not supported importMode in config file");
+    private void logLastElement(OSMElement e) {
+        this.lastOSMID = e.getOSMID();
     }
+    
+    @Override
+    public void addNode(HashMap<String, String> attributes, ArrayList<TagElement> tags) throws Exception {
+        NodeElement newNode = new NodeElement(attributes, tags);
+        nodes.put(String.valueOf(newNode.getID()), newNode);
+        if (nodes.size() > this.tmpStorageSize) {
+            nodesNew += nodes.size();
+            this.saveNodeElements();
+            this.printStatusShort(4);
+        }
+        this.logLastElement(newNode);
   }
 
   private NodeElement selectNodeById(long osm_id) {
@@ -667,6 +551,8 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
     private SQLStatementQueue sqlQueue;
 
     private boolean waysProcessed = false;
+    private boolean relationsProcessed = false;
+
     private void saveWayElements() throws SQLException, IOException {
         // set up a sql queue
 //        SQLStatementQueue sqlQueue = new SQLStatementQueue(this.targetConnection, this.logger);
@@ -783,12 +669,20 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
 //                sqlQueue.flush();
             }
         }
-        nodeIsPartSql.forceExecute();
-//        nodeIsPartSql.forceExecute("is part of statement");
+        
+//        nodeIsPartSql.forceExecute();
+        nodeIsPartSql.forceExecute("is part of statement");
         // flush sql statements (required when using append variant)
         
-        sqlQueue.forceExecute();
+        // already some way processed?
+        if(!this.waysProcessed) {
+            this.waysProcessed = true;
+            sqlQueue.flushThreads();
+        }
+//        sqlQueue.forceExecute();
 //        sqlQueue.forceExecute("ways");
+        sqlQueue.forceExecute(lastOSMID);
+        
         this.ways.clear();
     }
 
@@ -820,163 +714,39 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
     }
   }
 
-  /**
-   * http://wiki.openstreetmap.org/wiki/Way
-   *
-   * @param attributes
-   * @param nds
-   * @param tags
-   */
-  @Override
-  public void addWay(HashMap<String, String> attributes, ArrayList<NodeElement> nds, ArrayList<TagElement> tags) throws Exception {
-    if (nds == null || nds.isEmpty()) {
-      return; // a way without nodes makes no sense.
-    }
-    if (!nodes.isEmpty()) {
-      nodesNew += nodes.size();
-      this.saveNodeElements();
-      printStatusShort(1);
-      logger.print(1, "finished saving nodes, continuing with ways", true);
-    }
-    WayElement newWay = new WayElement(this, attributes, nds, tags);
-
-    if (importMode.equalsIgnoreCase("update")) {
-      WayElement dbWay = selectWayById(newWay.getID());
-      switch (matchWays(newWay, dbWay)) {
-        case 0:
-          this.waysNew++;
-          this.saveWayElement(newWay);
-          newWay.getNodes().stream().forEach((nd) -> {
-            HashMap<String, String> map = new HashMap<>();
-            map.put("id_way", String.valueOf(newWay.getID()));
-            this.updateNode(nd.getID(), map);
-          });
-          break;
-        case 1:
-          this.waysChanged++;
-          // update nodes column id_way in NODETABLE
-          // new Node in this Way
-          newWay.getNodes().stream().forEach((nd) -> {
-            if (!dbWay.hasNodeId(nd.getID())) {
-              HashMap<String, String> newNode = new HashMap<>();
-              newNode.put("id_way", String.valueOf(newWay.getID()));
-              this.updateNode(nd.getID(), newNode);
-            }
-          });
-          // Node does not exist any more in this Way
-          dbWay.getNodes().stream().forEach((nd) -> {
-            if (!newWay.hasNodeId(nd.getID())) {
-              HashMap<String, String> delNode = new HashMap<>();
-              delNode.put("id_way", "null");
-              this.updateNode(nd.getID(), delNode);
-            }
-          });
-          break;
-        case 2:
-          this.waysExisting++;
-          break;
-        default:
-          break;
-      }
-    } else if (importMode.equalsIgnoreCase("initial_import")) {
-      this.waysNew++;
-      this.ways.put(String.valueOf(newWay.getID()), newWay);
-      if (((ways.size() * 10) + 1) % tmpStorageSize == 0) {
-        this.saveWayElements();
-        this.printStatusShort(4);
-      }
-    } else {
-      logger.print(1, "not supported importMode in config file");
-    }
-  }
-
-  private WayElement selectWayById(long osm_id) {
-    StringBuilder sqlWay = new StringBuilder("SELECT * FROM ");
-    sqlWay.append(WAYTABLE).append(" WHERE osm_id = ? ;");
-    StringBuilder sqlNodes = new StringBuilder("SELECT * FROM ");
-    sqlNodes.append(NODETABLE).append(" WHERE id_way = ?;");
-    PreparedStatement stmtNodes = null;
-    PreparedStatement stmtWay = null;
-    HashMap<String, String> attrWay = new HashMap<>();
-    ArrayList<NodeElement> nds = new ArrayList<>();
-    try {
-      stmtNodes = targetConnection.prepareStatement(sqlNodes.toString());
-      stmtNodes.setLong(1, osm_id);
-      ResultSet rsNodes = stmtNodes.executeQuery();
-      while (rsNodes.next()) {
-        HashMap<String, String> attrNode = new HashMap<>();
-        attrNode.put("id", String.valueOf(rsNodes.getInt("osm_id")));
-        attrNode.put("lat", rsNodes.getString("lat"));
-        attrNode.put("lon", rsNodes.getString("long"));
-        nds.add(new NodeElement(attrNode, null));
-      }
-
-      if (!nds.isEmpty()) {
-        stmtWay = targetConnection.prepareStatement(sqlWay.toString());
-        stmtWay.setLong(1, osm_id);
-        ResultSet rsWay = stmtWay.executeQuery();
-        if (rsWay.next()) {
-          attrWay.put("id", String.valueOf(rsWay.getInt("osm_id")));
+    /**
+     * http://wiki.openstreetmap.org/wiki/Way
+     *
+     * @param attributes
+     * @param nds
+     * @param tags
+     */
+    @Override
+    public void addWay(HashMap<String, String> attributes, ArrayList<NodeElement> nds, ArrayList<TagElement> tags) throws Exception {
+        if (nds == null || nds.isEmpty()) {
+            return; // a way without nodes makes no sense.
         }
-      }
-    } catch (SQLException e) {
-      logger.print(1, e.getLocalizedMessage(), true);
-    } finally {
-      try {
-        if (stmtNodes != null) {
-          stmtNodes.close();
+        if (!nodes.isEmpty()) {
+            nodesNew += nodes.size();
+            this.saveNodeElements();
+            printStatusShort(1);
+            logger.print(1, "finished saving nodes, continuing with ways", true);
         }
-      } catch (SQLException e) {
-      }
-      try {
-        if (stmtWay != null) {
-          stmtWay.close();
+        WayElement newWay = new WayElement(attributes, nds, tags);
+        this.waysNew++;
+        this.ways.put(String.valueOf(newWay.getID()), newWay);
+        if (((ways.size() * 10) + 1) % tmpStorageSize == 0) {
+            this.saveWayElements();
+            this.printStatusShort(4);
         }
-      } catch (SQLException e) {
-      }
+        
+        this.logLastElement(newWay);
     }
-    if (nds.isEmpty()) {
-      return null;
-    } else {
-      return new WayElement(attrWay, nds, null);
-    }
-  }
 
-  /**
-   * checks if the ways have the same nodes (compared by their id)
-   *
-   * @param newWay
-   * @param dbWay
-   * @return 0: way does not exist, 1: way has changed, 2: ways are the same
-   */
-  private Integer matchWays(WayElement newWay, WayElement dbWay) {
-    Integer state = 2;
-    if (dbWay == null) {
-      return 0;
-    } else {
-      // checks if all nodes in the new way are in the stored way
-      for (NodeElement nd : newWay.getNodes()) {
-        if (!dbWay.hasNodeId(nd.getID())) {
-          state = 1;
-        }
-      }
-      // checks if all nodes in the stored way are also in the new way
-      if (state != 1) {
-        for (NodeElement nd : dbWay.getNodes()) {
-          if (!newWay.hasNodeId(nd.getID())) {
-            state = 1;
-          }
-        }
-      }
-    }
-    return state;
-  }
+    private final HashMap<String, RelationElement> rels = new HashMap<>();
 
-  private final HashMap<String, RelationElement> rels = new HashMap<>();
-
-    private void saveRelElements() throws SQLException {
-        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection, this.logger);
-        String lastOSMID = null;
+    private void saveRelElements() throws SQLException, IOException {
+//        SQLStatementQueue sqlQueue = new SQLStatementQueue(this.targetConnection, this.logger);
         
         for (Map.Entry<String, RelationElement> entry : rels.entrySet()) {
             RelationElement relationElement = entry.getValue();
@@ -1005,17 +775,17 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
                 memberIDs = memberIDsb.toString();
             }
 
-            sq.append("INSERT INTO ");
-            sq.append(RELATIONTABLE);
-            sq.append(" (osm_id, classcode, serializedtags, member_ids, valid) VALUES (");
-            sq.append(osm_id);
-            sq.append(", ");
-            sq.append(classID);
-            sq.append(", '");
-            sq.append(sTags);
-            sq.append("', '");
-            sq.append(memberIDs);
-            sq.append("', true);");
+            sqlQueue.append("INSERT INTO ");
+            sqlQueue.append(RELATIONTABLE);
+            sqlQueue.append(" (osm_id, classcode, serializedtags, member_ids, valid) VALUES (");
+            sqlQueue.append(osm_id);
+            sqlQueue.append(", ");
+            sqlQueue.append(classID);
+            sqlQueue.append(", '");
+            sqlQueue.append(sTags);
+            sqlQueue.append("', '");
+            sqlQueue.append(memberIDs);
+            sqlQueue.append("', true);");
             
 //            sq.flush();
 
@@ -1024,33 +794,33 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
         ArrayList<Long> wayMemberIDs = new ArrayList<>();
             
         for (MemberElement member : entry.getValue().getMember()) {
-            sq.append("INSERT INTO ");
-            sq.append(RELATIONMEMBER);
-            sq.append(" (relation_id, role, ");
+            sqlQueue.append("INSERT INTO ");
+            sqlQueue.append(RELATIONMEMBER);
+            sqlQueue.append(" (relation_id, role, ");
 
             switch (member.getType()) {
             case "node":
-                sq.append(" node_id)");  
+                sqlQueue.append(" node_id)");  
                 nodeMemberIDs.add(member.getID());
                 break;
             case "way":
-                sq.append(" way_id)"); 
+                sqlQueue.append(" way_id)"); 
                 wayMemberIDs.add(member.getID());
                 break;
             case "relation":
-                sq.append(" member_rel_id)"); break;
+                sqlQueue.append(" member_rel_id)"); break;
             default:
                 logger.print(3, "member with incorrect type"); break;
             }
 
             // add values
-            sq.append(" VALUES (");
-            sq.append(osm_id);
-            sq.append(", '");
-            sq.append(member.getRole());
-            sq.append("', ");
-            sq.append(member.getId());
-            sq.append(");");
+            sqlQueue.append(" VALUES (");
+            sqlQueue.append(osm_id);
+            sqlQueue.append(", '");
+            sqlQueue.append(member.getRole());
+            sqlQueue.append("', ");
+            sqlQueue.append(member.getId());
+            sqlQueue.append(");");
 
             // sq.flush();
 
@@ -1060,35 +830,42 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
 
             // update nodes and ways
             if(nodeMemberIDs.size() > 0) {
-                sq.append("UPDATE nodes SET is_part=true WHERE ");
+                sqlQueue.append("UPDATE nodes SET is_part=true WHERE ");
                 boolean first = true;
                 for (Long id : nodeMemberIDs) {
                     if(!first) {
-                        sq.append(" OR ");
+                        sqlQueue.append(" OR ");
                     } else {
                         first = false;
                     }
-                    sq.append("osm_id = ");
-                    sq.append(id);
+                    sqlQueue.append("osm_id = ");
+                    sqlQueue.append(id);
                 }
-                sq.append("; ");
+                sqlQueue.append("; ");
             }
             
             if(wayMemberIDs.size() > 0) {
-                sq.append("UPDATE ways SET is_part=true WHERE ");
+                sqlQueue.append("UPDATE ways SET is_part=true WHERE ");
                 boolean first = true;
                 for (Long id : wayMemberIDs) {
                     if(!first) {
-                        sq.append(" OR ");
+                        sqlQueue.append(" OR ");
                     } else {
                         first = false;
                     }
-                    sq.append("osm_id = ");
-                    sq.append(id);
+                    sqlQueue.append("osm_id = ");
+                    sqlQueue.append(id);
                 }
-                sq.append("; ");
+                sqlQueue.append("; ");
             }
-            sq.forceExecute();
+//            sqlQueue.forceExecute();
+            
+            if(!this.relationsProcessed) {
+                this.relationsProcessed = true;
+                sqlQueue.flushThreads();
+            }
+            
+            sqlQueue.forceExecute(lastOSMID);
         }
     }
 
@@ -1099,55 +876,43 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
    * @param members
    * @param tags
    */
-  @Override
-  public void addRelation(HashMap<String, String> attributes, ArrayList<MemberElement> members, ArrayList<TagElement> tags
-  ) throws Exception {
+    @Override
+    public void addRelation(HashMap<String, String> attributes, 
+          ArrayList<MemberElement> members, ArrayList<TagElement> tags) 
+            throws Exception {
+      
     if (members == null || members.isEmpty() || tags == null) {
-      return; // empty relations makes no sense;
+        return; // empty relations makes no sense;
     }
+    
     if (!ways.isEmpty()) {
-      waysNew += ways.size();
-      saveWayElements();
-      this.printStatusShort(1);
-      logger.print(1, "finished saving ways, continuing with relations", true);
+        waysNew += ways.size();
+        saveWayElements();
+        this.printStatusShort(1);
+        logger.print(1, "finished saving ways, continuing with relations", true);
     }
     RelationElement newRel = new RelationElement(attributes, members, tags);
-    if (importMode.equalsIgnoreCase("update")) {
-      // todo
-      // todo
-      // todo
-      // todo
-      // todo
-      // todo
-      // todo
-      // todo
-      // todo
-      // todo
-      // todo
-      // todo
-      // todo
-    } else if (importMode.equalsIgnoreCase("initial_import")) {
-      this.relNew++;
-      this.rels.put(String.valueOf(newRel.getID()), newRel);
-      if (((rels.size() * 100) + 1) % tmpStorageSize == 0) {
+    
+    this.relNew++;
+    this.rels.put(String.valueOf(newRel.getID()), newRel);
+    if (((rels.size() * 100) + 1) % tmpStorageSize == 0) {
         this.saveRelElements();
         this.printStatusShort(4);
-      }
-    } else {
-      logger.print(1, "not supported importMode in config file");
     }
+    
+    this.logLastElement(newRel);
   }
 
   @Override
   public void flush() throws Exception {
     if (!nodes.isEmpty()) {
-      this.saveNodeElements();
+        this.saveNodeElements();
     }
     if (!ways.isEmpty()) {
-      this.saveWayElements();
+        this.saveWayElements();
     }
     if (!rels.isEmpty()) {
-      this.saveRelElements();
+        this.saveRelElements();
     }
   }
 
@@ -1189,15 +954,6 @@ public class SQLImportCommandBuilder implements ImportCommandBuilder, ElementSto
       default:
         break;
     }
-  }
-
-  ////////////////////////////////////////////////////////////////////
-  //                       element storage                          //
-  ////////////////////////////////////////////////////////////////////
-  @Override
-  public NodeElement getNodeByID(String id) {
-    // ToDo Select from db
-    return null;
   }
 
   ////////////////////////////////////////////////////////////////////

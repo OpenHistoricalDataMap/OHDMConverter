@@ -18,6 +18,8 @@ public class Parameter {
     private String pwd;
     private String dbname;
     private String schema;
+    private String maxThreads = "2";
+    private String recordFileName = "recordFile.txt";
     
     public Parameter(String filename) throws FileNotFoundException, IOException {
         FileInputStream fInput = new FileInputStream(filename);
@@ -43,6 +45,8 @@ public class Parameter {
                         case "pwd": this.pwd = value; break;
                         case "dbname": this.dbname = value; break;
                         case "schema": this.schema = value; break;
+                        case "maxThreads": this.maxThreads = value; break;
+                        case "recordFileName": this.recordFileName = value; break;
                     }
                 }
             }
@@ -57,6 +61,9 @@ public class Parameter {
     public String getPWD() { return this.pwd ;}
     public String getdbName() { return this.dbname ;}
     public String getSchema() { return this.schema ;}
+    public String getMaxThread() { return this.maxThreads ;}
+    public String getRecordFileName() { return this.recordFileName; }
     
     public String getPath() { return this.getdbName() ;}
+
 }

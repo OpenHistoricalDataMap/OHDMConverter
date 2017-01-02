@@ -22,12 +22,13 @@ public class SQLStatementQueue {
     
     public static final int DEFAULT_MAX_SQL_STATEMENTS = 100;
     private final ArrayList<SQLExecute> execThreads = new ArrayList<>();
-    private static final int MAX_EXEC_THREADS = 1;
+    private static final int MAX_EXEC_THREADS = 2;
     
     private StringBuilder sqlQueue;
     
     private int number = 0;
     private File recordFile = null;
+    private int maxThreads = 1;
     
     public SQLStatementQueue(Connection connection, int maxStatements, MyLogger logger) {
         this.connection = connection;
@@ -44,9 +45,14 @@ public class SQLStatementQueue {
     }
     
     public SQLStatementQueue(Connection connection, File recordFile) {
+        this(connection, recordFile, MAX_EXEC_THREADS);
+    }
+    
+    public SQLStatementQueue(Connection connection, File recordFile, int maxThreads) {
         this(connection, DEFAULT_MAX_SQL_STATEMENTS, null);
         
         this.recordFile = recordFile;
+        this.maxThreads = maxThreads;
     }
     
     /**
@@ -82,14 +88,6 @@ public class SQLStatementQueue {
         }
     }
     
-    public boolean finished() {
-        return this.execThreads.isEmpty();
-    }
-
-    public int numberRunningThread() {
-        return this.execThreads.size();
-    }
-    
     /**
      * Parallel execution of sql statement
      * @param recordEntry
@@ -115,7 +113,7 @@ public class SQLStatementQueue {
     
     private Thread t = null;
             
-    public synchronized void forceExecute(boolean parallel, String recordEntry) 
+    public void forceExecute(boolean parallel, String recordEntry) 
             throws SQLException, IOException {
         
         if(this.sqlQueue == null || this.sqlQueue.length() < 1) {
@@ -128,33 +126,25 @@ public class SQLStatementQueue {
             this.writeLog(recordEntry);
         } else {
             // find thread
-            if(this.execThreads.size() < SQLStatementQueue.MAX_EXEC_THREADS) {
-                // create new thread
-                SQLExecute se = new SQLExecute(this.connection, this.sqlQueue.toString(), 
-                        recordEntry, this);
-                this.execThreads.add(se);
-                se.start();
-            } else {
-                // find idol thread
-                boolean notFound = true;
-                while(notFound) {
-                    for(SQLExecute se : this.execThreads) {
-                        if(se.isDone()) {
-                            se.execNext(this.sqlQueue.toString(), recordEntry);
-                            se.wakeup();
-                            notFound = false;
-                        }
-                    }
-                    // no idol thread found and all thread are already activated.. wait
-                    this.t = Thread.currentThread();
+            boolean found = false;
+            while(!found) {
+                if(this.execThreads.size() < this.maxThreads) {
+                    // create new thread
+                    SQLExecute se = new SQLExecute(this.connection, this.sqlQueue.toString(), 
+                            recordEntry, this);
+                    this.execThreads.add(se);
+                    se.start();
+                    found = true;
+                } else {
+                    // no more thread allowed.. make an educated guess and wait for
+                    // first one to end
+                    Thread jThread = this.execThreads.get(0);
                     try {
-                        this.t.wait();
-                        System.out.println("caller thread of SQLStatement.force() waits now: " + recordEntry);
-                    }
-                    catch(InterruptedException ie) {
-                        // woke up.. nice go ahead
-                        this.t = null;
-                        System.out.println("caller thread of SQLStatement.force() wakes up" + recordEntry);
+//                        System.out.println("sqlQueue: no sql thread found.. wait for first one to die");
+                        jThread.join();
+//                        System.out.println("sqlQueue: first sql thread died");
+                    } catch (InterruptedException ex) {
+                        // ignore and go ahead
                     }
                 }
             }
@@ -178,7 +168,7 @@ public class SQLStatementQueue {
     }
     
     void writeLog(String recordEntry) throws FileNotFoundException, IOException {
-        if(this.recordFile == null) return;
+        if(this.recordFile == null || recordEntry == null) return;
         
         FileWriter fw = new FileWriter(this.recordFile);
         fw.write(recordEntry);
@@ -215,9 +205,24 @@ public class SQLStatementQueue {
     }
 
     synchronized void done(SQLExecute execThread) {
-        // wake sql queue if necessary
-        if(this.t != null) {
-            this.t.interrupt();
+        this.execThreads.remove(execThread);
+//        System.out.println("sqlQueue: exec thread removed");
+    }
+    
+    /**
+     * Wait until all pending threads came to end end.. flushes that queue
+     */
+    public void flushThreads() {
+        System.out.println("sqlQueue: flush called... wait for threads to finish");
+        while(!this.execThreads.isEmpty()) {
+            try {
+                // each loop we wait for the first thread to finish until
+                // array is empty
+                this.execThreads.get(0).join();
+            } catch (InterruptedException ex) {
+                // go ahead
+            }
         }
+//        System.out.println("sqlQueue: flush finished");
     }
 }

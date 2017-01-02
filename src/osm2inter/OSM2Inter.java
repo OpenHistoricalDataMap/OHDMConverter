@@ -20,7 +20,6 @@ public class OSM2Inter {
     private static final String SUBDIR_SEPARATER = "\\";
     private static final String DEFAULT_CONFIG_DIR = "conf/";
     private static final String DEFAULT_OSM_FILENAME = "sample.osm";
-    private static final String DEFAULT_RECORD_FILENAME = "lastValidOSMID.txt";
     
     private static final String INTER_DB_SETTINGS_FILENAME = "db_inter.txt";
 
@@ -57,14 +56,7 @@ public class OSM2Inter {
     
     Parameter dbConnectionSettings = new Parameter(parameterFile);
     
-    String recordFileName = DEFAULT_RECORD_FILENAME;
-    if(args.length > 2) {
-        recordFileName = args[2];
-    }
-    
-    File recordFile = new File(recordFileName);
-    
-    newSAXParser.parse(osmFile, new OSMImporter(dbConnectionSettings, recordFile));
+    newSAXParser.parse(osmFile, new OSMImporter(dbConnectionSettings));
       
     } catch (ParserConfigurationException ex) {
         Logger.getLogger(OSM2Inter.class.getName()).log(Level.SEVERE, null, ex);

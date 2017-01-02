@@ -9,28 +9,27 @@ import java.util.HashMap;
  */
 public class OSMElement extends AbstractElement {
 
-  private long id = 0;
+    private long id = 0;
+    private String osmIDString;
 
-  OSMElement(HashMap<String, String> attributes) {
-    this(attributes, null);
-  }
+    OSMElement(HashMap<String, String> attributes) {
+      this(attributes, null);
+    }
 
-  OSMElement(HashMap<String, String> attributes, ArrayList<TagElement> tags) {
-    this(null, attributes, tags);
-  }
-  
     OSMElement(String serializedAttributes, String serializedTags) {
         super(serializedAttributes, serializedTags);
     }
-
-    OSMElement(ElementStorage storage, HashMap<String, String> attributes, ArrayList<TagElement> tags) {
+    
+    OSMElement(HashMap<String, String> attributes, ArrayList<TagElement> tags) {
         super(attributes, tags);
         try {
             if (id == 0) {
-                if (this.attributes.get("id") != null) {
-                  this.id = Long.valueOf(this.attributes.get("id"));
+                this.osmIDString = this.attributes.get("id");
+                if (this.osmIDString != null) {
+                    this.id = Long.valueOf(this.osmIDString);
+                    // TODO: else part correct??
                 } else if (this.attributes.get("ref") != null) {
-                  this.id = Long.valueOf(this.attributes.get("ref"));
+                    this.id = Long.valueOf(this.attributes.get("ref"));
                 }
             }
         } catch (NumberFormatException e) {
@@ -43,7 +42,11 @@ public class OSMElement extends AbstractElement {
     });
   }
 
-  public long getID() {
-    return this.id;
-  }
+    public long getID() {
+        return this.id;
+    }
+    
+    public String getOSMID() {
+        return this.osmIDString;
+    }
 }

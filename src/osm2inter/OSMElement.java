@@ -9,35 +9,35 @@ import java.util.HashMap;
  */
 public class OSMElement extends AbstractElement {
 
-    private long id = 0;
+    private long id;
     private String osmIDString;
 
     OSMElement(HashMap<String, String> attributes) {
       this(attributes, null);
     }
 
-    OSMElement(String serializedAttributes, String serializedTags) {
-        super(serializedAttributes, serializedTags);
-    }
+//    OSMElement(String serializedAttributes, String serializedTags) {
+//        super(serializedAttributes, serializedTags);
+//    }
     
     OSMElement(HashMap<String, String> attributes, ArrayList<TagElement> tags) {
         super(attributes, tags);
+        this.id = 0; // make compiler happy
         try {
-            if (id == 0) {
-                this.osmIDString = this.attributes.get("id");
-                if (this.osmIDString != null) {
-                    this.id = Long.valueOf(this.osmIDString);
-                    // TODO: else part correct??
-                } else if (this.attributes.get("ref") != null) {
-                    this.id = Long.valueOf(this.attributes.get("ref"));
-                }
+            this.osmIDString = this.getAttributes().get("id");
+            this.osmIDString = this.getAttributes().get("id");
+            if (this.osmIDString != null) {
+                this.id = Long.valueOf(this.osmIDString);
+                // TODO: else part correct??
+            } else if (this.getAttributes().get("ref") != null) {
+                this.id = Long.valueOf(this.getAttributes().get("ref"));
             }
         } catch (NumberFormatException e) {
         }
     }
 
   void print() {
-    attributes.entrySet().stream().forEach((entry) -> {
+    this.getAttributes().entrySet().stream().forEach((entry) -> {
       System.out.print("k|v: " + entry.getKey() + "|" + entry.getValue() + "\n");
     });
   }

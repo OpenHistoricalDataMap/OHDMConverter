@@ -14,7 +14,7 @@ public class OHDMWay extends OHDMElement {
 
     OHDMWay(IntermediateDB intermediateDB, String osmIDString, String classCodeString, String sTags, String nodeIDs, String ohdmObjectIDString, String ohdmGeomIDString, boolean isPart, boolean valid) {
         // handle tags as attributes..
-        super(intermediateDB, osmIDString, classCodeString, null, sTags, ohdmObjectIDString, ohdmGeomIDString, isPart, valid);
+        super(intermediateDB, osmIDString, classCodeString, sTags, ohdmObjectIDString, ohdmGeomIDString, isPart, valid);
         this.nodeIDs = nodeIDs;
     }
 

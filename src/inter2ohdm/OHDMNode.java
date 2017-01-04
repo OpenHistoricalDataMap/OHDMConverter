@@ -11,7 +11,7 @@ public class OHDMNode extends OHDMElement {
     private String latitude;
 
     OHDMNode(IntermediateDB intermediateDB, String osmIDString, String classCodeString, String sTags, String ohdmObjectIDString, String ohdmGeomIDString, boolean isPart, boolean valid) {
-        super(intermediateDB, osmIDString, classCodeString, null, sTags, ohdmObjectIDString, ohdmGeomIDString, isPart, valid);
+        super(intermediateDB, osmIDString, classCodeString, sTags, ohdmObjectIDString, ohdmGeomIDString, isPart, valid);
     }
 
     OHDMNode(IntermediateDB intermediateDB, String osmIDString, String classCodeString, String sTags, String longitude, String latitude, String ohdmObjectIDString, String ohdmGeomIDString, boolean isPart, boolean valid) {

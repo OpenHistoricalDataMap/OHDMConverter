@@ -407,31 +407,20 @@ public class SQLImportCommandBuilder implements OSM2InterBuilder {
      * @return 
      */
     private int getOHDMClassID(OSMElement osmElement) {
-      // a node can have tags which can describe geometrie feature classe
-        ArrayList<TagElement> tags = osmElement.getTags();
-        if(tags == null) return -1;
-        
-        Iterator<TagElement> tagIter = tags.iterator();
-        if(tagIter == null) return -1;
-        
-        while(tagIter.hasNext()) {
-            TagElement tag = tagIter.next();
+        // a node can have tags which can describe geometrie feature classe
+        // get attributes of that tag
+        Iterator<String> keyIter = osmElement.getAttributes().keySet().iterator();
+        while(keyIter.hasNext()) {
+            String key = keyIter.next();
 
-            // get attributes of that tag
-            Iterator<String> keyIter = tag.attributes.keySet().iterator();
-            while(keyIter.hasNext()) {
-                String key = keyIter.next();
+            // is this key name of a feature class?
+            if(this.isClassName(key)) {
+                String value = osmElement.getValue(key);
 
-                // is this key name of a feature class?
-                if(this.isClassName(key)) {
-                    String value = tag.attributes.get(key);
-
-                    // find id of class / subclass
-                    return this.getOHDMClassID(key, value);
-                }
+                // find id of class / subclass
+                return this.getOHDMClassID(key, value);
             }
         }
-
         // there is no class description - sorry
         return -1;
     }
@@ -731,7 +720,7 @@ public class SQLImportCommandBuilder implements OSM2InterBuilder {
             nodesNew += nodes.size();
             this.saveNodeElements();
             printStatusShort(1);
-            logger.print(1, "finished saving nodes, continuing with ways", true);
+            logger.print(1, "finished saving nodes, continue with ways", true);
         }
         WayElement newWay = new WayElement(attributes, nds, tags);
         this.waysNew++;
@@ -890,7 +879,7 @@ public class SQLImportCommandBuilder implements OSM2InterBuilder {
         waysNew += ways.size();
         saveWayElements();
         this.printStatusShort(1);
-        logger.print(1, "finished saving ways, continuing with relations", true);
+        logger.print(1, "finished saving ways, proceed with relations", true);
     }
     RelationElement newRel = new RelationElement(attributes, members, tags);
     

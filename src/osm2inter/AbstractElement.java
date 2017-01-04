@@ -2,6 +2,7 @@ package osm2inter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
@@ -10,17 +11,46 @@ import java.util.StringTokenizer;
  * @author thsc
  */
 public abstract class AbstractElement {
-    public final HashMap<String, String> attributes;
-    public ArrayList<TagElement> tags = null;
+    private HashMap<String, String> attributes;
     
+    public HashMap<String, String> getAttributes() {
+        return this.attributes;
+    }
+    /**
+     * use that constructor only when scanning osm import file - it removes a number of attributes
+     * @param attributes
+     * @param tags 
+     */
     public AbstractElement(HashMap<String, String> attributes, ArrayList<TagElement> tags) {
         this.attributes = attributes;
-        this.tags = tags;
+        
+        this.tags2attributes(tags);
     }
 
-    public AbstractElement(String serializedAttributes, String serializedTags) {
-        this.attributes = this.deserializeAttributes(serializedAttributes);
-        this.tags = this.deserializeTags(serializedTags);
+    public AbstractElement(String serializedAttrAndTags) {
+//        this.attributes = new HashMap<>();
+        this.attributes = this.deserializeAttributes(serializedAttrAndTags);
+        
+//        this.tags2attributes();
+    }
+    
+    /**
+     * copy all tas to attributes
+     */
+    private void tags2attributes(ArrayList<TagElement> tags) {
+        if(tags == null) return;
+        if(tags.size() > 0) {
+            int i = 42; // debug break
+        }
+        for (TagElement tag : tags) {
+            HashMap<String, String> tagAttributes = tag.getAttributes();
+            if(tagAttributes != null) {
+                for(String key : tagAttributes.keySet()) {
+                    String value = tagAttributes.get(key);
+                    this.attributes.put(key, value);
+                }
+            }
+        }
     }
   
     protected String serializeAttributes(HashMap<String, String> attributes) {
@@ -70,7 +100,7 @@ public abstract class AbstractElement {
                 serializedThing.equalsIgnoreCase("0000"));
     }
 
-    protected final ArrayList<TagElement> deserializeTags(String serializedTags) {
+    protected final ArrayList<TagElement> deserializeAttrAndTags(String serializedTags) {
         ArrayList<TagElement> t = new ArrayList<>();
         
         if(emptySerialization(serializedTags)) return t;
@@ -89,54 +119,45 @@ public abstract class AbstractElement {
     
     public static String[] relevantAttributeKeys = new String[] {"uid", "user"};
     
-    protected HashMap<String, String> relevantAttributes = null;
-    HashMap<String, String> getRelevantAttributes() {
-        if(this.relevantAttributes != null) {
-            return this.relevantAttributes;
-        }
+    private HashMap<String, String> getRelevantAttributes(HashMap<String, String> attributes) {
+        HashMap<String, String> relevantAttributes = new HashMap<>();
         
-        this.relevantAttributes = new HashMap<>();
+        relevantAttributes = new HashMap<>();
     
         for (String key : AbstractElement.relevantAttributeKeys) {
-            String value = this.attributes.get(key);
+            String value = attributes.get(key);
             
             if(value != null) {
-                this.relevantAttributes.put(key, value);
+                relevantAttributes.put(key, value);
             }
         }
         
-        return this.relevantAttributes;
+        return relevantAttributes;
     }
   
     protected String getSerializedTagsAndAttributes() {
-        StringBuilder sTagAttr = new StringBuilder();
-        
         // attributes first - take only relevant attributes
-        HashMap<String, String> relAttributes = this.getRelevantAttributes();
-        if(relAttributes != null && !relAttributes.isEmpty()) {
-            String sAttributes = this.serializeAttributes(relAttributes);
-            sTagAttr.append(this.getStringWithLength(sAttributes));
-        }
-        
-        // now tags
-        if(this.tags != null && !this.tags.isEmpty()) {
-            Iterator<TagElement> tagIter = this.tags.iterator();
-
-            while(tagIter.hasNext()) {
-                TagElement tag = tagIter.next();
-
-                String sAttributes = this.serializeAttributes(tag.attributes);
-
-                sTagAttr.append(this.getStringWithLength(sAttributes));
+        if(this.attributes != null && !this.attributes.isEmpty()) {
+            String sAttributes = this.serializeAttributes(this.attributes);
+            if(sAttributes != null && sAttributes.length() > 0) {
+                return sAttributes;
             }
         }
-
-        if(sTagAttr.length() < 1) {
-            return this.getStringWithLength(null);
-        } 
         
-        // else: non empty tag / attr list
-        return sTagAttr.toString();
+        return null;
+        
+        // now tags
+//        if(this.tags != null && !this.tags.isEmpty()) {
+//            Iterator<TagElement> tagIter = this.tags.iterator();
+//
+//            while(tagIter.hasNext()) {
+//                TagElement tag = tagIter.next();
+//
+//                String sAttributes = this.serializeAttributes(tag.attributes);
+//
+//                sTagAttr.append(this.getStringWithLength(sAttributes));
+//            }
+//        }
     }
   
     protected String getStringWithLength(String s) {
@@ -213,42 +234,48 @@ public abstract class AbstractElement {
     public String getName() {
         if(this.name == null) {
             // check tags for a name
-            this.name = this.findValueInTags("name");
+            this.name = this.getValue("name");
             if(this.name == null) this.name = "";
         }
         
         return this.name;
     }
     
-    public final String findValue(String key) {
-        String value = this.findValueInTags(key);
-        if(value != null) return value;
-        
-        return this.attributes.get(key);
+    public final String getValue(String key) {
+        String value = this.attributes.get(key);
+        return value;
     }
     
     public String getType() {
-        return this.findValue("type");
+        return this.getValue("type");
     }
     
-    public String findValueInTags(String key) {
-        String nix = null;
+    /**
+     * duration / names pairs  of old names as there are found in osm
+     * @return can return null if no old name is found.
+     */
+    public HashMap<String, String> getOldNameStrings() {
+        //old_name:[lang]:1906-1933
         
-        if(this.tags == null || tags.isEmpty()) return nix;
-        
-        Iterator<TagElement> iterator = this.tags.iterator();
-        
-        for (TagElement tag : this.tags) {
-            if(tag.attributes != null) {
-                String elementName = tag.attributes.get(key);
-                if(elementName != null) return elementName;
+        HashMap<String, String> oldNames = null;
+        // iterate attributes
+        for(String name : this.attributes.keySet()) {
+            if(name.startsWith("old_name")) {
+                if(oldNames == null) {
+                    oldNames = new HashMap<>();
+                }
+                // extract time from key
+                int last = name.lastIndexOf(":");
+                if(last == -1) continue;
+                String durationString = name.substring(last);
+                String oldName = this.attributes.get(name);
+                
+                if(oldName != null && oldName.length() > 0) {
+                    oldNames.put(name, oldName);
+                }
             }
         }
         
-        return nix;
-    }
-    
-    public ArrayList<TagElement> getTags() {
-      return this.tags;
+        return oldNames;
     }
 }

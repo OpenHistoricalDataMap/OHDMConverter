@@ -23,15 +23,19 @@ public abstract class OHDMElement extends AbstractElement {
     protected boolean isPolygon = false;
     protected final IntermediateDB intermediateDB;
     private final boolean isPart;
-    
+
     public static enum GeometryType {POINT, LINESTRING, POLYGON, RELATION};
 
     OHDMElement(IntermediateDB intermediateDB, String osmIDString, 
-            String classCodeString, String sAttributes, String sTags, 
+            String classCodeString, String sTags, 
             String ohdmObjectIDString, String ohdmGeomIDString, boolean isPart, boolean valid) {
         
-        super(sAttributes, sTags);
+        super(sTags);
 
+        if(osmIDString.equalsIgnoreCase("28245535")) {
+            int i = 42; // debug break
+        }
+        
         this.intermediateDB = intermediateDB;
         this.getUserID();
         this.getUsername();
@@ -144,7 +148,7 @@ public abstract class OHDMElement extends AbstractElement {
      */
     final String getUserID() {
         if(this.uid == null) {
-            this.uid = this.findValue("uid");
+            this.uid = this.getValue("uid");
 
             if(this.uid == null) {
                 this.uid = "-1";
@@ -157,7 +161,7 @@ public abstract class OHDMElement extends AbstractElement {
     private String username = null;
     final String getUsername() {
         if(this.username == null) {
-            this.username = this.findValue("user");
+            this.username = this.getValue("user");
 
             if(this.username == null) {
                 this.username = "unknown";
@@ -218,5 +222,6 @@ public abstract class OHDMElement extends AbstractElement {
     boolean isPolygon() {
         return this.isPolygon;
     }
+    
     
 }

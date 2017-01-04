@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import osm.OSMClassification;
@@ -127,6 +128,31 @@ public class Inter2OHDM extends Importer {
             } 
         }
 
+        return false;
+    }
+    
+    @Override
+    public boolean importHistoricalInformation(OHDMElement element) throws SQLException {
+        // are there historic names?
+        HashMap<String, String> oldNameString = element.getOldNameStrings();
+        if(oldNameString == null) return false;
+        
+        
+        // HIER WEITERMACHEN TODO
+        
+//        OHDMRelation relation = null;
+//        relation.getMember(0);
+//        
+//        int targetType = Inter2OHDM.TARGET_POLYGON;
+//        String classCodeString = null;
+//        String sourceIDString = null;
+//        String targetIDString = null;
+//        int externalUserID = 0;
+//        
+//        this.addValidity(this.targetQueue, targetType, 
+//            classCodeString, sourceIDString, 
+//            targetIDString, externalUserID);
+        
         return false;
     }
     
@@ -431,7 +457,7 @@ public class Inter2OHDM extends Importer {
             int i = 42;
         }
         
-        ArrayList<TagElement> tags = ohdmElement.getTags();
+//        ArrayList<TagElement> tags = ohdmElement.getTags();
         
         try {
             // get external user id from ohdm
@@ -465,6 +491,8 @@ public class Inter2OHDM extends Importer {
 
             // keep some special tags (url etc, see wiki)
             addContentAndURL(ohdmElement, ohdmObjectIDString);
+            
+            // are there even historical information stored
 
             return ohdmObjectIDString;
         }

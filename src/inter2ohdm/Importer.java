@@ -129,4 +129,6 @@ public abstract class Importer {
     public abstract boolean importRelation(OHDMRelation relation) throws SQLException;
 
     public abstract boolean importNode(OHDMNode node) throws SQLException;
+
+    public abstract boolean importHistoricalInformation(OHDMElement element) throws SQLException;
 }

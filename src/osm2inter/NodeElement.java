@@ -15,10 +15,10 @@ public class NodeElement extends OSMElement {
   }
 
   public String getLatitude() {
-    return this.attributes.get("lat");
+    return this.getValue("lat");
   }
 
   public String getLongitude() {
-    return this.attributes.get("lon");
+    return this.getValue("lon");
   }
 }

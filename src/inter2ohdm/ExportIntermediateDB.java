@@ -2,7 +2,6 @@ package inter2ohdm;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import static osm2inter.SQLImportCommandBuilder.RELATIONTABLE;
@@ -23,6 +22,8 @@ public class ExportIntermediateDB extends IntermediateDB {
     private int numberWays = 0;
     private int numberRelations = 0;
     private final String schema;
+    
+    private int historicInfos = 0;
     
     private final SQLStatementQueue sourceQueue;
     
@@ -69,6 +70,10 @@ public class ExportIntermediateDB extends IntermediateDB {
                     this.numberNodes++;
                 }
                 
+                if(this.importer.importHistoricalInformation(node)) {
+                    this.historicInfos++;
+                }
+                
             }
         } catch (SQLException ex) {
             System.err.println("inter2ohdm: exception when processing sql request: " + sql.toString());
@@ -108,6 +113,10 @@ public class ExportIntermediateDB extends IntermediateDB {
                 // process that stuff
                 if(this.importer.importWay(way)) {
                     this.numberWays++;
+                }
+                
+                if(this.importer.importHistoricalInformation(way)) {
+                    this.historicInfos++;
                 }
             }
         } catch (SQLException ex) {
@@ -258,6 +267,11 @@ public class ExportIntermediateDB extends IntermediateDB {
                 // process that stuff
                 if(relationMemberComplete && this.importer.importRelation(relation)) {
                     this.numberRelations++;
+                    
+                    if(this.importer.importHistoricalInformation(relation)) {
+                        this.historicInfos++;
+                    }
+                    
                 } else {
                     if(!debug_alreadyPrinted) {
                         String type = relation.getClassName();
@@ -284,6 +298,8 @@ public class ExportIntermediateDB extends IntermediateDB {
         sb.append(" ways | ");
         sb.append(this.numberRelations);
         sb.append(" relations | ");
+        sb.append(this.historicInfos);
+        sb.append(" historical information");
         
         return sb.toString();
     }

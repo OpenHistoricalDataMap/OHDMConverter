@@ -16,7 +16,7 @@ public class OHDMRelation extends OHDMElement {
     private ArrayList<String> roleMemberIDList;
     
     OHDMRelation(IntermediateDB intermediateDB, String osmIDString, String classCodeString, String sTags, String memberIDs, String ohdmObjectIDString, String ohdmGeomIDString, boolean valid) {
-        super(intermediateDB, osmIDString, classCodeString, null, sTags, ohdmObjectIDString, ohdmGeomIDString, false, valid);
+        super(intermediateDB, osmIDString, classCodeString, sTags, ohdmObjectIDString, ohdmGeomIDString, false, valid);
         this.memberIDs = memberIDs;
     }
     

@@ -607,34 +607,22 @@ public class OSMClassification {
      * @return 
      */
     public int getOHDMClassID(AbstractElement osmElement) {
-      // a node can have tags which can describe geometrie feature classe
-        ArrayList<TagElement> tags = osmElement.getTags();
-        if(tags == null) return -1;
-        
-        Iterator<TagElement> tagIter = tags.iterator();
-        if(tagIter == null) return -1;
-        
-        while(tagIter.hasNext()) {
-            TagElement tag = tagIter.next();
-
             // get attributes of that tag
-            Iterator<String> keyIter = tag.attributes.keySet().iterator();
+            Iterator<String> keyIter = osmElement.getAttributes().keySet().iterator();
             while(keyIter.hasNext()) {
                 String key = keyIter.next();
 
                 // is this key name of a feature class?
                 if(this.isClassName(key)) {
-                    String value = tag.attributes.get(key);
+                    String value = osmElement.getValue(key);
 
                     // find id of class / subclass
                     return this.getOHDMClassID(key, value);
                 }
-            }
         }
 
         // there is no class description - sorry
         return -1;
-        
     }
     
     /**

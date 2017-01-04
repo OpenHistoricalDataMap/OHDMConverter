@@ -1,6 +1,5 @@
 package inter2ohdm;
 
-import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
@@ -165,17 +164,6 @@ public abstract class OHDMElement extends AbstractElement {
             }
         }
         return this.username;
-    }
-    
-    final String findValue(String key) {
-        String value = this.findValueInTags(key);
-        if(value != null) return value;
-        
-        return this.attributes.get(key);
-    }
-    
-    final String getType() {
-        return this.findValue("type");
     }
     
     protected ArrayList<String> setupIDList(String idString) {

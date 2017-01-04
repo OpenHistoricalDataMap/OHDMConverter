@@ -220,6 +220,17 @@ public abstract class AbstractElement {
         return this.name;
     }
     
+    public final String findValue(String key) {
+        String value = this.findValueInTags(key);
+        if(value != null) return value;
+        
+        return this.attributes.get(key);
+    }
+    
+    public String getType() {
+        return this.findValue("type");
+    }
+    
     public String findValueInTags(String key) {
         String nix = null;
         

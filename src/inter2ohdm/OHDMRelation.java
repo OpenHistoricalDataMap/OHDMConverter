@@ -35,7 +35,7 @@ public class OHDMRelation extends OHDMElement {
     boolean fillRelatedGeometries(ArrayList<String> polygonIDs, ArrayList<String> polygonWKT) {
         // now... we are going to construct a wkt out of OSM multipolygon... good luck :/
         
-        // create a polygon with hole
+        // create a polygon with hole or multiple polygons
         // POLYGON ((10 10, 110 10, 110 110, 10 110), (20 20, 20 30, 30 30, 30 20), (40 20, 40 30, 50 30, 50 20))
 
         if(this.getOSMIDString().equalsIgnoreCase("3323434")) {
@@ -144,7 +144,7 @@ public class OHDMRelation extends OHDMElement {
                                 // whole polygon done
                                 polygonIDs.add("-1");
                                 polygonWKT.add("POLYGON(" + wktBuilder.toString() + ")");
-//                                wktBuilder = null;
+                                wktBuilder = null;
                             } // else // start next hole.. nothing todo
                         }
                     } else {
@@ -179,13 +179,13 @@ public class OHDMRelation extends OHDMElement {
             return false;
         }
         
-        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        System.out.println("osmid: " + this.getOSMIDString());
-        for(int i=0; i<polygonIDs.size();i++) {
-            System.out.println("id: " + polygonIDs.get(i));
-            System.out.println("wktstring:\n" + polygonWKT.get(i));
-        }
-        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+//        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+//        System.out.println("osmid: " + this.getOSMIDString());
+//        for(int i=0; i<polygonIDs.size();i++) {
+//            System.out.println("id: " + polygonIDs.get(i));
+//            System.out.println("wktstring:\n" + polygonWKT.get(i));
+//        }
+//        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         
         return true;
     }

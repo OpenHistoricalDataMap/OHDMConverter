@@ -134,24 +134,27 @@ public class Inter2OHDM extends Importer {
     @Override
     public boolean importHistoricalInformation(OHDMElement element) throws SQLException {
         // are there historic names?
-        HashMap<String, String> oldNameString = element.getOldNameStrings();
-        if(oldNameString == null) return false;
+        HashMap<String, String> oldNames = element.getOldNameStrings();
+        if(oldNames == null) return false;
         
-        
-        // HIER WEITERMACHEN TODO
-        
+//        int targetType = Inter2OHDM.TARGET_POLYGON;
+//        String classCodeString = element.getClassCodeString(); // just a guess, might have changed over time.
+//        
+//        
+//        String sourceIDString = ""; // we need a new geografic object
+//        // create new go for historic thing
+//
+//        // this does not work for relations
+//        String targetIDString = element.getOHDMGeomID();
+//
+//        // we can get relation member from that object
 //        OHDMRelation relation = null;
 //        relation.getMember(0);
-//        
-//        int targetType = Inter2OHDM.TARGET_POLYGON;
-//        String classCodeString = null;
-//        String sourceIDString = null;
-//        String targetIDString = null;
-//        int externalUserID = 0;
-//        
+        
+        
 //        this.addValidity(this.targetQueue, targetType, 
-//            classCodeString, sourceIDString, 
-//            targetIDString, externalUserID);
+//            classCodeString, sourceIDString,
+//            targetIDString, this.getOHDM_ID_ExternalUser(element));
         
         return false;
     }

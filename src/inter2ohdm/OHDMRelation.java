@@ -38,9 +38,9 @@ public class OHDMRelation extends OHDMElement {
         // create a polygon with hole
         // POLYGON ((10 10, 110 10, 110 110, 10 110), (20 20, 20 30, 30 30, 30 20), (40 20, 40 30, 50 30, 50 20))
 
-//        if(this.getOSMIDString().equalsIgnoreCase("3323433")) {
-//            int debuggingStop = 42;
-//        }
+        if(this.getOSMIDString().equalsIgnoreCase("3323434")) {
+            int debuggingStop = 42;
+        }
         
         try {
             StringBuilder wktBuilder = null;
@@ -85,7 +85,7 @@ public class OHDMRelation extends OHDMElement {
                             if(nextOutside) {
                                 // no hole
                                 polygonIDs.add("-1");
-                                polygonWKT.add(wktBuilder.toString());
+                                polygonWKT.add("POLYGON(" + wktBuilder.toString() + ")");
                                 wktBuilder = null;
                             } else {
                                 // there is a hole.. start hole wkt
@@ -143,8 +143,8 @@ public class OHDMRelation extends OHDMElement {
                             if(nextOutside || lastLoop) {
                                 // whole polygon done
                                 polygonIDs.add("-1");
-                                polygonWKT.add(wktBuilder.toString());
-                                wktBuilder = null;
+                                polygonWKT.add("POLYGON(" + wktBuilder.toString() + ")");
+//                                wktBuilder = null;
                             } // else // start next hole.. nothing todo
                         }
                     } else {

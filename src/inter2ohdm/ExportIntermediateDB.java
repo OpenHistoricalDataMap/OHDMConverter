@@ -24,25 +24,36 @@ public class ExportIntermediateDB extends IntermediateDB {
     private int numberRelations = 0;
     private final String schema;
     
+    private final SQLStatementQueue sourceQueue;
+    
     ExportIntermediateDB(Connection sourceConnection, String schema, Importer importer) {
         super(sourceConnection, schema);
         
         this.schema = schema;
         this.importer = importer;
+        
+        this.sourceQueue = new SQLStatementQueue(sourceConnection);
+    }
+
+    void processNodes() {
+        this.processNodes(this.sourceQueue);
     }
     
-    void processNodes() {
+    void processNodes(SQLStatementQueue sql) {
         // go through node table and do what has to be done.
         
-        StringBuilder sql = new StringBuilder("SELECT * FROM ");
-        sql.append(Importer.getFullTableName(this.schema, NODETABLE)).append(";");
+//        StringBuilder sql = new StringBuilder("SELECT * FROM ");
+        sql.append("SELECT * FROM ");
+        sql.append(Importer.getFullTableName(this.schema, NODETABLE));
+        sql.append(";");
         
         int number = 0;
         int notPartNumber = 0;
         System.out.println("Nodes... print a star after 100 nodes");
         try {
-            PreparedStatement stmt = this.sourceConnection.prepareStatement(sql.toString());
-            ResultSet qResultNode = stmt.executeQuery();
+//            PreparedStatement stmt = this.sourceConnection.prepareStatement(sql.toString());
+//            ResultSet qResultNode = stmt.executeQuery();
+            ResultSet qResultNode = sql.executeWithResult();
             
             while(qResultNode.next()) {
                 number++;
@@ -60,6 +71,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                 
             }
         } catch (SQLException ex) {
+            System.err.println("inter2ohdm: exception when processing sql request: " + sql.toString());
             System.err.println(ex.getLocalizedMessage());
         }
         
@@ -67,15 +79,21 @@ public class ExportIntermediateDB extends IntermediateDB {
     }
     
     void processWays() {
-        StringBuilder sql = new StringBuilder("SELECT * FROM ");
-        sql.append(Importer.getFullTableName(this.schema, WAYTABLE)).append(";");
+        this.processWays(this.sourceQueue);
+    }
+    
+    void processWays(SQLStatementQueue sql) {
+//        StringBuilder sql = new StringBuilder("SELECT * FROM ");
+        sql.append("SELECT * FROM ");
+        sql.append(Importer.getFullTableName(this.schema, WAYTABLE));
+        sql.append(";");
         
         int number = 0;
         int notPartNumber = 0;
         System.out.println("Ways... print a star after 100 ways");
         try {
-            PreparedStatement stmt = this.sourceConnection.prepareStatement(sql.toString());
-            ResultSet qResultWay = stmt.executeQuery();
+            //PreparedStatement stmt = this.sourceConnection.prepareStatement(sql.toString());
+            ResultSet qResultWay = sql.executeWithResult();
             
             while(qResultWay.next()) {
                 number++;
@@ -93,6 +111,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                 }
             }
         } catch (SQLException ex) {
+            System.err.println("inter2ohdm: exception when processing sql request: " + sql.toString());
             System.err.println(ex.getLocalizedMessage());
         }
         
@@ -128,8 +147,12 @@ public class ExportIntermediateDB extends IntermediateDB {
         return way;
     }
     
-    void processRelations() throws SQLException {
-        SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
+    void processRelations() {
+        this.processRelations(this.sourceQueue);
+    }
+    
+    void processRelations(SQLStatementQueue sql) {
+//        SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
         
         sql.append("SELECT * FROM ");
         sql.append(Importer.getFullTableName(this.schema, RELATIONTABLE));
@@ -192,6 +215,11 @@ public class ExportIntermediateDB extends IntermediateDB {
                     sql.append(id.toString());
                     sql.append(";");
                     
+                    // debug stop
+                    if(id.toString().equalsIgnoreCase("245960580")) {
+                        int i = 42;
+                    }
+                    
                     ResultSet memberResult = sql.executeWithResult();
                     if(memberResult.next()) {
                         // this call can fail, see else branch
@@ -239,6 +267,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                 }
             }
         } catch (SQLException ex) {
+            System.err.println("inter2ohdm: exception when processing sql request: " + sql.toString());
             System.err.println(ex.getLocalizedMessage());
         }
         

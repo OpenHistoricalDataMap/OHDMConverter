@@ -23,6 +23,8 @@ public class Inter2OHDM extends Importer {
     private final String sourceSchema;
     private final String targetSchema;
     private final IntermediateDB intermediateDB;
+    private final SQLStatementQueue sourceQueue;
+    private final SQLStatementQueue targetQueue;
     
     public Inter2OHDM(IntermediateDB intermediateDB, 
             Connection sourceConnection, Connection targetConnection, 
@@ -33,18 +35,31 @@ public class Inter2OHDM extends Importer {
         this.sourceSchema = sourceSchema;
         this.targetSchema = targetSchema;
         this.intermediateDB = intermediateDB;
+        
+        this.sourceQueue = new SQLStatementQueue(sourceConnection);
+        this.targetQueue = new SQLStatementQueue(targetConnection);
     }
 
-    public Inter2OHDM(IntermediateDB intermediateDB, 
-            String sourceParameterFile, String targetParameterFile,
-            String sourceSchema, String targetSchema) throws IOException, SQLException {
-        
-        super(sourceParameterFile, targetParameterFile);
-        
-        this.sourceSchema = sourceSchema;
-        this.targetSchema = targetSchema;
-        this.intermediateDB = intermediateDB;
-    }
+//    /**
+//     * @deprecated 
+//     * @param intermediateDB
+//     * @param sourceParameterFile
+//     * @param targetParameterFile
+//     * @param sourceSchema
+//     * @param targetSchema
+//     * @throws IOException
+//     * @throws SQLException 
+//     */
+//    public Inter2OHDM(IntermediateDB intermediateDB, 
+//            String sourceParameterFile, String targetParameterFile,
+//            String sourceSchema, String targetSchema) throws IOException, SQLException {
+//        
+//        super(sourceParameterFile, targetParameterFile);
+//        
+//        this.sourceSchema = sourceSchema;
+//        this.targetSchema = targetSchema;
+//        this.intermediateDB = intermediateDB;
+//    }
 
     @Override
     public boolean importWay(OHDMWay way) {
@@ -264,20 +279,20 @@ public class Inter2OHDM extends Importer {
         String ohdmIDString = ohdmElement.getOHDMObjectID();
         if(ohdmIDString != null) return ohdmIDString;
         
-        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
+//        SQLStatementQueue targetQueue = new SQLStatementQueue(this.targetConnection);
         
         String name = ohdmElement.getName();
         String classIDString = ohdmElement.getClassCodeString();
         
-        sq.append("INSERT INTO ");
-        sq.append(Inter2OHDM.getFullTableName(this.targetSchema, Inter2OHDM.GEOOBJECT));
-        sq.append(" (name, source_user_id) VALUES ('");
-        sq.append(name);
-        sq.append("', ");
-        sq.append(externalUserID);
-        sq.append(") RETURNING id;");
+        targetQueue.append("INSERT INTO ");
+        targetQueue.append(Inter2OHDM.getFullTableName(this.targetSchema, Inter2OHDM.GEOOBJECT));
+        targetQueue.append(" (name, source_user_id) VALUES ('");
+        targetQueue.append(name);
+        targetQueue.append("', ");
+        targetQueue.append(externalUserID);
+        targetQueue.append(") RETURNING id;");
         
-        ResultSet result = sq.executeWithResult();
+        ResultSet result = targetQueue.executeWithResult();
         result.next();
         return result.getBigDecimal(1).toString();
     }
@@ -286,39 +301,39 @@ public class Inter2OHDM extends Importer {
         String wkt = ohdmElement.getWKTGeometry();
         if(wkt == null || wkt.length() < 1) return null;
         
-        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
+//        SQLStatementQueue targetQueue = new SQLStatementQueue(this.targetConnection);
         
-        sq.append("INSERT INTO ");
+        targetQueue.append("INSERT INTO ");
         
         String fullTableName;
         
         switch(ohdmElement.getGeometryType()) {
             case POINT: 
                 fullTableName = Inter2OHDM.getFullTableName(this.targetSchema, Inter2OHDM.POINTS);
-                sq.append(fullTableName);
-                sq.append(" (point, ");
+                targetQueue.append(fullTableName);
+                targetQueue.append(" (point, ");
                 break;
             case LINESTRING: 
                 fullTableName = Inter2OHDM.getFullTableName(this.targetSchema, Inter2OHDM.LINES);
-                sq.append(fullTableName);
-                sq.append(" (line, ");
+                targetQueue.append(fullTableName);
+                targetQueue.append(" (line, ");
                 break;
             case POLYGON: 
                 fullTableName = Inter2OHDM.getFullTableName(this.targetSchema, Inter2OHDM.POLYGONS);
-                sq.append(fullTableName);
-                sq.append(" (polygon, ");
+                targetQueue.append(fullTableName);
+                targetQueue.append(" (polygon, ");
                 break;
         }
         
-        sq.append(" source_user_id) VALUES ('");
+        targetQueue.append(" source_user_id) VALUES ('");
         
-        sq.append(wkt);
-        sq.append("', ");
-        sq.append(externalUserID);
-        sq.append(") RETURNING id;");
+        targetQueue.append(wkt);
+        targetQueue.append("', ");
+        targetQueue.append(externalUserID);
+        targetQueue.append(") RETURNING id;");
 
         try {
-            ResultSet result = sq.executeWithResult();
+            ResultSet result = targetQueue.executeWithResult();
             result.next();
             return result.getBigDecimal(1).toString();
         }
@@ -346,9 +361,9 @@ public class Inter2OHDM extends Importer {
                 break;
         }
         
-        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
-        this.addValidity(sq, targetType, ohdmElement.getClassCodeString(), ohdmIDString, ohdmGeomIDString, externalUserID);
-        sq.forceExecute();
+//        SQLStatementQueue targetQueue = new SQLStatementQueue(this.targetConnection);
+        this.addValidity(targetQueue, targetType, ohdmElement.getClassCodeString(), ohdmIDString, ohdmGeomIDString, externalUserID);
+        targetQueue.forceExecute();
     }
     
     void addValidity(SQLStatementQueue sq, int targetType, 
@@ -381,7 +396,7 @@ public class Inter2OHDM extends Importer {
     }
     
     void addContentAndURL(OHDMElement ohdmElement, String ohdmIDString) {
-        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
+//        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
     }
     
     private boolean elementHasIdentity(OHDMElement ohdmElement) {
@@ -497,12 +512,12 @@ public class Inter2OHDM extends Importer {
     }
     
     static protected void createSequence(Connection targetConnection, String schema, String tableName) throws SQLException {
-        SQLStatementQueue sq = new SQLStatementQueue(targetConnection);
+        SQLStatementQueue targetQueue = new SQLStatementQueue(targetConnection);
         
-        sq.append("CREATE SEQUENCE "); 
-        sq.append(Inter2OHDM.getSequenceName(Inter2OHDM.getFullTableName(schema, tableName)));
-        sq.append(" INCREMENT 1 MINVALUE 1 MAXVALUE 9223372036854775807 START 1 CACHE 1;");
-        sq.forceExecute();
+        targetQueue.append("CREATE SEQUENCE "); 
+        targetQueue.append(Inter2OHDM.getSequenceName(Inter2OHDM.getFullTableName(schema, tableName)));
+        targetQueue.append(" INCREMENT 1 MINVALUE 1 MAXVALUE 9223372036854775807 START 1 CACHE 1;");
+        targetQueue.forceExecute();
     }
     
     static protected void drop(Connection targetConnection, String schema, String tableName) throws SQLException {
@@ -923,6 +938,11 @@ public class Inter2OHDM extends Importer {
         */
         if(!relation.checkMultipolygonMemberOrder()) return false;
         
+        // debugging stop
+        if(relation.getOSMIDString().equalsIgnoreCase("3323433")) {
+            int i = 42;
+        }
+        
         // option b) it is a polygone or probably a multipolygon
         ArrayList<String> polygonIDs = new ArrayList<>();
         ArrayList<String> polygonWKT = new ArrayList<>();
@@ -933,26 +953,31 @@ public class Inter2OHDM extends Importer {
          geometries or to string representing geometries which are 
         to be stored and referenced.
         */
-        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
+//        SQLStatementQueue targetQueue = new SQLStatementQueue(this.targetConnection);
         for(int i = 0; i < polygonIDs.size(); i++) {
             String pID = polygonIDs.get(i);
             if(pID.equalsIgnoreCase("-1")) {
                 // this geometry is not yet in the database.. insert that polygon
-                sq.append("INSERT INTO ");
-                sq.append(Inter2OHDM.getFullTableName(this.targetSchema, Inter2OHDM.POLYGONS));
-                sq.append(" (polygon, source_user_id) VALUES ('");
-                sq.append(polygonWKT.get(i));
-                sq.append("', ");
+                targetQueue.append("INSERT INTO ");
+                targetQueue.append(Inter2OHDM.getFullTableName(this.targetSchema, Inter2OHDM.POLYGONS));
+                targetQueue.append(" (polygon, source_user_id) VALUES ('");
+                targetQueue.append(polygonWKT.get(i));
+                targetQueue.append("', ");
                 int ohdmUserID = this.getOHDM_ID_ExternalUser(relation);
-                sq.append(ohdmUserID);
-                sq.append(") RETURNING ID;");
+                targetQueue.append(ohdmUserID);
+                targetQueue.append(") RETURNING ID;");
                 
 //                sq.print("saving polygon wkt");
-                
-                ResultSet polygonInsertResult = sq.executeWithResult();
-                polygonInsertResult.next();
-                String geomIDString = polygonInsertResult.getBigDecimal(1).toString();
-                polygonIDs.set(i, geomIDString);
+                try {
+                    ResultSet polygonInsertResult = targetQueue.executeWithResult();
+                    polygonInsertResult.next();
+                    String geomIDString = polygonInsertResult.getBigDecimal(1).toString();
+                    polygonIDs.set(i, geomIDString);
+                }
+                catch(SQLException e) {
+                    System.err.println("sql failed: " + targetQueue.toString());
+                    throw e;
+                }
             }
         }
 
@@ -970,10 +995,9 @@ public class Inter2OHDM extends Importer {
         
         // void addValidity(int targetType, String classCodeString, String sourceIDString, String targetIDString, int externalUserID) throws SQLException {
         for(String targetIDString : polygonIDs) {
-            this.addValidity(sq, targetType, classCodeString, sourceIDString, targetIDString, externalUserID);
+            this.addValidity(targetQueue, targetType, classCodeString, sourceIDString, targetIDString, externalUserID);
         }
-        sq.forceExecute();
+        targetQueue.forceExecute();
         return true;
     }
 }
-

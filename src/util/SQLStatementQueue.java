@@ -185,23 +185,30 @@ public class SQLStatementQueue {
             return result;
         }
         catch(SQLException e) {
-            this.resetStatement();
             throw e;
         }
         finally {
+            this.resetStatement();
             stmt.closeOnCompletion();
         }
     }
     
     private String debugLastStatement;
     private void resetStatement() {
-        this.debugLastStatement = this.sqlQueue.toString();
-        this.sqlQueue = null;
+        if(this.sqlQueue != null) {
+            this.debugLastStatement = this.sqlQueue.toString();
+            this.sqlQueue = null;
+        }
     }
 
     public void print(String message) {
         System.out.println(message);
         System.out.println(this.sqlQueue.toString());
+    }
+    
+    @Override
+    public String toString() {
+        return "lastStatement:\n" + this.debugLastStatement;
     }
 
     synchronized void done(SQLExecute execThread) {

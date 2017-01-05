@@ -130,5 +130,5 @@ public abstract class Importer {
 
     public abstract boolean importNode(OHDMNode node) throws SQLException;
 
-    public abstract boolean importHistoricalInformation(OHDMElement element) throws SQLException;
+    public abstract boolean importPostProcessing(OHDMElement element) throws SQLException;
 }

@@ -4,14 +4,15 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import osm.OSMClassification;
 import util.SQLStatementQueue;
-import osm2inter.TagElement;
 import util.Parameter;
 
 /**
@@ -26,6 +27,8 @@ public class Inter2OHDM extends Importer {
     private final IntermediateDB intermediateDB;
     private final SQLStatementQueue sourceQueue;
     private final SQLStatementQueue targetQueue;
+    private String defaultSince = "01-01-1970";
+    private String defaultUntil = "01-01-2017";
     
     public Inter2OHDM(IntermediateDB intermediateDB, 
             Connection sourceConnection, Connection targetConnection, 
@@ -39,28 +42,20 @@ public class Inter2OHDM extends Importer {
         
         this.sourceQueue = new SQLStatementQueue(sourceConnection);
         this.targetQueue = new SQLStatementQueue(targetConnection);
+        
+        this.defaultSince = "2016-01-01";
+        this.defaultUntil = this.getTodayString();
     }
+    
+    private String getTodayString() {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DATE, 0);
+        
+        SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd");
 
-//    /**
-//     * @deprecated 
-//     * @param intermediateDB
-//     * @param sourceParameterFile
-//     * @param targetParameterFile
-//     * @param sourceSchema
-//     * @param targetSchema
-//     * @throws IOException
-//     * @throws SQLException 
-//     */
-//    public Inter2OHDM(IntermediateDB intermediateDB, 
-//            String sourceParameterFile, String targetParameterFile,
-//            String sourceSchema, String targetSchema) throws IOException, SQLException {
-//        
-//        super(sourceParameterFile, targetParameterFile);
-//        
-//        this.sourceSchema = sourceSchema;
-//        this.targetSchema = targetSchema;
-//        this.intermediateDB = intermediateDB;
-//    }
+        String formatted = format1.format(cal.getTime());
+        return formatted;
+    }
 
     @Override
     public boolean importWay(OHDMWay way) {
@@ -131,32 +126,98 @@ public class Inter2OHDM extends Importer {
         return false;
     }
     
+    int getTargetTypeInt(OHDMElement ohdmElement) {
+        int targetType = 0;
+        switch(ohdmElement.getGeometryType()) {
+            case POINT: 
+                targetType = Inter2OHDM.TARGET_POINT;
+                break;
+            case LINESTRING: 
+                targetType = Inter2OHDM.TARGET_LINESTRING;
+                break;
+            case POLYGON: 
+                targetType = Inter2OHDM.TARGET_POLYGON;
+                break;
+        }
+        
+        return targetType;
+    }
+    
     @Override
-    public boolean importHistoricalInformation(OHDMElement element) throws SQLException {
+    public boolean importPostProcessing(OHDMElement element) throws SQLException {
         // are there historic names?
         HashMap<String, String> oldNames = element.getOldNameStrings();
         if(oldNames == null) return false;
         
-//        int targetType = Inter2OHDM.TARGET_POLYGON;
-//        String classCodeString = element.getClassCodeString(); // just a guess, might have changed over time.
-//        
-//        
-//        String sourceIDString = ""; // we need a new geografic object
-//        // create new go for historic thing
-//
-//        // this does not work for relations
-//        String targetIDString = element.getOHDMGeomID();
-//
-//        // we can get relation member from that object
-//        OHDMRelation relation = null;
-//        relation.getMember(0);
+        /* we have a list of pairs like
+        yyyy-yyyy oldName1
+        yyyy-yyyy oldName2
+        yyyy-yyyy oldName3
+        whereas oldName1 can be identical to oldName3 or 2 or all can be 
+        the same.. in that case, time spans must be combined...
+        */
+
+        int targetType = this.getTargetTypeInt(element);
+        String classCodeString = element.getClassCodeString(); // just a guess, might have changed over time.
+        int externalUserID = this.getOHDM_ID_ExternalUser(element);
         
+        // we keep all newly created elements in that map: name / ohdmID
+        HashMap<String, String> newOldElements = new HashMap<>();
+        for(String oldTimeSpan : oldNames.keySet()) {
+            int i = oldTimeSpan.indexOf("-");
+            if(i == -1) continue;
+            
+            String fromYear = oldTimeSpan.substring(0, i) + "-01-01";
+            String toYear = oldTimeSpan.substring(i+1) + "-01-01";
+            
+            String oldName = oldNames.get(oldTimeSpan);
+            
+            /*
+            It not seldom that e.g. a place is renamed for a while
+            and get's its name back after a regime change. That happend
+            e.g. in Germany between 1933-1945 but also after 1949-1989
+            in Eastgermany.
+            Thus, maybe that old could have already been used
+             */
+            
+            String newOldOHDMID = newOldElements.get(oldName);
+
+            // if this not already exist..create
+            if(newOldOHDMID == null || newOldOHDMID.length() == 0) {
+                newOldOHDMID = this.addOHDMObject(oldName, this.getOHDM_ID_ExternalUser(element));
+                // remember
+                newOldElements.put(oldName, newOldOHDMID);
+            }
+            
+            String targetIDString;
+            if(element instanceof OHDMRelation) {
+                // relations can have more than one associated geometry
+                OHDMRelation relation = (OHDMRelation) element;
+                for(i = 0; i < relation.getMemberSize(); i++) {
+                    OHDMElement member = relation.getMember(i);
+                    
+                    targetIDString = member.getOHDMGeomID();
+                    this.addValidity(this.targetQueue, targetType, 
+                            classCodeString, newOldOHDMID, targetIDString, 
+                            externalUserID, fromYear, toYear);
+                }
+            } else {
+                targetIDString = element.getOHDMGeomID();
+                if(targetIDString != null && targetIDString.length() > 0) {
+                    this.addValidity(this.targetQueue, targetType, 
+                            classCodeString, newOldOHDMID, targetIDString, 
+                            externalUserID, fromYear, toYear);
+                }
+            }
+            
+            
+        }
         
-//        this.addValidity(this.targetQueue, targetType, 
-//            classCodeString, sourceIDString,
-//            targetIDString, this.getOHDM_ID_ExternalUser(element));
+        if(newOldElements.isEmpty()) return false;
         
-        return false;
+        this.targetQueue.forceExecute();
+        
+        return true;
     }
     
     private int idExternalSystemOSM = -1;
@@ -311,17 +372,21 @@ public class Inter2OHDM extends Importer {
 //        SQLStatementQueue targetQueue = new SQLStatementQueue(this.targetConnection);
         
         String name = ohdmElement.getName();
-        String classIDString = ohdmElement.getClassCodeString();
         
-        targetQueue.append("INSERT INTO ");
-        targetQueue.append(Inter2OHDM.getFullTableName(this.targetSchema, Inter2OHDM.GEOOBJECT));
-        targetQueue.append(" (name, source_user_id) VALUES ('");
-        targetQueue.append(name);
-        targetQueue.append("', ");
-        targetQueue.append(externalUserID);
-        targetQueue.append(") RETURNING id;");
+        return this.addOHDMObject(name, externalUserID);
+    }
+    
+    String addOHDMObject(String name, int externalUserID) throws SQLException {
+        SQLStatementQueue sql = new SQLStatementQueue(this.targetConnection);
+        sql.append("INSERT INTO ");
+        sql.append(Inter2OHDM.getFullTableName(this.targetSchema, Inter2OHDM.GEOOBJECT));
+        sql.append(" (name, source_user_id) VALUES ('");
+        sql.append(name);
+        sql.append("', ");
+        sql.append(externalUserID);
+        sql.append(") RETURNING id;");
         
-        ResultSet result = targetQueue.executeWithResult();
+        ResultSet result = sql.executeWithResult();
         result.next();
         return result.getBigDecimal(1).toString();
     }
@@ -364,17 +429,18 @@ public class Inter2OHDM extends Importer {
         try {
             ResultSet result = targetQueue.executeWithResult();
             result.next();
-            return result.getBigDecimal(1).toString();
+            String geomIDString = result.getBigDecimal(1).toString();
+            ohdmElement.setOHDMGeometryID(geomIDString);
+            return geomIDString;
         }
         catch(SQLException e) {
             System.err.println("failure when inserting geometry, wkt:\n" + wkt + "\nosm_id: " + ohdmElement.getOSMIDString());
             throw e;
         }
     }
+    
+    
 
-    private final String defaultSince = "01-01-1970";
-    private final String defaultUntil = "01-01-2017";
-            
     void addValidity(OHDMElement ohdmElement, String ohdmIDString, String ohdmGeomIDString, int externalUserID) throws SQLException {
         // what table is reference by id_geometry
         int targetType = 0;
@@ -391,13 +457,43 @@ public class Inter2OHDM extends Importer {
         }
         
 //        SQLStatementQueue targetQueue = new SQLStatementQueue(this.targetConnection);
-        this.addValidity(targetQueue, targetType, ohdmElement.getClassCodeString(), ohdmIDString, ohdmGeomIDString, externalUserID);
+        this.addValidity(targetQueue, ohdmElement, targetType, ohdmElement.getClassCodeString(), ohdmIDString, ohdmGeomIDString, externalUserID);
         targetQueue.forceExecute();
+    }
+    
+    private String formatDateString(String sinceValue) {
+        // assume we have only got the year
+        if(sinceValue.length() == 4) {
+            return sinceValue + "-01-01";
+        } 
+        
+        // TODO more..
+        
+        return null;
+    }
+    
+    void addValidity(SQLStatementQueue sq, OHDMElement ohdmElement, int targetType, 
+            String classCodeString, String sourceIDString, 
+            String targetIDString, int externalUserID) throws SQLException {
+        
+        String sinceString = null;
+        // is there since tag in osm origin?
+        String sinceValue = ohdmElement.getValue("since");
+        if(sinceValue != null) {
+            sinceString = this.formatDateString(sinceValue);
+        }
+        
+        if(sinceString == null) {
+            sinceString = this.defaultSince;
+        }
+        
+        this.addValidity(sq, targetType, classCodeString, sourceIDString, targetIDString, externalUserID, sinceString, this.defaultUntil);
     }
     
     void addValidity(SQLStatementQueue sq, int targetType, 
             String classCodeString, String sourceIDString, 
-            String targetIDString, int externalUserID) throws SQLException {
+            String targetIDString, int externalUserID, String sinceString, 
+            String untilString) throws SQLException {
         
         if(sourceIDString == null) {
             // failure
@@ -416,9 +512,9 @@ public class Inter2OHDM extends Importer {
         sq.append(", ");
         sq.append(targetIDString);
         sq.append(", '");
-        sq.append(this.defaultSince);
+        sq.append(sinceString);
         sq.append("', '"); 
-        sq.append(this.defaultUntil);
+        sq.append(untilString);
         sq.append("', "); // until
         sq.append(externalUserID);
         sq.append(");");
@@ -1026,7 +1122,7 @@ public class Inter2OHDM extends Importer {
         
         // void addValidity(int targetType, String classCodeString, String sourceIDString, String targetIDString, int externalUserID) throws SQLException {
         for(String targetIDString : polygonIDs) {
-            this.addValidity(targetQueue, targetType, classCodeString, sourceIDString, targetIDString, externalUserID);
+            this.addValidity(targetQueue, relation, targetType, classCodeString, sourceIDString, targetIDString, externalUserID);
         }
         targetQueue.forceExecute();
         return true;

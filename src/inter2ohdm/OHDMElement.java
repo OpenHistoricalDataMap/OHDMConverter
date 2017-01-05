@@ -47,6 +47,15 @@ public abstract class OHDMElement extends AbstractElement {
         this.valid = valid;
     }
     
+    /**
+     * produce a clone: note: this is *not* a deep copy
+     * @param orig
+     * @return 
+     */
+    public OHDMElement clone(OHDMElement orig) {
+        return null; // TODO
+    }
+    
     abstract String getWKTGeometry();
     
     abstract GeometryType getGeometryType();

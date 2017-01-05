@@ -70,7 +70,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                     this.numberNodes++;
                 }
                 
-                if(this.importer.importHistoricalInformation(node)) {
+                if(this.importer.importPostProcessing(node)) {
                     this.historicInfos++;
                 }
                 
@@ -115,7 +115,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                     this.numberWays++;
                 }
                 
-                if(this.importer.importHistoricalInformation(way)) {
+                if(this.importer.importPostProcessing(way)) {
                     this.historicInfos++;
                 }
             }
@@ -268,7 +268,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                 if(relationMemberComplete && this.importer.importRelation(relation)) {
                     this.numberRelations++;
                     
-                    if(this.importer.importHistoricalInformation(relation)) {
+                    if(this.importer.importPostProcessing(relation)) {
                         this.historicInfos++;
                     }
                     

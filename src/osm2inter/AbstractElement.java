@@ -261,17 +261,17 @@ public abstract class AbstractElement {
         // iterate attributes
         for(String name : this.attributes.keySet()) {
             if(name.startsWith("old_name")) {
-                if(oldNames == null) {
-                    oldNames = new HashMap<>();
-                }
                 // extract time from key
                 int last = name.lastIndexOf(":");
                 if(last == -1) continue;
-                String durationString = name.substring(last);
+                String durationString = name.substring(last+1);
                 String oldName = this.attributes.get(name);
                 
                 if(oldName != null && oldName.length() > 0) {
-                    oldNames.put(name, oldName);
+                    if(oldNames == null) {
+                        oldNames = new HashMap<>();
+                    }
+                    oldNames.put(durationString, oldName);
                 }
             }
         }

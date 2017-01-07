@@ -64,7 +64,7 @@ public class SQLImportCommandBuilder implements OSM2InterBuilder {
     private Connection targetConnection;
 
     private String importMode = "initial_import";
-    private Integer tmpStorageSize;
+    private Integer tmpStorageSize = 100;
 
     private final MyLogger logger;
     private final Classification classification;
@@ -87,9 +87,6 @@ public class SQLImportCommandBuilder implements OSM2InterBuilder {
         this.config = Config.getInstance();
         this.logger = MyLogger.getInstance();
         this.classification = Classification.getInstance();
-        
-        // remove that line soon
-        this.tmpStorageSize = 10000 - 1;
     
     try {
         this.user = this.parameter.getUserName();
@@ -480,6 +477,9 @@ public class SQLImportCommandBuilder implements OSM2InterBuilder {
         this.lastOSMID = e.getOSMID();
     }
     
+    private int nextLog = 0;
+    private int nextSteps = 10000;
+    
     @Override
     public void addNode(HashMap<String, String> attributes, ArrayList<TagElement> tags) throws Exception {
         NodeElement newNode = new NodeElement(attributes, tags);
@@ -487,7 +487,12 @@ public class SQLImportCommandBuilder implements OSM2InterBuilder {
         if (nodes.size() > this.tmpStorageSize) {
             nodesNew += nodes.size();
             this.saveNodeElements();
-            this.printStatusShort(4);
+            if(this.nextLog < this.nodesNew) {
+                this.nextLog += this.nextSteps;
+                this.printStatusShort(4);
+            }
+//            System.gc();
+//            Thread.sleep(GC_PAUSE);
         }
         this.logLastElement(newNode);
   }
@@ -720,6 +725,11 @@ public class SQLImportCommandBuilder implements OSM2InterBuilder {
             nodesNew += nodes.size();
             this.saveNodeElements();
             printStatusShort(1);
+            this.sqlQueue.append("create index node_osmidindex on ");
+            this.sqlQueue.append(NODETABLE);
+            this.sqlQueue.append(" (osm_id);");
+            this.sqlQueue.forceExecute(true);
+            this.nextLog = 0;
             logger.print(1, "finished saving nodes, continue with ways", true);
         }
         WayElement newWay = new WayElement(attributes, nds, tags);
@@ -727,11 +737,18 @@ public class SQLImportCommandBuilder implements OSM2InterBuilder {
         this.ways.put(String.valueOf(newWay.getID()), newWay);
         if (((ways.size() * 10) + 1) % tmpStorageSize == 0) {
             this.saveWayElements();
-            this.printStatusShort(4);
+//            System.gc();
+//            Thread.sleep(GC_PAUSE);
+            if(this.nextLog < this.waysNew) {
+                this.nextLog += this.nextSteps;
+                this.printStatusShort(4);
+            }
         }
         
         this.logLastElement(newWay);
     }
+    
+    private static final int GC_PAUSE = 100;
 
     private final HashMap<String, RelationElement> rels = new HashMap<>();
 
@@ -879,6 +896,11 @@ public class SQLImportCommandBuilder implements OSM2InterBuilder {
         waysNew += ways.size();
         saveWayElements();
         this.printStatusShort(1);
+        // create index on ways
+        this.sqlQueue.append("create index way_osmidindex on ");
+        this.sqlQueue.append(WAYTABLE);
+        this.sqlQueue.append(" (osm_id);");
+        this.sqlQueue.forceExecute(true);
         logger.print(1, "finished saving ways, proceed with relations", true);
     }
     RelationElement newRel = new RelationElement(attributes, members, tags);
@@ -888,6 +910,8 @@ public class SQLImportCommandBuilder implements OSM2InterBuilder {
     if (((rels.size() * 100) + 1) % tmpStorageSize == 0) {
         this.saveRelElements();
         this.printStatusShort(4);
+//        System.gc();
+//        Thread.sleep(GC_PAUSE);
     }
     
     this.logLastElement(newRel);
@@ -920,7 +944,7 @@ public class SQLImportCommandBuilder implements OSM2InterBuilder {
     }
 
   public void printStatusShort(int level) {
-    logger.print(level, "n: " + nodesNew + " w: " + waysNew, true);
+    System.out.println("n: " + nodesNew + " w: " + waysNew);
   }
 
   public Connection getConnection() {

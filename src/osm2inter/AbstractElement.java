@@ -2,7 +2,6 @@ package osm2inter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
@@ -10,8 +9,8 @@ import java.util.StringTokenizer;
  *
  * @author thsc
  */
-public abstract class AbstractElement {
-    private HashMap<String, String> attributes;
+public class AbstractElement {
+    private final HashMap<String, String> attributes;
     
     public HashMap<String, String> getAttributes() {
         return this.attributes;
@@ -35,6 +34,16 @@ public abstract class AbstractElement {
     }
     
     /**
+     * That constructor should not exist (clean up that mess asap!)
+     * ... its ought to be an abstract class.. need access 
+     * to seriazlation to parse planet.osm.. TODO
+     */
+    public AbstractElement() {
+        this.attributes = null;
+        this.name = null;
+    }
+    
+    /**
      * copy all tas to attributes
      */
     private void tags2attributes(ArrayList<TagElement> tags) {
@@ -53,7 +62,24 @@ public abstract class AbstractElement {
         }
     }
   
-    protected String serializeAttributes(HashMap<String, String> attributes) {
+    private String stripForbiddenCharacters(String s) {
+        int i = s.indexOf("'");
+        
+        while(i != -1) {
+            // just throw it away
+            StringBuilder sb = new StringBuilder();
+            sb.append(s.substring(0, i));
+            if(i < s.length()-1) {
+                sb.append(s.substring(i+1));
+            }
+            s = sb.toString();
+            i = s.indexOf("'");
+        }
+        
+        return s;
+    }
+  
+    public String serializeAttributes(HashMap<String, String> attributes) {
         if(attributes == null || attributes.isEmpty()) return this.getStringWithLength(null);
 
         StringBuilder sAttributes = new StringBuilder();
@@ -61,16 +87,18 @@ public abstract class AbstractElement {
         Iterator<String> keyIter = attributes.keySet().iterator();
         while(keyIter.hasNext()) {
             String key = keyIter.next();
+            key = this.stripForbiddenCharacters(key);
             sAttributes.append(this.getStringWithLength(key));
 
             String value = attributes.get(key);
+            value = this.stripForbiddenCharacters(value);
             sAttributes.append(this.getStringWithLength(value));
         }
 
         return sAttributes.toString();
 
     }
-
+    
     protected final HashMap<String, String> deserializeAttributes(String serializedAttributes) {
         HashMap<String, String> a = new HashMap<>();
         

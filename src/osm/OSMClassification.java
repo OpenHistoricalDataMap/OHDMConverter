@@ -625,6 +625,25 @@ public class OSMClassification {
         return -1;
     }
     
+    public int getOHDMClassID(HashMap<String, String> attributes) {
+            // get attributes of that tag
+            Iterator<String> keyIter = attributes.keySet().iterator();
+            while(keyIter.hasNext()) {
+                String key = keyIter.next();
+
+                // is this key name of a feature class?
+                if(this.isClassName(key)) {
+                    String value = attributes.get(key);
+
+                    // find id of class / subclass
+                    return this.getOHDMClassID(key, value);
+                }
+        }
+
+        // there is no class description - sorry
+        return -1;
+    }
+    
     /**
      * @return -1 if no known class and sub class name, a non-negative number 
      * otherwise

@@ -18,6 +18,7 @@ import util.SQLStatementQueue;
 public class ExportIntermediateDB extends IntermediateDB {
     private final Importer importer;
     
+    private static final int GC_PAUSE = 1000;
     private int numberNodes = 0;
     private int numberWays = 0;
     private int numberRelations = 0;
@@ -59,7 +60,15 @@ public class ExportIntermediateDB extends IntermediateDB {
             while(qResultNode.next()) {
                 number++;
                 if(number % 100 == 0) {System.out.print("*");}
-                if(number % 1000 == 0) {System.out.print("\n");}
+                if(number % 1000 == 0) {
+                    System.out.print("\n");
+                    System.gc();
+                    try {
+                        Thread.sleep(GC_PAUSE);
+                    } catch (InterruptedException ex) {
+                        // wont happen
+                    }
+                }
                 
                 OHDMNode node = this.createOHDMNode(qResultNode);
                 
@@ -103,7 +112,15 @@ public class ExportIntermediateDB extends IntermediateDB {
             while(qResultWay.next()) {
                 number++;
                 if(number % 100 == 0) {System.out.print("*");}
-                if(number % 1000 == 0) {System.out.print("\n");}
+                if(number % 1000 == 0) {
+                    System.out.print("\n");
+                    System.gc();
+                    try {
+                        Thread.sleep(GC_PAUSE);
+                    } catch (InterruptedException ex) {
+                        // wont happen
+                    }
+                }
                 OHDMWay way = this.createOHDMWay(qResultWay);
                 
                 if(!way.isPart() && way.getName() == null) notPartNumber++;
@@ -177,7 +194,15 @@ public class ExportIntermediateDB extends IntermediateDB {
                 debug_alreadyPrinted = false;
                 number++;
                 if(number % 100 == 0) {System.out.print("*");}
-                if(number % 1000 == 0) {System.out.print("\n");}
+                if(number % 1000 == 0) {
+                    System.out.print("\n");
+                    System.gc();
+                    try {
+                        Thread.sleep(GC_PAUSE);
+                    } catch (InterruptedException ex) {
+                        // wont happen
+                    }
+                }
                 
                 OHDMRelation relation = this.createOHDMRelation(qResultRelations);
 

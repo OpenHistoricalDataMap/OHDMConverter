@@ -122,7 +122,7 @@ public class SQL_OSMImporter extends DefaultHandler {
     this.updateNodesQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
     this.updateWaysQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
     
-    //this.setupKB();
+    this.setupKB();
     }
     
     /*
@@ -152,24 +152,29 @@ public class SQL_OSMImporter extends DefaultHandler {
      * @param attributes 
      */
     private void newElement(Attributes attributes) {
-        // initialize required queues
+        // initialize
         this.ndFound = false;
         this.wayFound = false;
         this.memberFound = false;
-        this.currentElementID = attributes.getValue("id");
         
+        // TODO serialize uid and user into this.sAttributes
+        
+        
+        this.insertQueue.append("INSERT INTO ");
         switch(this.status) {
             case STATUS_OUTSIDE: 
-                this.insertQueue.append("INSERT INTO ");
                 this.insertQueue.append(NODETABLE);
-                this.insertQueue.append("(valid, osm_id, longitude, latitude, classcode, serializedtags) VALUES (true, ");
+                this.insertQueue.append("(valid, longitude, latitude, osm_id, classcode, serializedtags) VALUES (true, ");
+                this.insertQueue.append(attributes.getValue("lon"));
+                this.insertQueue.append(", ");
+                this.insertQueue.append(attributes.getValue("lat"));
+                this.insertQueue.append(", ");
                 break;
             case STATUS_WAY:
                 if(!this.wayProcessed) {
                     // first way! create index in nodes
                     this.wayProcessed = true;
                 }
-                this.insertQueue.append("INSERT INTO ");
                 this.insertQueue.append(WAYTABLE);
                 this.insertQueue.append("(valid, osm_id, classcode, serializedtags, node_ids) VALUES (true, ");
                 
@@ -183,7 +188,6 @@ public class SQL_OSMImporter extends DefaultHandler {
                     // first relation! create index in ways
                     this.relationProcessed = true;
                 }
-                this.insertQueue.append("INSERT INTO ");
                 this.insertQueue.append(RELATIONTABLE);
                 this.insertQueue.append("(valid, osm_id, classcode, serializedtags, member_ids) VALUES (true, ");
 
@@ -194,10 +198,15 @@ public class SQL_OSMImporter extends DefaultHandler {
                 
                 break;
         }
+        
+        this.currentElementID = attributes.getValue("id");
+        this.insertQueue.append(this.currentElementID);
+        this.insertQueue.append(", ");
+
     }
 
     // just a set of new attributes.. add serialized to sAttrib builder
-    private void addAttributes(Attributes attributes) {
+    private void addAttributesFromTag(Attributes attributes) {
 //        int number = attributes.getLength();
 //        for (int i = 0; i < number; i++) {
 //            String key = attributes.getQName(i);
@@ -238,7 +247,7 @@ public class SQL_OSMImporter extends DefaultHandler {
     boolean wayFound = false;
     boolean memberFound = false;
     private void addMember(Attributes attributes) {
-//insert into relationmember (relation_id, role, [node_id | way_id | member_rel_id]) VALUES ();        
+        //insert into relationmember (relation_id, role, [node_id | way_id | member_rel_id]) VALUES ();        
         // a new member like: <member type='way' ref='23084475' role='forward' />
         
         // remember id in member list first due to those to found-flags
@@ -333,52 +342,50 @@ public class SQL_OSMImporter extends DefaultHandler {
         builder.printStatus();
     }
 
-  @Override
-  public void startElement(String uri,
-          String localName,
-          String qName,
-          Attributes attributes) {
-    switch (qName) {
-      case "node": {
-        if (status != STATUS_OUTSIDE) {
-          System.err.println("node found but not outside");
+    @Override
+    public void startElement(String uri, String localName, String qName, 
+            Attributes attributes) {
+        
+        switch (qName) {
+        case "node": {
+            if (status != STATUS_OUTSIDE) {
+                System.err.println("node found but not outside");
+            }
+            this.status = STATUS_NODE;
+            this.newElement(attributes);
         }
-        this.status = STATUS_NODE;
-        this.newElement(attributes);
-      }
-      break; // single original node
-      case "way": {
-        if (status != STATUS_OUTSIDE) {
-          System.err.println("way found but not outside");
+        break; // single original node
+        case "way": {
+            if (status != STATUS_OUTSIDE) {
+                System.err.println("way found but not outside");
+            }
+            this.status = STATUS_WAY;
+            this.newElement(attributes);
         }
-        this.status = STATUS_WAY;
-        this.newElement(attributes);
-      }
-      break; // original way
-      case "relation": {
-        if (status != STATUS_OUTSIDE) {
-          System.err.println("relation found but not outside");
+        break; // original way
+        case "relation": {
+            if (status != STATUS_OUTSIDE) {
+                System.err.println("relation found but not outside");
+            }
+            this.status = STATUS_RELATION;
+            this.newElement(attributes);
         }
-        this.status = STATUS_RELATION;
-        this.newElement(attributes);
-      }
-      break; // original relation
-      case "tag": {
-        this.addAttributes(attributes);
-      }
-      break; // inside node, way or relation
-      case "nd": {
-        this.addND(attributes);
-      }
-      break; // inside a way or relation
-      case "member": {
-        this.addMember(attributes);
-      }
-      break; // inside a relation
-      default:
-      //System.out.print(qName + ", ");
+        break; // original relation
+        case "tag": {
+            this.addAttributesFromTag(attributes);
+        }
+        break; // inside way
+        case "nd": {
+            this.addND(attributes);
+        }
+        break; // inside relation
+        case "member": {
+            this.addMember(attributes);
+        }
+        break; // inside a relation
+        default:
     }
-  }
+}
 
 @Override
 public void endElement(String uri, String localName, String qName) {

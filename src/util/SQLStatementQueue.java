@@ -141,7 +141,9 @@ public class SQLStatementQueue {
                     Thread jThread = this.execThreads.get(0);
                     try {
 //                        System.out.println("sqlQueue: no sql thread found.. wait for first one to die");
-                        jThread.join();
+                        if(jThread != null) {
+                            jThread.join();
+                        }
 //                        System.out.println("sqlQueue: first sql thread died");
                     } catch (InterruptedException ex) {
                         // ignore and go ahead

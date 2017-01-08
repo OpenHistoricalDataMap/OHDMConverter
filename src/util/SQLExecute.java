@@ -57,7 +57,7 @@ class SQLExecute extends Thread {
             // ok, statement executed
             this.recordKeeper.writeLog(this.recordEntry);
             this.recordKeeper.done(this);
-            System.out.print(this.recordEntry + ", ");
+//            System.out.print(this.recordEntry + ", ");
 //            System.out.println("exec threat successfully issued sql statement: " + this.recordEntry);
         }
         catch(SQLException e) {

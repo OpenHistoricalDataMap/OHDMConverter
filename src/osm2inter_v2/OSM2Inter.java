@@ -36,9 +36,6 @@ public class OSM2Inter {
         parameterFile = args[1];
     }
     
-    System.out.println("wirklich????");
-    System.exit(1);
-    
     Parameter dbConnectionSettings = new Parameter(parameterFile);
     
     newSAXParser.parse(osmFile, new SQL_OSMImporter(dbConnectionSettings));

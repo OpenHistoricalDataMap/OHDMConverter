@@ -912,15 +912,21 @@ public class Inter2OHDM extends Importer {
     
     void forgetPreviousImport() throws SQLException {
         SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
-                
+
+        System.out.println("remove all ohdm entries from intermediate db - a reset");
+        System.out.println("reset nodes");
         sql.append("UPDATE ");
         sql.append(Importer.getFullTableName(this.sourceSchema, "nodes"));
         sql.append(" SET ohdm_geom_id=null, ohdm_object_id=null;");
+        sql.forceExecute();
         
+        System.out.println("reset ways");
         sql.append("UPDATE ");
         sql.append(Importer.getFullTableName(this.sourceSchema, "ways"));
         sql.append(" SET ohdm_geom_id=null, ohdm_object_id=null;");
-
+        sql.forceExecute();
+        
+        System.out.println("reset relations");
         sql.append("UPDATE ");
         sql.append(Importer.getFullTableName(this.sourceSchema, "relations"));
         sql.append(" SET ohdm_geom_id=null, ohdm_object_id=null;");

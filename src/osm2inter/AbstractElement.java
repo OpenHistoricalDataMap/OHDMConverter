@@ -102,17 +102,35 @@ public class AbstractElement {
     protected final HashMap<String, String> deserializeAttributes(String serializedAttributes) {
         HashMap<String, String> a = new HashMap<>();
         
-        if(emptySerialization(serializedAttributes))return a;
+        if(serializedAttributes == null) return a;
+        
+        /*
+        here comes a string key|value each entry (key or value) has this structure
+        [length]content length is a three digit decimal number (expressed as character)
+        OR it is "0000" which indicates empty (null) argument.
+        */
         
         int index = 0;
         while(index < serializedAttributes.length()) {
+            if(serializedAttributes.substring(index).startsWith("0000")) {
+                // empty key.. that makes no sense
+                System.err.println("\nAbstractElement.deserializeAttributes: found empty key (makes no sense), stop parsing attributes:" + serializedAttributes);
+                return a;
+            }
             String key = this.unwrapStringWithLength(serializedAttributes, index);
             index += this.calculateOffsetFromUnwrappedString(key);
             
-            String value = this.unwrapStringWithLength(serializedAttributes, index);
-            index += this.calculateOffsetFromUnwrappedString(value);
-            
-            a.put(key, value);
+            if(serializedAttributes.substring(index).startsWith("0000")) {
+                index+=4;
+                System.out.println("null value for key: " + key);
+                a.put(key, null);
+            } else {
+                String value = this.unwrapStringWithLength(serializedAttributes, index);
+                if(value != null) {
+                    index += this.calculateOffsetFromUnwrappedString(value);
+                }
+                a.put(key, value);
+            }
         }
         
         return a;
@@ -120,29 +138,6 @@ public class AbstractElement {
 
     protected String getSerializeAttributes() {
         return this.serializeAttributes(this.attributes);
-    }
-    
-    private boolean emptySerialization(String serializedThing) {
-        return (serializedThing == null || 
-                serializedThing.length() == 0 ||
-                serializedThing.equalsIgnoreCase("0000"));
-    }
-
-    protected final ArrayList<TagElement> deserializeAttrAndTags(String serializedTags) {
-        ArrayList<TagElement> t = new ArrayList<>();
-        
-        if(emptySerialization(serializedTags)) return t;
-        
-        int index = 0;
-        TagElement newTag;
-        while(index < serializedTags.length()) {
-            String sAttributes = this.unwrapStringWithLength(serializedTags, index);
-            index += this.calculateOffsetFromUnwrappedString(sAttributes);
-            
-            newTag = new TagElement(this.deserializeAttributes(sAttributes));
-            t.add(newTag);
-        }
-        return t;
     }
     
     public static String[] relevantAttributeKeys = new String[] {"uid", "user"};
@@ -243,10 +238,10 @@ public class AbstractElement {
     protected String unwrapStringWithLength(String s, int offset) {
         if(s == null || s.length() - offset < MAX_DECIMAL_PLACES) return null;
         
-        String lString = s.substring(offset, offset + MAX_DECIMAL_PLACES);
+        String lengthString = s.substring(offset, offset + MAX_DECIMAL_PLACES);
         
         try {
-            int length = Integer.parseInt(lString);
+            int length = Integer.parseInt(lengthString);
             offset += MAX_DECIMAL_PLACES; // move over length entry
             
             String result = s.substring(offset, offset + length);

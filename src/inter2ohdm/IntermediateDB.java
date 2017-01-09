@@ -157,6 +157,7 @@ public class IntermediateDB {
     
     private void readCommonColumns(ResultSet qResult) throws SQLException {
         osmIDString = this.extractBigDecimalAsString(qResult, "osm_id");
+        System.out.print(", " + osmIDString);
         classCodeString = this.extractBigDecimalAsString(qResult, "classcode");
         sTags = qResult.getString("serializedtags");
         ohdmObjectIDString = this.extractBigDecimalAsString(qResult, "ohdm_object_id");

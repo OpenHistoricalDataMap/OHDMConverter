@@ -17,8 +17,6 @@ import util.Util;
  * @author thsc
  */
 public class SQL_OSMImporter extends DefaultHandler {
-    public static final String MAX_ID_SIZE = "10485760";
-    
     private StringBuilder sAttributes;
     private StringBuilder nodeIDs;
     private StringBuilder memberIDs;
@@ -497,7 +495,7 @@ public class SQL_OSMImporter extends DefaultHandler {
                     break; // inside a relation
             }
         } catch (Exception eE) {
-            System.err.println("while saving node: " + eE.getClass().getName() + "\n" + eE.getMessage());
+            System.err.println("while saving element: " + eE.getClass().getName() + "\n" + eE.getMessage());
             eE.printStackTrace(System.err);
         }
     }

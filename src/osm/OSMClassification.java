@@ -412,7 +412,7 @@ public class OSMClassification {
         subClasses.add("emergency_access_point");
         subClasses.add("give_way");
         subClasses.add("mini_roundabout");
-        subClasses.add(" 	motorway_junction");
+        subClasses.add("motorway_junction");
         subClasses.add("passing_place");
         subClasses.add("rest_area");
         subClasses.add("speed_camera");
@@ -465,26 +465,26 @@ public class OSMClassification {
         // fill with all known subclasses
         subClasses.add(UNDEFINED);
         subClasses.add("allotments");
-        subClasses.add(" 	basin");
+        subClasses.add("basin");
         subClasses.add("brownfield");
         subClasses.add("cemetery");
         subClasses.add("commercial");
         subClasses.add("conservation");
         subClasses.add("construction");
-        subClasses.add(" 	farmland");
+        subClasses.add("farmland");
         subClasses.add("farmyard");
         subClasses.add("forest");
         subClasses.add("garages");
         subClasses.add("grass");
         subClasses.add("greenfield");
         subClasses.add("greenhouse_horticulture");
-        subClasses.add(" 	industrial");
+        subClasses.add("industrial");
         subClasses.add("landfill");
         subClasses.add("meadow");
         subClasses.add("military");
-        subClasses.add(" 	orchard");
+        subClasses.add("orchard");
         subClasses.add("pasture");
-        subClasses.add(" 	peat_cutting");
+        subClasses.add("peat_cutting");
         subClasses.add("plant_nursery");
         subClasses.add("port");
         subClasses.add("railway");
@@ -562,7 +562,7 @@ public class OSMClassification {
         subClasses.add("groyne");
         subClasses.add("hot_water_tank");
         subClasses.add("kiln");
-        subClasses.add("	lighthouse");
+        subClasses.add("lighthouse");
         subClasses.add("mast");
         subClasses.add("mineshaft");
         subClasses.add("monitoring_station");
@@ -570,7 +570,7 @@ public class OSMClassification {
         subClasses.add("observatory");
         subClasses.add("offshore_platform");
         subClasses.add("petroleum_well");
-        subClasses.add("	pier");
+        subClasses.add("pier");
         subClasses.add("pipeline");
         subClasses.add("pumping_station");
         subClasses.add("reservoir_covered");
@@ -789,17 +789,17 @@ public class OSMClassification {
         subClasses.add("halt");
         subClasses.add("platform");
         subClasses.add("station");
-        subClasses.add(" 	tram_stop");
-        subClasses.add(" 	buffer_stop");
-        subClasses.add(" 	derail");
-        subClasses.add(" 	crossing");
-        subClasses.add(" 	level_crossing");
-        subClasses.add(" 	signal");
+        subClasses.add("tram_stop");
+        subClasses.add("buffer_stop");
+        subClasses.add("derail");
+        subClasses.add("crossing");
+        subClasses.add("level_crossing");
+        subClasses.add("signal");
         subClasses.add("subway_entrance");
         subClasses.add("switch");
         subClasses.add("railway_crossing");
-        subClasses.add(" 	turntable");
-        subClasses.add(" 	roundhouse");
+        subClasses.add("turntable");
+        subClasses.add("roundhouse");
         subClasses.add("traverser");
              
         osmFeatureClasses.put("railway", subClasses);        
@@ -983,29 +983,152 @@ public class OSMClassification {
         // fill with all known subclasses
         subClasses.add(UNDEFINED);
         subClasses.add("9pin");
-             
-        // TODO add others
+        subClasses.add("10pin");
+        subClasses.add("american_football");
+        subClasses.add("aikido");
+        subClasses.add("archery");
+        subClasses.add("athletics");
+        subClasses.add("australian_football");
+        subClasses.add("badminton");
+        subClasses.add("baseball");
+        subClasses.add("basketball");
+        subClasses.add("beachvolleyball");
+        subClasses.add("billiards");
+        subClasses.add("bmx");
+        subClasses.add("bobsleigh");
+        subClasses.add("boules");
+        subClasses.add("bowls");
+        subClasses.add("boxing");
+        subClasses.add("canadian_football");
+        subClasses.add("canoe");
+        subClasses.add("chess");
+        subClasses.add("cliff_diving");
+        subClasses.add("climbing");
+        subClasses.add("climbing_adventure");
+        subClasses.add("cockfighting");
+        subClasses.add("cricket");
+        subClasses.add("croquet");
+        subClasses.add("curling");
+        subClasses.add("cycling");
+        subClasses.add("darts");
+        subClasses.add("dog_racing");
+        subClasses.add("equestrian");
+        subClasses.add("fencing");
+        subClasses.add("field_hockey");
+        subClasses.add("free_flying");
+        subClasses.add("gaelic_games");
+        subClasses.add("golf");
+        subClasses.add("gymnastics");
+        subClasses.add("handball");
+        subClasses.add("hapkido");
+        subClasses.add("horseshoes");
+        subClasses.add("horse_racing");
+        subClasses.add("ice_hockey");
+        subClasses.add("ice_skating");
+        subClasses.add("judo");
+        subClasses.add("ice_stock");
+        subClasses.add("karting");
+        subClasses.add("kitesurfing");
+        subClasses.add("korfball");
+        subClasses.add("model_aerodrome");
+        subClasses.add("motocross");
+        subClasses.add("motor");
+        subClasses.add("multi");
+        subClasses.add("netball");
+        subClasses.add("obstacle_course");
+        subClasses.add("orienteering");
+        subClasses.add("paddle_tennis");
+        subClasses.add("parachuting");
+        subClasses.add("paragliding");
+        subClasses.add("pelota");
+        subClasses.add("racquet");
+        subClasses.add("rc_car");
+        subClasses.add("roller_skating");
+        subClasses.add("rowing");
+        subClasses.add("rugby_league");
+        subClasses.add("rugby_union");
+        subClasses.add("running");
+        subClasses.add("sailing");
+        subClasses.add("scuba_diving");
+        subClasses.add("shooting");
+        subClasses.add("skateboard");
+        subClasses.add("soccer");
+        subClasses.add("sumo");
+        subClasses.add("surfing");
+        subClasses.add("swimming");
+        subClasses.add("table_tennis");
+        subClasses.add("table_soccer");
+        subClasses.add("taekwondo");
+        subClasses.add("tennis");
+        subClasses.add("toboggan");
+        subClasses.add("volleyball");
+        subClasses.add("water_polo");
+        subClasses.add("water_ski");
+        subClasses.add("weightlifting");
+        subClasses.add("wrestling");
+        subClasses.add("yoga");
+
         osmFeatureClasses.put("sport", subClasses);   
-        // Waterway
         
+        // tourism
+        subClasses = new ArrayList<>();
+        
+        // fill with all known subclasses
+        subClasses.add(UNDEFINED);
+        subClasses.add("alpine_hut");
+        subClasses.add("apartment");
+        subClasses.add("aquarium");
+        subClasses.add("artwork");
+        subClasses.add("attraction");
+        subClasses.add("camp_site");
+        subClasses.add("caravan_site");
+        subClasses.add("chalet");
+        subClasses.add("gallery");
+        subClasses.add("guest_house");
+        subClasses.add("hostel");
+        subClasses.add("hotel");
+        subClasses.add("information");
+        subClasses.add("motel");
+        subClasses.add("museum");
+        subClasses.add("picnic_site");
+        subClasses.add("theme_park");
+        subClasses.add("viewpoint");
+        subClasses.add("wilderness_hut");
+        subClasses.add("zoo");
+        subClasses.add("alpine_hut");
+        subClasses.add("alpine_hut");
+        subClasses.add("alpine_hut");
+        subClasses.add("alpine_hut");
+        subClasses.add("alpine_hut");
+        subClasses.add("alpine_hut");
+             
+        osmFeatureClasses.put("tourism", subClasses);   
+        
+        // Waterway
         subClasses = new ArrayList<>();
         
         // fill with all known subclasses
         subClasses.add(UNDEFINED);
         subClasses.add("river");
+        subClasses.add("riverbank");
+        subClasses.add("stream");
+        subClasses.add("canal");
+        subClasses.add("drain");
+        subClasses.add("ditch");
+        subClasses.add("wadi");
+        subClasses.add("fairway");
+        subClasses.add("dock");
+        subClasses.add("boatyard");
+        subClasses.add("dam");
+        subClasses.add("weir");
+        subClasses.add("waterfall ");
+        subClasses.add("lock_gate");
+        subClasses.add("turning_point");
+        subClasses.add("water_point");
+        subClasses.add("fuel");
              
-        // TODO add others
         osmFeatureClasses.put("waterway", subClasses);   
-        
-        // Historic person            
-        subClasses = new ArrayList<>();
-        
-        // fill with all known subclasses
-        subClasses.add(UNDEFINED);
-             
-        // TODO add others
-        osmFeatureClasses.put("historic_person", subClasses);  
-        
+                
         this.setupClassIDs_Names();
     }
     

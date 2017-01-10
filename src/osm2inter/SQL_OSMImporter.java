@@ -521,13 +521,13 @@ public class SQL_OSMImporter extends DefaultHandler {
                 }
             }
         } catch (SQLException sqlE) {
-            System.err.println("while saving node: " + sqlE.getMessage() + "\n" + this.insertQueue.toString());
+            System.err.println("while saving element: " + sqlE.getMessage() + "\n" + this.insertQueue.toString());
             sqlE.printStackTrace(System.err);
         } catch (IOException ioE) {
-            System.err.println("while saving node: " + ioE.getClass().getName() + "\n" + ioE.getMessage());
+            System.err.println("while saving element: " + ioE.getClass().getName() + "\n" + ioE.getMessage());
             ioE.printStackTrace(System.err);
         } catch (Exception eE) {
-            System.err.println("while saving node: " + eE.getClass().getName() + "\n" + eE.getMessage());
+            System.err.println("while saving element: " + eE.getClass().getName() + "\n" + eE.getMessage());
             eE.printStackTrace(System.err);
         }
     }

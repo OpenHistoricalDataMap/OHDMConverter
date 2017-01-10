@@ -5,7 +5,7 @@ import inter2ohdm.Inter2OHDM;
 import java.io.IOException;
 import java.sql.SQLException;
 import ohdm2rendering.OHDM2Rendering;
-import osm2inter_v2.OSM2Inter;
+import osm2inter.OSM2Inter;
 
 /**
  *

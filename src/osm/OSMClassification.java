@@ -346,13 +346,22 @@ public class OSMClassification {
         subClasses.add(UNDEFINED);
         subClasses.add("ambulance_station");
         subClasses.add("defibrillator");
+        subClasses.add("fire_extinguisher");
+        subClasses.add("fire_flapper");
+        subClasses.add("fire_hose");
+        subClasses.add("fire_hydrant");
+        subClasses.add("water_tank");
+        subClasses.add("lifeguard_base");
+        subClasses.add("lifeguard_place");
+        subClasses.add("life_ring");
+        subClasses.add("assembly_point");
+        subClasses.add("ses_station");
+        subClasses.add("siren");
+        subClasses.add("phone");
         
-        // TODO: continue with Firefighters
         // http://wiki.openstreetmap.org/wiki/Map_Features
         
         osmFeatureClasses.put("emergency", subClasses);        
-        
-
         
         // Geological
         subClasses = new ArrayList<>();
@@ -397,8 +406,22 @@ public class OSMClassification {
         subClasses.add("proposed");
         subClasses.add("construction");
         subClasses.add("bus_stop");
+        subClasses.add("bus_stop");
+        subClasses.add("crossing");
+        subClasses.add("elevator");
+        subClasses.add("emergency_access_point");
+        subClasses.add("give_way");
+        subClasses.add("mini_roundabout");
+        subClasses.add(" 	motorway_junction");
+        subClasses.add("passing_place");
+        subClasses.add("rest_area");
+        subClasses.add("speed_camera");
+        subClasses.add("street_lamp");
+        subClasses.add("services");
+        subClasses.add("stop");
+        subClasses.add("traffic_signals");
+        subClasses.add("turning_circle");
         
-        // TODO add others
         osmFeatureClasses.put("highway", subClasses);        
         
         // Historic (of course :) )
@@ -442,18 +465,134 @@ public class OSMClassification {
         // fill with all known subclasses
         subClasses.add(UNDEFINED);
         subClasses.add("allotments");
-        
-        // TODO add others
+        subClasses.add(" 	basin");
+        subClasses.add("brownfield");
+        subClasses.add("cemetery");
+        subClasses.add("commercial");
+        subClasses.add("conservation");
+        subClasses.add("construction");
+        subClasses.add(" 	farmland");
+        subClasses.add("farmyard");
+        subClasses.add("forest");
+        subClasses.add("garages");
+        subClasses.add("grass");
+        subClasses.add("greenfield");
+        subClasses.add("greenhouse_horticulture");
+        subClasses.add(" 	industrial");
+        subClasses.add("landfill");
+        subClasses.add("meadow");
+        subClasses.add("military");
+        subClasses.add(" 	orchard");
+        subClasses.add("pasture");
+        subClasses.add(" 	peat_cutting");
+        subClasses.add("plant_nursery");
+        subClasses.add("port");
+        subClasses.add("railway");
+        subClasses.add("recreation_ground");
+        subClasses.add("reservoir");
+        subClasses.add("residential");
+        subClasses.add("retail");
+        subClasses.add("salt_pond");
+        subClasses.add("village_green");
+        subClasses.add("vineyard");
+
         osmFeatureClasses.put("landuse", subClasses);        
 
+        // leisure
+        subClasses = new ArrayList<>();
+        
+        // fill with all known subclasses
+        subClasses.add(UNDEFINED);
+        subClasses.add("adult_gaming_centre");
+        subClasses.add("amusement_arcade");
+        subClasses.add("beach_resort");
+        subClasses.add("bandstand");
+        subClasses.add("bird_hide");
+        subClasses.add("common");
+        subClasses.add("dance");
+        subClasses.add("dog_park");
+        subClasses.add("firepit");
+        subClasses.add("fishing");
+        subClasses.add("fitness_centre");
+        subClasses.add("garden");
+        subClasses.add("golf_course");
+        subClasses.add("hackerspace");
+        subClasses.add("horse_riding");
+        subClasses.add("ice_rink");
+        subClasses.add("marina");
+        subClasses.add("miniature_golf");
+        subClasses.add("nature_reserve");
+        subClasses.add("park");
+        subClasses.add("picnic_table");
+        subClasses.add("pitch");
+        subClasses.add("playground");
+        subClasses.add("slipway");
+        subClasses.add("sports_centre");
+        subClasses.add("stadium");
+        subClasses.add("summer_camp");
+        subClasses.add("swimming_area");
+        subClasses.add("track");
+        subClasses.add("water_park");
+        subClasses.add("wildlife_hide");
+        
+        osmFeatureClasses.put("leisure", subClasses);        
+        
         // Man Made
         subClasses = new ArrayList<>();
         
         // fill with all known subclasses
         subClasses.add(UNDEFINED);
         subClasses.add("adit");
+        subClasses.add("beacon");
+        subClasses.add("breakwater");
+        subClasses.add("bridge");
+        subClasses.add("bunker_silo");
+        subClasses.add("campanile");
+        subClasses.add("chimney");
+        subClasses.add("communications_tower");
+        subClasses.add("crane");
+        subClasses.add("cross");
+        subClasses.add("cutline");
+        subClasses.add("clearcut");
+        subClasses.add("embankment");
+        subClasses.add("dovecote");
+        subClasses.add("dyke");
+        subClasses.add("flagpole");
+        subClasses.add("gasometer");
+        subClasses.add("groyne");
+        subClasses.add("hot_water_tank");
+        subClasses.add("kiln");
+        subClasses.add("	lighthouse");
+        subClasses.add("mast");
+        subClasses.add("mineshaft");
+        subClasses.add("monitoring_station");
+        subClasses.add("obelisk");
+        subClasses.add("observatory");
+        subClasses.add("offshore_platform");
+        subClasses.add("petroleum_well");
+        subClasses.add("	pier");
+        subClasses.add("pipeline");
+        subClasses.add("pumping_station");
+        subClasses.add("reservoir_covered");
+        subClasses.add("silo");
+        subClasses.add("snow_fence");
+        subClasses.add("snow_net");
+        subClasses.add("storage_tank");
+        subClasses.add("street_cabinet");
+        subClasses.add("surveillance");
+        subClasses.add("survey_point");
+        subClasses.add("telescope");
+        subClasses.add("tower");
+        subClasses.add("wastewater_plant");
+        subClasses.add("watermill");
+        subClasses.add("water_tower");
+        subClasses.add("water_well");
+        subClasses.add("water_tap");
+        subClasses.add("water_works");
+        subClasses.add("wildlife_crossing");
+        subClasses.add("windmill");
+        subClasses.add("works");
         
-        // TODO add others
         osmFeatureClasses.put("man_made", subClasses);        
         
         // Military
@@ -462,8 +601,20 @@ public class OSMClassification {
         // fill with all known subclasses
         subClasses.add(UNDEFINED);
         subClasses.add("airfield");
+        subClasses.add("ammunition");
+        subClasses.add("bunker");
+        subClasses.add("barracks");
+        subClasses.add("checkpoint");
+        subClasses.add("danger_area");
+        subClasses.add("naval_base");
+        subClasses.add("nuclear_explosion_site");
+        subClasses.add("obstacle_course");
+        subClasses.add("office");
+        subClasses.add("range");
+        subClasses.add("training_area");
+        subClasses.add("trench");
+        subClasses.add("airfield");
              
-        // TODO add others
         osmFeatureClasses.put("military", subClasses);        
 
         // Natural
@@ -472,8 +623,39 @@ public class OSMClassification {
         // fill with all known subclasses
         subClasses.add(UNDEFINED);
         subClasses.add("wood");
-             
-        // TODO add others
+        subClasses.add("tree_row");
+        subClasses.add("tree");
+        subClasses.add("scrub");
+        subClasses.add("heath");
+        subClasses.add("moor");
+        subClasses.add("grassland");
+        subClasses.add("fell");
+        subClasses.add("bare_rock");
+        subClasses.add("scree");
+        subClasses.add("shingle");
+        subClasses.add("sand");
+        subClasses.add("mud");
+        subClasses.add("water");
+        subClasses.add("wetland");
+        subClasses.add("glacier");
+        subClasses.add("bay");
+        subClasses.add("beach");
+        subClasses.add("coastline");
+        subClasses.add("spring");
+        subClasses.add("hot_spring");
+        subClasses.add("geyser");
+        subClasses.add("peak");
+        subClasses.add("volcano");
+        subClasses.add("valley");
+        subClasses.add("ridge");
+        subClasses.add("arete");
+        subClasses.add("cliff");
+        subClasses.add("saddle");
+        subClasses.add("rock");
+        subClasses.add("stone");
+        subClasses.add("sinkhole");
+        subClasses.add("cave_entrance");
+
         osmFeatureClasses.put("natural", subClasses);        
 
         // Office
@@ -482,8 +664,39 @@ public class OSMClassification {
         // fill with all known subclasses
         subClasses.add(UNDEFINED);
         subClasses.add("accountant");
-             
-        // TODO add others
+        subClasses.add("adoption_agency");
+        subClasses.add("advertising_agency");
+        subClasses.add("architect");
+        subClasses.add("association");
+        subClasses.add("company");
+        subClasses.add("educational_institution");
+        subClasses.add("employment_agency");
+        subClasses.add("energy_supplier");
+        subClasses.add("estate_agent");
+        subClasses.add("forestry");
+        subClasses.add("foundation");
+        subClasses.add("government");
+        subClasses.add("guide");
+        subClasses.add("insurance");
+        subClasses.add("it");
+        subClasses.add("lawyer");
+        subClasses.add("logistics");
+        subClasses.add("moving_company");
+        subClasses.add("newspaper");
+        subClasses.add("ngo");
+        subClasses.add("notary");
+        subClasses.add("political_party");
+        subClasses.add("private_investigator");
+        subClasses.add("quango");
+        subClasses.add("real_estate_agent");
+        subClasses.add("religion");
+        subClasses.add("research");
+        subClasses.add("tax");
+        subClasses.add("tax_advisor");
+        subClasses.add("telecommunication");
+        subClasses.add("travel_agent");
+        subClasses.add("water_utility");
+
         osmFeatureClasses.put("office", subClasses);        
 
         // Places
@@ -492,8 +705,31 @@ public class OSMClassification {
         // fill with all known subclasses
         subClasses.add(UNDEFINED);
         subClasses.add("country");
+        subClasses.add("state");
+        subClasses.add("region");
+        subClasses.add("province");
+        subClasses.add("district");
+        subClasses.add("county");
+        subClasses.add("municipality");
+        subClasses.add("city");
+        subClasses.add("borough");
+        subClasses.add("suburb");
+        subClasses.add("quarter");
+        subClasses.add("neighbourhood");
+        subClasses.add("city_block");
+        subClasses.add("plot");
+        subClasses.add("town");
+        subClasses.add("village");
+        subClasses.add("hamlet");
+        subClasses.add("isolated_dwelling");
+        subClasses.add("farm");
+        subClasses.add("allotments");
+        subClasses.add("continent");
+        subClasses.add("archipelago");
+        subClasses.add("island");
+        subClasses.add("islet");
+        subClasses.add("square");
              
-        // TODO add others
         osmFeatureClasses.put("places", subClasses);        
 
         // Power

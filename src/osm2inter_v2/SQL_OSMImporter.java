@@ -3,19 +3,16 @@ package osm2inter_v2;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.DefaultHandler;
 import osm.OSMClassification;
 import osm2inter.AbstractElement;
 import osm2inter.Classification;
+import util.DB;
 import util.Parameter;
 import util.SQLStatementQueue;
 import util.Util;
@@ -24,13 +21,6 @@ import util.Util;
  * @author thsc
  */
 public class SQL_OSMImporter extends DefaultHandler {
-    public static final String TAGTABLE = "Tags";
-    public static final String NODETABLE = "Nodes";
-    public static final String WAYTABLE = "Ways";
-    public static final String RELATIONTABLE = "Relations";
-    public static final String RELATIONMEMBER = "RelationMember";
-    public static final String CLASSIFICATIONTABLE = "Classification";
-    public static final String WAYMEMBER = "WAYNODES";
     public static final String MAX_ID_SIZE = "10485760";
     
     private StringBuilder sAttributes;
@@ -43,7 +33,7 @@ public class SQL_OSMImporter extends DefaultHandler {
     private int rA = 0;
     
     private int all = 0;
-    private int flushSteps = 100;
+    private int flushSteps = 500;
     
     private static final int STATUS_OUTSIDE = 0;
     private static final int STATUS_NODE = 1;
@@ -54,7 +44,6 @@ public class SQL_OSMImporter extends DefaultHandler {
     
     private Connection targetConnection;
     private final Parameter parameter;
-    private final Classification classification;
     private String user;
     private String pwd;
     private String serverName;
@@ -67,20 +56,15 @@ public class SQL_OSMImporter extends DefaultHandler {
     private final SQLStatementQueue memberQueue;
     private final SQLStatementQueue updateNodesQueue;
     private final SQLStatementQueue updateWaysQueue;
-    private final SQLStatementQueue indexQueue;
     private String currentElementID;
 
-    public SQL_OSMImporter(Parameter parameter) throws Exception {
+    public SQL_OSMImporter(Parameter parameter, OSMClassification osmClassification) throws Exception {
         this.parameter = parameter;
-        this.classification = Classification.getInstance();
+        this.osmClassification = osmClassification;
     
     try {
-        this.user = this.parameter.getUserName();
-        this.pwd = this.parameter.getPWD();
-        this.serverName = this.parameter.getServerName();
-        this.portNumber = this.parameter.getPortNumber();
-        this.path = this.parameter.getdbName();
-        this.schema = this.parameter.getSchema();
+        this.targetConnection = DB.createConnection(parameter);
+        
         this.recordFile = new File(this.parameter.getRecordFileName());
         try {
             String v = this.parameter.getMaxThread();
@@ -92,34 +76,18 @@ public class SQL_OSMImporter extends DefaultHandler {
             this.maxThreads = 1;
         }
       
-        Properties connProps = new Properties();
-        connProps.put("user", this.user);
-        connProps.put("password", this.pwd);
-        this.targetConnection = DriverManager.getConnection(
-                "jdbc:postgresql://" + this.serverName
-                + ":" + this.portNumber + "/" + this.path, connProps);
-        if (!this.schema.equalsIgnoreCase("")) {
-            StringBuilder sql = new StringBuilder("SET search_path = ");
-            sql.append(this.schema);
-            try (PreparedStatement stmt = targetConnection.prepareStatement(sql.toString())) {
-              stmt.execute();
-            } catch (SQLException e) {
-            }
+        } catch (SQLException e) {
         }
-    } catch (SQLException e) {
-    }
 
-    if (this.targetConnection == null) {
-        System.err.println("cannot connect to database: reason unknown");
-    }
-    this.insertQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
-    this.memberQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
-    this.updateNodesQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
-    this.updateWaysQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
-    
-    this.indexQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
-    
-    this.setupKB();
+        if (this.targetConnection == null) {
+            System.err.println("cannot connect to database: reason unknown");
+        }
+        this.insertQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
+        this.memberQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
+        this.updateNodesQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
+        this.updateWaysQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
+
+        InterDB.createInterTables(insertQueue, schema);
     }
     
     /*
@@ -165,7 +133,7 @@ public class SQL_OSMImporter extends DefaultHandler {
         this.insertQueue.append("INSERT INTO ");
         switch(this.status) {
             case STATUS_NODE: 
-                this.insertQueue.append(NODETABLE);
+                this.insertQueue.append(InterDB.NODETABLE);
                 this.insertQueue.append("(valid, longitude, latitude, osm_id, classcode, serializedtags) VALUES (true, ");
                 this.insertQueue.append(attributes.getValue("lon"));
                 this.insertQueue.append(", ");
@@ -180,11 +148,11 @@ public class SQL_OSMImporter extends DefaultHandler {
                     // first way! create index in nodes
                     this.wayProcessed = true;
                 }
-                this.insertQueue.append(WAYTABLE);
+                this.insertQueue.append(InterDB.WAYTABLE);
                 this.insertQueue.append("(valid, osm_id, classcode, serializedtags, node_ids) VALUES (true, ");
                 
                 this.memberQueue.append("INSERT INTO ");
-                this.memberQueue.append(WAYMEMBER); 
+                this.memberQueue.append(InterDB.WAYMEMBER); 
                 this.memberQueue.append(" (way_id, node_id) VALUES ");
                 
                 break;
@@ -200,7 +168,7 @@ public class SQL_OSMImporter extends DefaultHandler {
                     // first relation! create index in ways
                     this.relationProcessed = true;
                 }
-                this.insertQueue.append(RELATIONTABLE);
+                this.insertQueue.append(InterDB.RELATIONTABLE);
                 this.insertQueue.append("(valid, osm_id, classcode, serializedtags, member_ids) VALUES (true, ");
 
                 break;
@@ -235,7 +203,7 @@ public class SQL_OSMImporter extends DefaultHandler {
                 /* yes: next value is the subclass
                     value describes subclass
                 */
-                this.currentClassID = this.getOHDMClassID(
+                this.currentClassID = this.osmClassification.getOHDMClassID(
                       attributes.getValue(i), 
                       attributes.getValue(i+1)
                 );
@@ -263,7 +231,7 @@ public class SQL_OSMImporter extends DefaultHandler {
             this.ndFound = true;
             // init update queue
             this.updateNodesQueue.append("UPDATE ");
-            this.updateNodesQueue.append(NODETABLE);
+            this.updateNodesQueue.append(InterDB.NODETABLE);
             this.updateNodesQueue.append(" SET is_part=true WHERE ");
         } else {
             this.memberQueue.append(", ");
@@ -298,7 +266,7 @@ public class SQL_OSMImporter extends DefaultHandler {
         }
         
         this.memberQueue.append("INSERT INTO ");
-        this.memberQueue.append(RELATIONMEMBER);
+        this.memberQueue.append(InterDB.RELATIONMEMBER);
         this.memberQueue.append(" (relation_id, role, ");
         switch(attributes.getValue("type")) {
             case "node":
@@ -309,7 +277,7 @@ public class SQL_OSMImporter extends DefaultHandler {
                     this.ndFound = true;
                     // init update node queue
                     this.updateNodesQueue.append("UPDATE ");
-                    this.updateNodesQueue.append(NODETABLE);
+                    this.updateNodesQueue.append(InterDB.NODETABLE);
                     this.updateNodesQueue.append(" SET is_part=true WHERE ");
                 } else {
                     this.updateNodesQueue.append(" OR ");
@@ -325,7 +293,7 @@ public class SQL_OSMImporter extends DefaultHandler {
                     this.wayFound = true;
                     // init update way queue
                     this.updateWaysQueue.append("UPDATE ");
-                    this.updateWaysQueue.append(WAYTABLE);
+                    this.updateWaysQueue.append(InterDB.WAYTABLE);
                     this.updateWaysQueue.append(" SET is_part=true WHERE ");
                 } else {
                     this.updateWaysQueue.append(" OR ");
@@ -501,8 +469,8 @@ public class SQL_OSMImporter extends DefaultHandler {
                     break; // single original node
                 case "way":
                     if(!this.wayProcessed) {
-                        // first way.. create an index on nodes
-                        this.indexQueue.exec("create index node_osm_id on nodes (osm_id);");
+                        // join with all inserts
+                        this.insertQueue.join();
                     }
                     this.wA++;
                     
@@ -515,8 +483,8 @@ public class SQL_OSMImporter extends DefaultHandler {
 
                 case "relation":
                     if(!this.relationProcessed) {
-                        // first relation.. create index on ways
-                        this.indexQueue.exec("create index way_osm_id on ways (osm_id);");
+                        // join with all inserts
+                        this.insertQueue.join();
                     }
                     this.rA++;
                     
@@ -550,7 +518,7 @@ public class SQL_OSMImporter extends DefaultHandler {
                 this.memberQueue.forceExecute(this.currentElementID);
                 this.updateNodesQueue.forceExecute(this.currentElementID);
                 this.updateWaysQueue.forceExecute(this.currentElementID);
-                if(++this.era >= this.flushSteps) {
+                if(++this.era >= 100) {
                     this.era = 0;
                     this.printStatus();
                 } else {
@@ -599,248 +567,5 @@ public class SQL_OSMImporter extends DefaultHandler {
         System.out.print(hours + " : ");
         System.out.print(min + " : ");
         System.out.println(sec);
-    }
-    
-    private List<String> createTablesList() {
-        List<String> l = new ArrayList<>();
-        l.add(RELATIONMEMBER); // dependencies to way, node and relations
-        l.add(WAYTABLE); // dependencies to node
-        l.add(NODETABLE);
-        l.add(RELATIONTABLE);
-        l.add(CLASSIFICATIONTABLE);
-        l.add(WAYMEMBER);
-        return l;
-    }
-
-  private void setupTable(String table, String sqlCreate) throws SQLException {
-    PreparedStatement stmt = null;
-    StringBuilder sql = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
-    sql.append(table).append(sqlCreate);
-    try {
-      stmt = targetConnection.prepareStatement(sql.toString());
-      stmt.execute();
-    } catch (SQLException ex) {
-        System.err.println(ex.getClass().getName() + "\n" + ex.getMessage());
-    } finally {
-      if (stmt != null) {
-        stmt.close();
-      }
-    }
-  }
-
-  private void dropTables() throws SQLException {
-//    if (config.getValue("db_dropTables").equalsIgnoreCase("yes")) {
-      StringBuilder sqlDel = new StringBuilder("DROP TABLE ");
-      PreparedStatement delStmt = null;
-      List<String> tables = this.createTablesList();
-      tables.stream().forEach((table) -> {
-        sqlDel.append(table).append(", ");
-      });
-      sqlDel.delete(sqlDel.lastIndexOf(","), sqlDel.length()).replace(sqlDel.length(), sqlDel.length(), ";");
-      try {
-        delStmt = targetConnection.prepareStatement(sqlDel.toString());
-        delStmt.execute();
-      } catch (SQLException e) {
-      } finally {
-        if (delStmt != null) {
-          delStmt.close();
-        }
-      }
-//    }
-  }
-  
-  private void setupKB() {
-    System.out.println("--- setting up tables ---");
-    try {
-      this.dropTables();
-      /**
-       * ************ Knowledge base tables ****************************
-       */
-    this.loadClassification();
-      
-      StringBuilder sqlWay = new StringBuilder();
-      sqlWay.append(" (osm_id bigint PRIMARY KEY, ")
-              .append("classcode bigint REFERENCES ").append(CLASSIFICATIONTABLE).append(" (classcode), ")
-              .append("serializedTags character varying, ")
-              .append("ohdm_geom_id bigint, ")
-              .append("ohdm_object_id bigint, ")
-              .append("node_ids character varying, ")
-              .append("is_part boolean DEFAULT false, ")
-              .append("valid boolean);");
-      this.setupTable(WAYTABLE, sqlWay.toString());
-
-      StringBuilder sqlNode = new StringBuilder();
-      sqlNode.append(" (osm_id bigint PRIMARY KEY, ")
-              .append("classcode bigint REFERENCES ").append(CLASSIFICATIONTABLE).append(" (classcode), ")
-              .append("serializedTags character varying, ")
-              .append("longitude character varying(").append(MAX_ID_SIZE).append("), ")
-              .append("latitude character varying(").append(MAX_ID_SIZE).append("), ")
-              .append("ohdm_geom_id bigint, ")
-              .append("ohdm_object_id bigint, ")
-//              .append("id_way bigint REFERENCES ").append(WAYTABLE).append(" (osm_id), ")
-              .append("is_part boolean DEFAULT false, ")
-              .append("valid boolean);");
-      this.setupTable(NODETABLE, sqlNode.toString());
-
-      StringBuilder sqlRelation = new StringBuilder();
-      sqlRelation.append(" (osm_id bigint PRIMARY KEY, ")
-              .append("classcode bigint REFERENCES ").append(CLASSIFICATIONTABLE).append(" (classcode), ")
-              .append("serializedTags character varying, ")
-              .append("ohdm_geom_id bigint, ")
-              .append("ohdm_object_id bigint, ")
-              .append("member_ids character varying, ")
-              .append("valid boolean);");
-      this.setupTable(RELATIONTABLE, sqlRelation.toString());
-      
-      StringBuilder sqlWayMember = new StringBuilder();
-      sqlWayMember.append(" (way_id bigint, ");
-      sqlWayMember.append("node_id bigint");
-      sqlWayMember.append(");");
-      this.setupTable(WAYMEMBER, sqlWayMember.toString());
-      
-      StringBuilder sqlRelMember = new StringBuilder();
-//      sqlRelMember.append(" (relation_id bigint REFERENCES ").append(RELATIONTABLE).append(" (osm_id) NOT NULL, ")
-      sqlRelMember.append(" (relation_id bigint NOT NULL, ")
-//              .append("way_id bigint REFERENCES ").append(WAYTABLE).append(" (osm_id), ")
-              .append("way_id bigint, ")
-//              .append("node_id bigint REFERENCES ").append(NODETABLE).append(" (osm_id), ")
-              .append("node_id bigint, ")
-//              .append("member_rel_id bigint REFERENCES ").append(RELATIONTABLE).append(" (osm_id));");
-              .append("member_rel_id bigint, ")
-              .append("role character varying);");
-      this.setupTable(RELATIONMEMBER, sqlRelMember.toString());
-      
-    } catch (SQLException e) {
-      System.err.println("error while setting up tables: " + e.getLocalizedMessage());
-    }
-  }
-  
-    private HashMap<String, Integer> classIDs = new HashMap<>();
-
-    private String createFullClassName(String className, String subclassname) {
-        return className + "_" + subclassname;
-    }
-  
-    private void loadClassification() throws SQLException {      
-//            Statement stmt = null;
-//            try {
-//                stmt = targetConnection.createStatement();
-//                StringBuilder sb = new StringBuilder("SELECT * FROM ");
-//                if (!this.schema.equalsIgnoreCase("")) {
-//                    sb.append(schema).append(".");
-//                }
-//                sb.append(CLASSIFICATIONTABLE).append(";");
-//                try (ResultSet rs = stmt.executeQuery(sb.toString())) {
-//                    while (rs.next()) {
-//                        this.classification.put(rs.getString("class"), rs.getString("subclassname"), rs.getInt("classcode"));
-//                    }
-//                }
-//            } catch (SQLException e) {
-//            } finally {
-//                if (stmt != null) {
-//                    try {
-//                      stmt.close();
-//                    } catch (SQLException e) {
-//                    }
-//                }
-//            }
-//        } else {
-            StringBuilder sqlRelMember = new StringBuilder();
-            sqlRelMember.append("(classcode bigint PRIMARY KEY, ")
-              .append("classname character varying, ")
-              .append("subclassname character varying);");
-
-            this.setupTable(CLASSIFICATIONTABLE, sqlRelMember.toString());
-
-            // fill that table
-            // set up classification table from scratch
-            OSMClassification osmClassification = OSMClassification.getOSMClassification();
-
-            // init first line: unknown classification
-            StringBuilder insertStatement = new StringBuilder();
-            insertStatement.append("INSERT INTO ")
-                    .append(CLASSIFICATIONTABLE)
-                    .append(" VALUES (-1, 'no_class', 'no_subclass');");
-
-            PreparedStatement stmt = null;
-            try {
-                stmt = targetConnection.prepareStatement(insertStatement.toString());
-                stmt.execute();
-            } catch (SQLException ex) {
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
-            }
-
-            // no append real data
-            int id = 0;
-
-            // create classification table
-            // iterate classes
-            Iterator<String> classIter = osmClassification.osmFeatureClasses.keySet().iterator();
-
-            while(classIter.hasNext()) {
-                String className = classIter.next();
-                List<String> subClasses = osmClassification.osmFeatureClasses.get(className);
-                Iterator<String> subClassIter = subClasses.iterator();
-
-                while(subClassIter.hasNext()) {
-                    String subClassName = subClassIter.next();
-
-                    // keep in memory
-                    Integer idInteger = id;
-                    String fullClassName = this.createFullClassName(className, subClassName);
-
-                    this.classIDs.put(fullClassName, idInteger);
-
-                    // add to database
-                    insertStatement = new StringBuilder();
-                    insertStatement.append("INSERT INTO ")
-                            .append(CLASSIFICATIONTABLE)
-                            .append(" VALUES (")
-                            .append(id++)
-                            .append(", '")
-                            .append(className)
-                            .append("', '")
-                            .append(subClassName)
-                            .append("');");
-
-                    stmt = null;
-                    try {
-                        stmt = targetConnection.prepareStatement(insertStatement.toString());
-                        stmt.execute();
-                    } catch (SQLException ex) {
-                    } finally {
-                      if (stmt != null) {
-                        stmt.close();
-                      }
-                    }
-                }
-
-            }
-        }
-    
-    /**
-     * @return -1 if no known class and sub class name, a non-negative number 
-     * otherwise
-     */
-    private int getOHDMClassID(String className, String subClassName) {
-        String fullClassName = this.createFullClassName(className, subClassName);
-        
-        // find entry
-        Integer id = this.classIDs.get(fullClassName);
-        if(id != null) {
-            return id;
-        }
-        
-        // try undefined
-        fullClassName = this.createFullClassName(className, OSMClassification.UNDEFINED);
-        id = this.classIDs.get(fullClassName);
-        if(id != null) {
-            return id;
-        }
-        
-        return -1;
     }
 }

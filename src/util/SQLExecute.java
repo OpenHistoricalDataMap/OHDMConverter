@@ -32,12 +32,11 @@ class SQLExecute extends Thread {
         try {
             stmt = connection.prepareStatement(sqlStatement);
             stmt.execute();
-            stmt.close();
         } catch (SQLException ex) {
-            System.err.println(ex.getMessage());
             e = ex;
         }
         finally {
+            stmt.close();
             if(e != null) throw e;
         }
     }

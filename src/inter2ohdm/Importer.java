@@ -120,10 +120,6 @@ public abstract class Importer {
                     + ":" + targetPortNumber + "/" + targetPath, targetConnProps);
     }
     
-    static protected String getFullTableName(String schema, String tableName) {
-        return schema + "." + tableName;
-    }
-    
     public abstract boolean importWay(OHDMWay way) throws SQLException;
 
     public abstract boolean importRelation(OHDMRelation relation) throws SQLException;

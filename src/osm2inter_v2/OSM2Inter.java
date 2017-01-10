@@ -8,6 +8,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.SAXException;
+import osm.OSMClassification;
 import osm2inter.MyLogger;
 import util.Parameter;
 
@@ -37,8 +38,9 @@ public class OSM2Inter {
     }
     
     Parameter dbConnectionSettings = new Parameter(parameterFile);
+    OSMClassification osmClassification = OSMClassification.getOSMClassification();
     
-    newSAXParser.parse(osmFile, new SQL_OSMImporter(dbConnectionSettings));
+    newSAXParser.parse(osmFile, new SQL_OSMImporter(dbConnectionSettings, osmClassification));
       
     } catch (ParserConfigurationException ex) {
         Logger.getLogger(OSM2Inter.class.getName()).log(Level.SEVERE, null, ex);

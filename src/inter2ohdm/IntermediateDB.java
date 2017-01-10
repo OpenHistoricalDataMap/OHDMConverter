@@ -9,6 +9,7 @@ import static osm2inter.SQLImportCommandBuilder.RELATIONMEMBER;
 import static osm2inter.SQLImportCommandBuilder.RELATIONTABLE;
 import static osm2inter.SQLImportCommandBuilder.WAYMEMBER;
 import static osm2inter.SQLImportCommandBuilder.WAYTABLE;
+import util.DB;
 import util.SQLStatementQueue;
 
 /**
@@ -26,11 +27,11 @@ public class IntermediateDB {
     
     protected String getIntermediateTableName(OHDMElement element) {
         if(element instanceof OHDMNode) {
-            return(Importer.getFullTableName(this.schema, NODETABLE));
+            return(DB.getFullTableName(this.schema, NODETABLE));
         } else if(element instanceof OHDMWay) {
-            return(Importer.getFullTableName(this.schema, WAYTABLE));
+            return(DB.getFullTableName(this.schema, WAYTABLE));
         } else {
-            return(Importer.getFullTableName(this.schema, RELATIONTABLE));
+            return(DB.getFullTableName(this.schema, RELATIONTABLE));
         } 
     }
     
@@ -82,7 +83,7 @@ public class IntermediateDB {
             // remove line from relationsmember
             sq.append("DELETE FROM ");
 
-            sq.append(Importer.getFullTableName(this.schema, RELATIONMEMBER));
+            sq.append(DB.getFullTableName(this.schema, RELATIONMEMBER));
 
             sq.append(" WHERE relation_id = ");
             sq.append(element.getOSMIDString());
@@ -92,7 +93,7 @@ public class IntermediateDB {
             // remove line from relationsmember
             sq.append("DELETE FROM ");
 
-            sq.append(Importer.getFullTableName(this.schema, WAYMEMBER));
+            sq.append(DB.getFullTableName(this.schema, WAYMEMBER));
 
             sq.append(" WHERE way_id = ");
             sq.append(element.getOSMIDString());
@@ -123,9 +124,9 @@ public class IntermediateDB {
         SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
 
         sql.append("select * from ");
-        sql.append(Importer.getFullTableName(this.schema, NODETABLE));
+        sql.append(DB.getFullTableName(this.schema, NODETABLE));
         sql.append(" where osm_id IN (SELECT node_id FROM ");            
-        sql.append(Importer.getFullTableName(this.schema, WAYMEMBER));
+        sql.append(DB.getFullTableName(this.schema, WAYMEMBER));
         sql.append(" where way_id = ");            
         sql.append(way.getOSMIDString());
         sql.append(");");  

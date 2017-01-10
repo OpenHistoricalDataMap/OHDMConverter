@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import osm2inter.AbstractElement;
 import util.SQLStatementQueue;
-import osm2inter.TagElement;
+import util.DB;
 
 /**
  *
@@ -558,8 +558,8 @@ public class OSMClassification {
         this.setupClassIDs_Names();
     }
     
-    private HashMap<String, Integer> classIDs = new HashMap<>();
-    private ArrayList<String> fullClassNames = new ArrayList<>();
+    private final HashMap<String, Integer> classIDs = new HashMap<>();
+    private final ArrayList<String> fullClassNames = new ArrayList<>();
     
     private void setupClassIDs_Names() {
         // no append real data
@@ -578,7 +578,7 @@ public class OSMClassification {
                 String subClassName = subClassIter.next();
                 
                 // keep in memory
-                String fullClassName = this.createFullClassName(className, subClassName);
+                String fullClassName = OSMClassification.createFullClassName(className, subClassName);
                 
                 this.classIDs.put(fullClassName, id++);
                 this.fullClassNames.add(fullClassName);
@@ -586,7 +586,7 @@ public class OSMClassification {
         }
     }
     
-    private String createFullClassName(String className, String subclassname) {
+    public static String createFullClassName(String className, String subclassname) {
         return className + "_" + subclassname;
     }
     
@@ -645,11 +645,13 @@ public class OSMClassification {
     }
     
     /**
+     * @param className
+     * @param subClassName
      * @return -1 if no known class and sub class name, a non-negative number 
      * otherwise
      */
     public int getOHDMClassID(String className, String subClassName) {
-        String fullClassName = this.createFullClassName(className, subClassName);
+        String fullClassName = OSMClassification.createFullClassName(className, subClassName);
         
         // find entry
         Integer id = this.classIDs.get(fullClassName);
@@ -658,7 +660,7 @@ public class OSMClassification {
         }
         
         // try undefined
-        fullClassName = this.createFullClassName(className, OSMClassification.UNDEFINED);
+        fullClassName = OSMClassification.createFullClassName(className, OSMClassification.UNDEFINED);
         id = this.classIDs.get(fullClassName);
         if(id != null) {
             return id;
@@ -719,5 +721,66 @@ public class OSMClassification {
                 this.classIDs.put(fullClassName, classID);
             }
         }
+    }
+    
+    public static final String CLASSIFICATIONTABLE = "classification";
+    
+    /**
+     * reads classification into memory from table or even creates classification
+     * table if not exists (TODO: currently: table is always created)
+     * @param sq
+     * @param schema
+     * @throws SQLException 
+     */
+    public void setupClassificationTable(SQLStatementQueue sq, String schema) throws SQLException {
+        DB.drop(sq, schema, CLASSIFICATIONTABLE);
+        
+        // create table
+        sq.append("CREATE TABLE ");
+        sq.append(DB.getFullTableName(schema, CLASSIFICATIONTABLE));
+        sq.append("(classcode bigint PRIMARY KEY, ");
+        sq.append("classname character varying, ");
+        sq.append("subclassname character varying);");
+
+        // init first line: unknown classification
+        sq.append("INSERT INTO ");
+        sq.append(DB.getFullTableName(schema, CLASSIFICATIONTABLE));
+        sq.append(" VALUES (-1, 'no_class', 'no_subclass');");
+
+        // now append real data
+        int id = 0;
+
+        // create classification table
+        // iterate classes
+        Iterator<String> classIter = osmClassification.osmFeatureClasses.keySet().iterator();
+
+        while(classIter.hasNext()) {
+            String className = classIter.next();
+            List<String> subClasses = osmClassification.osmFeatureClasses.get(className);
+            Iterator<String> subClassIter = subClasses.iterator();
+
+            while(subClassIter.hasNext()) {
+                String subClassName = subClassIter.next();
+
+                // keep in memory
+                Integer idInteger = id;
+                String fullClassName = OSMClassification.createFullClassName(className, subClassName);
+
+                this.classIDs.put(fullClassName, idInteger);
+
+                // add to database
+                sq.append("INSERT INTO ");
+                sq.append(CLASSIFICATIONTABLE);
+                sq.append(" VALUES (");
+                sq.append(id++);
+                sq.append(", '");
+                sq.append(className);
+                sq.append("', '");
+                sq.append(subClassName);
+                sq.append("');");
+            }
+        }
+        
+        sq.forceExecute();
     }
 }

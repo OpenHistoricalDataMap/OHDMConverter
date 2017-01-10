@@ -9,6 +9,7 @@ import static osm2inter.SQLImportCommandBuilder.WAYMEMBER;
 import static osm2inter.SQLImportCommandBuilder.WAYTABLE;
 import static osm2inter.SQLImportCommandBuilder.NODETABLE;
 import static osm2inter.SQLImportCommandBuilder.RELATIONMEMBER;
+import util.DB;
 import util.SQLStatementQueue;
 
 /**
@@ -49,7 +50,7 @@ public class ExportIntermediateDB extends IntermediateDB {
     private void calculateInitialIDs(SQLStatementQueue sql, String tableName) throws SQLException {
         // first: figure out min and max osm_id in nodes table
         sql.append("SELECT min(osm_id) FROM ");
-        sql.append(Importer.getFullTableName(this.schema, tableName));
+        sql.append(DB.getFullTableName(this.schema, tableName));
         sql.append(";");
 
         ResultSet result = sql.executeWithResult();
@@ -57,7 +58,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         BigDecimal minID = result.getBigDecimal(1);
 
         sql.append("SELECT max(osm_id) FROM ");
-        sql.append(Importer.getFullTableName(this.schema, tableName));
+        sql.append(DB.getFullTableName(this.schema, tableName));
         sql.append(";");
 
         result = sql.executeWithResult();
@@ -89,7 +90,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                 System.out.println(upperID.toString());
         
                 sql.append("SELECT * FROM ");
-                sql.append(Importer.getFullTableName(this.schema, NODETABLE));
+                sql.append(DB.getFullTableName(this.schema, NODETABLE));
                 sql.append(" where osm_id <= "); // including upper
                 sql.append(upperID.toString());
                 sql.append(" AND osm_id > "); // excluding lower 
@@ -160,7 +161,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                 System.out.println(upperID.toString());
                 
                 sql.append("SELECT * FROM ");
-                sql.append(Importer.getFullTableName(this.schema, WAYTABLE));
+                sql.append(DB.getFullTableName(this.schema, WAYTABLE));
                 sql.append(" where osm_id <= "); // including upper
                 sql.append(upperID.toString());
                 sql.append(" AND osm_id > "); // excluding lower 
@@ -220,9 +221,9 @@ public class ExportIntermediateDB extends IntermediateDB {
         SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
 
         sql.append("select * from ");
-        sql.append(Importer.getFullTableName(this.schema, NODETABLE));
+        sql.append(DB.getFullTableName(this.schema, NODETABLE));
         sql.append(" where osm_id IN (SELECT node_id FROM ");            
-        sql.append(Importer.getFullTableName(this.schema, WAYMEMBER));
+        sql.append(DB.getFullTableName(this.schema, WAYMEMBER));
         sql.append(" where way_id = ");            
         sql.append(way.getOSMIDString());
         sql.append(");");  
@@ -263,7 +264,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                 System.out.println(upperID.toString());
 
                 sql.append("SELECT * FROM ");
-                sql.append(Importer.getFullTableName(this.schema, RELATIONTABLE));
+                sql.append(DB.getFullTableName(this.schema, RELATIONTABLE));
                 sql.append(" where osm_id <= "); // including upper
                 sql.append(upperID.toString());
                 sql.append(" AND osm_id > "); // excluding lower 
@@ -284,7 +285,7 @@ public class ExportIntermediateDB extends IntermediateDB {
 
                     // find all associated nodes and add to that relation
                     sql.append("select * from ");
-                    sql.append(Importer.getFullTableName(this.schema, RELATIONMEMBER));
+                    sql.append(DB.getFullTableName(this.schema, RELATIONMEMBER));
                     sql.append(" where relation_id = ");            
                     sql.append(relation.getOSMIDString());
                     sql.append(";");  
@@ -304,17 +305,17 @@ public class ExportIntermediateDB extends IntermediateDB {
 
                         id = qResultRelation.getBigDecimal("node_id");
                         if(id != null) {
-                            sql.append(Importer.getFullTableName(this.schema, NODETABLE));
+                            sql.append(DB.getFullTableName(this.schema, NODETABLE));
                             type = OHDMElement.GeometryType.POINT;
                         } else {
                             id = qResultRelation.getBigDecimal("way_id");
                             if(id != null) {
-                                sql.append(Importer.getFullTableName(this.schema, WAYTABLE));
+                                sql.append(DB.getFullTableName(this.schema, WAYTABLE));
                                 type = OHDMElement.GeometryType.LINESTRING;
                             } else {
                                 id = qResultRelation.getBigDecimal("member_rel_id");
                                 if(id != null) {
-                                    sql.append(Importer.getFullTableName(this.schema, RELATIONTABLE));
+                                    sql.append(DB.getFullTableName(this.schema, RELATIONTABLE));
                                     type = OHDMElement.GeometryType.RELATION;
                                 } else {
                                     // we have a serious problem here.. or no member

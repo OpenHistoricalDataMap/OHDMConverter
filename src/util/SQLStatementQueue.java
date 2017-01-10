@@ -155,6 +155,30 @@ public class SQLStatementQueue {
     }
     
     /**
+     * wait until all issued threads are finished
+     * 
+     */
+    public void join() {
+        boolean done = false;
+        while(!done) {
+            SQLExecute execThread = this.execThreads.get(0);
+            if(execThread != null) {
+                try {
+                    execThread.join();
+                } catch (InterruptedException ex) {
+                    // wont happen
+                }
+            } else {
+                /* it assumed that now other threads are created after this
+                method was called - it can be assumed that failing a single
+                thread in the list indicates that all threads are finished
+                */
+                done = true;
+            }
+        }
+    }
+    
+    /**
      * sequential execution of sql statement
      * @throws SQLException 
      */
@@ -163,10 +187,16 @@ public class SQLStatementQueue {
             return;
         }
         
-        SQLExecute.doExec(this.connection, this.sqlQueue.toString());
-
-        // no exeption
-        this.resetStatement();
+        try {
+            SQLExecute.doExec(this.connection, this.sqlQueue.toString());
+        }
+        catch(SQLException e) {
+            throw e;
+        }
+        finally {
+            // in any case
+            this.resetStatement();
+        }
     }
     
     void writeLog(String recordEntry) throws FileNotFoundException, IOException {

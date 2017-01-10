@@ -87,7 +87,7 @@ public class SQL_OSMImporter extends DefaultHandler {
         this.updateNodesQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
         this.updateWaysQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
 
-        InterDB.createInterTables(insertQueue, schema);
+        InterDB.createTables(insertQueue, schema);
     }
     
     /*

@@ -24,7 +24,7 @@ public class InterDB {
         DB.drop(sql, targetSchema, WAYTABLE);
     }
     
-    static void createInterTables(SQLStatementQueue sql, String schema) throws SQLException {
+    static void createTables(SQLStatementQueue sql, String schema) throws SQLException {
         System.out.println("--- setting up intermediate db ---");
         try {
             System.out.println("drop tables");
@@ -52,6 +52,8 @@ public class InterDB {
             sql.append("ohdm_geom_id bigint,");
             sql.append("ohdm_object_id bigint,");
             sql.append("is_part boolean DEFAULT false,");
+            sql.append("new boolean,");
+            sql.append("changed boolean,");
             sql.append("valid boolean);");
             sql.forceExecute();
 

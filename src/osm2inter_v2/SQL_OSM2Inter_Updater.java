@@ -22,7 +22,7 @@ public class SQL_OSM2Inter_Updater {
         // setup changes db
         Connection conn = DB.createConnection(changesDBSetting);
         SQLStatementQueue sql = DB.createSQLStatementQueue(conn, changesDBSetting);
-        InterDB.createInterTables(sql, changesDBSetting.getSchema());
+        InterDB.createTables(sql, changesDBSetting.getSchema());
     }
     
     public static void main(String args[]) throws IOException, SQLException {

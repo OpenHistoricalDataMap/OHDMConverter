@@ -153,9 +153,9 @@ public class SQL_OSMImporter extends DefaultHandler {
                 break;
             case STATUS_RELATION: 
                 // do we need nodeIDs in a relation - dont think so.. TODO
-                if(this.nodeIDs == null || this.nodeIDs.length() > 0) {
-                    this.nodeIDs = new StringBuilder();
-                }
+//                if(this.nodeIDs == null || this.nodeIDs.length() > 0) {
+//                    this.nodeIDs = new StringBuilder();
+//                }
                 // member ids required
                 if(this.memberIDs == null || this.memberIDs.length() > 0) {
                     this.memberIDs = new StringBuilder();
@@ -338,7 +338,7 @@ public class SQL_OSMImporter extends DefaultHandler {
         UPDATE nodes SET is_part=true WHERE id = id_nodes OR ...
         */
         
-        try {
+//        try {
             // add remaining parameter; 
             this.insertQueue.append(this.currentClassID);
             this.insertQueue.append(", '");
@@ -349,16 +349,16 @@ public class SQL_OSMImporter extends DefaultHandler {
 
             // finish insert member statement
             this.memberQueue.append(";");
-            this.memberQueue.forceExecute(this.currentElementID);
+//            this.memberQueue.forceExecute(this.currentElementID);
             
             // finish update nodes statement
             this.updateNodesQueue.append(";");
-            this.updateNodesQueue.forceExecute(this.currentElementID);
-        } catch (SQLException ex) {
-            System.err.println("while saving node: " + ex.getMessage() + "\n" + this.insertQueue.toString());
-        } catch (IOException ex) {
-            System.err.println("while saving node: " + ex.getClass().getName() + "\n" + ex.getMessage());
-        }
+//            this.updateNodesQueue.forceExecute(this.currentElementID);
+//        } catch (SQLException ex) {
+//            System.err.println("while saving node: " + ex.getMessage() + "\n" + this.insertQueue.toString());
+//        } catch (IOException ex) {
+//            System.err.println("while saving node: " + ex.getClass().getName() + "\n" + ex.getMessage());
+//        }
         
     }
 
@@ -371,7 +371,7 @@ public class SQL_OSMImporter extends DefaultHandler {
         UPDATE ways SET is_part=true WHERE osm_id = ?? OR osm_id = ??;
         */
         
-        try {
+//        try {
             this.insertQueue.append(this.currentClassID);
             this.insertQueue.append(", '");
             this.insertQueue.append(this.sAttributes.toString());
@@ -380,19 +380,19 @@ public class SQL_OSMImporter extends DefaultHandler {
             this.insertQueue.append("');");
             
             this.memberQueue.append(";");
-            this.memberQueue.forceExecute(this.currentElementID);
+//            this.memberQueue.forceExecute(this.currentElementID);
             
             this.updateNodesQueue.append(";");
-            this.updateNodesQueue.forceExecute(this.currentElementID);
+//            this.updateNodesQueue.forceExecute(this.currentElementID);
             
             this.updateWaysQueue.append(";");
-            this.updateWaysQueue.forceExecute(this.currentElementID);
+//            this.updateWaysQueue.forceExecute(this.currentElementID);
             
-        } catch (SQLException ex) {
-            System.err.println("while saving node: " + ex.getMessage() + "\n" + this.insertQueue.toString());
-        } catch (IOException ex) {
-            System.err.println("while saving node: " + ex.getClass().getName() + "\n" + ex.getMessage());
-        }
+//        } catch (SQLException ex) {
+//            System.err.println("while saving node: " + ex.getMessage() + "\n" + this.insertQueue.toString());
+//        } catch (IOException ex) {
+//            System.err.println("while saving node: " + ex.getClass().getName() + "\n" + ex.getMessage());
+//        }
     }
 
     @Override
@@ -402,7 +402,12 @@ public class SQL_OSMImporter extends DefaultHandler {
 
     @Override
     public void endDocument() {
-        System.out.println("\nOSM Import ended\n");
+        System.out.println("\nOSM Import ended.. wait for threads to end..\n");
+        insertQueue.join();
+        memberQueue.join();
+        updateNodesQueue.join();
+        updateWaysQueue.join();
+        
         this.printStatus();
     }
 

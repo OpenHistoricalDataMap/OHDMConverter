@@ -133,10 +133,10 @@ public class SQLStatementQueue {
                     se.start();
                     found = true;
                 } else {
-                    // no more thread allowed.. make an educated guess and wait for
-                    // first one to end
-                    Thread jThread = this.execThreads.get(0);
                     try {
+                        // no more thread allowed.. make an educated guess and wait for
+                        // first one to end
+                        Thread jThread = this.execThreads.get(0);
 //                        System.out.println("sqlQueue: no sql thread found.. wait for first one to die");
                         if(jThread != null) {
                             jThread.join();
@@ -144,6 +144,9 @@ public class SQLStatementQueue {
 //                        System.out.println("sqlQueue: first sql thread died");
                     } catch (InterruptedException ex) {
                         // ignore and go ahead
+                    }
+                    catch(IndexOutOfBoundsException e) {
+                        // was to slowly .. list already empty.. go ahead
                     }
                 }
             }
@@ -158,19 +161,25 @@ public class SQLStatementQueue {
     public void join() {
         boolean done = false;
         while(!done) {
-            SQLExecute execThread = this.execThreads.get(0);
-            if(execThread != null) {
+            if(this.execThreads.isEmpty()) return;
                 try {
-                    execThread.join();
-                } catch (InterruptedException ex) {
-                    // wont happen
+                    SQLExecute execThread = this.execThreads.get(0);
+                if(execThread != null) {
+                    try {
+                        execThread.join();
+                    } catch (InterruptedException ex) {
+                        // wont happen
+                    }
+                } else {
+                    /* it assumed that now other threads are created after this
+                    method was called - it can be assumed that failing a single
+                    thread in the list indicates that all threads are finished
+                    */
+                    done = true;
                 }
-            } else {
-                /* it assumed that now other threads are created after this
-                method was called - it can be assumed that failing a single
-                thread in the list indicates that all threads are finished
-                */
-                done = true;
+            }
+            catch(IndexOutOfBoundsException e) {
+                // was to slowly .. empty.. again
             }
         }
     }

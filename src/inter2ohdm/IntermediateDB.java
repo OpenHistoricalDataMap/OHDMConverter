@@ -17,6 +17,7 @@ import util.SQLStatementQueue;
  * @author thsc
  */
 public class IntermediateDB {
+    private boolean debug = false;
     protected final Connection sourceConnection;
     private final String schema;
     
@@ -158,7 +159,9 @@ public class IntermediateDB {
     
     private void readCommonColumns(ResultSet qResult) throws SQLException {
         osmIDString = this.extractBigDecimalAsString(qResult, "osm_id");
-        System.out.print(", " + osmIDString);
+        if(this.debug) {
+            System.out.print(", " + osmIDString);
+        }
         if(osmIDString.equalsIgnoreCase("1368193")) {
             int i = 42;
         }

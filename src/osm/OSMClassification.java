@@ -1247,7 +1247,7 @@ public class OSMClassification {
     }
     
     private boolean isClassName(String key) {
-        return this.getOSMClassification().osmFeatureClasses.keySet().contains(key);
+        return OSMClassification.getOSMClassification().osmFeatureClasses.keySet().contains(key);
     }
     
     public void write2Table(Connection targetConnection, String classificationTableName) throws SQLException {
@@ -1266,11 +1266,11 @@ public class OSMClassification {
 
         // create classification table
         // iterate classes
-        Iterator<String> classIter = this.osmClassification.osmFeatureClasses.keySet().iterator();
+        Iterator<String> classIter = OSMClassification.osmClassification.osmFeatureClasses.keySet().iterator();
 
         while(classIter.hasNext()) {
             String className = classIter.next();
-            List<String> subClasses = this.osmClassification.osmFeatureClasses.get(className);
+            List<String> subClasses = OSMClassification.osmClassification.osmFeatureClasses.get(className);
             Iterator<String> subClassIter = subClasses.iterator();
 
             while(subClassIter.hasNext()) {
@@ -1290,7 +1290,7 @@ public class OSMClassification {
                 int classID = insertResult.getInt(1);
                 
                 // keep in memory
-                String fullClassName = this.createFullClassName(className, subClassName);
+                String fullClassName = OSMClassification.createFullClassName(className, subClassName);
                 
                 this.classIDs.put(fullClassName, classID);
             }

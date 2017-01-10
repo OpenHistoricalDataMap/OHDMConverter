@@ -152,9 +152,11 @@ public class SQL_OSMImporter extends DefaultHandler {
                 
                 break;
             case STATUS_RELATION: 
+                // do we need nodeIDs in a relation - dont think so.. TODO
                 if(this.nodeIDs == null || this.nodeIDs.length() > 0) {
                     this.nodeIDs = new StringBuilder();
                 }
+                // member ids required
                 if(this.memberIDs == null || this.memberIDs.length() > 0) {
                     this.memberIDs = new StringBuilder();
                 }

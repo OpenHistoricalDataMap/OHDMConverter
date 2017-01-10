@@ -4,11 +4,11 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import static osm2inter.SQLImportCommandBuilder.RELATIONTABLE;
-import static osm2inter.SQLImportCommandBuilder.WAYMEMBER;
-import static osm2inter.SQLImportCommandBuilder.WAYTABLE;
-import static osm2inter.SQLImportCommandBuilder.NODETABLE;
-import static osm2inter.SQLImportCommandBuilder.RELATIONMEMBER;
+import static osm2inter_v2.InterDB.NODETABLE;
+import static osm2inter_v2.InterDB.RELATIONMEMBER;
+import static osm2inter_v2.InterDB.RELATIONTABLE;
+import static osm2inter_v2.InterDB.WAYMEMBER;
+import static osm2inter_v2.InterDB.WAYTABLE;
 import util.DB;
 import util.SQLStatementQueue;
 
@@ -19,7 +19,7 @@ import util.SQLStatementQueue;
 public class ExportIntermediateDB extends IntermediateDB {
     private final Importer importer;
     
-    private static final int GC_PAUSE = 1000;
+    private static final int DEFAULT_STEP_LEN = 1000;
     private int numberNodes = 0;
     private int numberWays = 0;
     private int numberRelations = 0;
@@ -29,13 +29,19 @@ public class ExportIntermediateDB extends IntermediateDB {
     
     private final SQLStatementQueue sourceQueue;
     
-    ExportIntermediateDB(Connection sourceConnection, String schema, Importer importer) {
+    ExportIntermediateDB(Connection sourceConnection, String schema, Importer importer, int steplen) {
         super(sourceConnection, schema);
         
         this.schema = schema;
         this.importer = importer;
         
         this.sourceQueue = new SQLStatementQueue(sourceConnection);
+        
+        if(steplen < 1) {
+            steplen = DEFAULT_STEP_LEN;
+        }
+        
+        this.steps = new BigDecimal(steplen);
     }
 
     void processNodes() {
@@ -45,11 +51,11 @@ public class ExportIntermediateDB extends IntermediateDB {
     private BigDecimal initialLowerID;
     private BigDecimal initialUpperID;
     private BigDecimal initialMaxID;
-    private BigDecimal steps = new BigDecimal(10000);
+    private BigDecimal steps;
     
     private void calculateInitialIDs(SQLStatementQueue sql, String tableName) throws SQLException {
         // first: figure out min and max osm_id in nodes table
-        sql.append("SELECT min(osm_id) FROM ");
+        sql.append("SELECT min(id) FROM ");
         sql.append(DB.getFullTableName(this.schema, tableName));
         sql.append(";");
 
@@ -57,7 +63,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         result.next();
         BigDecimal minID = result.getBigDecimal(1);
 
-        sql.append("SELECT max(osm_id) FROM ");
+        sql.append("SELECT max(id) FROM ");
         sql.append(DB.getFullTableName(this.schema, tableName));
         sql.append(";");
 
@@ -91,9 +97,9 @@ public class ExportIntermediateDB extends IntermediateDB {
         
                 sql.append("SELECT * FROM ");
                 sql.append(DB.getFullTableName(this.schema, NODETABLE));
-                sql.append(" where osm_id <= "); // including upper
+                sql.append(" where id <= "); // including upper
                 sql.append(upperID.toString());
-                sql.append(" AND osm_id > "); // excluding lower 
+                sql.append(" AND id > "); // excluding lower 
                 sql.append(lowerID.toString());
                 sql.append(";");
                 ResultSet qResultNode = sql.executeWithResult();
@@ -162,9 +168,9 @@ public class ExportIntermediateDB extends IntermediateDB {
                 
                 sql.append("SELECT * FROM ");
                 sql.append(DB.getFullTableName(this.schema, WAYTABLE));
-                sql.append(" where osm_id <= "); // including upper
+                sql.append(" where id <= "); // including upper
                 sql.append(upperID.toString());
-                sql.append(" AND osm_id > "); // excluding lower 
+                sql.append(" AND id > "); // excluding lower 
                 sql.append(lowerID.toString());
                 sql.append(";");
 
@@ -265,9 +271,9 @@ public class ExportIntermediateDB extends IntermediateDB {
 
                 sql.append("SELECT * FROM ");
                 sql.append(DB.getFullTableName(this.schema, RELATIONTABLE));
-                sql.append(" where osm_id <= "); // including upper
+                sql.append(" where id <= "); // including upper
                 sql.append(upperID.toString());
-                sql.append(" AND osm_id > "); // excluding lower 
+                sql.append(" AND id > "); // excluding lower 
                 sql.append(lowerID.toString());
                 sql.append(";");
 

@@ -30,13 +30,21 @@ class SQLExecute extends Thread {
         PreparedStatement stmt = null;
         
         try {
+            if(connection == null) {
+                System.err.println("no connection to database - cannot perform sql statement");
+                throw new SQLException("connection is null");
+            }
+            if(sqlStatement == null) {
+                System.err.println("cannot execute empty (null) sqlStatement - continue");
+                return;
+            }
             stmt = connection.prepareStatement(sqlStatement);
             stmt.execute();
+            stmt.close();
         } catch (SQLException ex) {
             e = ex;
         }
         finally {
-            stmt.close();
             if(e != null) throw e;
         }
     }

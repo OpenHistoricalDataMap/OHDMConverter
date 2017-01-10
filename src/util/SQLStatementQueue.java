@@ -9,7 +9,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import osm2inter.MyLogger;
 
 /**
  *
@@ -18,7 +17,6 @@ import osm2inter.MyLogger;
 public class SQLStatementQueue {
     private final Connection connection;
     private final int maxLength;
-    private final MyLogger logger;
     
     public static final int DEFAULT_MAX_SQL_STATEMENTS = 100;
     private final ArrayList<SQLExecute> execThreads = new ArrayList<>();
@@ -30,15 +28,14 @@ public class SQLStatementQueue {
     private File recordFile = null;
     private int maxThreads = 1;
     
-    public SQLStatementQueue(Connection connection, int maxStatements, MyLogger logger) {
+    public SQLStatementQueue(Connection connection, int maxStatements) {
         this.connection = connection;
         this.maxLength = maxStatements;
-        this.logger = logger;
     }
     
-    public SQLStatementQueue(Connection connection, MyLogger logger) {
-        this(connection, DEFAULT_MAX_SQL_STATEMENTS, logger);
-    }
+//    public SQLStatementQueue(Connection connection, MyLogger logger) {
+//        this(connection, DEFAULT_MAX_SQL_STATEMENTS, logger);
+//    }
     
     public SQLStatementQueue(Connection connection) {
         this(connection, (File)null);
@@ -49,7 +46,7 @@ public class SQLStatementQueue {
     }
     
     public SQLStatementQueue(Connection connection, File recordFile, int maxThreads) {
-        this(connection, DEFAULT_MAX_SQL_STATEMENTS, null);
+        this(connection, DEFAULT_MAX_SQL_STATEMENTS);
         
         this.recordFile = recordFile;
         this.maxThreads = maxThreads;
@@ -212,7 +209,6 @@ public class SQLStatementQueue {
         
         try {
             ResultSet result = stmt.executeQuery();
-            this.resetStatement();
         
             return result;
         }

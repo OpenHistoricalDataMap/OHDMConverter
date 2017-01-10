@@ -6,6 +6,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -105,20 +107,28 @@ public class DB {
         connProps.put("user", parameter.getUserName());
         connProps.put("password", parameter.getPWD());
         
-        Connection connection = DriverManager.getConnection(
-                "jdbc:postgresql://" + parameter.getServerName()
-                + ":" + parameter.getPortNumber() + "/" + parameter.getdbName(), connProps);
+        Connection connection;
+        try {
+            connection = DriverManager.getConnection(
+                    "jdbc:postgresql://" + parameter.getServerName()
+                    + ":" + parameter.getPortNumber() + "/" + parameter.getdbName(), connProps);
         
-        if (parameter.getSchema() != null && !parameter.getSchema().equalsIgnoreCase("")) {
-            StringBuilder sql = new StringBuilder("SET search_path = ");
-            sql.append(parameter.getSchema());
-            try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
-              stmt.execute();
-            } catch (SQLException e) {
+            if (parameter.getSchema() != null && !parameter.getSchema().equalsIgnoreCase("")) {
+                StringBuilder sql = new StringBuilder("SET search_path = ");
+                sql.append(parameter.getSchema());
+                PreparedStatement stmt = connection.prepareStatement(sql.toString());
+                stmt.execute();
             }
-        }
         
         return connection;
+        
+        } catch (SQLException ex) {
+            System.err.println("cannot connect to database - fatal - exit\n" + ex.getMessage());
+            ex.printStackTrace(System.err);
+        }
+        
+        System.exit(1);
+        return null;
     }
     
     public static SQLStatementQueue createSQLStatementQueue(Connection target, Parameter parameter) {

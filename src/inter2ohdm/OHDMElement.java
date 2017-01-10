@@ -3,7 +3,7 @@ package inter2ohdm;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
-import osm2inter.AbstractElement;
+import util.AbstractElement;
 import osm.OSMClassification;
 
 /**
@@ -184,7 +184,7 @@ public abstract class OHDMElement extends AbstractElement {
         if (idString != null) {
             StringTokenizer st = new StringTokenizer(idString, ",");
             while (st.hasMoreTokens()) {
-                idList.add(st.nextToken());
+                idList.add(st.nextToken().trim());
             }
         }
         

@@ -20,6 +20,7 @@ public class Parameter {
     private String schema;
     private String maxThreads = "2";
     private String recordFileName = "recordFile.txt";
+    private String readStepLen;
     
     public Parameter(String filename) throws FileNotFoundException, IOException {
         FileInputStream fInput = new FileInputStream(filename);
@@ -47,6 +48,7 @@ public class Parameter {
                         case "schema": this.schema = value; break;
                         case "maxThreads": this.maxThreads = value; break;
                         case "recordFileName": this.recordFileName = value; break;
+                        case "readsteplen": this.readStepLen = value; break;
                     }
                 }
             }
@@ -63,6 +65,7 @@ public class Parameter {
     public String getSchema() { return this.schema ;}
     public String getMaxThread() { return this.maxThreads ;}
     public String getRecordFileName() { return this.recordFileName; }
+    public String getReadStepLen() { return this.readStepLen; }
     
     public String getPath() { return this.getdbName() ;}
 

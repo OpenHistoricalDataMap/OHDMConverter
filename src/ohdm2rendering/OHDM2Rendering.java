@@ -101,7 +101,12 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                         sql.append("drop table ");
                         sql.append(tableName);
                         sql.append(";");
-                        sql.forceExecute();
+                        try {
+                            sql.forceExecute();
+                        }
+                        catch(SQLException e) {
+                            System.err.println("ignore that sql exception:\n" + e.getMessage() + "\n" + sql.toString());
+                        }
                     }
                     
                     // add data in following loops

@@ -1,4 +1,4 @@
-package osm2inter;
+package util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,11 +20,11 @@ public class AbstractElement {
      * @param attributes
      * @param tags 
      */
-    public AbstractElement(HashMap<String, String> attributes, ArrayList<TagElement> tags) {
-        this.attributes = attributes;
-        
-        this.tags2attributes(tags);
-    }
+//    public AbstractElement(HashMap<String, String> attributes, ArrayList<TagElement> tags) {
+//        this.attributes = attributes;
+//        
+//        this.tags2attributes(tags);
+//    }
 
     public AbstractElement(String serializedAttrAndTags) {
 //        this.attributes = new HashMap<>();
@@ -46,21 +46,21 @@ public class AbstractElement {
     /**
      * copy all tas to attributes
      */
-    private void tags2attributes(ArrayList<TagElement> tags) {
-        if(tags == null) return;
-        if(tags.size() > 0) {
-            int i = 42; // debug break
-        }
-        for (TagElement tag : tags) {
-            HashMap<String, String> tagAttributes = tag.getAttributes();
-            if(tagAttributes != null) {
-                for(String key : tagAttributes.keySet()) {
-                    String value = tagAttributes.get(key);
-                    this.attributes.put(key, value);
-                }
-            }
-        }
-    }
+//    private void tags2attributes(ArrayList<TagElement> tags) {
+//        if(tags == null) return;
+//        if(tags.size() > 0) {
+//            int i = 42; // debug break
+//        }
+//        for (TagElement tag : tags) {
+//            HashMap<String, String> tagAttributes = tag.getAttributes();
+//            if(tagAttributes != null) {
+//                for(String key : tagAttributes.keySet()) {
+//                    String value = tagAttributes.get(key);
+//                    this.attributes.put(key, value);
+//                }
+//            }
+//        }
+//    }
   
     private String stripForbiddenCharacters(String s) {
         int i = s.indexOf("'");

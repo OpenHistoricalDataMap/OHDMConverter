@@ -3,15 +3,11 @@ package osm2inter_v2;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.DefaultHandler;
 import osm.OSMClassification;
-import osm2inter.AbstractElement;
-import osm2inter.Classification;
+import util.AbstractElement;
 import util.DB;
 import util.Parameter;
 import util.SQLStatementQueue;
@@ -24,7 +20,6 @@ public class SQL_OSMImporter extends DefaultHandler {
     public static final String MAX_ID_SIZE = "10485760";
     
     private StringBuilder sAttributes;
-    
     private StringBuilder nodeIDs;
     private StringBuilder memberIDs;
     
@@ -33,7 +28,7 @@ public class SQL_OSMImporter extends DefaultHandler {
     private int rA = 0;
     
     private int all = 0;
-    private int flushSteps = 500;
+    private int flushSteps = 100;
     
     private static final int STATUS_OUTSIDE = 0;
     private static final int STATUS_NODE = 1;
@@ -64,6 +59,7 @@ public class SQL_OSMImporter extends DefaultHandler {
     
     try {
         this.targetConnection = DB.createConnection(parameter);
+        this.schema = parameter.getSchema();
         
         this.recordFile = new File(this.parameter.getRecordFileName());
         try {
@@ -120,7 +116,7 @@ public class SQL_OSMImporter extends DefaultHandler {
         // initialize
         this.ndFound = false;
         this.wayFound = false;
-        this.memberFound = false;
+        this.relationMemberFound = false;
         this.currentClassID = -1;
         
         // reset attributes
@@ -133,7 +129,8 @@ public class SQL_OSMImporter extends DefaultHandler {
         this.insertQueue.append("INSERT INTO ");
         switch(this.status) {
             case STATUS_NODE: 
-                this.insertQueue.append(InterDB.NODETABLE);
+                
+                this.insertQueue.append(DB.getFullTableName(schema, InterDB.NODETABLE));
                 this.insertQueue.append("(valid, longitude, latitude, osm_id, classcode, serializedtags) VALUES (true, ");
                 this.insertQueue.append(attributes.getValue("lon"));
                 this.insertQueue.append(", ");
@@ -148,11 +145,11 @@ public class SQL_OSMImporter extends DefaultHandler {
                     // first way! create index in nodes
                     this.wayProcessed = true;
                 }
-                this.insertQueue.append(InterDB.WAYTABLE);
+                this.insertQueue.append(DB.getFullTableName(schema, InterDB.WAYTABLE));
                 this.insertQueue.append("(valid, osm_id, classcode, serializedtags, node_ids) VALUES (true, ");
                 
                 this.memberQueue.append("INSERT INTO ");
-                this.memberQueue.append(InterDB.WAYMEMBER); 
+                this.memberQueue.append(DB.getFullTableName(schema, InterDB.WAYMEMBER));
                 this.memberQueue.append(" (way_id, node_id) VALUES ");
                 
                 break;
@@ -168,7 +165,7 @@ public class SQL_OSMImporter extends DefaultHandler {
                     // first relation! create index in ways
                     this.relationProcessed = true;
                 }
-                this.insertQueue.append(InterDB.RELATIONTABLE);
+                this.insertQueue.append(DB.getFullTableName(schema, InterDB.RELATIONTABLE));
                 this.insertQueue.append("(valid, osm_id, classcode, serializedtags, member_ids) VALUES (true, ");
 
                 break;
@@ -231,13 +228,13 @@ public class SQL_OSMImporter extends DefaultHandler {
             this.ndFound = true;
             // init update queue
             this.updateNodesQueue.append("UPDATE ");
-            this.updateNodesQueue.append(InterDB.NODETABLE);
+            this.updateNodesQueue.append(DB.getFullTableName(schema, InterDB.NODETABLE));
             this.updateNodesQueue.append(" SET is_part=true WHERE ");
         } else {
             this.memberQueue.append(", ");
             this.updateNodesQueue.append(" OR ");
             
-            this.nodeIDs.append(", ");
+            this.nodeIDs.append(",");
         }
         this.nodeIDs.append(attributes.getValue("ref"));
         
@@ -252,21 +249,25 @@ public class SQL_OSMImporter extends DefaultHandler {
     }
     
     boolean wayFound = false;
-    boolean memberFound = false;
+    boolean relationMemberFound = false;
     private void addMember(Attributes attributes) {
+        if(this.currentElementID.equalsIgnoreCase("14984")) {
+            int i = 42;
+        }
+        
         //insert into relationmember (relation_id, role, [node_id | way_id | member_rel_id]) VALUES ();        
         // a new member like: <member type='way' ref='23084475' role='forward' />
         
         // remember id in member list first due to those to found-flags
-        if(!attributes.getValue("type").equalsIgnoreCase("relation")) {
-            if(this.ndFound || this.wayFound) {
-                this.memberIDs.append(", ");                
+//        if(!attributes.getValue("type").equalsIgnoreCase("relation")) {
+            if(this.ndFound || this.wayFound || this.relationMemberFound) {
+                this.memberIDs.append(",");                
             }
             this.memberIDs.append(attributes.getValue("ref")); 
-        }
+//        }
         
         this.memberQueue.append("INSERT INTO ");
-        this.memberQueue.append(InterDB.RELATIONMEMBER);
+        this.memberQueue.append(DB.getFullTableName(schema, InterDB.RELATIONMEMBER));
         this.memberQueue.append(" (relation_id, role, ");
         switch(attributes.getValue("type")) {
             case "node":
@@ -277,7 +278,7 @@ public class SQL_OSMImporter extends DefaultHandler {
                     this.ndFound = true;
                     // init update node queue
                     this.updateNodesQueue.append("UPDATE ");
-                    this.updateNodesQueue.append(InterDB.NODETABLE);
+                    this.updateNodesQueue.append(DB.getFullTableName(schema, InterDB.NODETABLE));
                     this.updateNodesQueue.append(" SET is_part=true WHERE ");
                 } else {
                     this.updateNodesQueue.append(" OR ");
@@ -293,7 +294,7 @@ public class SQL_OSMImporter extends DefaultHandler {
                     this.wayFound = true;
                     // init update way queue
                     this.updateWaysQueue.append("UPDATE ");
-                    this.updateWaysQueue.append(InterDB.WAYTABLE);
+                    this.updateWaysQueue.append(DB.getFullTableName(schema, InterDB.WAYTABLE));
                     this.updateWaysQueue.append(" SET is_part=true WHERE ");
                 } else {
                     this.updateWaysQueue.append(" OR ");
@@ -302,6 +303,7 @@ public class SQL_OSMImporter extends DefaultHandler {
                 this.updateWaysQueue.append(attributes.getValue("ref"));
                 break;
             case "relation":
+                this.relationMemberFound = true;
                 this.memberQueue.append(" member_rel_id) ");
                 break;
         }
@@ -322,16 +324,10 @@ public class SQL_OSMImporter extends DefaultHandler {
         /*
         insert into nodes (osm_id, longitude, latitude, classcode, serializedtags, valid) VALUES (..);
         */
-//        try {
-            this.insertQueue.append(this.currentClassID);
-            this.insertQueue.append(", '");
-            this.insertQueue.append(this.sAttributes.toString());
-            this.insertQueue.append("');");
-//        } catch (SQLException ex) {
-//            System.err.println("while saving node: " + ex.getMessage() + "\n" + this.insertQueue.toString());
-//        } catch (IOException ex) {
-//            System.err.println("while saving node: " + ex.getClass().getName() + "\n" + ex.getMessage());
-//        }
+        this.insertQueue.append(this.currentClassID);
+        this.insertQueue.append(", '");
+        this.insertQueue.append(this.sAttributes.toString());
+        this.insertQueue.append("');");
     }
 
     private void endWay() {
@@ -343,21 +339,21 @@ public class SQL_OSMImporter extends DefaultHandler {
         */
         
         try {
-            // TODO add remaining parameter; 
+            // add remaining parameter; 
             this.insertQueue.append(this.currentClassID);
             this.insertQueue.append(", '");
             this.insertQueue.append(this.sAttributes.toString());
             this.insertQueue.append("', '");
             this.insertQueue.append(this.nodeIDs.toString());
             this.insertQueue.append("');");
-//            this.insertQueue.forceExecute(this.currentElementID);
-            
+
+            // finish insert member statement
             this.memberQueue.append(";");
             this.memberQueue.forceExecute(this.currentElementID);
             
+            // finish update nodes statement
             this.updateNodesQueue.append(";");
             this.updateNodesQueue.forceExecute(this.currentElementID);
-            
         } catch (SQLException ex) {
             System.err.println("while saving node: " + ex.getMessage() + "\n" + this.insertQueue.toString());
         } catch (IOException ex) {
@@ -382,7 +378,6 @@ public class SQL_OSMImporter extends DefaultHandler {
             this.insertQueue.append("', '");
             this.insertQueue.append(this.memberIDs.toString());
             this.insertQueue.append("');");
-//            this.insertQueue.forceExecute(this.currentElementID);
             
             this.memberQueue.append(";");
             this.memberQueue.forceExecute(this.currentElementID);

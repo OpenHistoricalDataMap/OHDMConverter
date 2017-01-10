@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import osm2inter.AbstractElement;
+import util.AbstractElement;
 import util.SQLStatementQueue;
 import util.DB;
 

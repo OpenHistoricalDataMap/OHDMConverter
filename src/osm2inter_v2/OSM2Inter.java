@@ -9,7 +9,6 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.SAXException;
 import osm.OSMClassification;
-import osm2inter.MyLogger;
 import util.Parameter;
 
 /**
@@ -51,6 +50,5 @@ public class OSM2Inter {
     } catch (Exception ex) {
         Logger.getLogger(OSM2Inter.class.getName()).log(Level.SEVERE, null, ex);
     }
-        MyLogger.getInstance().print(0, "End of osm2inter", true);
     }
 }

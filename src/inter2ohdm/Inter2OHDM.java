@@ -72,7 +72,7 @@ public class Inter2OHDM extends Importer {
     @Override
     public boolean importRelation(OHDMRelation relation) throws SQLException {
         // debug stop
-        if(relation.getOSMIDString().equalsIgnoreCase("2376994")) {
+        if(relation.getOSMIDString().equalsIgnoreCase("1368193")) {
             int i = 42;
         }
         
@@ -912,9 +912,20 @@ public class Inter2OHDM extends Importer {
             }
             
             ohdmImporter.createOHDMTables(targetConnection);
+            
+            String stepLenString = sourceParameter.getReadStepLen();
+            int stepLen = 10000;
+            try {
+                if(stepLenString != null) {
+                    stepLen = Integer.parseInt(stepLenString);
+                }
+            }
+            catch(NumberFormatException e) {
+                    // ignore and work with default
+            }
 
             ExportIntermediateDB exporter = 
-                    new ExportIntermediateDB(sourceConnection, sourceSchema, ohdmImporter);
+                    new ExportIntermediateDB(sourceConnection, sourceSchema, ohdmImporter, stepLen);
             
             exporter.processNodes();
             exporter.processWays();

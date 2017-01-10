@@ -4,11 +4,11 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import static osm2inter.SQLImportCommandBuilder.NODETABLE;
-import static osm2inter.SQLImportCommandBuilder.RELATIONMEMBER;
-import static osm2inter.SQLImportCommandBuilder.RELATIONTABLE;
-import static osm2inter.SQLImportCommandBuilder.WAYMEMBER;
-import static osm2inter.SQLImportCommandBuilder.WAYTABLE;
+import static osm2inter_v2.InterDB.NODETABLE;
+import static osm2inter_v2.InterDB.RELATIONMEMBER;
+import static osm2inter_v2.InterDB.RELATIONTABLE;
+import static osm2inter_v2.InterDB.WAYMEMBER;
+import static osm2inter_v2.InterDB.WAYTABLE;
 import util.DB;
 import util.SQLStatementQueue;
 
@@ -159,6 +159,9 @@ public class IntermediateDB {
     private void readCommonColumns(ResultSet qResult) throws SQLException {
         osmIDString = this.extractBigDecimalAsString(qResult, "osm_id");
         System.out.print(", " + osmIDString);
+        if(osmIDString.equalsIgnoreCase("1368193")) {
+            int i = 42;
+        }
         classCodeString = this.extractBigDecimalAsString(qResult, "classcode");
         sTags = qResult.getString("serializedtags");
         ohdmObjectIDString = this.extractBigDecimalAsString(qResult, "ohdm_object_id");

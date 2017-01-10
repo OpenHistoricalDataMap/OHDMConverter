@@ -738,8 +738,23 @@ public class OSMClassification {
         // fill with all known subclasses
         subClasses.add(UNDEFINED);
         subClasses.add("plant");
+        subClasses.add("generator");
+        subClasses.add("line");
+        subClasses.add("minor_line");
+        subClasses.add("cable");
+        subClasses.add("pole");
+        subClasses.add("tower");
+        subClasses.add("portal");
+        subClasses.add("catenary_mast");
+        subClasses.add("terminal");
+        subClasses.add("substation");
+        subClasses.add("transformer");
+        subClasses.add("switch");
+        subClasses.add("insulator");
+        subClasses.add("compensator");
+        subClasses.add("converter");
+        subClasses.add("heliostat");
              
-        // TODO add others
         osmFeatureClasses.put("power", subClasses);        
 
         // Public Transport
@@ -748,8 +763,10 @@ public class OSMClassification {
         // fill with all known subclasses
         subClasses.add(UNDEFINED);
         subClasses.add("stop_position");
-             
-        // TODO add others
+        subClasses.add("platform");
+        subClasses.add("station");
+        subClasses.add("stop_area");
+
         osmFeatureClasses.put("public_transport", subClasses);        
 
         // Railway
@@ -758,8 +775,33 @@ public class OSMClassification {
         // fill with all known subclasses
         subClasses.add(UNDEFINED);
         subClasses.add("abandoned");
+        subClasses.add("construction");
+        subClasses.add("disused");
+        subClasses.add("funicular");
+        subClasses.add("light_rail");
+        subClasses.add("miniature");
+        subClasses.add("monorail");
+        subClasses.add("narrow_gauge");
+        subClasses.add("preserved");
+        subClasses.add("rail");
+        subClasses.add("subway");
+        subClasses.add("tram");
+        subClasses.add("halt");
+        subClasses.add("platform");
+        subClasses.add("station");
+        subClasses.add(" 	tram_stop");
+        subClasses.add(" 	buffer_stop");
+        subClasses.add(" 	derail");
+        subClasses.add(" 	crossing");
+        subClasses.add(" 	level_crossing");
+        subClasses.add(" 	signal");
+        subClasses.add("subway_entrance");
+        subClasses.add("switch");
+        subClasses.add("railway_crossing");
+        subClasses.add(" 	turntable");
+        subClasses.add(" 	roundhouse");
+        subClasses.add("traverser");
              
-        // TODO add others
         osmFeatureClasses.put("railway", subClasses);        
         
         // Route
@@ -768,11 +810,184 @@ public class OSMClassification {
         // fill with all known subclasses
         subClasses.add(UNDEFINED);
         subClasses.add("bicycle");
-             
-        // TODO add others
+        subClasses.add("bus");
+        subClasses.add("canoe");
+        subClasses.add("detour");
+        subClasses.add("ferry");
+        subClasses.add("fitness_trail");
+        subClasses.add("hiking");
+        subClasses.add("horse");
+        subClasses.add("inline_skates");
+        subClasses.add("light_rail");
+        subClasses.add("mtb");
+        subClasses.add("nordic_walking");
+        subClasses.add("pipeline");
+        subClasses.add("piste");
+        subClasses.add("power");
+        subClasses.add("railway");
+        subClasses.add("road");
+        subClasses.add("running");
+        subClasses.add("ski");
+        subClasses.add("train");
+        subClasses.add("tram");
+
         osmFeatureClasses.put("route", subClasses);        
 
+        // shop
+        subClasses = new ArrayList<>();
+        
+        // fill with all known subclasses
+        subClasses.add(UNDEFINED);
+        subClasses.add("alcohol");
+        subClasses.add("bakery");
+        subClasses.add("beverages");
+        subClasses.add("brewing_supplies");
+        subClasses.add("butcher");
+        subClasses.add("cheese");
+        subClasses.add("chocolate");
+        subClasses.add("coffee");
+        subClasses.add("confectionery");
+        subClasses.add("convenience");
+        subClasses.add("deli");
+        subClasses.add("dairy");
+        subClasses.add("farm");
+        subClasses.add("greengrocer");
+        subClasses.add("ice_cream");
+        subClasses.add("organic");
+        subClasses.add("pasta");
+        subClasses.add("pastry");
+        subClasses.add("seafood");
+        subClasses.add("spices");
+        subClasses.add("tea");
+        subClasses.add("wine");
+        subClasses.add("department_store");
+        subClasses.add("general");
+        subClasses.add("kiosk");
+        subClasses.add("mall");
+        subClasses.add("supermarket");
+        subClasses.add("baby_goods");
+        subClasses.add("bag");
+        subClasses.add("boutique");
+        subClasses.add("clothes");
+        subClasses.add("fabric");
+        subClasses.add("fashion");
+        subClasses.add("jewelry");
+        subClasses.add("leather");
+        subClasses.add("shoes");
+        subClasses.add("tailor");
+        subClasses.add("watches");
+        subClasses.add("charity");
+        subClasses.add("second_hand");
+        subClasses.add("variety_store");
+        subClasses.add("beauty");
+        subClasses.add("chemist");
+        subClasses.add("cosmetics");
+        subClasses.add("drugstore");
+        subClasses.add("erotic");
+        subClasses.add("hairdresser");
+        subClasses.add("hearing_aids");
+        subClasses.add("herbalist");
+        subClasses.add("massage");
+        subClasses.add("medical_supply");
+        subClasses.add("nutrition_supplements");
+        subClasses.add("optician");
+        subClasses.add("perfumery");
+        subClasses.add("tattoo");
+        subClasses.add("bathroom_furnishing");
+        subClasses.add("doityourself");
+        subClasses.add("electrical");
+        subClasses.add("energy");
+        subClasses.add("fireplace");
+        subClasses.add("florist");
+        subClasses.add("garden_centre");
+        subClasses.add("garden_furniture");
+        subClasses.add("gas");
+        subClasses.add("glaziery");
+        subClasses.add("hardware");
+        subClasses.add("houseware");
+        subClasses.add("locksmith");
+        subClasses.add("paint");
+        subClasses.add("trade");
+        subClasses.add("antiques");
+        subClasses.add("bed");
+        subClasses.add("candles");
+        subClasses.add("carpet");
+        subClasses.add("curtain");
+        subClasses.add("furniture");
+        subClasses.add("interior_decoration");
+        subClasses.add("kitchen");
+        subClasses.add("lamps");
+        subClasses.add("tiles");
+        subClasses.add("window_blind");
+        subClasses.add("computer");
+        subClasses.add("electronics");
+        subClasses.add("hifi");
+        subClasses.add("mobile_phone");
+        subClasses.add("radiotechnics");
+        subClasses.add("vacuum_cleaner");
+        subClasses.add("bicycle");
+        subClasses.add("car");
+        subClasses.add("car_repair");
+        subClasses.add("car_parts");
+        subClasses.add("fuel");
+        subClasses.add("fishing");
+        subClasses.add("free_flying");
+        subClasses.add("hunting");
+        subClasses.add("motorcycle");
+        subClasses.add("outdoor");
+        subClasses.add("scuba_diving");
+        subClasses.add("sports");
+        subClasses.add("swimming_pool");
+        subClasses.add("tyres");
+        subClasses.add("art");
+        subClasses.add("collector");
+        subClasses.add("craft");
+        subClasses.add("frame");
+        subClasses.add("games");
+        subClasses.add("music");
+        subClasses.add("musical_instrument");
+        subClasses.add("photo");
+        subClasses.add("camera");
+        subClasses.add("trophy");
+        subClasses.add("video");
+        subClasses.add("video_games");
+        subClasses.add("anime");
+        subClasses.add("books");
+        subClasses.add("gift");
+        subClasses.add("lottery");
+        subClasses.add("newsagent");
+        subClasses.add("stationery");
+        subClasses.add("ticket");
+        subClasses.add("bookmaker");
+        subClasses.add("copyshop");
+        subClasses.add("dry_cleaning");
+        subClasses.add("e-cigarette");
+        subClasses.add("funeral_directors");
+        subClasses.add("laundry");
+        subClasses.add("money_lender");
+        subClasses.add("pawnbroker");
+        subClasses.add("pet");
+        subClasses.add("pyrotechnics");
+        subClasses.add("religion");
+        subClasses.add("tobacco");
+        subClasses.add("toys");
+        subClasses.add("travel_agency");
+        subClasses.add("vacant");
+        subClasses.add("weapons");
+        
+        osmFeatureClasses.put("shop", subClasses);   
+        
+        // sport
+        subClasses = new ArrayList<>();
+        
+        // fill with all known subclasses
+        subClasses.add(UNDEFINED);
+        subClasses.add("9pin");
+             
+        // TODO add others
+        osmFeatureClasses.put("sport", subClasses);   
         // Waterway
+        
         subClasses = new ArrayList<>();
         
         // fill with all known subclasses

@@ -2,12 +2,12 @@ package util;
 
 import java.io.File;
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Enumeration;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -107,11 +107,35 @@ public class DB {
         connProps.put("user", parameter.getUserName());
         connProps.put("password", parameter.getPWD());
         
+        
+        Driver d = null;
+        System.out.println("debugging: find jdbc driver by class name: org.postgresql.Driver");
+//        if(!drivers.hasMoreElements()) {
+            try {
+                Class driverClass = Class.forName("org.postgresql.Driver");
+                System.out.println("debugging: found class.. try to cast");
+
+                Object newInstance = driverClass.getConstructor().newInstance();
+                
+                d = (Driver)newInstance;
+            }
+            catch(Throwable re) {
+                System.out.println("debugging: runtime problem: " + re.getMessage());
+                re.printStackTrace();
+            }
+            
+//        }
+        
         Connection connection;
         try {
-            connection = DriverManager.getConnection(
+            connection = d.connect(
                     "jdbc:postgresql://" + parameter.getServerName()
                     + ":" + parameter.getPortNumber() + "/" + parameter.getdbName(), connProps);
+            
+            
+//            connection = DriverManager.getConnection(
+//                    "jdbc:postgresql://" + parameter.getServerName()
+//                    + ":" + parameter.getPortNumber() + "/" + parameter.getdbName(), connProps);
         
             if (parameter.getSchema() != null && !parameter.getSchema().equalsIgnoreCase("")) {
                 StringBuilder sql = new StringBuilder("SET search_path = ");

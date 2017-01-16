@@ -37,6 +37,7 @@ public class Parameter {
                 key = st.nextToken();
                 if(st.hasMoreTokens()) {
                     value = st.nextToken();
+                    value = value.trim();
                 
                     // fill parameters
                     switch(key) {

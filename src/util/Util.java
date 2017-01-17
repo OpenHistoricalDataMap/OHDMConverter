@@ -73,4 +73,33 @@ public class Util {
         appendStringWithLength(target, key);
         appendStringWithLength(target, value);
     }
+    
+    public static String getElapsedTime(long since) {
+        int days = 0;
+        int hours = 0;
+        int min = 0;
+        long now = System.currentTimeMillis();
+        long sec = (now - since) / 1000;
+
+        if(sec >= 60) {
+            min = (int) (sec / 60);
+            sec = sec % 60;
+        }
+        if(min >= 60) {
+            hours = min / 60;
+            min = min % 60;
+        }
+        if(hours >= 24) {
+            days = hours / 24;
+            hours = hours % 24;
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append(days).append(" : ");
+        sb.append(hours).append(" : ");
+        sb.append(min).append(" : ");
+        sb.append(sec);
+        
+        return sb.toString();
+    }
 }

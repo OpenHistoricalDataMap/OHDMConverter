@@ -11,6 +11,7 @@ import static osm2inter.InterDB.WAYMEMBER;
 import static osm2inter.InterDB.WAYTABLE;
 import util.DB;
 import util.SQLStatementQueue;
+import util.Util;
 
 /**
  *
@@ -18,6 +19,9 @@ import util.SQLStatementQueue;
  */
 public class ExportIntermediateDB extends IntermediateDB {
     private final Importer importer;
+    
+    private int printEra = 0;
+    private final static int PRINT_ERA_LENGTH = 10000;
     
     private static final int DEFAULT_STEP_LEN = 1000;
     private int numberNodes = 0;
@@ -28,9 +32,14 @@ public class ExportIntermediateDB extends IntermediateDB {
     private int historicInfos = 0;
     
     private final SQLStatementQueue sourceQueue;
+    private final long startTime;
+    private int number;
     
     ExportIntermediateDB(Connection sourceConnection, String schema, Importer importer, int steplen) {
         super(sourceConnection, schema);
+        
+        this.startTime = System.currentTimeMillis();
+        this.number = 0;
         
         this.schema = schema;
         this.importer = importer;
@@ -78,7 +87,6 @@ public class ExportIntermediateDB extends IntermediateDB {
     void processNodes(SQLStatementQueue sql) {
         // go through node table and do what has to be done.
 
-        int number = 0;
         int notPartNumber = 0;
             
         try {
@@ -88,12 +96,9 @@ public class ExportIntermediateDB extends IntermediateDB {
             BigDecimal upperID = this.initialUpperID;
             BigDecimal maxID = this.initialMaxID;
             
-            System.out.println("Nodes... print a star after 100 nodes");
+//            System.out.println("Nodes... print a star after 100 nodes");
             do {
-                System.out.print("select nodes between ");
-                System.out.print(lowerID.toString());
-                System.out.print(" and ");
-                System.out.println(upperID.toString());
+                this.printSelectBetween("nodes", lowerID.toString(), upperID.toString());
         
                 sql.append("SELECT * FROM ");
                 sql.append(DB.getFullTableName(this.schema, NODETABLE));
@@ -105,11 +110,12 @@ public class ExportIntermediateDB extends IntermediateDB {
                 ResultSet qResultNode = sql.executeWithResult();
                 
                 while(qResultNode.next()) {
-                    number++;
-                    if(number % 100 == 0) {System.out.print("*");}
-                    if(number % 1000 == 0) {
-                        System.out.print("\n");
-                    }
+                    this.number++;
+                    this.printStatistics();
+//                    if(number % 100 == 0) {System.out.print("*");}
+//                    if(number % 1000 == 0) {
+//                        System.out.print("\n");
+//                    }
 
                     OHDMNode node = this.createOHDMNode(qResultNode);
 
@@ -139,7 +145,7 @@ public class ExportIntermediateDB extends IntermediateDB {
             System.err.println("inter2ohdm: exception when processing sql request: " + sql.toString());
             System.err.println(ex.getLocalizedMessage());
         }
-        System.out.println("\nChecked / imported nodes / not part and no identity: " + number + " / " + this.numberNodes + " / " + notPartNumber);
+        this.printFinished("nodes");
     }
     
     void processWays() {
@@ -147,7 +153,6 @@ public class ExportIntermediateDB extends IntermediateDB {
     }
     
     void processWays(SQLStatementQueue sql) {
-        int number = 0;
         int notPartNumber = 0;
         
         try {
@@ -158,13 +163,10 @@ public class ExportIntermediateDB extends IntermediateDB {
             BigDecimal upperID = this.initialUpperID;
             BigDecimal maxID = this.initialMaxID;
             
-            System.out.println("Ways... print a star after 100 ways");
+//            System.out.println("Ways... print a star after 100 ways");
 
             do {
-                System.out.print("select ways between ");
-                System.out.print(lowerID.toString());
-                System.out.print(" and ");
-                System.out.println(upperID.toString());
+                this.printSelectBetween("ways", lowerID.toString(), upperID.toString());
                 
                 sql.append("SELECT * FROM ");
                 sql.append(DB.getFullTableName(this.schema, WAYTABLE));
@@ -178,11 +180,13 @@ public class ExportIntermediateDB extends IntermediateDB {
                 ResultSet qResultWay = sql.executeWithResult();
 
                 while(qResultWay.next()) {
-                    number++;
-                    if(number % 100 == 0) {System.out.print("*");}
-                    if(number % 1000 == 0) {
-                        System.out.print("\n");
-                    }
+                    this.number++;
+                    this.printStatistics();
+
+//                    if(number % 100 == 0) {System.out.print("*");}
+//                    if(number % 1000 == 0) {
+//                        System.out.print("\n");
+//                    }
                     OHDMWay way = this.createOHDMWay(qResultWay);
 
                     if(!way.isPart() && way.getName() == null) notPartNumber++;
@@ -214,7 +218,7 @@ public class ExportIntermediateDB extends IntermediateDB {
             System.err.println(ex.getLocalizedMessage());
         }
         
-        System.out.println("\nChecked / imported ways / not part and identity:  " + number + " / " + this.numberWays + " / " + notPartNumber);
+        this.printFinished("ways");
     }
     
     @Override
@@ -250,8 +254,18 @@ public class ExportIntermediateDB extends IntermediateDB {
         this.processRelations(this.sourceQueue);
     }
     
+    private void printSelectBetween(String what, String from, String to) {
+        System.out.println("---------------------------------------");
+        System.out.print("select ");
+        System.out.print(from);
+        System.out.print(" =< ");
+        System.out.print(what);
+        System.out.print(".id < ");
+        System.out.println(to);
+        System.out.println("---------------------------------------");
+    }
+    
     void processRelations(SQLStatementQueue sql) {
-        int number = 0;
         boolean debug_alreadyPrinted = false;
         
         try {
@@ -261,14 +275,11 @@ public class ExportIntermediateDB extends IntermediateDB {
             BigDecimal upperID = this.initialUpperID;
             BigDecimal maxID = this.initialMaxID;
             
-            System.out.println("Relations... print a star after 100 relations");
+//            System.out.println("Relations... print a star after 100 relations");
 
             do {
-                System.out.print("select relations between ");
-                System.out.print(lowerID.toString());
-                System.out.print(" and ");
-                System.out.println(upperID.toString());
-
+                this.printSelectBetween("relations", lowerID.toString(), upperID.toString());
+                
                 sql.append("SELECT * FROM ");
                 sql.append(DB.getFullTableName(this.schema, RELATIONTABLE));
                 sql.append(" where id <= "); // including upper
@@ -281,11 +292,12 @@ public class ExportIntermediateDB extends IntermediateDB {
 
                 while(qResultRelations.next()) {
                     debug_alreadyPrinted = false;
-                    number++;
-                    if(number % 100 == 0) {System.out.print("*");}
-                    if(number % 1000 == 0) {
-                        System.out.print("\n");
-                    }
+                    this.number++;
+                    this.printStatistics();
+//                    if(number % 100 == 0) {System.out.print("*");}
+//                    if(number % 1000 == 0) {
+//                        System.out.print("\n");
+//                    }
 
                     OHDMRelation relation = this.createOHDMRelation(qResultRelations);
 
@@ -362,7 +374,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                             in that case .. remove whole relation: parts of it are 
                             outside our current scope
                             */
-                            System.out.println("would removed relation: " + relation.getOSMIDString());
+//                            System.out.println("would removed relation: " + relation.getOSMIDString());
                             debug_alreadyPrinted = true;
                             //relation.remove();
                             relationMemberComplete = false; 
@@ -384,7 +396,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                         if(!debug_alreadyPrinted) {
                             String type = relation.getClassName();
                             if(type == null) type ="not set";
-                            System.out.println("not imported relation: " + relation.getOSMIDString() + " / classname: " + type);
+//                            System.out.println("not imported relation: " + relation.getOSMIDString() + " / classname: " + type);
                         }
                     }
                 }
@@ -404,22 +416,42 @@ public class ExportIntermediateDB extends IntermediateDB {
             System.err.println(ex.getLocalizedMessage());
         }
         
-        System.out.println("\nChecked / imported relations: " + number + " / " + this.numberRelations);
+        this.printFinished("relations");
+    }
+    
+    private void printFinished(String what) {
+        System.out.println("********************************************************************************");
+        System.out.print("Finished importing ");
+        System.out.println(what);
+        System.out.println(this.getStatistics());
+        System.out.println("********************************************************************************");
     }
     
     public String getStatistics() {
         StringBuilder sb = new StringBuilder();
         
-        sb.append("imported: ");
+        sb.append("checked: ");
+        sb.append(this.number);
+        sb.append(" | imported: ");
+        sb.append(this.numberNodes + this.numberWays + this.numberRelations);
+        sb.append(" (n:");
         sb.append(this.numberNodes);
-        sb.append(" nodes | ");
+        sb.append(", w:");
         sb.append(this.numberWays);
-        sb.append(" ways | ");
+        sb.append(", r:");
         sb.append(this.numberRelations);
-        sb.append(" relations | ");
+        sb.append(") | h:");
         sb.append(this.historicInfos);
-        sb.append(" historical information");
+        sb.append(" | elapsed: ");
+        sb.append(Util.getElapsedTime(this.startTime));
         
         return sb.toString();
+    }
+    
+    private void printStatistics() {
+        if(++this.printEra >= PRINT_ERA_LENGTH) {
+            this.printEra = 0;
+            System.out.println(this.getStatistics());
+        }
     }
 }

@@ -521,9 +521,10 @@ public class SQL_OSMImporter extends DefaultHandler {
                 if(++this.era >= 100) {
                     this.era = 0;
                     this.printStatus();
-                } else {
-                    System.out.print("*");
-                }
+                } 
+//                else {
+//                    System.out.print("*");
+//                }
             }
         } catch (SQLException sqlE) {
             System.err.println("while saving element: " + sqlE.getMessage() + "\n" + this.insertQueue.toString());
@@ -542,30 +543,9 @@ public class SQL_OSMImporter extends DefaultHandler {
         System.out.print("nodes: " + this.nA);
         System.out.print(" | ways: " + this.wA);
         System.out.print(" | relations: " + this.rA);
-        System.out.print(" | entries per star: " + this.flushSteps);
+//        System.out.print(" | entries per star: " + this.flushSteps);
 
-        int days = 0;
-        int hours = 0;
-        int min = 0;
-        long now = System.currentTimeMillis();
-        long sec = (now - this.startTime) / 1000;
-
-        if(sec >= 60) {
-            min = (int) (sec / 60);
-            sec = sec % 60;
-        }
-        if(min >= 60) {
-            hours = min / 60;
-            min = min % 60;
-        }
-        if(hours >= 24) {
-            days = hours / 24;
-            hours = hours % 24;
-        }
         System.out.print(" | elapsed time:  ");
-        System.out.print(days + " : ");
-        System.out.print(hours + " : ");
-        System.out.print(min + " : ");
-        System.out.println(sec);
+        System.out.println(Util.getElapsedTime(this.startTime));
     }
 }

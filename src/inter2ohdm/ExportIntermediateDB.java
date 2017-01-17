@@ -88,6 +88,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         // go through node table and do what has to be done.
 
         int notPartNumber = 0;
+        OHDMNode node = null;
             
         try {
             this.calculateInitialIDs(sql, NODETABLE);
@@ -117,7 +118,7 @@ public class ExportIntermediateDB extends IntermediateDB {
 //                        System.out.print("\n");
 //                    }
 
-                    OHDMNode node = this.createOHDMNode(qResultNode);
+                    node = this.createOHDMNode(qResultNode);
 
                     if(!node.isPart() && node.getName() == null) notPartNumber++;
 
@@ -142,10 +143,29 @@ public class ExportIntermediateDB extends IntermediateDB {
                 
             } while(!(upperID.compareTo(initialMaxID) == 1));
         } catch (SQLException ex) {
-            System.err.println("inter2ohdm: exception when processing sql request: " + sql.toString());
-            System.err.println(ex.getLocalizedMessage());
+            this.printExceptionMessage(ex, sql, node);
         }
         this.printFinished("nodes");
+    }
+    
+    private void printExceptionMessage(Exception ex, SQLStatementQueue sql, OHDMElement element) {
+        if(element != null) {
+            System.err.print("inter2ohdm: exception when processing ");
+            if(element instanceof OHDMNode) {
+                System.err.print("node ");
+            }
+            else if(element instanceof OHDMWay) {
+                System.err.print("way ");
+            }
+            else {
+                System.err.print("relation ");
+            }
+            System.err.print("with osm_id = ");
+            System.err.println(element.getOSMIDString());
+        }
+        System.err.println("inter2ohdm: sql request: " + sql.toString());
+        System.err.println(ex.getLocalizedMessage());
+        ex.printStackTrace(System.err);
     }
     
     void processWays() {
@@ -154,6 +174,7 @@ public class ExportIntermediateDB extends IntermediateDB {
     
     void processWays(SQLStatementQueue sql) {
         int notPartNumber = 0;
+        OHDMWay way = null;
         
         try {
             this.calculateInitialIDs(sql, WAYTABLE);
@@ -187,7 +208,7 @@ public class ExportIntermediateDB extends IntermediateDB {
 //                    if(number % 1000 == 0) {
 //                        System.out.print("\n");
 //                    }
-                    OHDMWay way = this.createOHDMWay(qResultWay);
+                    way = this.createOHDMWay(qResultWay);
 
                     if(!way.isPart() && way.getName() == null) notPartNumber++;
 
@@ -214,8 +235,7 @@ public class ExportIntermediateDB extends IntermediateDB {
             } while(!(upperID.compareTo(initialMaxID) == 1));
             
         } catch (SQLException ex) {
-            System.err.println("inter2ohdm: exception when processing sql request: " + sql.toString());
-            System.err.println(ex.getLocalizedMessage());
+            this.printExceptionMessage(ex, sql, way);
         }
         
         this.printFinished("ways");
@@ -258,15 +278,16 @@ public class ExportIntermediateDB extends IntermediateDB {
         System.out.println("---------------------------------------");
         System.out.print("select ");
         System.out.print(from);
-        System.out.print(" =< ");
+        System.out.print(" < ");
         System.out.print(what);
-        System.out.print(".id < ");
+        System.out.print(".id =< ");
         System.out.println(to);
         System.out.println("---------------------------------------");
     }
     
     void processRelations(SQLStatementQueue sql) {
         boolean debug_alreadyPrinted = false;
+        OHDMRelation relation = null;
         
         try {
             this.calculateInitialIDs(sql, RELATIONTABLE);
@@ -299,7 +320,7 @@ public class ExportIntermediateDB extends IntermediateDB {
 //                        System.out.print("\n");
 //                    }
 
-                    OHDMRelation relation = this.createOHDMRelation(qResultRelations);
+                    relation = this.createOHDMRelation(qResultRelations);
 
                     // find all associated nodes and add to that relation
                     sql.append("select * from ");
@@ -412,8 +433,7 @@ public class ExportIntermediateDB extends IntermediateDB {
             } while(!(upperID.compareTo(initialMaxID) == 1));
                 
         } catch (SQLException ex) {
-            System.err.println("inter2ohdm: exception when processing sql request: " + sql.toString());
-            System.err.println(ex.getLocalizedMessage());
+            this.printExceptionMessage(ex, sql, relation);
         }
         
         this.printFinished("relations");

@@ -103,29 +103,59 @@ public class Util {
         return sb.toString();
     }
     
-    public static void printExceptionMessage(Exception e, SQLStatementQueue sql, String additionalMessage) {
-        System.err.println(additionalMessage);
-        System.err.println(e.getMessage());
-        System.err.println(sql.toString());
-        e.printStackTrace(System.err);
+    public static void printExceptionMessage(Throwable e, SQLStatementQueue sql, String additionalMessage, boolean goahead) {
+        System.err.println("****************************************************************************************");
+
+        if(additionalMessage != null ) System.err.println(additionalMessage);
+        if(e != null ) System.err.println(e.getMessage());
+        if(sql != null ) System.err.println(sql.toString());
+        if(e != null ) e.printStackTrace(System.err);
+        
+        if(!goahead) {
+            System.err.println("FATAL.. stop executing");
+            System.exit(1);
+        } else {
+            System.err.println("non-fatal.. go ahead");
+        }
+        
+        System.err.println("****************************************************************************************");
+    }
+    
+    public static void printExceptionMessage(Throwable e, SQLStatementQueue sql, String additionalMessage) {
+        Util.printExceptionMessage(e, sql, additionalMessage, true);
+    }
+    
+    static String getThreeDigitString(int value) {
+        if(value >= 100) return String.valueOf(value);
+        
+        StringBuilder s = new StringBuilder();
+        s.append("0"); // leading 0
+        if(value < 10) {
+            s.append("0"); // maybe another one
+        }
+        
+        s.append(value);
+        
+        return s.toString();
     }
     
     public static String getIntWithDots(int value) {
         if(value < 1000) {
-            return Integer.toString(value);
+            return Util.getThreeDigitString(value);
         }
         
         int rest = value % 1000;
-        String result = Integer.toString(rest);
+        
+        String result = Util.getThreeDigitString(rest);
         value /= 1000;
         
         while(value > 1000) {
-            result = value % 1000 + "," + result;
+            result = Util.getThreeDigitString(value % 1000) + "." + result;
             value /= 1000;
         } 
         
         // finally
-        result = value + "," + result;
+        result = value + "." + result;
         return result;
     }
 }

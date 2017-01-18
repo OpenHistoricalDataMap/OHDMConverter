@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import osm2inter.InterDB;
 import static osm2inter.InterDB.NODETABLE;
 import static osm2inter.InterDB.RELATIONMEMBER;
 import static osm2inter.InterDB.RELATIONTABLE;
@@ -31,9 +32,12 @@ public class ExportIntermediateDB extends IntermediateDB {
     
     private int historicInfos = 0;
     
-    private final SQLStatementQueue sourceQueue;
     private final long startTime;
     private int number;
+    
+    static final int NODE = 0;
+    static final int WAY = 1;
+    static final int RELATION = 2;
     
     ExportIntermediateDB(Connection sourceConnection, String schema, Importer importer, int steplen) {
         super(sourceConnection, schema);
@@ -44,8 +48,6 @@ public class ExportIntermediateDB extends IntermediateDB {
         this.schema = schema;
         this.importer = importer;
         
-        this.sourceQueue = new SQLStatementQueue(sourceConnection);
-        
         if(steplen < 1) {
             steplen = DEFAULT_STEP_LEN;
         }
@@ -53,84 +55,244 @@ public class ExportIntermediateDB extends IntermediateDB {
         this.steps = new BigDecimal(steplen);
     }
 
-    void processNodes() {
-        this.processNodes(this.sourceQueue);
-    }
-    
     private BigDecimal initialLowerID;
     private BigDecimal initialUpperID;
     private BigDecimal initialMaxID;
-    private BigDecimal steps;
+    private final BigDecimal steps;
     
-    private void calculateInitialIDs(SQLStatementQueue sql, String tableName) throws SQLException {
+    private void calculateInitialIDs(SQLStatementQueue sql, String tableName) {
         // first: figure out min and max osm_id in nodes table
-        sql.append("SELECT min(id) FROM ");
-        sql.append(DB.getFullTableName(this.schema, tableName));
-        sql.append(";");
+        try {
+            sql.append("SELECT min(id) FROM ");
+            sql.append(DB.getFullTableName(this.schema, tableName));
+            sql.append(";");
 
-        ResultSet result = sql.executeWithResult();
-        result.next();
-        BigDecimal minID = result.getBigDecimal(1);
+            ResultSet result = sql.executeWithResult();
+            result.next();
+            BigDecimal minID = result.getBigDecimal(1);
 
-        sql.append("SELECT max(id) FROM ");
-        sql.append(DB.getFullTableName(this.schema, tableName));
-        sql.append(";");
+            sql.append("SELECT max(id) FROM ");
+            sql.append(DB.getFullTableName(this.schema, tableName));
+            sql.append(";");
 
-        result = sql.executeWithResult();
-        result.next();
-        this.initialMaxID = result.getBigDecimal(1);
+            result = sql.executeWithResult();
+            result.next();
+            this.initialMaxID = result.getBigDecimal(1);
 
-        this.initialLowerID = minID.subtract(new BigDecimal(1));
-        this.initialUpperID = minID.add(this.steps);
+            this.initialLowerID = minID.subtract(new BigDecimal(1));
+            this.initialUpperID = minID.add(this.steps);
+        }
+        catch(SQLException se) {
+            Util.printExceptionMessage(se, sql, "when calculating initial min max ids for select of nodes, ways or relations", false);
+        }
+    }
+    
+    void processNode(ResultSet qResult, SQLStatementQueue sql) {
+        OHDMNode node = null;
+        try {
+            node = this.createOHDMNode(qResult);
+
+    //        if(!node.isPart() && node.getName() == null) notPartNumber++;
+
+            // now process that stuff
+            if(this.importer.importNode(node)) {
+                this.numberNodes++;
+            }
+
+            if(this.importer.importPostProcessing(node)) {
+                this.historicInfos++;
+            }
+        }
+        catch(SQLException se) {
+            System.err.println("node osm_id: " + node.getOSMIDString());
+            Util.printExceptionMessage(se, sql, "failure when processing node.. non fatal", true);
+        }
+    }
+    
+    void processWay(ResultSet qResult, SQLStatementQueue sql) {
+        OHDMWay way = null;
+        try {
+            way = this.createOHDMWay(qResult);
+
+//            if(!way.isPart() && way.getName() == null) notPartNumber++;
+
+            this.addNodes2OHDMWay(way);
+
+            // process that stuff
+            if(this.importer.importWay(way)) {
+                this.numberWays++;
+            }
+
+            if(this.importer.importPostProcessing(way)) {
+                this.historicInfos++;
+            }
+        }
+        catch(SQLException se) {
+            System.err.println("way osm_id: " + way.getOSMIDString());
+            Util.printExceptionMessage(se, sql, "failure when processing way.. non fatal", true);
+        }
+    }
+    
+    void processRelation(ResultSet qResult, SQLStatementQueue sql) {
+        OHDMRelation relation = null;
+        try {
+            relation = this.createOHDMRelation(qResult);
+
+            // find all associated nodes and add to that relation
+            sql.append("select * from ");
+            sql.append(DB.getFullTableName(this.schema, RELATIONMEMBER));
+            sql.append(" where relation_id = ");            
+            sql.append(relation.getOSMIDString());
+            sql.append(";");  
+
+            ResultSet qResultRelation = sql.executeWithResult();
+
+            boolean relationMemberComplete = true; // assume we find all member
+
+            while(qResultRelation.next()) {
+                String roleString =  qResultRelation.getString("role");
+
+                // extract member objects from their tables
+                BigDecimal id;
+                OHDMElement.GeometryType type = null;
+
+                sql.append("SELECT * FROM ");
+
+                id = qResultRelation.getBigDecimal("node_id");
+                if(id != null) {
+                    sql.append(DB.getFullTableName(this.schema, NODETABLE));
+                    type = OHDMElement.GeometryType.POINT;
+                } else {
+                    id = qResultRelation.getBigDecimal("way_id");
+                    if(id != null) {
+                        sql.append(DB.getFullTableName(this.schema, WAYTABLE));
+                        type = OHDMElement.GeometryType.LINESTRING;
+                    } else {
+                        id = qResultRelation.getBigDecimal("member_rel_id");
+                        if(id != null) {
+                            sql.append(DB.getFullTableName(this.schema, RELATIONTABLE));
+                            type = OHDMElement.GeometryType.RELATION;
+                        } else {
+                            // we have a serious problem here.. or no member
+                        }
+                    }
+                }
+                sql.append(" where osm_id = ");
+                sql.append(id.toString());
+                sql.append(";");
+
+                // debug stop
+                if(id.toString().equalsIgnoreCase("245960580")) {
+                    int i = 42;
+                }
+
+                ResultSet memberResult = sql.executeWithResult();
+                if(memberResult.next()) {
+                    // this call can fail, see else branch
+                    OHDMElement memberElement = null;
+                    switch(type) {
+                        case POINT: 
+                            memberElement = this.createOHDMNode(memberResult);
+                            break;
+                        case LINESTRING:
+                            memberElement = this.createOHDMWay(memberResult);
+                            break;
+                        case RELATION:
+                            memberElement = this.createOHDMRelation(memberResult);
+                            break;
+                    }
+                    relation.addMember(memberElement, roleString);
+                } else {
+                    /* this call can fail
+                    a) if this program is buggy - which is most likely :) OR
+                    b) intermediate DB has not imported whole world. In that
+                    case, relation can refer to data which are not actually 
+                    stored in intermediate db tables.. 
+                    in that case .. remove whole relation: parts of it are 
+                    outside our current scope
+                    */
+//                            System.out.println("would removed relation: " + relation.getOSMIDString());
+//                    debug_alreadyPrinted = true;
+                    //relation.remove();
+                    relationMemberComplete = false; 
+                }
+                memberResult.close();
+
+                if(!relationMemberComplete) break;
+            }
+
+            // process that stuff
+            if(relationMemberComplete && this.importer.importRelation(relation)) {
+                this.numberRelations++;
+
+                if(this.importer.importPostProcessing(relation)) {
+                    this.historicInfos++;
+                }
+
+            } 
+//            else {
+//                if(!debug_alreadyPrinted) {
+//                    String type = relation.getClassName();
+//                    if(type == null) type ="not set";
+////                            System.out.println("not imported relation: " + relation.getOSMIDString() + " / classname: " + type);
+//                }
+//            }
+        }
+        catch(SQLException se) {
+            System.err.println("relation osm_id: " + relation.getOSMIDString());
+            Util.printExceptionMessage(se, sql, "failure when processing relation.. non fatal", true);
+        }
     }
     
     void processNodes(SQLStatementQueue sql) {
-        // go through node table and do what has to be done.
-
-        int notPartNumber = 0;
-        OHDMNode node = null;
+        this.processElements(sql, NODE);
+    }
+    
+    void processWays(SQLStatementQueue sql) {
+        this.processElements(sql, WAY);
+    }
+    
+    void processRelations(SQLStatementQueue sql) {
+        this.processElements(sql, RELATION);
+    }
+    
+    void processElements(SQLStatementQueue sql, int elementType) {
+        String elementTableName = null;
+        switch(elementType) {
+            case NODE:
+                elementTableName = InterDB.NODETABLE;
+                break;
+            case WAY:
+                elementTableName = InterDB.WAYTABLE;
+                break;
+            case RELATION:
+                elementTableName = InterDB.RELATIONTABLE;
+                break;
+        }
+        
+        this.calculateInitialIDs(sql, elementTableName);
+        // first: figure out min and max osm_id in nodes table
+        BigDecimal lowerID = this.initialLowerID;
+        BigDecimal upperID = this.initialUpperID;
+        BigDecimal maxID = this.initialMaxID;
             
         try {
-            this.calculateInitialIDs(sql, NODETABLE);
-            // first: figure out min and max osm_id in nodes table
-            BigDecimal lowerID = this.initialLowerID;
-            BigDecimal upperID = this.initialUpperID;
-            BigDecimal maxID = this.initialMaxID;
-            
-//            System.out.println("Nodes... print a star after 100 nodes");
             do {
-                this.printSelectBetween("nodes", lowerID.toString(), upperID.toString());
+                this.printSelectBetween(elementTableName, lowerID.toString(), upperID.toString());
         
                 sql.append("SELECT * FROM ");
-                sql.append(DB.getFullTableName(this.schema, NODETABLE));
+                sql.append(DB.getFullTableName(this.schema, elementTableName));
                 sql.append(" where id <= "); // including upper
                 sql.append(upperID.toString());
                 sql.append(" AND id > "); // excluding lower 
                 sql.append(lowerID.toString());
                 sql.append(";");
-                ResultSet qResultNode = sql.executeWithResult();
+                ResultSet qResult = sql.executeWithResult();
                 
-                while(qResultNode.next()) {
+                while(qResult.next()) {
                     this.number++;
                     this.printStatistics();
-//                    if(number % 100 == 0) {System.out.print("*");}
-//                    if(number % 1000 == 0) {
-//                        System.out.print("\n");
-//                    }
-
-                    node = this.createOHDMNode(qResultNode);
-
-                    if(!node.isPart() && node.getName() == null) notPartNumber++;
-
-                    // now process that stuff
-                    if(this.importer.importNode(node)) {
-                        this.numberNodes++;
-                    }
-
-                    if(this.importer.importPostProcessing(node)) {
-                        this.historicInfos++;
-                    }
-
+                    this.processElement(qResult, sql, elementType);
                 }
                 
                 // next bulk of data
@@ -140,14 +302,15 @@ public class ExportIntermediateDB extends IntermediateDB {
                 if(upperID.compareTo(initialMaxID) == 1 && lowerID.compareTo(initialMaxID) == -1) {
                     upperID = initialMaxID; // last round
                 }
-                
             } while(!(upperID.compareTo(initialMaxID) == 1));
-        } catch (SQLException ex) {
-            this.printExceptionMessage(ex, sql, node);
+        } 
+        catch (SQLException ex) {
+            // fatal exception.. do not continue
+            Util.printExceptionMessage(ex, sql, "when selecting nodes/ways/relation", false);
         }
-        this.printFinished("nodes");
+        this.printFinished(elementTableName);
     }
-    
+        
     private void printExceptionMessage(Exception ex, SQLStatementQueue sql, OHDMElement element) {
         if(element != null) {
             System.err.print("inter2ohdm: exception when processing ");
@@ -166,79 +329,6 @@ public class ExportIntermediateDB extends IntermediateDB {
         System.err.println("inter2ohdm: sql request: " + sql.toString());
         System.err.println(ex.getLocalizedMessage());
         ex.printStackTrace(System.err);
-    }
-    
-    void processWays() {
-        this.processWays(this.sourceQueue);
-    }
-    
-    void processWays(SQLStatementQueue sql) {
-        int notPartNumber = 0;
-        OHDMWay way = null;
-        
-        try {
-            this.calculateInitialIDs(sql, WAYTABLE);
-            
-            // first: figure out min and max osm_id in nodes table
-            BigDecimal lowerID = this.initialLowerID;
-            BigDecimal upperID = this.initialUpperID;
-            BigDecimal maxID = this.initialMaxID;
-            
-//            System.out.println("Ways... print a star after 100 ways");
-
-            do {
-                this.printSelectBetween("ways", lowerID.toString(), upperID.toString());
-                
-                sql.append("SELECT * FROM ");
-                sql.append(DB.getFullTableName(this.schema, WAYTABLE));
-                sql.append(" where id <= "); // including upper
-                sql.append(upperID.toString());
-                sql.append(" AND id > "); // excluding lower 
-                sql.append(lowerID.toString());
-                sql.append(";");
-
-                //PreparedStatement stmt = this.sourceConnection.prepareStatement(sql.toString());
-                ResultSet qResultWay = sql.executeWithResult();
-
-                while(qResultWay.next()) {
-                    this.number++;
-                    this.printStatistics();
-
-//                    if(number % 100 == 0) {System.out.print("*");}
-//                    if(number % 1000 == 0) {
-//                        System.out.print("\n");
-//                    }
-                    way = this.createOHDMWay(qResultWay);
-
-                    if(!way.isPart() && way.getName() == null) notPartNumber++;
-
-                    this.addNodes2OHDMWay(way);
-
-                    // process that stuff
-                    if(this.importer.importWay(way)) {
-                        this.numberWays++;
-                    }
-
-                    if(this.importer.importPostProcessing(way)) {
-                        this.historicInfos++;
-                    }
-                }
-                
-                // next bulk of data
-                lowerID = upperID;
-                upperID = upperID.add(steps);
-                
-                if(upperID.compareTo(initialMaxID) == 1 && lowerID.compareTo(initialMaxID) == -1) {
-                    upperID = initialMaxID; // last round
-                }
-                
-            } while(!(upperID.compareTo(initialMaxID) == 1));
-            
-        } catch (SQLException ex) {
-            this.printExceptionMessage(ex, sql, way);
-        }
-        
-        this.printFinished("ways");
     }
     
     @Override
@@ -270,10 +360,6 @@ public class ExportIntermediateDB extends IntermediateDB {
         return way;
     }
     
-    void processRelations() {
-        this.processRelations(this.sourceQueue);
-    }
-    
     private void printSelectBetween(String what, String from, String to) {
         System.out.println("---------------------------------------");
         System.out.print("select ");
@@ -283,160 +369,6 @@ public class ExportIntermediateDB extends IntermediateDB {
         System.out.print(".id =< ");
         System.out.println(to);
         System.out.println("---------------------------------------");
-    }
-    
-    void processRelations(SQLStatementQueue sql) {
-        boolean debug_alreadyPrinted = false;
-        OHDMRelation relation = null;
-        
-        try {
-            this.calculateInitialIDs(sql, RELATIONTABLE);
-            // first: figure out min and max osm_id in nodes table
-            BigDecimal lowerID = this.initialLowerID;
-            BigDecimal upperID = this.initialUpperID;
-            BigDecimal maxID = this.initialMaxID;
-            
-//            System.out.println("Relations... print a star after 100 relations");
-
-            do {
-                this.printSelectBetween("relations", lowerID.toString(), upperID.toString());
-                
-                sql.append("SELECT * FROM ");
-                sql.append(DB.getFullTableName(this.schema, RELATIONTABLE));
-                sql.append(" where id <= "); // including upper
-                sql.append(upperID.toString());
-                sql.append(" AND id > "); // excluding lower 
-                sql.append(lowerID.toString());
-                sql.append(";");
-
-                ResultSet qResultRelations = sql.executeWithResult();
-
-                while(qResultRelations.next()) {
-                    debug_alreadyPrinted = false;
-                    this.number++;
-                    this.printStatistics();
-//                    if(number % 100 == 0) {System.out.print("*");}
-//                    if(number % 1000 == 0) {
-//                        System.out.print("\n");
-//                    }
-
-                    relation = this.createOHDMRelation(qResultRelations);
-
-                    // find all associated nodes and add to that relation
-                    sql.append("select * from ");
-                    sql.append(DB.getFullTableName(this.schema, RELATIONMEMBER));
-                    sql.append(" where relation_id = ");            
-                    sql.append(relation.getOSMIDString());
-                    sql.append(";");  
-
-                    ResultSet qResultRelation = sql.executeWithResult();
-
-                    boolean relationMemberComplete = true; // assume we find all member
-
-                    while(qResultRelation.next()) {
-                        String roleString =  qResultRelation.getString("role");
-
-                        // extract member objects from their tables
-                        BigDecimal id;
-                        OHDMElement.GeometryType type = null;
-
-                        sql.append("SELECT * FROM ");
-
-                        id = qResultRelation.getBigDecimal("node_id");
-                        if(id != null) {
-                            sql.append(DB.getFullTableName(this.schema, NODETABLE));
-                            type = OHDMElement.GeometryType.POINT;
-                        } else {
-                            id = qResultRelation.getBigDecimal("way_id");
-                            if(id != null) {
-                                sql.append(DB.getFullTableName(this.schema, WAYTABLE));
-                                type = OHDMElement.GeometryType.LINESTRING;
-                            } else {
-                                id = qResultRelation.getBigDecimal("member_rel_id");
-                                if(id != null) {
-                                    sql.append(DB.getFullTableName(this.schema, RELATIONTABLE));
-                                    type = OHDMElement.GeometryType.RELATION;
-                                } else {
-                                    // we have a serious problem here.. or no member
-                                }
-                            }
-                        }
-                        sql.append(" where osm_id = ");
-                        sql.append(id.toString());
-                        sql.append(";");
-
-                        // debug stop
-                        if(id.toString().equalsIgnoreCase("245960580")) {
-                            int i = 42;
-                        }
-
-                        ResultSet memberResult = sql.executeWithResult();
-                        if(memberResult.next()) {
-                            // this call can fail, see else branch
-                            OHDMElement memberElement = null;
-                            switch(type) {
-                                case POINT: 
-                                    memberElement = this.createOHDMNode(memberResult);
-                                    break;
-                                case LINESTRING:
-                                    memberElement = this.createOHDMWay(memberResult);
-                                    break;
-                                case RELATION:
-                                    memberElement = this.createOHDMRelation(memberResult);
-                                    break;
-                            }
-                            relation.addMember(memberElement, roleString);
-                        } else {
-                            /* this call can fail
-                            a) if this program is buggy - which is most likely :) OR
-                            b) intermediate DB has not imported whole world. In that
-                            case, relation can refer to data which are not actually 
-                            stored in intermediate db tables.. 
-                            in that case .. remove whole relation: parts of it are 
-                            outside our current scope
-                            */
-//                            System.out.println("would removed relation: " + relation.getOSMIDString());
-                            debug_alreadyPrinted = true;
-                            //relation.remove();
-                            relationMemberComplete = false; 
-                        }
-                        memberResult.close();
-
-                        if(!relationMemberComplete) break;
-                    }
-
-                    // process that stuff
-                    if(relationMemberComplete && this.importer.importRelation(relation)) {
-                        this.numberRelations++;
-
-                        if(this.importer.importPostProcessing(relation)) {
-                            this.historicInfos++;
-                        }
-
-                    } else {
-                        if(!debug_alreadyPrinted) {
-                            String type = relation.getClassName();
-                            if(type == null) type ="not set";
-//                            System.out.println("not imported relation: " + relation.getOSMIDString() + " / classname: " + type);
-                        }
-                    }
-                }
-                
-                // next bulk of data
-                lowerID = upperID;
-                upperID = upperID.add(steps);
-                
-                if(upperID.compareTo(initialMaxID) == 1 && lowerID.compareTo(initialMaxID) == -1) {
-                    upperID = initialMaxID; // last round
-                }
-                
-            } while(!(upperID.compareTo(initialMaxID) == 1));
-                
-        } catch (SQLException ex) {
-            this.printExceptionMessage(ex, sql, relation);
-        }
-        
-        this.printFinished("relations");
     }
     
     private void printFinished(String what) {
@@ -451,17 +383,17 @@ public class ExportIntermediateDB extends IntermediateDB {
         StringBuilder sb = new StringBuilder();
         
         sb.append("checked: ");
-        sb.append(this.number);
+        sb.append(Util.getIntWithDots(this.number));
         sb.append(" | imported: ");
-        sb.append(this.numberNodes + this.numberWays + this.numberRelations);
+        sb.append(Util.getIntWithDots(this.numberNodes + this.numberWays + this.numberRelations));
         sb.append(" (n:");
-        sb.append(this.numberNodes);
+        sb.append(Util.getIntWithDots(this.numberNodes));
         sb.append(", w:");
-        sb.append(this.numberWays);
+        sb.append(Util.getIntWithDots(this.numberWays));
         sb.append(", r:");
-        sb.append(this.numberRelations);
+        sb.append(Util.getIntWithDots(this.numberRelations));
         sb.append(") | h:");
-        sb.append(this.historicInfos);
+        sb.append(Util.getIntWithDots(this.historicInfos));
         sb.append(" | elapsed: ");
         sb.append(Util.getElapsedTime(this.startTime));
         
@@ -472,6 +404,25 @@ public class ExportIntermediateDB extends IntermediateDB {
         if(++this.printEra >= PRINT_ERA_LENGTH) {
             this.printEra = 0;
             System.out.println(this.getStatistics());
+        }
+    }
+
+    void processElement(ResultSet qResult, SQLStatementQueue sql, int elementType) {
+        try {
+            switch(elementType) {
+                case NODE:
+                    this.processNode(qResult, sql);
+                    break;
+                case WAY:
+                    this.processWay(qResult, sql);
+                    break;
+                case RELATION:
+                    this.processRelation(qResult, sql);
+                    break;
+            }
+        }
+        catch(Throwable t) {
+            Util.printExceptionMessage(t, sql, "uncatched throwable when processing element from intermediate db", true);
         }
     }
 }

@@ -14,6 +14,7 @@ import osm.OSMClassification;
 import util.DB;
 import util.SQLStatementQueue;
 import util.Parameter;
+import util.Util;
 
 /**
  * That class imports (and updates) data from intermediate database to OHDM.
@@ -873,6 +874,7 @@ public class Inter2OHDM extends Importer {
     public static void main(String args[]) throws IOException {
         // let's fill OHDM database
         System.out.println("Start importing ODHM data from intermediate DB");
+        SQLStatementQueue sourceQueue = null;
         
         try {
             String sourceParameterFileName = "db_inter.txt";
@@ -926,15 +928,16 @@ public class Inter2OHDM extends Importer {
             ExportIntermediateDB exporter = 
                     new ExportIntermediateDB(sourceConnection, sourceSchema, ohdmImporter, stepLen);
             
-            exporter.processNodes();
-            exporter.processWays();
-            exporter.processRelations();
+            sourceQueue = DB.createSQLStatementQueue(sourceConnection, sourceParameter);
+            
+            exporter.processNodes(sourceQueue);
+            exporter.processWays(sourceQueue);
+            exporter.processRelations(sourceQueue);
             
             System.out.println(exporter.getStatistics());
   
         } catch (Exception e) {
-            System.err.println("fatal: " + e.getLocalizedMessage());
-            e.printStackTrace(System.err);
+            Util.printExceptionMessage(e, sourceQueue, "main method in Inter2OHDM", false);
         }
     }
 

@@ -163,7 +163,7 @@ public class Util {
     
     public static String getIntWithDots(int value) {
         if(value < 1000) {
-            return Util.getThreeDigitString(value);
+            return String.valueOf(value);
         }
         
         int rest = value % 1000;
@@ -171,7 +171,7 @@ public class Util {
         String result = Util.getThreeDigitString(rest);
         value /= 1000;
         
-        while(value > 1000) {
+        while(value >= 1000) {
             result = Util.getThreeDigitString(value % 1000) + "." + result;
             value /= 1000;
         } 

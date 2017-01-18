@@ -21,6 +21,9 @@ public class DebugInter2OHDM extends Inter2OHDM {
     public static void main(String args[]) throws IOException {
         SQLStatementQueue sourceQueue = null;
         
+        System.out.println(Util.getIntWithDots(1000000));
+        System.exit(0);
+        
         try {
             String sourceParameterFileName = "db_inter_f4_test.txt";
             String targetParameterFileName = "db_ohdm_local.txt";

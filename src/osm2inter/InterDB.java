@@ -37,6 +37,7 @@ public class InterDB {
             // setup classification
 //            OSMClassification.getOSMClassification().setupClassificationTable(sql, schema);
             
+            System.out.println("start tables creation for intermediate database");
             // NODETABLE
             // sequence
             DB.createSequence(sql, schema, NODETABLE);
@@ -116,6 +117,7 @@ public class InterDB {
             sql.append("role character varying");
             sql.append(");");
             sql.forceExecute();
+            System.out.println("intermediate database is ready for import");
       
         } catch (SQLException e) {
             System.err.println("error while setting up tables: " + e.getLocalizedMessage());

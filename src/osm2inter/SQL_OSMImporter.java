@@ -142,6 +142,25 @@ public class SQL_OSMImporter extends DefaultHandler {
                 if(!this.wayProcessed) {
                     // first way! create index in nodes
                     this.wayProcessed = true;
+                    
+                    /* create an index on nodes
+                     CREATE INDEX node_osm_id ON intermediate.nodes (osm_id);
+                    */
+                    this.updateNodesQueue.append("CREATE INDEX node_osm_id ON ");
+                    this.updateNodesQueue.append(DB.getFullTableName(this.schema, InterDB.NODETABLE));
+                    this.updateNodesQueue.append(" (osm_id);");
+                    System.out.println("----------------------------------------------------------------");
+                    System.out.println("End of nodes import.. create index on nodes table over osm_id");
+                    this.printStatus();
+                    System.out.println("----------------------------------------------------------------");
+                    try {
+                        this.updateNodesQueue.forceExecute(); // exec and wait.. no new thread
+                        System.out.println("index on node tables created.. go ahead with ways import");
+                        this.printStatus();
+                    }
+                    catch(SQLException se) {
+                        Util.printExceptionMessage(se, updateNodesQueue, "error while creating index on nodes");
+                    }
                 }
                 this.insertQueue.append(DB.getFullTableName(schema, InterDB.WAYTABLE));
                 this.insertQueue.append("(valid, osm_id, classcode, serializedtags, node_ids) VALUES (true, ");
@@ -163,6 +182,55 @@ public class SQL_OSMImporter extends DefaultHandler {
                 
                 if(!this.relationProcessed) {
                     // first relation! create index in ways
+                    /*
+                    on ways:
+                    CREATE INDEX way_osm_id ON intermediate.ways (osm_id);
+
+                    on waynodes:
+                    CREATE INDEX waynodes_node_id ON intermediate.waynodes (node_id);
+                    CREATE INDEX waynodes_way_id ON intermediate.waynodes (way_id);
+                    */
+                    System.out.println("----------------------------------------------------------------");
+                    System.out.println("End of ways import.. create indexes");
+                    this.printStatus();
+                    System.out.println("----------------------------------------------------------------");
+                    this.updateWaysQueue.append("CREATE INDEX way_osm_id ON ");
+                    this.updateWaysQueue.append(DB.getFullTableName(this.schema, InterDB.WAYTABLE));
+                    this.updateWaysQueue.append(" (osm_id);");
+                    System.out.println("index on way table over osm_id");
+                    try {
+                        this.updateWaysQueue.forceExecute(true);
+                    }
+                    catch(Exception e) {
+                        Util.printExceptionMessage(e, updateWaysQueue, "exception when starting index creation on way table over osm_id");
+                    }
+
+                    this.updateWaysQueue.append("CREATE INDEX waynodes_node_id ON ");
+                    this.updateWaysQueue.append(DB.getFullTableName(this.schema, InterDB.WAYMEMBER));
+                    this.updateWaysQueue.append(" (node_id);");
+                    System.out.println("index on waymember table over node_id");
+                    try {
+                        this.updateWaysQueue.forceExecute(true);
+                    }
+                    catch(Exception e) {
+                        Util.printExceptionMessage(e, updateWaysQueue, "exception when starting index creation on waymember table over node_id");
+                    }
+
+                    this.updateWaysQueue.append("CREATE INDEX waynodes_way_id ON ");
+                    this.updateWaysQueue.append(DB.getFullTableName(this.schema, InterDB.WAYMEMBER));
+                    this.updateWaysQueue.append(" (way_id);");
+                    System.out.println("index on waymember table over way_id");
+                    try {
+                        this.updateWaysQueue.forceExecute();
+                    }
+                    catch(Exception e) {
+                        Util.printExceptionMessage(e, updateWaysQueue, "exception during index creation on waymember table over node_id");
+                    }
+
+                    this.updateWaysQueue.join();
+                    System.out.println("indexes on way tables created.. go ahead with relations import");
+                    this.printStatus();
+                    
                     this.relationProcessed = true;
                 }
                 this.insertQueue.append(DB.getFullTableName(schema, InterDB.RELATIONTABLE));
@@ -398,19 +466,77 @@ public class SQL_OSMImporter extends DefaultHandler {
     @Override
     public void startDocument() {
         status = STATUS_OUTSIDE;
+        System.out.println("----------------------------------------------------------------");
+        System.out.println("Start import from OSM file.. ");
+        this.printStatus();
+        System.out.println("----------------------------------------------------------------");
     }
 
     @Override
     public void endDocument() {
-        System.out.println("\nOSM Import ended.. wait for threads to end..\n");
+        System.out.print("----------------------------------------------------------------");
+        System.out.print("\nRelation import ended.. wait for import threads to end..\n");
+        this.printStatus();
+        System.out.println("----------------------------------------------------------------");
         insertQueue.join();
         memberQueue.join();
         updateNodesQueue.join();
         updateWaysQueue.join();
-        
         this.printStatus();
-    }
+        System.out.println("create indexes on relation tables");
 
+        try {
+            this.updateWaysQueue.append("CREATE INDEX relation_osm_id ON ");
+            this.updateWaysQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONTABLE));
+            this.updateWaysQueue.append(" (osm_id);");
+            System.out.println("index on relation table over osm_id");
+            this.updateWaysQueue.forceExecute(true);
+
+            /*
+            CREATE INDEX relationmember_member_rel_id ON 
+            intermediate.relationmember (member_rel_id);
+            */
+            this.updateWaysQueue.append("CREATE INDEX relationmember_member_rel_id ON ");
+            this.updateWaysQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONMEMBER));
+            this.updateWaysQueue.append(" (member_rel_id);");
+            System.out.println("index on relation member table over member_rel_id");
+            System.out.flush();
+            this.updateWaysQueue.forceExecute(true);
+                        
+            /*
+            CREATE INDEX relationmember_node_id ON 
+            intermediate.relationmember (node_id);            
+            */
+            this.updateWaysQueue.append("CREATE INDEX relationmember_node_id ON ");
+            this.updateWaysQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONMEMBER));
+            this.updateWaysQueue.append(" (node_id);");
+            System.out.println("index on relation member table over node_id");
+            System.out.flush();
+            this.updateWaysQueue.forceExecute(true);
+
+            /*
+            CREATE INDEX relationmember_way_id ON 
+            intermediate.relationmember (node_id);            
+            */
+            this.updateWaysQueue.append("CREATE INDEX relationmember_way_id ON ");
+            this.updateWaysQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONMEMBER));
+            this.updateWaysQueue.append(" (way_id);");
+            System.out.println("index on relation member table over way_id");
+            System.out.flush();
+            this.updateWaysQueue.forceExecute();
+            
+            this.updateWaysQueue.join();
+            System.out.println("index creation successfully");
+            System.out.println("----------------------------------------------------------------");
+            System.out.println("OSM import ended");
+            this.printStatus();
+            System.out.println("----------------------------------------------------------------");
+        }
+        catch(SQLException se) {
+            Util.printExceptionMessage(se, this.updateWaysQueue, "error while creating index");
+        }
+    }
+    
     @Override
     public void startElement(String uri, String localName, String qName, 
             Attributes attributes) {
@@ -507,6 +633,8 @@ public class SQL_OSMImporter extends DefaultHandler {
         }
     }
     
+    private static final int LOG_STEPS = 100000;
+    
     private int era = 0;
     private long startTime = System.currentTimeMillis();
     private void flush() {
@@ -518,7 +646,7 @@ public class SQL_OSMImporter extends DefaultHandler {
                 this.memberQueue.forceExecute(this.currentElementID);
                 this.updateNodesQueue.forceExecute(this.currentElementID);
                 this.updateWaysQueue.forceExecute(this.currentElementID);
-                if(++this.era >= 100) {
+                if(++this.era >= LOG_STEPS / this.flushSteps) {
                     this.era = 0;
                     this.printStatus();
                 } 
@@ -539,7 +667,6 @@ public class SQL_OSMImporter extends DefaultHandler {
     }
     
     private void printStatus() {
-        System.out.print("\n");
         System.out.print("nodes: " + this.nA);
         System.out.print(" | ways: " + this.wA);
         System.out.print(" | relations: " + this.rA);

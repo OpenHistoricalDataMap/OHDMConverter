@@ -109,11 +109,11 @@ public class DB {
         
         
         Driver d = null;
-        System.out.println("debugging: find jdbc driver by class name: org.postgresql.Driver");
+//        System.out.println("debugging: find jdbc driver by class name: org.postgresql.Driver");
 //        if(!drivers.hasMoreElements()) {
             try {
                 Class driverClass = Class.forName("org.postgresql.Driver");
-                System.out.println("debugging: found class.. try to cast");
+//                System.out.println("debugging: found class.. try to cast");
 
                 Object newInstance = driverClass.getConstructor().newInstance();
                 

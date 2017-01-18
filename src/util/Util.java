@@ -102,4 +102,11 @@ public class Util {
         
         return sb.toString();
     }
+    
+    public static void printExceptionMessage(Exception e, SQLStatementQueue sql, String additionalMessage) {
+        System.err.println(additionalMessage);
+        System.err.println(e.getMessage());
+        System.err.println(sql.toString());
+        e.printStackTrace(System.err);
+    }
 }

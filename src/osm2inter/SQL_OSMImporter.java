@@ -660,7 +660,7 @@ public class SQL_OSMImporter extends DefaultHandler {
         } catch (IOException ioE) {
             System.err.println("while saving element: " + ioE.getClass().getName() + "\n" + ioE.getMessage());
             ioE.printStackTrace(System.err);
-        } catch (Exception eE) {
+        } catch (Throwable eE) {
             System.err.println("while saving element: " + eE.getClass().getName() + "\n" + eE.getMessage());
             eE.printStackTrace(System.err);
         }

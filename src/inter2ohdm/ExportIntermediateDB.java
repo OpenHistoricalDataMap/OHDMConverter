@@ -363,11 +363,11 @@ public class ExportIntermediateDB extends IntermediateDB {
     private void printSelectBetween(String what, String from, String to) {
         System.out.println("---------------------------------------");
         System.out.print("select ");
-        System.out.print(from);
+        System.out.print(Util.setDotsInStringValue(from));
         System.out.print(" < ");
         System.out.print(what);
         System.out.print(".id =< ");
-        System.out.println(to);
+        System.out.println(Util.setDotsInStringValue(to));
         System.out.println("---------------------------------------");
     }
     

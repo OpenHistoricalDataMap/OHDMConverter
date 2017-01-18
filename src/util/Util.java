@@ -139,6 +139,28 @@ public class Util {
         return s.toString();
     }
     
+    public static String setDotsInStringValue(String value) {
+        if(value.length() <= 3) return value;
+        
+        StringBuilder s = new StringBuilder();
+        
+        int firstlength = value.length() % 3;
+        if(firstlength != 0) {
+            s.append(value.subSequence(0, firstlength));
+        }
+        
+        int from = firstlength;
+        while(from < value.length()) {
+            if(from != 0) {
+                s.append(".");
+            }
+            s.append(value.subSequence(from, from+3));
+            from += 3;
+        };
+        
+        return s.toString();
+    }
+    
     public static String getIntWithDots(int value) {
         if(value < 1000) {
             return Util.getThreeDigitString(value);

@@ -856,19 +856,21 @@ public class Inter2OHDM extends Importer {
         sql.append("UPDATE ");
         sql.append(DB.getFullTableName(this.sourceSchema, "nodes"));
         sql.append(" SET ohdm_geom_id=null, ohdm_object_id=null;");
-        sql.forceExecute();
+        sql.forceExecute(true);
         
         System.out.println("reset ways");
         sql.append("UPDATE ");
         sql.append(DB.getFullTableName(this.sourceSchema, "ways"));
         sql.append(" SET ohdm_geom_id=null, ohdm_object_id=null;");
-        sql.forceExecute();
+        sql.forceExecute(true);
         
         System.out.println("reset relations");
         sql.append("UPDATE ");
         sql.append(DB.getFullTableName(this.sourceSchema, "relations"));
         sql.append(" SET ohdm_geom_id=null, ohdm_object_id=null;");
         sql.forceExecute();
+        
+        sql.join();
     }
     
     public static void main(String args[]) throws IOException {
@@ -1032,7 +1034,7 @@ public class Inter2OHDM extends Importer {
         ArrayList<String> polygonWKT = new ArrayList<>();
         
         if(!relation.fillRelatedGeometries(polygonIDs, polygonWKT)) return false;
-
+        
         /* we have two list with either references to existing
          geometries or to string representing geometries which are 
         to be stored and referenced.

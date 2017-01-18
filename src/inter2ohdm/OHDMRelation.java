@@ -98,11 +98,20 @@ public class OHDMRelation extends OHDMElement {
                         if(way.isPolygon()) {
                             // is a polygon by itself.. has it a hole ?
                             if(nextOutside || lastLoop) { 
-                                /* we are done here. It is a polygon followed 
+                                /* we are done here. It is a polygon followed
                                 by another one outside with no previous polygons
-                                */
-                                polygonIDs.add(way.getOHDMObjectID());
-                                polygonWKT.add("");
+                                 */
+                                
+                                // options: this way can have it own identity is is already in database
+                                String ohdmObjectID = way.getOHDMObjectID();
+                                if(ohdmObjectID != null && !ohdmObjectID.equalsIgnoreCase("-1")) {
+                                    polygonIDs.add(way.getOHDMObjectID());
+                                    polygonWKT.add("");
+                                } else {
+                                    // it is has no identity - we take its full geometry
+                                    polygonIDs.add("-1");
+                                    polygonWKT.add(way.getWKTGeometry());
+                                }
                             } else {
                                 /* one or more holes are following
                                 create a new wkt and outside shape into wkt

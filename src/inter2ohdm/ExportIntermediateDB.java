@@ -91,6 +91,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         OHDMNode node = null;
         try {
             node = this.createOHDMNode(qResult);
+            this.currentElement = node;
 
     //        if(!node.isPart() && node.getName() == null) notPartNumber++;
 
@@ -113,6 +114,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         OHDMWay way = null;
         try {
             way = this.createOHDMWay(qResult);
+            this.currentElement = way;
 
 //            if(!way.isPart() && way.getName() == null) notPartNumber++;
 
@@ -137,6 +139,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         OHDMRelation relation = null;
         try {
             relation = this.createOHDMRelation(qResult);
+            this.currentElement = relation;
 
             // find all associated nodes and add to that relation
             sql.append("select * from ");
@@ -406,8 +409,11 @@ public class ExportIntermediateDB extends IntermediateDB {
             System.out.println(this.getStatistics());
         }
     }
+    
+    OHDMElement currentElement = null;
 
     void processElement(ResultSet qResult, SQLStatementQueue sql, int elementType) {
+        this.currentElement = null;
         try {
             switch(elementType) {
                 case NODE:
@@ -422,7 +428,26 @@ public class ExportIntermediateDB extends IntermediateDB {
             }
         }
         catch(Throwable t) {
+            System.err.println("---------------------------------------------------------------------------");
+            System.err.print("was handling a ");
+            switch(elementType) {
+                case NODE:
+                    System.err.println("NODE ");
+                    break;
+                case WAY:
+                    System.err.println("WAY ");
+                    break;
+                case RELATION:
+                    System.err.println("RELATION ");
+                    break;
+            }
+            if(currentElement != null) {
+                System.err.println("current element osm id: " + this.currentElement.getOSMIDString());
+            } else {
+                System.err.println("current element is null");
+            }
             Util.printExceptionMessage(t, sql, "uncatched throwable when processing element from intermediate db", true);
+            System.err.println("---------------------------------------------------------------------------");
         }
     }
 }

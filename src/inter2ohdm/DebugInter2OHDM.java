@@ -21,8 +21,8 @@ public class DebugInter2OHDM extends Inter2OHDM {
     public static void main(String args[]) throws IOException {
         SQLStatementQueue sourceQueue = null;
         
-        System.out.println(Util.getIntWithDots(1000000));
-        System.exit(0);
+//        System.out.println(Util.getIntWithDots(12));
+//        System.exit(0);
         
         try {
             String sourceParameterFileName = "db_inter_f4_test.txt";
@@ -52,21 +52,21 @@ public class DebugInter2OHDM extends Inter2OHDM {
             Inter2OHDM ohdmImporter = new Inter2OHDM(iDB, sourceConnection, 
                     targetConnection, sourceSchema, targetSchema);
             
-//            try {
-//                ohdmImporter.forgetPreviousImport();
-//            }
-//            catch(Exception e) {
-//                System.err.println("problems during setting old data (non-fatal): " + e.getLocalizedMessage());
-//            }
+            try {
+                ohdmImporter.forgetPreviousImport();
+            }
+            catch(Exception e) {
+                System.err.println("problems during setting old data (non-fatal): " + e.getLocalizedMessage());
+            }
             
-//            try {
-//                ohdmImporter.dropOHDMTables(targetConnection);
-//            }
-//            catch(Exception e) {
-//                System.err.println("problems during setting old data (non-fatal): " + e.getLocalizedMessage());
-//            }
+            try {
+                ohdmImporter.dropOHDMTables(targetConnection);
+            }
+            catch(Exception e) {
+                System.err.println("problems during setting old data (non-fatal): " + e.getLocalizedMessage());
+            }
             
-//            ohdmImporter.createOHDMTables(targetConnection);
+            ohdmImporter.createOHDMTables(targetConnection);
             
             String stepLenString = sourceParameter.getReadStepLen();
             int stepLen = 10000;
@@ -86,7 +86,9 @@ public class DebugInter2OHDM extends Inter2OHDM {
             
             ResultSet qResult = null; 
             // do some sql here..
-//            sourceQueue.append("SELECT * FROM intermediate.ways where osm_id = 186022626;");
+//            sourceQueue.append("SELECT * FROM intermediate.nodes where osm_id = 6464945;");
+//            sourceQueue.append("SELECT * FROM intermediate.ways where osm_id = 6464945;");
+//            sourceQueue.append("SELECT * FROM intermediate.relations where osm_id = 6464945;");
             sourceQueue.append("SELECT * FROM intermediate.relations;");
             qResult = sourceQueue.executeWithResult();
             

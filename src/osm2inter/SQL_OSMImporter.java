@@ -667,9 +667,9 @@ public class SQL_OSMImporter extends DefaultHandler {
     }
     
     private void printStatus() {
-        System.out.print("nodes: " + this.nA);
-        System.out.print(" | ways: " + this.wA);
-        System.out.print(" | relations: " + this.rA);
+        System.out.print("nodes: " + Util.getIntWithDots(this.nA));
+        System.out.print(" | ways: " + Util.getIntWithDots(this.wA));
+        System.out.print(" | relations: " + Util.getIntWithDots(this.rA));
 //        System.out.print(" | entries per star: " + this.flushSteps);
 
         System.out.print(" | elapsed time:  ");

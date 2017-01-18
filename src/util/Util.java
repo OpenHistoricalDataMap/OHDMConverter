@@ -109,4 +109,23 @@ public class Util {
         System.err.println(sql.toString());
         e.printStackTrace(System.err);
     }
+    
+    public static String getIntWithDots(int value) {
+        if(value < 1000) {
+            return Integer.toString(value);
+        }
+        
+        int rest = value % 1000;
+        String result = Integer.toString(rest);
+        value /= 1000;
+        
+        while(value > 1000) {
+            result = value % 1000 + "," + result;
+            value /= 1000;
+        } 
+        
+        // finally
+        result = value + "," + result;
+        return result;
+    }
 }

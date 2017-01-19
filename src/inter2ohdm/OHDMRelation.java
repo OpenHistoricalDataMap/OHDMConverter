@@ -102,13 +102,13 @@ public class OHDMRelation extends OHDMElement {
                                 by another one outside with no previous polygons
                                  */
                                 
-                                // options: this way can have it own identity is is already in database
-                                String ohdmObjectID = way.getOHDMObjectID();
-                                if(ohdmObjectID != null && !ohdmObjectID.equalsIgnoreCase("-1")) {
-                                    polygonIDs.add(way.getOHDMObjectID());
+                                // options: this way can have its geometry already in ohdm
+                                String ohdmGeomID = way.getOHDMGeomID();
+                                if(ohdmGeomID != null && !ohdmGeomID.equalsIgnoreCase("-1")) {
+                                    polygonIDs.add(ohdmGeomID);
                                     polygonWKT.add("");
                                 } else {
-                                    // it is has no identity - we take its full geometry
+                                    // geometry not yet stored.. extract wkt for further processing
                                     polygonIDs.add("-1");
                                     polygonWKT.add(way.getWKTGeometry());
                                 }

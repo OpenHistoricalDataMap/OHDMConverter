@@ -45,12 +45,19 @@ public class SQL_OSMImporter extends DefaultHandler {
     private String schema;
     private File recordFile;
     private int maxThreads;
-    private final SQLStatementQueue insertQueue;
-    private final SQLStatementQueue memberQueue;
-    private final SQLStatementQueue updateNodesQueue;
-    private final SQLStatementQueue updateWaysQueue;
+    private SQLStatementQueue insertQueue;
+    private SQLStatementQueue memberQueue;
+    private SQLStatementQueue updateNodesQueue;
+    private SQLStatementQueue updateWaysQueue;
     private String currentElementID;
 
+    private static final int LOG_STEPS = 100000;
+    private static final long RECONNECTIONTIME = 1000*60*30; // 30 minutes in milliseconds
+//    private static final long RECONNECTIONTIME = 1000; // 30 minutes in milliseconds
+    private long lastReconnect;
+    private int era = 0;
+    private final long startTime;
+    
     public SQL_OSMImporter(Parameter parameter, OSMClassification osmClassification) throws Exception {
         this.parameter = parameter;
         this.osmClassification = osmClassification;
@@ -82,6 +89,32 @@ public class SQL_OSMImporter extends DefaultHandler {
         this.updateWaysQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
 
         InterDB.createTables(insertQueue, schema);
+        
+        this.startTime = System.currentTimeMillis();
+        this.lastReconnect = this.startTime;
+        
+    }
+    
+    private void resetDBConnection() throws SQLException {
+        // wait for open statements
+        this.insertQueue.join();
+        this.memberQueue.join();
+        this.updateNodesQueue.join();
+        this.updateWaysQueue.join();
+
+        // close db connection
+        if(this.targetConnection != null) {
+            this.targetConnection.close();
+        }
+        
+        // reset connection
+        this.targetConnection = DB.createConnection(parameter);
+        
+        // re-establish queues
+        this.insertQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
+        this.memberQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
+        this.updateNodesQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
+        this.updateWaysQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
     }
     
     /*
@@ -633,10 +666,6 @@ public class SQL_OSMImporter extends DefaultHandler {
         }
     }
     
-    private static final int LOG_STEPS = 100000;
-    
-    private int era = 0;
-    private long startTime = System.currentTimeMillis();
     private void flush() {
         try {
             this.all++;
@@ -650,9 +679,17 @@ public class SQL_OSMImporter extends DefaultHandler {
                     this.era = 0;
                     this.printStatus();
                 } 
-//                else {
-//                    System.out.print("*");
-//                }
+                
+                // re-establish db connection from time to time
+                long now = System.currentTimeMillis();
+                if(now - this.lastReconnect > RECONNECTIONTIME) {
+                    System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+                    System.out.println("hung up and re-connect with database");
+                    this.resetDBConnection();
+                    this.printStatus();
+                    this.lastReconnect = now;
+                    System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+                }
             }
         } catch (SQLException sqlE) {
             System.err.println("while saving element: " + sqlE.getMessage() + "\n" + this.insertQueue.toString());

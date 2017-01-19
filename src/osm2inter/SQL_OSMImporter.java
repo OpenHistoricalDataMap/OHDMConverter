@@ -679,17 +679,18 @@ public class SQL_OSMImporter extends DefaultHandler {
                     this.era = 0;
                     this.printStatus();
                 
-                    // re-establish db connection from time to time
-                    long now = System.currentTimeMillis();
-                    if(now - this.lastReconnect > RECONNECTIONTIME) {
-                        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-                        System.out.println("hung up and re-connect with database");
-                        this.resetDBConnection();
-                        this.printStatus();
-                        this.lastReconnect = now;
-                        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-                    }
                 } 
+                
+                // re-establish db connection from time to time
+                long now = System.currentTimeMillis();
+                if(now - this.lastReconnect > RECONNECTIONTIME) {
+                    System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+                    System.out.println("hung up and re-connect with database");
+                    this.resetDBConnection();
+                    this.printStatus();
+                    this.lastReconnect = now;
+                    System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+                }
             }
         } catch (SQLException sqlE) {
             System.err.println("while saving element: " + sqlE.getMessage() + "\n" + this.insertQueue.toString());

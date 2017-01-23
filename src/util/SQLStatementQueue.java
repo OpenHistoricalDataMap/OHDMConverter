@@ -2,20 +2,25 @@ package util;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author thsc
  */
 public class SQLStatementQueue {
-    private final Connection connection;
+    private List<Connection> connections = new ArrayList<>();
+    private List<Boolean> freeConnection = new ArrayList<>();
+    
     private final int maxLength;
     
     public static final int DEFAULT_MAX_SQL_STATEMENTS = 100;
@@ -28,8 +33,13 @@ public class SQLStatementQueue {
     private File recordFile = null;
     private int maxThreads = 1;
     
+    private PrintStream outStream = null;
+    private PrintStream logStream = null;
+    private PrintStream errStream = null;
+    
     public SQLStatementQueue(Connection connection, int maxStatements) {
-        this.connection = connection;
+        this.connections.add(connection);
+        this.freeConnection.add(Boolean.TRUE);
         this.maxLength = maxStatements;
     }
     
@@ -41,15 +51,99 @@ public class SQLStatementQueue {
         this(connection, (File)null);
     }
     
+    /**
+     * @deprecated 
+     * @param connection
+     * @param recordFile 
+     */
     public SQLStatementQueue(Connection connection, File recordFile) {
         this(connection, recordFile, MAX_EXEC_THREADS);
     }
-    
+
+    /**
+     * @deprecated 
+     * @param connection
+     * @param recordFile
+     * @param maxThreads 
+     */
     public SQLStatementQueue(Connection connection, File recordFile, int maxThreads) {
         this(connection, DEFAULT_MAX_SQL_STATEMENTS);
         
         this.recordFile = recordFile;
         this.maxThreads = maxThreads;
+    }
+    
+    public SQLStatementQueue(Parameter parameter, int maxThreads) throws SQLException {
+        this(null);
+        
+        this.outStream = parameter.getOutStream();
+        this.errStream = parameter.getErrStream();
+        this.logStream = parameter.getLogStream();
+        
+        this.connections.clear();
+        this.freeConnection.clear();
+        this.maxThreads = maxThreads;
+        
+        // do we work over a connection or not.. try
+        try {
+            // try to create first
+            this.connections.add(DB.createConnection(parameter));
+            
+            // no exception thrown... set up connections
+            this.freeConnection.add(Boolean.TRUE);
+            
+            this.outStream.println(this.hashCode() + ": create " + maxThreads + " connections");
+            // create connections more connection
+            for(int i=1; i < maxThreads; i++) {
+                this.connections.add(DB.createConnection(parameter));
+                this.freeConnection.add(Boolean.TRUE);
+            }
+        }
+        catch(SQLException e) {
+            Util.printExceptionMessage(errStream, e, this, "could not create db connection.. probably we work with psql", true);
+            this.connections = null;
+            this.freeConnection = null;
+        }
+
+    }
+    
+    public void close() throws SQLException {
+        this.join();
+        if(this.connections != null) {
+            for(Connection conn : this.connections) {
+                conn.close();
+            }
+            this.connections.clear();
+        }
+    }
+    
+    private Connection getFreeConnection() {
+        if(this.connections != null) {
+            for(int i = 0; i < this.freeConnection.size(); i++) {
+                if(this.freeConnection.get(i)) {
+                    this.freeConnection.set(i, Boolean.FALSE);
+    //                System.out.println(this.hashCode() + ": connection taken #"+ this.connections.get(i).hashCode());
+                    return this.connections.get(i);
+                }
+            }
+
+            // wait for all threads to end
+            this.join();
+            return this.getFreeConnection();
+        }
+        
+        return null;
+    }
+    
+    private void setFreeConnection(Connection conn) {
+        if(this.connections != null) {
+            for(int i = 0; i < this.connections.size(); i++) {
+                if(this.connections.get(i) == conn) {
+                    this.freeConnection.set(i, Boolean.TRUE);
+    //                System.out.println(this.hashCode() + ": connection free " + conn.hashCode());
+                }
+            }
+        }
     }
     
     /**
@@ -127,7 +221,8 @@ public class SQLStatementQueue {
             while(!found) {
                 if(this.execThreads.size() < this.maxThreads) {
                     // create new thread
-                    SQLExecute se = new SQLExecute(this.connection, this.sqlQueue.toString(), 
+                    Connection conn = this.getFreeConnection();
+                    SQLExecute se = new SQLExecute(conn, this.sqlQueue.toString(), 
                             recordEntry, this);
                     this.execThreads.add(se);
                     se.start();
@@ -192,9 +287,10 @@ public class SQLStatementQueue {
         if(this.sqlQueue == null || this.sqlQueue.length() < 1) {
             return;
         }
-        
+
+        Connection conn = this.getFreeConnection();
         try {
-            SQLExecute.doExec(this.connection, this.sqlQueue.toString());
+            SQLExecute.doExec(conn, this.sqlQueue.toString());
         }
         catch(SQLException e) {
             throw e;
@@ -202,6 +298,7 @@ public class SQLStatementQueue {
         finally {
             // in any case
             this.resetStatement();
+            this.setFreeConnection(conn);
         }
     }
     
@@ -214,7 +311,8 @@ public class SQLStatementQueue {
     }
     
     public ResultSet executeWithResult() throws SQLException {
-        PreparedStatement stmt = this.connection.prepareStatement(this.sqlQueue.toString());
+        Connection conn = this.getFreeConnection();
+        PreparedStatement stmt = conn.prepareStatement(this.sqlQueue.toString());
         
         try {
             ResultSet result = stmt.executeQuery();
@@ -227,6 +325,7 @@ public class SQLStatementQueue {
         finally {
             this.resetStatement();
             stmt.closeOnCompletion();
+            this.setFreeConnection(conn);
         }
     }
     
@@ -250,6 +349,8 @@ public class SQLStatementQueue {
 
     synchronized void done(SQLExecute execThread) {
         this.execThreads.remove(execThread);
+        Connection conn = execThread.getConnection();
+        this.setFreeConnection(conn);
 //        System.out.println("sqlQueue: exec thread removed");
     }
     

@@ -1,5 +1,7 @@
 package util;
 
+import java.io.PrintStream;
+
 /**
  *
  * @author thsc
@@ -104,25 +106,29 @@ public class Util {
     }
     
     public static void printExceptionMessage(Throwable e, SQLStatementQueue sql, String additionalMessage, boolean goahead) {
-        System.err.println("****************************************************************************************");
+        Util.printExceptionMessage(System.err, e, sql, additionalMessage, goahead);
+    }
+    
+    public static void printExceptionMessage(PrintStream err, Throwable e, SQLStatementQueue sql, String additionalMessage, boolean goahead) {
+        err.println("****************************************************************************************");
 
         if(additionalMessage != null ) System.err.println(additionalMessage);
-        if(e != null ) System.err.println(e.getMessage());
-        if(sql != null ) System.err.println(sql.toString());
+        if(e != null ) err.println(e.getMessage());
+        if(sql != null ) err.println(sql.toString());
         if(e != null ) e.printStackTrace(System.err);
         
         if(!goahead) {
-            System.err.println("FATAL.. stop executing");
+            err.println("FATAL.. stop executing");
             System.exit(1);
         } else {
-            System.err.println("non-fatal.. go ahead");
+            err.println("non-fatal.. go ahead");
         }
         
-        System.err.println("****************************************************************************************");
+        err.println("****************************************************************************************");
     }
     
     public static void printExceptionMessage(Throwable e, SQLStatementQueue sql, String additionalMessage) {
-        Util.printExceptionMessage(e, sql, additionalMessage, true);
+        Util.printExceptionMessage(System.err, e, sql, additionalMessage, true);
     }
     
     static String getThreeDigitString(int value) {

@@ -76,4 +76,8 @@ class SQLExecute extends Thread {
             this.done = true; // in any case.. we are ready here
         }
     }
+
+    Connection getConnection() {
+        return this.connection;
+    }
 }

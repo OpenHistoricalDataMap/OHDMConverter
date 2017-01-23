@@ -62,8 +62,6 @@ public class SQL_OSMImporter extends DefaultHandler {
         this.parameter = parameter;
         this.osmClassification = osmClassification;
     
-    try {
-        this.targetConnection = DB.createConnection(parameter);
         this.schema = parameter.getSchema();
         
         this.recordFile = new File(this.parameter.getRecordFileName());
@@ -77,16 +75,17 @@ public class SQL_OSMImporter extends DefaultHandler {
             this.maxThreads = 1;
         }
       
-        } catch (SQLException e) {
-        }
-
-        if (this.targetConnection == null) {
-            System.err.println("cannot connect to database: reason unknown");
-        }
+        /*
         this.insertQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
         this.memberQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
         this.updateNodesQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
         this.updateWaysQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
+        */
+        
+        this.insertQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
+        this.memberQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
+        this.updateNodesQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
+        this.updateWaysQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
 
         InterDB.createTables(insertQueue, schema);
         
@@ -95,27 +94,27 @@ public class SQL_OSMImporter extends DefaultHandler {
         
     }
     
-    private void resetDBConnection() throws SQLException {
-        // wait for open statements
-        this.insertQueue.join();
-        this.memberQueue.join();
-        this.updateNodesQueue.join();
-        this.updateWaysQueue.join();
-
-        // close db connection
-        if(this.targetConnection != null) {
-            this.targetConnection.close();
-        }
-        
-        // reset connection
-        this.targetConnection = DB.createConnection(parameter);
-        
-        // re-establish queues
-        this.insertQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
-        this.memberQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
-        this.updateNodesQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
-        this.updateWaysQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
-    }
+//    private void resetDBConnection() throws SQLException {
+//        // wait for open statements
+//        this.insertQueue.join();
+//        this.memberQueue.join();
+//        this.updateNodesQueue.join();
+//        this.updateWaysQueue.join();
+//
+//        // close db connection
+//        if(this.targetConnection != null) {
+//            this.targetConnection.close();
+//        }
+//        
+//        // reset connection
+//        this.targetConnection = DB.createConnection(parameter);
+//        
+//        // re-establish queues
+//        this.insertQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
+//        this.memberQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
+//        this.updateNodesQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
+//        this.updateWaysQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
+//    }
     
     /*
     there are following different sql statements:
@@ -511,14 +510,15 @@ public class SQL_OSMImporter extends DefaultHandler {
         System.out.print("\nRelation import ended.. wait for import threads to end..\n");
         this.printStatus();
         System.out.println("----------------------------------------------------------------");
-        insertQueue.join();
-        memberQueue.join();
-        updateNodesQueue.join();
-        updateWaysQueue.join();
-        this.printStatus();
-        System.out.println("create indexes on relation tables");
 
         try {
+            insertQueue.close();
+            memberQueue.close();
+            updateNodesQueue.close();
+            
+            this.printStatus();
+            System.out.println("create indexes on relation tables");
+        
             this.updateWaysQueue.append("CREATE INDEX relation_osm_id ON ");
             this.updateWaysQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONTABLE));
             this.updateWaysQueue.append(" (osm_id);");
@@ -558,7 +558,7 @@ public class SQL_OSMImporter extends DefaultHandler {
             System.out.flush();
             this.updateWaysQueue.forceExecute();
             
-            this.updateWaysQueue.join();
+            this.updateWaysQueue.close();
             System.out.println("index creation successfully");
             System.out.println("----------------------------------------------------------------");
             System.out.println("OSM import ended");
@@ -682,15 +682,15 @@ public class SQL_OSMImporter extends DefaultHandler {
                 } 
                 
                 // re-establish db connection from time to time
-                long now = System.currentTimeMillis();
-                if(now - this.lastReconnect > RECONNECTIONTIME) {
-                    System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-                    System.out.println("hung up and re-connect with database");
-                    this.resetDBConnection();
-                    this.printStatus();
-                    this.lastReconnect = now;
-                    System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-                }
+//                long now = System.currentTimeMillis();
+//                if(now - this.lastReconnect > RECONNECTIONTIME) {
+//                    System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+//                    System.out.println("hung up and re-connect with database");
+//                    this.resetDBConnection();
+//                    this.printStatus();
+//                    this.lastReconnect = now;
+//                    System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+//                }
             }
         } catch (SQLException sqlE) {
             System.err.println("while saving element: " + sqlE.getMessage() + "\n" + this.insertQueue.toString());

@@ -1,13 +1,9 @@
 package osm2inter;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.xml.parsers.ParserConfigurationException;
+import java.io.PrintStream;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import org.xml.sax.SAXException;
 import osm.OSMClassification;
 import util.Parameter;
 import util.Util;
@@ -21,6 +17,7 @@ public class OSM2Inter {
     private static final String INTER_DB_SETTINGS_FILENAME = "db_inter.txt";
 
     public static void main(String[] args) {
+        Parameter dbConnectionSettings = null;
         try {
             SAXParserFactory spf = SAXParserFactory.newInstance();
             SAXParser newSAXParser = spf.newSAXParser();
@@ -37,13 +34,22 @@ public class OSM2Inter {
             parameterFile = args[1];
         }
 
-        Parameter dbConnectionSettings = new Parameter(parameterFile);
+        dbConnectionSettings = new Parameter(parameterFile);
         OSMClassification osmClassification = OSMClassification.getOSMClassification();
 
         newSAXParser.parse(osmFile, new SQL_OSMImporter(dbConnectionSettings, osmClassification));
 
         } catch (Throwable t) {
-            Util.printExceptionMessage(t, null, "in main OSM2Inter", false);
+            PrintStream err = System.err;
+            // maybe another stream was defined and could be opened
+            try {
+                err = dbConnectionSettings.getErrStream();
+            }
+            catch(Throwable tt) {
+                // ignore that..
+            }
+            
+            Util.printExceptionMessage(err, t, null, "in main OSM2Inter", false);
         }
     }
 }

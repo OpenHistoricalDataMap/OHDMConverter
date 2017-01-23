@@ -203,6 +203,10 @@ public class SQLStatementQueue {
     }
     
     private Thread t = null;
+    
+    private boolean useJDBC() {
+        return this.connections != null;
+    }
             
     public void forceExecute(boolean parallel, String recordEntry) 
             throws SQLException, IOException {
@@ -211,41 +215,49 @@ public class SQLStatementQueue {
             return;
         }
         
-        if(!parallel) {
-            this.forceExecute();
-            // that point is reached if no sql exception has been thrown. write log
-            this.writeLog(recordEntry);
-        } else {
-            // find thread
-            boolean found = false;
-            while(!found) {
-                if(this.execThreads.size() < this.maxThreads) {
-                    // create new thread
-                    Connection conn = this.getFreeConnection();
-                    SQLExecute se = new SQLExecute(conn, this.sqlQueue.toString(), 
-                            recordEntry, this);
-                    this.execThreads.add(se);
-                    se.start();
-                    found = true;
-                } else {
-                    try {
-                        // no more thread allowed.. make an educated guess and wait for
-                        // first one to end
-                        Thread jThread = this.execThreads.get(0);
-//                        System.out.println("sqlQueue: no sql thread found.. wait for first one to die");
-                        if(jThread != null) {
-                            jThread.join();
+        if(!this.useJDBC()) {
+            // print it to outputstream
+            this.outStream.print(this.sqlQueue.toString());
+            this.resetStatement();
+        }
+        // using JDBC
+        else {
+            if(!parallel) {
+                this.forceExecute();
+                // that point is reached if no sql exception has been thrown. write log
+                this.writeLog(recordEntry);
+            } else {
+                // find thread
+                boolean found = false;
+                while(!found) {
+                    if(this.execThreads.size() < this.maxThreads) {
+                        // create new thread
+                        Connection conn = this.getFreeConnection();
+                        SQLExecute se = new SQLExecute(conn, this.sqlQueue.toString(), 
+                                recordEntry, this);
+                        this.execThreads.add(se);
+                        se.start();
+                        found = true;
+                    } else {
+                        try {
+                            // no more thread allowed.. make an educated guess and wait for
+                            // first one to end
+                            Thread jThread = this.execThreads.get(0);
+    //                        System.out.println("sqlQueue: no sql thread found.. wait for first one to die");
+                            if(jThread != null) {
+                                jThread.join();
+                            }
+    //                        System.out.println("sqlQueue: first sql thread died");
+                        } catch (InterruptedException ex) {
+                            // ignore and go ahead
                         }
-//                        System.out.println("sqlQueue: first sql thread died");
-                    } catch (InterruptedException ex) {
-                        // ignore and go ahead
-                    }
-                    catch(IndexOutOfBoundsException e) {
-                        // was to slowly .. list already empty.. go ahead
+                        catch(IndexOutOfBoundsException e) {
+                            // was to slowly .. list already empty.. go ahead
+                        }
                     }
                 }
+                this.resetStatement();
             }
-            this.resetStatement();
         }
     }
     
@@ -254,6 +266,8 @@ public class SQLStatementQueue {
      * 
      */
     public void join() {
+        if(!this.useJDBC()) return;
+        
         boolean done = false;
         while(!done) {
             if(this.execThreads.isEmpty()) return;
@@ -287,18 +301,24 @@ public class SQLStatementQueue {
         if(this.sqlQueue == null || this.sqlQueue.length() < 1) {
             return;
         }
-
-        Connection conn = this.getFreeConnection();
-        try {
-            SQLExecute.doExec(conn, this.sqlQueue.toString());
-        }
-        catch(SQLException e) {
-            throw e;
-        }
-        finally {
-            // in any case
+        
+        if(!this.useJDBC()) {
+            // print it to outputstream
+            this.outStream.print(this.sqlQueue.toString());
             this.resetStatement();
-            this.setFreeConnection(conn);
+        } else { // JDBC
+            Connection conn = this.getFreeConnection();
+            try {
+                SQLExecute.doExec(conn, this.sqlQueue.toString());
+            }
+            catch(SQLException e) {
+                throw e;
+            }
+            finally {
+                // in any case
+                this.resetStatement();
+                this.setFreeConnection(conn);
+            }
         }
     }
     

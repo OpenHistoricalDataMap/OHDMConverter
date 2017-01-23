@@ -73,38 +73,54 @@ public class SQLStatementQueue {
         this.maxThreads = maxThreads;
     }
     
-    public SQLStatementQueue(Parameter parameter, int maxThreads) throws SQLException {
+    public SQLStatementQueue(Parameter parameter, int maxThreads) throws SQLException, FileNotFoundException {
+        this(parameter, maxThreads, null, null, true);
+    }
+    
+    public SQLStatementQueue(Parameter parameter, int maxThreads, PrintStream outStream, String name) throws SQLException, FileNotFoundException {
+        this(parameter, maxThreads, outStream, name, false);
+    }
+    
+    public SQLStatementQueue(Parameter parameter, int maxThreads, PrintStream outStream, String name, boolean forceJDBC) throws SQLException, FileNotFoundException {
         this(null);
         
-        this.outStream = parameter.getOutStream();
-        this.errStream = parameter.getErrStream();
-        this.logStream = parameter.getLogStream();
+        if(outStream != null) {
+            this.outStream = outStream;
+        } else {
+            this.outStream = parameter.getOutStream(name);
+        }
+        this.errStream = parameter.getErrStream(name);
+        this.logStream = parameter.getLogStream(name);
         
         this.connections.clear();
         this.freeConnection.clear();
         this.maxThreads = maxThreads;
         
-        // do we work over a connection or not.. try
-        try {
-            // try to create first
-            this.connections.add(DB.createConnection(parameter));
-            
-            // no exception thrown... set up connections
-            this.freeConnection.add(Boolean.TRUE);
-            
-            this.outStream.println(this.hashCode() + ": create " + maxThreads + " connections");
-            // create connections more connection
-            for(int i=1; i < maxThreads; i++) {
+        if(parameter.useJDBC() || forceJDBC) {
+            // set up connections
+            try {
+                // try to create first
                 this.connections.add(DB.createConnection(parameter));
+
+                // no exception thrown... set up connections
                 this.freeConnection.add(Boolean.TRUE);
+
+                this.logStream.println(this.hashCode() + ": create " + maxThreads + " connections");
+                // create connections more connection
+                for(int i=1; i < maxThreads; i++) {
+                    this.connections.add(DB.createConnection(parameter));
+                    this.freeConnection.add(Boolean.TRUE);
+                }
             }
-        }
-        catch(SQLException e) {
-            Util.printExceptionMessage(errStream, e, this, "could not create db connection.. probably we work with psql", true);
+            catch(SQLException e) {
+                Util.printExceptionMessage(errStream, e, this, "could not create db connection.. probably we work with psql", true);
+                this.connections = null;
+                this.freeConnection = null;
+            }
+        } else {
             this.connections = null;
             this.freeConnection = null;
         }
-
     }
     
     public void close() throws SQLException {
@@ -159,11 +175,11 @@ public class SQLStatementQueue {
     }
     
     public void append(int a) {
-        this.sqlQueue.append(Integer.toString(a));
+        this.append(Integer.toString(a));
     }
     
     public void append(long a) {
-        this.sqlQueue.append(Long.toString(a));
+        this.append(Long.toString(a));
     }
     
     public void exec(String sqlStatement) throws SQLException {
@@ -207,6 +223,12 @@ public class SQLStatementQueue {
     private boolean useJDBC() {
         return this.connections != null;
     }
+    
+    private void doNonJDBCExec() {
+        // print it to outputstream
+        this.outStream.println(this.sqlQueue.toString());
+        this.resetStatement();
+    }
             
     public void forceExecute(boolean parallel, String recordEntry) 
             throws SQLException, IOException {
@@ -216,9 +238,7 @@ public class SQLStatementQueue {
         }
         
         if(!this.useJDBC()) {
-            // print it to outputstream
-            this.outStream.print(this.sqlQueue.toString());
-            this.resetStatement();
+            this.doNonJDBCExec();
         }
         // using JDBC
         else {
@@ -303,9 +323,7 @@ public class SQLStatementQueue {
         }
         
         if(!this.useJDBC()) {
-            // print it to outputstream
-            this.outStream.print(this.sqlQueue.toString());
-            this.resetStatement();
+            this.doNonJDBCExec();
         } else { // JDBC
             Connection conn = this.getFreeConnection();
             try {

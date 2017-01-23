@@ -38,6 +38,7 @@ public class OSM2Inter {
         OSMClassification osmClassification = OSMClassification.getOSMClassification();
 
         newSAXParser.parse(osmFile, new SQL_OSMImporter(dbConnectionSettings, osmClassification));
+//        newSAXParser.parse(osmFile, new Dump_OSMImporter(dbConnectionSettings, osmClassification));
 
         } catch (Throwable t) {
             PrintStream err = System.err;

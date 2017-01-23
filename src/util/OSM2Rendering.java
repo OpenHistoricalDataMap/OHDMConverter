@@ -80,11 +80,11 @@ public class OSM2Rendering {
         }
         
         // debug
-        System.out.println("osmFile: " + osmFile);
-        System.out.println("importInterDBConfig: " + importInterDBConfig);
-        System.out.println("updateInterDBConfig: " + updateInterDBConfig);
-        System.out.println("ohdmDBConfig: " + ohdmDBConfig);
-        System.out.println("renderingDBConfig: " + renderingDBConfig);
+        System.err.println("osmFile: " + osmFile);
+        System.err.println("importInterDBConfig: " + importInterDBConfig);
+        System.err.println("updateInterDBConfig: " + updateInterDBConfig);
+        System.err.println("ohdmDBConfig: " + ohdmDBConfig);
+        System.err.println("renderingDBConfig: " + renderingDBConfig);
         
         OSM2Rendering.printMessage("start processes:");
         if(importInterDBConfig != null && osmFile != null) {
@@ -125,11 +125,11 @@ public class OSM2Rendering {
     }
 
     private static void printUsageAndExit(String message) {
-        OSM2Rendering.printUsageAndExit(message, System.out);
+        OSM2Rendering.printUsageAndExit(message, System.err);
     }
     
     private static void printMessage(String message) {
-        OSM2Rendering.printMessage(message, System.out);
+        OSM2Rendering.printMessage(message, System.err);
     }
     
     private static void printMessage(String message, PrintStream out) {

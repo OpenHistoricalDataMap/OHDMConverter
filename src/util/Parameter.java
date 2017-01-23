@@ -8,7 +8,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.sql.SQLException;
+import java.io.UnsupportedEncodingException;
 import java.util.StringTokenizer;
 
 /**
@@ -30,9 +30,9 @@ public class Parameter {
     private String logFile;
     private String errFile;
     
-    private final PrintStream outStream;
-    private final PrintStream logStream;
-    private final PrintStream errStream;
+    private PrintStream outStream;
+    private PrintStream logStream;
+    private PrintStream errStream;
     
     private static final String STDOUT = "stdout";
     private static final String STDERR = "stderr";
@@ -82,10 +82,6 @@ public class Parameter {
             // next line
             inLine = br.readLine();
         }
-        
-        this.outStream = this.getStream(this.outFile);
-        this.logStream = this.getStream(this.logFile);
-        this.errStream = this.getStream(this.errFile);
     }
     
     public String getServerName() { return this.servername ;}
@@ -98,14 +94,52 @@ public class Parameter {
     public String getRecordFileName() { return this.recordFileName; }
     public String getReadStepLen() { return this.readStepLen; }
     
-    public PrintStream getOutStream() { return this.outStream; }
-    public PrintStream getLogStream() { return this.logStream; }
-    public PrintStream getErrStream() { return this.errStream; }
-    
     public String getPath() { return this.getdbName() ;}
     public boolean useJDBC() { return this.useJDBC ;}
     
-    private PrintStream getStream(String outFile) throws FileNotFoundException {
+    
+    public PrintStream getOutStream() throws FileNotFoundException { 
+        if(this.outStream == null) {
+            this.outStream = this.getOutStream(null);
+        }
+        
+        return this.outStream;
+    }
+    
+    public PrintStream getOutStream(String name) throws FileNotFoundException {
+        return this.getStream(this.outFile, name);
+    }
+    
+    public PrintStream getLogStream() throws FileNotFoundException { 
+        if(this.logStream == null) {
+            this.logStream = this.getOutStream(null);
+        }
+        
+        return this.logStream;
+    }
+    
+    public PrintStream getLogStream(String name) throws FileNotFoundException {
+        return this.getStream(this.logFile, name);
+    }
+    
+    public PrintStream getErrStream() throws FileNotFoundException { 
+        if(this.errStream == null) {
+            this.errStream = this.getOutStream(null);
+        }
+        
+        return this.errStream;
+    }
+    
+    public PrintStream getErrStream(String name) throws FileNotFoundException {
+        return this.getStream(this.errFile, name);
+    }
+    
+    private PrintStream getStream(String outFile, String name) throws FileNotFoundException {
+        
+        if(outFile == null || outFile.length() == 0) {
+            throw new FileNotFoundException("empty filename");
+        }
+        
         PrintStream stream = null;
         
         // yes we are
@@ -117,7 +151,16 @@ public class Parameter {
         }
         else {
             // open file and create PrintStream
-            stream = new PrintStream(new FileOutputStream(outFile));
+            if(name != null) {
+                outFile = outFile + "_" + name;
+            }
+            try {
+                stream = new PrintStream(new FileOutputStream(outFile), true, "UTF-8");
+            }
+            catch(UnsupportedEncodingException e) {
+                // utf-8 should be well-known.. anyway: but in case: hide it as file not found..
+                throw new FileNotFoundException("weired: that system cannot handle UTF-8.. fatal");
+            }
         }
         
         return stream;

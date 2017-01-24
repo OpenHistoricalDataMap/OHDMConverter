@@ -3,6 +3,7 @@ package osm2inter;
 import java.sql.SQLException;
 import util.DB;
 import util.SQLStatementQueue;
+import util.Util;
 
 /**
  *
@@ -128,8 +129,7 @@ public class InterDB {
 //            System.out.println("intermediate database is ready for import");
       
         } catch (SQLException e) {
-//            System.err.println("error while setting up tables: " + e.getLocalizedMessage());
-            throw e;
+            Util.printExceptionMessage(e, sql, "when creating database", false);
         }
     }
 }

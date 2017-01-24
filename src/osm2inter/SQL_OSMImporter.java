@@ -283,9 +283,9 @@ public class SQL_OSMImporter extends DefaultHandler {
     private int currentClassID = -1;
     // just a set of new attributes.. add serialized to sAttrib builder
     private void addAttributesFromTag(Attributes attributes) {
-        if(this.currentElementID.equalsIgnoreCase("28237510")) {
-            int i = 42;
-        }
+//        if(this.currentElementID.equalsIgnoreCase("28237510")) {
+//            int i = 42;
+//        }
         
         String key;
         

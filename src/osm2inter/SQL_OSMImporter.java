@@ -161,7 +161,7 @@ public class SQL_OSMImporter extends DefaultHandler {
             case STATUS_NODE: 
                 
                 this.insertQueue.append(DB.getFullTableName(schema, InterDB.NODETABLE));
-                this.insertQueue.append("(valid, longitude, latitude, osm_id, classcode, serializedtags) VALUES (true, ");
+                this.insertQueue.append("(valid, longitude, latitude, osm_id, tstamp, classcode, serializedtags) VALUES (true, ");
                 this.insertQueue.append(attributes.getValue("lon"));
                 this.insertQueue.append(", ");
                 this.insertQueue.append(attributes.getValue("lat"));
@@ -195,7 +195,7 @@ public class SQL_OSMImporter extends DefaultHandler {
                     }
                 }
                 this.insertQueue.append(DB.getFullTableName(schema, InterDB.WAYTABLE));
-                this.insertQueue.append("(valid, osm_id, classcode, serializedtags, node_ids) VALUES (true, ");
+                this.insertQueue.append("(valid, osm_id, tstamp, classcode, serializedtags, node_ids) VALUES (true, ");
                 
                 this.memberQueue.append("INSERT INTO ");
                 this.memberQueue.append(DB.getFullTableName(schema, InterDB.WAYMEMBER));
@@ -266,14 +266,16 @@ public class SQL_OSMImporter extends DefaultHandler {
                     this.relationProcessed = true;
                 }
                 this.insertQueue.append(DB.getFullTableName(schema, InterDB.RELATIONTABLE));
-                this.insertQueue.append("(valid, osm_id, classcode, serializedtags, member_ids) VALUES (true, ");
+                this.insertQueue.append("(valid, osm_id, tstamp, classcode, serializedtags, member_ids) VALUES (true, ");
 
                 break;
         }
         
         this.currentElementID = attributes.getValue("id");
         this.insertQueue.append(this.currentElementID);
-        this.insertQueue.append(", ");
+        this.insertQueue.append(", '");
+        this.insertQueue.append(attributes.getValue("timestamp"));
+        this.insertQueue.append("', ");
     }
     
     OSMClassification osmClassification = OSMClassification.getOSMClassification();
@@ -673,8 +675,15 @@ public class SQL_OSMImporter extends DefaultHandler {
                 this.all = 0;
                 this.insertQueue.forceExecute(this.currentElementID);
                 this.memberQueue.forceExecute(this.currentElementID);
+                
+                /* no update any longer
                 this.updateNodesQueue.forceExecute(this.currentElementID);
                 this.updateWaysQueue.forceExecute(this.currentElementID);
+                */
+                
+                this.updateNodesQueue.resetStatement();
+                this.updateWaysQueue.resetStatement();
+                
                 if(++this.era >= LOG_STEPS / this.flushSteps) {
                     this.era = 0;
                     this.printStatus();

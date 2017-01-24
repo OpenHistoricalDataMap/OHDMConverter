@@ -368,7 +368,7 @@ public class SQLStatementQueue {
     }
     
     private String debugLastStatement;
-    private void resetStatement() {
+    public void resetStatement() {
         if(this.sqlQueue != null) {
             this.debugLastStatement = this.sqlQueue.toString();
             this.sqlQueue = null;

@@ -7,6 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
+import util.DB;
 import util.Parameter;
 
 /**
@@ -26,37 +27,8 @@ public abstract class Importer {
         Parameter sourceParameter = new Parameter(sourceParameterFile);
         Parameter targetParameter = new Parameter(targetParameterFile);
         
-        this.sourceConnection = this.createConnection(sourceParameter);
-        this.targetConnection = this.createConnection(targetParameter);
-    }
-    
-    public final static Connection createConnection(Parameter parameter) throws SQLException {
-        
-        String user, pwd, servername, path, port;
-        
-        user = parameter.getUserName();
-        if(user == null) return null;
-        
-        pwd = parameter.getPWD();
-        if(pwd == null) return null;
-        
-        servername = parameter.getServerName();
-        if(servername == null) return null;
-        
-        path = parameter.getdbName();
-        if(path == null) return null;
-        
-        port = parameter.getPortNumber();
-        if(port == null) return null;
-        
-        Properties connectionProperties = new Properties();
-        connectionProperties.put("user", user);
-        connectionProperties.put("password", pwd);
-        
-        return DriverManager.getConnection(
-                "jdbc:postgresql://" + servername
-                + ":" + port + "/" + path, connectionProperties);
-        
+        this.sourceConnection = DB.createConnection(sourceParameter);
+        this.targetConnection = DB.createConnection(targetParameter);
     }
     
     protected ResultSet executeQueryOnTarget(String sql) throws SQLException {
@@ -120,11 +92,11 @@ public abstract class Importer {
                     + ":" + targetPortNumber + "/" + targetPath, targetConnProps);
     }
     
-    public abstract boolean importWay(OHDMWay way) throws SQLException;
+    public abstract boolean importNode(OSMNode node, boolean importUnnamedEntities) throws SQLException;
 
-    public abstract boolean importRelation(OHDMRelation relation) throws SQLException;
+    public abstract boolean importWay(OSMWay way, boolean importUnnamedEntities) throws SQLException;
 
-    public abstract boolean importNode(OHDMNode node) throws SQLException;
+    public abstract boolean importRelation(OSMRelation relation, boolean importUnnamedEntities) throws SQLException;
 
-    public abstract boolean importPostProcessing(OHDMElement element) throws SQLException;
+    public abstract boolean importPostProcessing(OSMElement element, boolean importUnnamedEntities) throws SQLException;
 }

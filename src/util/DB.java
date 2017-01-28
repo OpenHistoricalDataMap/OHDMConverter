@@ -3,10 +3,8 @@ package util;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.Driver;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Enumeration;
 import java.util.Properties;
 
 /**
@@ -138,7 +136,7 @@ public class DB {
 //                    + ":" + parameter.getPortNumber() + "/" + parameter.getdbName(), connProps);
         
             if (parameter.getSchema() != null && !parameter.getSchema().equalsIgnoreCase("")) {
-                StringBuilder sql = new StringBuilder("SET search_path = ");
+                StringBuilder sql = new StringBuilder("SET search_path = public, ");
                 sql.append(parameter.getSchema());
                 PreparedStatement stmt = connection.prepareStatement(sql.toString());
                 stmt.execute();

@@ -1,5 +1,6 @@
 package osm2inter;
 
+import util.InterDB;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;

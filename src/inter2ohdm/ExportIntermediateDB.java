@@ -1,15 +1,16 @@
 package inter2ohdm;
 
+import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import osm2inter.InterDB;
-import static osm2inter.InterDB.NODETABLE;
-import static osm2inter.InterDB.RELATIONMEMBER;
-import static osm2inter.InterDB.RELATIONTABLE;
-import static osm2inter.InterDB.WAYMEMBER;
-import static osm2inter.InterDB.WAYTABLE;
+import util.InterDB;
+import static util.InterDB.NODETABLE;
+import static util.InterDB.RELATIONMEMBER;
+import static util.InterDB.RELATIONTABLE;
+import static util.InterDB.WAYMEMBER;
+import static util.InterDB.WAYTABLE;
 import util.DB;
 import util.SQLStatementQueue;
 import util.Util;
@@ -21,19 +22,19 @@ import util.Util;
 public class ExportIntermediateDB extends IntermediateDB {
     private final Importer importer;
     
-    private int printEra = 0;
-    private final static int PRINT_ERA_LENGTH = 10000;
-    
-    private static final int DEFAULT_STEP_LEN = 1000;
-    private int numberNodes = 0;
-    private int numberWays = 0;
-    private int numberRelations = 0;
     private final String schema;
     
-    private int historicInfos = 0;
-    
+    private int printEra = 0;
+    private final static int PRINT_ERA_LENGTH = 10000;
+    private static final int DEFAULT_STEP_LEN = 1000;
+
+    // for statistics
+    private long number;
+    private long numberNodes = 0;
+    private long numberWays = 0;
+    private long numberRelations = 0;
+    private long historicInfos = 0;
     private final long startTime;
-    private int number;
     
     static final int NODE = 0;
     static final int WAY = 1;
@@ -87,21 +88,23 @@ public class ExportIntermediateDB extends IntermediateDB {
         }
     }
     
-    void processNode(ResultSet qResult, SQLStatementQueue sql) {
-        OHDMNode node = null;
+    void processNode(ResultSet qResult, SQLStatementQueue sql, boolean importUnnamedEntities) {
+        OSMNode node = null;
         try {
             node = this.createOHDMNode(qResult);
             this.currentElement = node;
 
-    //        if(!node.isPart() && node.getName() == null) notPartNumber++;
+            if(node.isConsistent()) {
+                // now process that stuff
+                if(this.importer.importNode(node, importUnnamedEntities)) {
+                    this.numberNodes++;
+                }
 
-            // now process that stuff
-            if(this.importer.importNode(node)) {
-                this.numberNodes++;
-            }
-
-            if(this.importer.importPostProcessing(node)) {
-                this.historicInfos++;
+                if(this.importer.importPostProcessing(node, importUnnamedEntities)) {
+                    this.historicInfos++;
+                }
+            } else {
+                this.printError(System.err, "node not consistent:\n" + node);
             }
         }
         catch(SQLException se) {
@@ -110,8 +113,13 @@ public class ExportIntermediateDB extends IntermediateDB {
         }
     }
     
-    void processWay(ResultSet qResult, SQLStatementQueue sql) {
-        OHDMWay way = null;
+    void printError(PrintStream p, String s) {
+        p.println(s);
+        p.println("-------------------------------------");
+    }
+    
+    void processWay(ResultSet qResult, SQLStatementQueue sql, boolean importUnnamedEntities) {
+        OSMWay way = null;
         try {
             way = this.createOHDMWay(qResult);
             this.currentElement = way;
@@ -120,25 +128,36 @@ public class ExportIntermediateDB extends IntermediateDB {
 
             this.addNodes2OHDMWay(way);
 
-            // process that stuff
-            if(this.importer.importWay(way)) {
-                this.numberWays++;
-            }
+            if(way.isConsistent()) {
+                // process that stuff
+                if(this.importer.importWay(way, importUnnamedEntities)) {
+                    this.numberWays++;
+                }
 
-            if(this.importer.importPostProcessing(way)) {
-                this.historicInfos++;
+                if(this.importer.importPostProcessing(way, importUnnamedEntities)) {
+                    this.historicInfos++;
+                }
+            } else {
+                this.printError(System.err, "way not consistent:\n" + way);
             }
         }
         catch(SQLException se) {
-            System.err.println("way osm_id: " + way.getOSMIDString());
+            System.err.println("way: " + way);
             Util.printExceptionMessage(se, sql, "failure when processing way.. non fatal", true);
         }
     }
     
-    void processRelation(ResultSet qResult, SQLStatementQueue sql) {
-        OHDMRelation relation = null;
+    void processRelation(ResultSet qResult, SQLStatementQueue sql, boolean importUnnamedEntities) {
+        OSMRelation relation = null;
+        
         try {
             relation = this.createOHDMRelation(qResult);
+            
+            String r_id = relation.getOSMIDString();
+            if(r_id.equalsIgnoreCase("4451529")) {
+                int i = 42;
+            }
+
             this.currentElement = relation;
 
             // find all associated nodes and add to that relation
@@ -157,24 +176,24 @@ public class ExportIntermediateDB extends IntermediateDB {
 
                 // extract member objects from their tables
                 BigDecimal id;
-                OHDMElement.GeometryType type = null;
+                OSMElement.GeometryType type = null;
 
                 sql.append("SELECT * FROM ");
 
                 id = qResultRelation.getBigDecimal("node_id");
                 if(id != null) {
                     sql.append(DB.getFullTableName(this.schema, NODETABLE));
-                    type = OHDMElement.GeometryType.POINT;
+                    type = OSMElement.GeometryType.POINT;
                 } else {
                     id = qResultRelation.getBigDecimal("way_id");
                     if(id != null) {
                         sql.append(DB.getFullTableName(this.schema, WAYTABLE));
-                        type = OHDMElement.GeometryType.LINESTRING;
+                        type = OSMElement.GeometryType.LINESTRING;
                     } else {
                         id = qResultRelation.getBigDecimal("member_rel_id");
                         if(id != null) {
                             sql.append(DB.getFullTableName(this.schema, RELATIONTABLE));
-                            type = OHDMElement.GeometryType.RELATION;
+                            type = OSMElement.GeometryType.RELATION;
                         } else {
                             // we have a serious problem here.. or no member
                         }
@@ -192,7 +211,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                 ResultSet memberResult = sql.executeWithResult();
                 if(memberResult.next()) {
                     // this call can fail, see else branch
-                    OHDMElement memberElement = null;
+                    OSMElement memberElement = null;
                     switch(type) {
                         case POINT: 
                             memberElement = this.createOHDMNode(memberResult);
@@ -223,23 +242,20 @@ public class ExportIntermediateDB extends IntermediateDB {
 
                 if(!relationMemberComplete) break;
             }
+            
+            if(relation.isConsistent()) {
+                // process that stuff
+                if(relationMemberComplete && this.importer.importRelation(relation, importUnnamedEntities)) {
+                    this.numberRelations++;
 
-            // process that stuff
-            if(relationMemberComplete && this.importer.importRelation(relation)) {
-                this.numberRelations++;
+                    if(this.importer.importPostProcessing(relation, importUnnamedEntities)) {
+                        this.historicInfos++;
+                    }
 
-                if(this.importer.importPostProcessing(relation)) {
-                    this.historicInfos++;
-                }
-
-            } 
-//            else {
-//                if(!debug_alreadyPrinted) {
-//                    String type = relation.getClassName();
-//                    if(type == null) type ="not set";
-////                            System.out.println("not imported relation: " + relation.getOSMIDString() + " / classname: " + type);
-//                }
-//            }
+                } 
+            } else {
+                this.printError(System.err, "inconsistent relation\n" + relation);
+            }
         }
         catch(SQLException se) {
             System.err.println("relation osm_id: " + relation.getOSMIDString());
@@ -247,19 +263,19 @@ public class ExportIntermediateDB extends IntermediateDB {
         }
     }
     
-    void processNodes(SQLStatementQueue sql) {
-        this.processElements(sql, NODE);
+    void processNodes(SQLStatementQueue sql, boolean importUnnamedEntities) {
+        this.processElements(sql, NODE, importUnnamedEntities);
     }
     
-    void processWays(SQLStatementQueue sql) {
-        this.processElements(sql, WAY);
+    void processWays(SQLStatementQueue sql, boolean importUnnamedEntities) {
+        this.processElements(sql, WAY, importUnnamedEntities);
     }
     
-    void processRelations(SQLStatementQueue sql) {
-        this.processElements(sql, RELATION);
+    void processRelations(SQLStatementQueue sql, boolean importUnnamedEntities) {
+        this.processElements(sql, RELATION, importUnnamedEntities);
     }
     
-    void processElements(SQLStatementQueue sql, int elementType) {
+    void processElements(SQLStatementQueue sql, int elementType, boolean importUnnamedEntities) {
         String elementTableName = null;
         switch(elementType) {
             case NODE:
@@ -289,13 +305,17 @@ public class ExportIntermediateDB extends IntermediateDB {
                 sql.append(upperID.toString());
                 sql.append(" AND id > "); // excluding lower 
                 sql.append(lowerID.toString());
+                sql.append(" AND classcode != -1 "); // excluding lower 
+                if(importUnnamedEntities) {
+                    sql.append(" AND serializedtags like '%004name%'"); // entities with a name
+                }
                 sql.append(";");
                 ResultSet qResult = sql.executeWithResult();
                 
                 while(qResult.next()) {
                     this.number++;
                     this.printStatistics();
-                    this.processElement(qResult, sql, elementType);
+                    this.processElement(qResult, sql, elementType, importUnnamedEntities);
                 }
                 
                 // next bulk of data
@@ -314,13 +334,13 @@ public class ExportIntermediateDB extends IntermediateDB {
         this.printFinished(elementTableName);
     }
         
-    private void printExceptionMessage(Exception ex, SQLStatementQueue sql, OHDMElement element) {
+    private void printExceptionMessage(Exception ex, SQLStatementQueue sql, OSMElement element) {
         if(element != null) {
             System.err.print("inter2ohdm: exception when processing ");
-            if(element instanceof OHDMNode) {
+            if(element instanceof OSMNode) {
                 System.err.print("node ");
             }
-            else if(element instanceof OHDMWay) {
+            else if(element instanceof OSMWay) {
                 System.err.print("way ");
             }
             else {
@@ -335,7 +355,7 @@ public class ExportIntermediateDB extends IntermediateDB {
     }
     
     @Override
-    OHDMWay addNodes2OHDMWay(OHDMWay way) throws SQLException {
+    OSMWay addNodes2OHDMWay(OSMWay way) throws SQLException {
         // find all associated nodes and add to that way
         /* SQL Query is like this
             select * from nodes_table where osm_id IN 
@@ -343,6 +363,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         */ 
         SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
 
+        // TODO: replace join with enumeration from member id in table ways itself..
         sql.append("select * from ");
         sql.append(DB.getFullTableName(this.schema, NODETABLE));
         sql.append(" where osm_id IN (SELECT node_id FROM ");            
@@ -354,7 +375,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         ResultSet qResultNode = sql.executeWithResult();
 
         while(qResultNode.next()) {
-            OHDMNode node = this.createOHDMNode(qResultNode);
+            OSMNode node = this.createOHDMNode(qResultNode);
             way.addNode(node);
         }
         
@@ -386,17 +407,17 @@ public class ExportIntermediateDB extends IntermediateDB {
         StringBuilder sb = new StringBuilder();
         
         sb.append("checked: ");
-        sb.append(Util.getIntWithDots(this.number));
+        sb.append(Util.getValueWithDots(this.number));
         sb.append(" | imported: ");
-        sb.append(Util.getIntWithDots(this.numberNodes + this.numberWays + this.numberRelations));
+        sb.append(Util.getValueWithDots(this.numberNodes + this.numberWays + this.numberRelations));
         sb.append(" (n:");
-        sb.append(Util.getIntWithDots(this.numberNodes));
+        sb.append(Util.getValueWithDots(this.numberNodes));
         sb.append(", w:");
-        sb.append(Util.getIntWithDots(this.numberWays));
+        sb.append(Util.getValueWithDots(this.numberWays));
         sb.append(", r:");
-        sb.append(Util.getIntWithDots(this.numberRelations));
+        sb.append(Util.getValueWithDots(this.numberRelations));
         sb.append(") | h:");
-        sb.append(Util.getIntWithDots(this.historicInfos));
+        sb.append(Util.getValueWithDots(this.historicInfos));
         sb.append(" | elapsed: ");
         sb.append(Util.getElapsedTime(this.startTime));
         
@@ -410,20 +431,20 @@ public class ExportIntermediateDB extends IntermediateDB {
         }
     }
     
-    OHDMElement currentElement = null;
+    OSMElement currentElement = null;
 
-    void processElement(ResultSet qResult, SQLStatementQueue sql, int elementType) {
+    void processElement(ResultSet qResult, SQLStatementQueue sql, int elementType, boolean importUnnamedEntities) {
         this.currentElement = null;
         try {
             switch(elementType) {
                 case NODE:
-                    this.processNode(qResult, sql);
+                    this.processNode(qResult, sql, importUnnamedEntities);
                     break;
                 case WAY:
-                    this.processWay(qResult, sql);
+                    this.processWay(qResult, sql, importUnnamedEntities);
                     break;
                 case RELATION:
-                    this.processRelation(qResult, sql);
+                    this.processRelation(qResult, sql, importUnnamedEntities);
                     break;
             }
         }

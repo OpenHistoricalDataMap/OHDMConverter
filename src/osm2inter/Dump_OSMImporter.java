@@ -1,5 +1,6 @@
 package osm2inter;
 
+import util.InterDB;
 import java.io.File;
 import java.io.PrintStream;
 import java.sql.Connection;
@@ -21,9 +22,9 @@ public class Dump_OSMImporter extends DefaultHandler {
     private StringBuilder nodeIDs;
     private StringBuilder memberIDs;
     
-    private int nA = 0;
-    private int wA = 0;
-    private int rA = 0;
+    private long nA = 0;
+    private long wA = 0;
+    private long rA = 0;
     
     private int all = 0;
     private int flushSteps = 100;
@@ -703,9 +704,9 @@ public class Dump_OSMImporter extends DefaultHandler {
     }
     
     private void printStatus() {
-        this.logStream.print("nodes: " + Util.getIntWithDots(this.nA));
-        this.logStream.print(" | ways: " + Util.getIntWithDots(this.wA));
-        this.logStream.print(" | relations: " + Util.getIntWithDots(this.rA));
+        this.logStream.print("nodes: " + Util.getValueWithDots(this.nA));
+        this.logStream.print(" | ways: " + Util.getValueWithDots(this.wA));
+        this.logStream.print(" | relations: " + Util.getValueWithDots(this.rA));
 
         this.logStream.print(" | elapsed time:  ");
         this.logStream.println(Util.getElapsedTime(this.startTime));

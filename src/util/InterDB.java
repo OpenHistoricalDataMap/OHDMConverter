@@ -1,4 +1,4 @@
-package osm2inter;
+package util;
 
 import java.sql.SQLException;
 import util.DB;
@@ -25,7 +25,7 @@ public class InterDB {
         DB.drop(sql, targetSchema, WAYTABLE);
     }
     
-    static void createTables(SQLStatementQueue sql, String schema) throws SQLException {
+    public static void createTables(SQLStatementQueue sql, String schema) throws SQLException {
         try {
             InterDB.dropTables(sql, schema);
         } catch (SQLException e) {
@@ -45,17 +45,18 @@ public class InterDB {
             // add table specifics
             sql.append(",");
             sql.append("osm_id bigint,");
-            sql.append("tstamp character varying,");
+            sql.append("tstamp date,");
             sql.append("classcode bigint,");
             sql.append("serializedTags character varying,");
             sql.append("longitude character varying,");
             sql.append("latitude character varying,");
             sql.append("ohdm_geom_id bigint,");
             sql.append("ohdm_object_id bigint,");
-            sql.append("is_part boolean DEFAULT false,");
+//            sql.append("is_part boolean DEFAULT false,");
             sql.append("new boolean DEFAULT false,");
             sql.append("changed boolean DEFAULT false,");
             sql.append("deleted boolean DEFAULT false,");
+            sql.append("has_name boolean DEFAULT false,");
             sql.append("valid boolean);");
             sql.forceExecute();
 
@@ -67,16 +68,17 @@ public class InterDB {
             // add table specifics
             sql.append(",");
             sql.append("osm_id bigint,");
-            sql.append("tstamp character varying,");
+            sql.append("tstamp date,");
             sql.append("classcode bigint,");
             sql.append("serializedTags character varying,");
             sql.append("ohdm_geom_id bigint,");
             sql.append("ohdm_object_id bigint,");
             sql.append("node_ids character varying,");
-            sql.append("is_part boolean DEFAULT false,");
+//            sql.append("is_part boolean DEFAULT false,");
             sql.append("new boolean DEFAULT false,");
             sql.append("changed boolean DEFAULT false,");
             sql.append("deleted boolean DEFAULT false,");
+            sql.append("has_name boolean DEFAULT false,");
             sql.append("valid boolean);");
             sql.forceExecute();
 
@@ -88,7 +90,7 @@ public class InterDB {
             // add table specifics
             sql.append(",");
             sql.append("osm_id bigint,");
-            sql.append("tstamp character varying,");
+            sql.append("tstamp date,");
             sql.append("classcode bigint,");
             sql.append("serializedTags character varying,");
             sql.append("ohdm_geom_id bigint,");
@@ -97,6 +99,7 @@ public class InterDB {
             sql.append("new boolean DEFAULT false,");
             sql.append("changed boolean DEFAULT false,");
             sql.append("deleted boolean DEFAULT false,");
+            sql.append("has_name boolean DEFAULT false,");
             sql.append("valid boolean);");
             sql.forceExecute();
 

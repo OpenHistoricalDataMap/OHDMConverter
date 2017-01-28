@@ -12,6 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import osm.OSMClassification;
 import util.DB;
+import util.OHDM_DB;
 import util.SQLStatementQueue;
 import util.Parameter;
 import util.Util;
@@ -28,8 +29,8 @@ public class Inter2OHDM extends Importer {
     private final IntermediateDB intermediateDB;
     private final SQLStatementQueue sourceQueue;
     private final SQLStatementQueue targetQueue;
-    private String defaultSince = "01-01-1970";
-    private String defaultUntil = "01-01-2017";
+    private String defaultSince = "1970-01-01";
+    private String defaultUntil = "2017-01-01";
     
     public Inter2OHDM(IntermediateDB intermediateDB, 
             Connection sourceConnection, Connection targetConnection, 
@@ -59,8 +60,18 @@ public class Inter2OHDM extends Importer {
     }
 
     @Override
-    public boolean importWay(OHDMWay way) {
-        return (this.importOHDMElement(way) != null);
+    public boolean importNode(OSMNode node, boolean importUnnamedEntities) {
+        if(!this.elementHasIdentity(node) && !importUnnamedEntities) {
+            // nodes without an identity are not imported.
+            return false;
+        }
+
+        return (this.importOSMElement(node, importUnnamedEntities, false) != null);
+    }
+     
+    @Override
+    public boolean importWay(OSMWay way, boolean importUnnamedEntities) {
+        return (this.importOSMElement(way, importUnnamedEntities, false) != null);
     }
 
     /**
@@ -70,28 +81,13 @@ public class Inter2OHDM extends Importer {
      * @throws SQLException 
      */
     @Override
-    public boolean importRelation(OHDMRelation relation) throws SQLException {
+    public boolean importRelation(OSMRelation relation, boolean importUnnamedEntities) throws SQLException {
         // debug stop
-        if(relation.getOSMIDString().equalsIgnoreCase("1368193")) {
+        if(relation.getOSMIDString().equalsIgnoreCase("4451529")) {
             int i = 42;
         }
         
-        String ohdmIDString = null;
-        
-        if(this.elementHasIdentity(relation)) {
-            // save relation with identity.
-            ohdmIDString = this.importOHDMElement(relation);
-            
-        } else {
-            // relations without an identity are not imported with 
-            // some exceptions
-            
-            switch(relation.getClassName()) {
-                case "building":
-                case "landuse":
-                    ohdmIDString = this.getOSMDummyObject_OHDM_ID();
-            }
-        }
+        String ohdmIDString = this.importOSMElement(relation, importUnnamedEntities, true);
         
         if(ohdmIDString == null) return false;
         
@@ -127,17 +123,17 @@ public class Inter2OHDM extends Importer {
         return false;
     }
     
-    int getTargetTypeInt(OHDMElement ohdmElement) {
+    int getTargetTypeInt(OSMElement ohdmElement) {
         int targetType = 0;
         switch(ohdmElement.getGeometryType()) {
             case POINT: 
-                targetType = Inter2OHDM.TARGET_POINT;
+                targetType = OHDM_DB.TARGET_POINT;
                 break;
             case LINESTRING: 
-                targetType = Inter2OHDM.TARGET_LINESTRING;
+                targetType = OHDM_DB.TARGET_LINESTRING;
                 break;
             case POLYGON: 
-                targetType = Inter2OHDM.TARGET_POLYGON;
+                targetType = OHDM_DB.TARGET_POLYGON;
                 break;
         }
         
@@ -145,7 +141,7 @@ public class Inter2OHDM extends Importer {
     }
     
     @Override
-    public boolean importPostProcessing(OHDMElement element) throws SQLException {
+    public boolean importPostProcessing(OSMElement element, boolean importUnnamedEntities) throws SQLException {
         // are there historic names?
         HashMap<String, String> oldNames = element.getOldNameStrings();
         if(oldNames == null) return false;
@@ -191,11 +187,11 @@ public class Inter2OHDM extends Importer {
             }
             
             String targetIDString;
-            if(element instanceof OHDMRelation) {
+            if(element instanceof OSMRelation) {
                 // relations can have more than one associated geometry
-                OHDMRelation relation = (OHDMRelation) element;
+                OSMRelation relation = (OSMRelation) element;
                 for(i = 0; i < relation.getMemberSize(); i++) {
-                    OHDMElement member = relation.getMember(i);
+                    OSMElement member = relation.getMember(i);
                     
                     targetIDString = member.getOHDMGeomID();
                     this.addValidity(this.targetQueue, targetType, 
@@ -227,7 +223,7 @@ public class Inter2OHDM extends Importer {
             try {
                 StringBuilder sb = new StringBuilder();
                 sb.append("SELECT id FROM ");
-                sb.append(DB.getFullTableName(targetSchema, Inter2OHDM.EXTERNAL_SYSTEMS));
+                sb.append(DB.getFullTableName(targetSchema, OHDM_DB.EXTERNAL_SYSTEMS));
                 sb.append(" where name = 'OSM' OR name = 'osm';");
                 ResultSet result = 
                         this.executeQueryOnTarget(sb.toString());
@@ -251,11 +247,10 @@ public class Inter2OHDM extends Importer {
         return true;
     }
     
-    static final int UNKNOWN_USER_ID = -1;
     
     private final HashMap<String, Integer> idExternalUsers = new HashMap<>();
     
-    private int getOHDM_ID_ExternalUser(OHDMElement ohdmElement) {
+    private int getOHDM_ID_ExternalUser(OSMElement ohdmElement) {
         // create user entry or find user primary key
         String externalUserID = ohdmElement.getUserID();
         String externalUsername = ohdmElement.getUsername();
@@ -265,7 +260,7 @@ public class Inter2OHDM extends Importer {
     }
     
     private int getOHDM_ID_ExternalUser(String externalUserID, String externalUserName) {
-        if(!this.validUserID(externalUserID)) return Inter2OHDM.UNKNOWN_USER_ID;
+        if(!this.validUserID(externalUserID)) return OHDM_DB.UNKNOWN_USER_ID;
         
         Integer idInteger = this.idExternalUsers.get(externalUserID);
         if(idInteger != null) { // already in memory
@@ -280,7 +275,7 @@ public class Inter2OHDM extends Importer {
             // SELECT id from external_users where userid = '43566';
             StringBuilder sb = new StringBuilder();
             sb.append("SELECT id from ");
-            sb.append(DB.getFullTableName(this.targetSchema, Inter2OHDM.EXTERNAL_USERS));
+            sb.append(DB.getFullTableName(this.targetSchema, OHDM_DB.EXTERNAL_USERS));
             sb.append(" where userid = '");
             sb.append(externalUserID);
             sb.append("' AND external_system_id = '");
@@ -300,7 +295,7 @@ public class Inter2OHDM extends Importer {
                 StringBuilder s = new StringBuilder();
                 //SQLStatementQueue s = new SQLStatementQueue(this.targetConnection);
                 s.append("INSERT INTO ");
-                s.append(DB.getFullTableName(this.targetSchema, Inter2OHDM.EXTERNAL_USERS));
+                s.append(DB.getFullTableName(this.targetSchema, OHDM_DB.EXTERNAL_USERS));
                 s.append(" (userid, username, external_system_id) VALUES ('");
                 s.append(externalUserID);
                 s.append("', '");
@@ -323,37 +318,36 @@ public class Inter2OHDM extends Importer {
         
     }
     
-    String getOHDMObject(OHDMElement ohdmElement, boolean persist) throws SQLException {
+    String getOHDMObject(OSMElement osmElement, boolean importUnnamedEntities) throws SQLException {
         // already in OHDM DB?
-        String ohdmIDString = ohdmElement.getOHDMObjectID();
+        String ohdmIDString = osmElement.getOHDMObjectID();
         if(ohdmIDString != null) return ohdmIDString;
         
         // add entry in object table
         try {
-            /* nodes without tags have no identity and are part of a way or relation
-            and stored with them. We are done here and return
-            */
-            if(!this.elementHasIdentity(ohdmElement)) {
-                /*
-                Anonymous way which are *not* part of a relation are
-                refered to the general dummy OHDM object
-                */
-                if(ohdmElement instanceof OHDMWay && !ohdmElement.isPart()) {
+            // osm elements don't have necessarily a name. Does this one?
+            if(!this.elementHasIdentity(osmElement)) {
+                // no name - to be imported anyway?
+                if(importUnnamedEntities) {
+                    // yes - fetch osm dummy object
                     ohdmIDString = this.getOSMDummyObject_OHDM_ID();
-                    ohdmElement.setOHDMObjectID(ohdmIDString);
+                    osmElement.setOHDMObjectID(ohdmIDString);
+                    
                     return ohdmIDString;
                 } else {
                     return null;
                 }
             } else {
+                // object has an identity
+                
                 // create user entry or find user primary key
-                String externalUserID = ohdmElement.getUserID();
-                String externalUsername = ohdmElement.getUsername();
+                String externalUserID = osmElement.getUserID();
+                String externalUsername = osmElement.getUsername();
 
                 int id_ExternalUser = this.getOHDM_ID_ExternalUser(externalUserID, 
                         externalUsername);
 
-                ohdmIDString =  this.addOHDMObject(ohdmElement, id_ExternalUser);
+                ohdmIDString =  this.addOHDMObject(osmElement, id_ExternalUser);
             }
         
             return ohdmIDString;
@@ -365,7 +359,7 @@ public class Inter2OHDM extends Importer {
         return null;
     }
     
-    String addOHDMObject(OHDMElement ohdmElement, int externalUserID) throws SQLException {
+    String addOHDMObject(OSMElement ohdmElement, int externalUserID) throws SQLException {
         // already in OHDM DB?
         String ohdmIDString = ohdmElement.getOHDMObjectID();
         if(ohdmIDString != null) return ohdmIDString;
@@ -380,7 +374,7 @@ public class Inter2OHDM extends Importer {
     String addOHDMObject(String name, int externalUserID) throws SQLException {
         SQLStatementQueue sql = new SQLStatementQueue(this.targetConnection);
         sql.append("INSERT INTO ");
-        sql.append(DB.getFullTableName(this.targetSchema, Inter2OHDM.GEOOBJECT));
+        sql.append(DB.getFullTableName(this.targetSchema, OHDM_DB.GEOOBJECT));
         sql.append(" (name, source_user_id) VALUES ('");
         sql.append(name);
         sql.append("', ");
@@ -392,8 +386,8 @@ public class Inter2OHDM extends Importer {
         return result.getBigDecimal(1).toString();
     }
     
-    String addGeometry(OHDMElement ohdmElement, int externalUserID) throws SQLException {
-        String wkt = ohdmElement.getWKTGeometry();
+    String addGeometry(OSMElement osmElement, int externalUserID) throws SQLException {
+        String wkt = osmElement.getWKTGeometry();
         if(wkt == null || wkt.length() < 1) return null;
         
 //        SQLStatementQueue targetQueue = new SQLStatementQueue(this.targetConnection);
@@ -402,19 +396,19 @@ public class Inter2OHDM extends Importer {
         
         String fullTableName;
         
-        switch(ohdmElement.getGeometryType()) {
+        switch(osmElement.getGeometryType()) {
             case POINT: 
-                fullTableName = DB.getFullTableName(this.targetSchema, Inter2OHDM.POINTS);
+                fullTableName = DB.getFullTableName(this.targetSchema, OHDM_DB.POINTS);
                 targetQueue.append(fullTableName);
                 targetQueue.append(" (point, ");
                 break;
             case LINESTRING: 
-                fullTableName = DB.getFullTableName(this.targetSchema, Inter2OHDM.LINES);
+                fullTableName = DB.getFullTableName(this.targetSchema, OHDM_DB.LINES);
                 targetQueue.append(fullTableName);
                 targetQueue.append(" (line, ");
                 break;
             case POLYGON: 
-                fullTableName = DB.getFullTableName(this.targetSchema, Inter2OHDM.POLYGONS);
+                fullTableName = DB.getFullTableName(this.targetSchema, OHDM_DB.POLYGONS);
                 targetQueue.append(fullTableName);
                 targetQueue.append(" (polygon, ");
                 break;
@@ -431,35 +425,37 @@ public class Inter2OHDM extends Importer {
             ResultSet result = targetQueue.executeWithResult();
             result.next();
             String geomIDString = result.getBigDecimal(1).toString();
-            ohdmElement.setOHDMGeometryID(geomIDString);
+            osmElement.setOHDMGeometryID(geomIDString);
             return geomIDString;
         }
         catch(SQLException e) {
-            System.err.println("failure when inserting geometry, wkt:\n" + wkt + "\nosm_id: " + ohdmElement.getOSMIDString());
+            System.err.println("failure when inserting geometry, wkt:\n" + wkt + "\nosm_id: " + osmElement.getOSMIDString());
             throw e;
         }
     }
     
     
 
-    void addValidity(OHDMElement ohdmElement, String ohdmIDString, String ohdmGeomIDString, int externalUserID) throws SQLException {
+    void addValidity(OSMElement osmElement, String ohdmIDString, String ohdmGeomIDString, int externalUserID) throws SQLException {
         // what table is reference by id_geometry
         int targetType = 0;
-        switch(ohdmElement.getGeometryType()) {
+        switch(osmElement.getGeometryType()) {
             case POINT: 
-                targetType = Inter2OHDM.TARGET_POINT;
+                targetType = OHDM_DB.TARGET_POINT;
                 break;
             case LINESTRING: 
-                targetType = Inter2OHDM.TARGET_LINESTRING;
+                targetType = OHDM_DB.TARGET_LINESTRING;
                 break;
             case POLYGON: 
-                targetType = Inter2OHDM.TARGET_POLYGON;
+                targetType = OHDM_DB.TARGET_POLYGON;
                 break;
         }
         
-//        SQLStatementQueue targetQueue = new SQLStatementQueue(this.targetConnection);
-        this.addValidity(targetQueue, ohdmElement, targetType, ohdmElement.getClassCodeString(), ohdmIDString, ohdmGeomIDString, externalUserID);
-        targetQueue.forceExecute();
+        this.addValidity(targetQueue, osmElement, targetType, 
+                osmElement.getClassCodeString(), ohdmIDString, 
+                ohdmGeomIDString, externalUserID);
+        
+        this.targetQueue.forceExecute();
     }
     
     private String formatDateString(String sinceValue) {
@@ -473,17 +469,26 @@ public class Inter2OHDM extends Importer {
         return null;
     }
     
-    void addValidity(SQLStatementQueue sq, OHDMElement ohdmElement, int targetType, 
+    void addValidity(SQLStatementQueue sq, OSMElement osmElement, int targetType, 
             String classCodeString, String sourceIDString, 
             String targetIDString, int externalUserID) throws SQLException {
         
         String sinceString = null;
-        // is there since tag in osm origin?
-        String sinceValue = ohdmElement.getValue("since");
+        /* 
+        is there since tag in osm origin?
+        probably not .. haven't not yet proposed that tag 
+        */
+        String sinceValue = osmElement.getValue("since");
         if(sinceValue != null) {
             sinceString = this.formatDateString(sinceValue);
+        } 
+
+        // take osm timestamp
+        if(sinceString == null) {
+            sinceString = osmElement.getTimeStampString();
         }
         
+        // finally take default
         if(sinceString == null) {
             sinceString = this.defaultSince;
         }
@@ -502,7 +507,7 @@ public class Inter2OHDM extends Importer {
         }
         
         sq.append("INSERT INTO ");
-        sq.append(DB.getFullTableName(this.targetSchema, Inter2OHDM.GEOOBJECT_GEOMETRY));
+        sq.append(DB.getFullTableName(this.targetSchema, OHDM_DB.GEOOBJECT_GEOMETRY));
         sq.append(" (type_target, classification_id, id_geoobject_source, id_target, valid_since, valid_until, source_user_id) VALUES (");
 
         sq.append(targetType);
@@ -521,11 +526,35 @@ public class Inter2OHDM extends Importer {
         sq.append(");");
     }
     
-    void addContentAndURL(OHDMElement ohdmElement, String ohdmIDString) {
+    void addContentAndURL(OSMElement osmElement, String ohdmIDString) {
+        SQLStatementQueue sql = new SQLStatementQueue(this.targetConnection);
+        
+        String description = osmElement.getValue("description");
+        
+        /*
+        INSERT INTO ohdm.content(id, name, value, mimetype)
+            VALUES (42, 'description', 'huhu', 'text/plain');
+        */
+//        if(description != null) {
+//            sql.append("INSERT INTO ");
+//            sql.append(DB.getFullTableName(this.targetSchema, OHDM_DB.CONTENT));
+//            sql.append(" (name, source_user_id) VALUES ('");
+//            sql.append(name);
+//            sql.append("', ");
+//            sql.append(externalUserID);
+//            sql.append(") RETURNING id;");
+//        }
+        
+        /*
+         * URLs
+        image
+        url
+        website
+         */
 //        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
     }
     
-    private boolean elementHasIdentity(OHDMElement ohdmElement) {
+    private boolean elementHasIdentity(OSMElement ohdmElement) {
         String name = ohdmElement.getName();
         
         // must have a name
@@ -547,305 +576,69 @@ public class Inter2OHDM extends Importer {
     
     /**
      * 
-     * @param ohdmElement
+     * @param osmElement
      * @return ohdm_id as string
      */
-    public String importOHDMElement(OHDMElement ohdmElement) {
-        String osmID = ohdmElement.getOSMIDString();
+    public String importOSMElement(OSMElement osmElement, boolean importUnnamedEntities, boolean importWithoutGeometry) {
+        String osmID = osmElement.getOSMIDString();
         if(osmID.equalsIgnoreCase("188276804") || osmID.equalsIgnoreCase("301835391")) {
             // debug break
             int i = 42;
         }
         
-//        ArrayList<TagElement> tags = ohdmElement.getTags();
+        // except relations, entities without a geometry are not to be imported
+        if(!osmElement.hasGeometry() && !importWithoutGeometry) {
+            return null;
+        }
         
         try {
             // get external user id from ohdm
-            int id_ExternalUser = this.getOHDM_ID_ExternalUser(ohdmElement);
+            int id_ExternalUser = this.getOHDM_ID_ExternalUser(osmElement);
 
-            /* create a geomtry in OHDM 
-                this call fails (produces null) if this element has no geometry,
-                which is a relation that has not only inner / outer member
-            */
-            String ohdmGeomIDString = this.addGeometry(ohdmElement, id_ExternalUser);
-            
-            boolean persist = ohdmGeomIDString == null;
-//            boolean persist = true;
-            
-            /* add entry in object table IF this object has an identity
-                perist that object ONLY IF there is no geometry. Reduces db access!
-            */
-            String ohdmObjectIDString = this.getOHDMObject(ohdmElement, persist);
-            
+            // try to add a geometry.. can be null if importWithoutGeometry is true
+            String ohdmGeomIDString = this.addGeometry(osmElement, id_ExternalUser);
 
-            // refer object and geometry to each other
-            if(ohdmGeomIDString != null && ohdmObjectIDString != null) {
+            /*
+              get ohdm object. That call returns null only of that object has no
+            identity and importing of unnamed entities is not yet wished in that call
+            null indicates a failure
+            */
+            String ohdmObjectIDString = this.getOHDMObject(osmElement, importUnnamedEntities);
+
+            if(ohdmObjectIDString == null) {
+                System.err.println("cannot create or find ohdm object id (not even dummy osm) and importing of unnamed entites allowed");
+                System.err.println(osmElement);
+
+                if(ohdmGeomIDString != null) {
+                    // remeber geometry in inter db
+                    this.intermediateDB.setOHDM_IDs(osmElement, null, ohdmGeomIDString);
+                }
+                
+                return null;
+            }
+            
+            // combine object and geometry if there is a geometry
+            if(ohdmGeomIDString != null) {
                 // create entry in object_geometry table
-                addValidity(ohdmElement, ohdmObjectIDString, ohdmGeomIDString, 
+                this.addValidity(osmElement, ohdmObjectIDString, ohdmGeomIDString, 
                         id_ExternalUser);
                 
                 /* now make both object and geom id persistent to intermediate db
                 */
-                this.intermediateDB.setOHDM_IDs(ohdmElement, ohdmObjectIDString, ohdmGeomIDString);
+                this.intermediateDB.setOHDM_IDs(osmElement, ohdmObjectIDString, ohdmGeomIDString);
             }
 
             // keep some special tags (url etc, see wiki)
-            addContentAndURL(ohdmElement, ohdmObjectIDString);
+            this.addContentAndURL(osmElement, ohdmObjectIDString);
             
-            // are there even historical information stored
-
             return ohdmObjectIDString;
         }
         catch(Exception e) {
             System.err.println("failure during import of intermediate object: " + e.getMessage());
+            System.err.println(osmElement);
         }
         
         return null;
-    }
-    
-    @Override
-    public boolean importNode(OHDMNode node) {
-        if(!this.elementHasIdentity(node)) {
-            // nodes without an identity are not imported.
-            return false;
-        }
-
-        return (this.importOHDMElement(node) != null);
-    }
-     
-    // Table names
-    static final String EXTERNAL_SYSTEMS = "external_systems";
-    static final String EXTERNAL_USERS = "external_users";
-    static final String CLASSIFICATION = "classification";
-    static final String CONTENT = "content";
-    static final String GEOOBJECT = "geoobject";
-    static final String GEOOBJECT_CONTENT = "geoobject_content";
-    static final String GEOOBJECT_GEOMETRY = "geoobject_geometry";
-    static final String GEOOBJECT_URL = "geoobject_url";
-    static final String LINES = "lines";
-    static final String POINTS = "points";
-    static final String POLYGONS = "polygons";
-    static final String URL = "url";
-    
-    // Geometry Types 
-    public static int TARGET_POINT = 1;
-    public static int TARGET_LINESTRING = 2;
-    public static int TARGET_POLYGON = 3;
-    public static int TARGET_GEOOBJECT = 0;
-    
-    void dropOHDMTables(Connection targetConnection) throws SQLException {
-        // drop
-        DB.drop(targetConnection, this.targetSchema, EXTERNAL_SYSTEMS);
-        DB.drop(targetConnection, this.targetSchema, EXTERNAL_USERS);
-        DB.drop(targetConnection, this.targetSchema, CLASSIFICATION);
-        DB.drop(targetConnection, this.targetSchema, CONTENT);
-        DB.drop(targetConnection, this.targetSchema, GEOOBJECT);
-        DB.drop(targetConnection, this.targetSchema, GEOOBJECT_CONTENT);
-        DB.drop(targetConnection, this.targetSchema, GEOOBJECT_GEOMETRY);
-        DB.drop(targetConnection, this.targetSchema, GEOOBJECT_URL);
-        DB.drop(targetConnection, this.targetSchema, LINES);
-        DB.drop(targetConnection, this.targetSchema, POINTS);
-        DB.drop(targetConnection, this.targetSchema, POLYGONS);
-        DB.drop(targetConnection, this.targetSchema, URL);
-    }
-    
-    void createOHDMTables(Connection targetConnection) throws SQLException {
-        String schema = this.targetSchema;
-        
-        SQLStatementQueue sq;
-        
-        // EXTERNAL SYSTEMS
-        // sequence
-        DB.createSequence(targetConnection, schema, EXTERNAL_SYSTEMS);
-        // table
-        sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, Inter2OHDM.EXTERNAL_SYSTEMS));
-        // add table specifics
-        sq.append(",");
-        sq.append("name character varying,");
-        sq.append("description character varying");
-        sq.append(");");
-        sq.forceExecute();
-        
-        // insert osm as external system !!
-        sq.append("INSERT INTO ");
-        sq.append(DB.getFullTableName(schema, Inter2OHDM.EXTERNAL_SYSTEMS));
-        sq.append(" (name, description) VALUES ('osm', 'Open Street Map');");
-        sq.forceExecute();
-        
-        // EXTERNAL_USERS
-        // sequence
-        DB.createSequence(targetConnection, schema, EXTERNAL_USERS);
-        // table
-        sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, Inter2OHDM.EXTERNAL_USERS));
-        // add table specifics:
-        sq.append(",");
-        sq.append("userid bigint,");
-        sq.append("username character varying,");
-        sq.append("external_system_id bigint NOT NULL");
-        // TODO: add foreign key constraints
-        sq.append(");");
-        sq.forceExecute();
-        
-        // CLASSIFICATION
-        // sequence
-        DB.createSequence(targetConnection, schema, CLASSIFICATION);
-        // table
-        sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, Inter2OHDM.CLASSIFICATION));
-        // add table specifics:
-        sq.append(",");
-        sq.append("class character varying,");
-        sq.append("subclassname character varying");
-        sq.append(");");
-        sq.forceExecute();
-        
-        // fill classification
-        OSMClassification.getOSMClassification().write2Table(targetConnection, 
-                DB.getFullTableName(schema, Inter2OHDM.CLASSIFICATION)
-            );
-        
-        // CONTENT
-        // sequence
-        DB.createSequence(targetConnection, schema, CONTENT);
-        // table
-        sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, Inter2OHDM.CONTENT));
-        // add table specifics:
-        sq.append(",");
-        sq.append("name character varying,");
-        sq.append("value bytea NOT NULL,");
-        sq.append("mimetype character varying");
-        sq.append(");");
-        sq.forceExecute();
-        
-        // GEOOBJECT
-        // sequence
-        DB.createSequence(targetConnection, schema, GEOOBJECT);
-        // table
-        sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, Inter2OHDM.GEOOBJECT));
-        // add table specifics:
-        sq.append(",");
-        sq.append("name character varying,");
-        sq.append("source_user_id bigint NOT NULL");
-        sq.append(");");
-        sq.forceExecute();
-        
-        // insert osm dummy object.. it has no name.. thats important
-        sq.append("INSERT INTO ");
-        sq.append(DB.getFullTableName(schema, Inter2OHDM.GEOOBJECT));
-        sq.append("(id, source_user_id) VALUES (0, 1);");
-        sq.forceExecute();
-        
-        // GEOOBJECT_CONTENT
-        // sequence
-        DB.createSequence(targetConnection, schema, GEOOBJECT_CONTENT);
-        // table
-        sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, Inter2OHDM.GEOOBJECT_CONTENT));
-        // add table specifics:
-        sq.append(",");
-        sq.append("valid_since date NOT NULL,");
-        sq.append("valid_until date NOT NULL,");
-        sq.append("valid_since_offset bigint DEFAULT 0,");
-        sq.append("valid_until_offset bigint DEFAULT 0,");
-        sq.append("geoobject_id bigint NOT NULL,");
-        sq.append("content_id bigint NOT NULL");
-        sq.append(");");
-        sq.forceExecute();
-        
-        // GEOOBJECT_GEOMETRY
-        // sequence
-        DB.createSequence(targetConnection, schema, GEOOBJECT_GEOMETRY);
-        // table
-        sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, Inter2OHDM.GEOOBJECT_GEOMETRY));
-        // add table specifics:
-        sq.append(",");
-        sq.append("id_target bigint,");
-        sq.append("type_target bigint,");
-        sq.append("id_geoobject_source bigint NOT NULL,");
-        sq.append("role character varying,");
-        sq.append("classification_id bigint NOT NULL,");
-        sq.append("valid_since date NOT NULL,");
-        sq.append("valid_until date NOT NULL,");
-        sq.append("valid_since_offset bigint DEFAULT 0,");
-        sq.append("valid_until_offset bigint DEFAULT 0,");
-        sq.append("source_user_id bigint");
-        sq.append(");");
-        sq.forceExecute();
-        
-        // GEOOBJECT_URL
-        // sequence
-        DB.createSequence(targetConnection, schema, GEOOBJECT_URL);
-        // table
-        sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, Inter2OHDM.GEOOBJECT_URL));
-        // add table specifics:
-        sq.append(",");
-        sq.append("geoobject_id bigint NOT NULL,");
-        sq.append("url_id bigint NOT NULL,");
-        sq.append("valid_since date NOT NULL,");
-        sq.append("valid_until date NOT NULL,");
-        sq.append("valid_since_offset bigint DEFAULT 0,");
-        sq.append("valid_until_offset bigint DEFAULT 0");
-        sq.append(");");
-        sq.forceExecute();
-        
-        // LINES
-        // sequence
-        DB.createSequence(targetConnection, schema, LINES);
-        // table
-        sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, Inter2OHDM.LINES));
-        // add table specifics:
-        sq.append(",");
-        sq.append("line geometry,");
-        sq.append("source_user_id bigint");
-        sq.append(");");
-        sq.forceExecute();
-        
-        // POINTS
-        // sequence
-        DB.createSequence(targetConnection, schema, POINTS);
-        // table
-        sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, Inter2OHDM.POINTS));
-        // add table specifics:
-        sq.append(",");
-        sq.append("point geometry,");
-        sq.append("source_user_id bigint");
-        sq.append(");");
-        sq.forceExecute();
-        
-        // POLYGONS
-        // sequence
-        DB.createSequence(targetConnection, schema, POLYGONS);
-        // table
-        sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, Inter2OHDM.POLYGONS));
-        // add table specifics:
-        sq.append(",");
-        sq.append("polygon geometry,");
-        sq.append("source_user_id bigint");
-        sq.append(");");
-        sq.forceExecute();
-        
-        // URL
-        // sequence
-        DB.createSequence(targetConnection, schema, URL);
-        // table
-        sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, Inter2OHDM.URL));
-        // add table specifics:
-        sq.append(",");
-        sq.append("url character varying,");
-        sq.append("source_user_id bigint");
-        sq.append(");");
-        sq.forceExecute();
-        
     }
     
     void forgetPreviousImport() throws SQLException {
@@ -895,8 +688,8 @@ public class Inter2OHDM extends Importer {
             Parameter sourceParameter = new Parameter(sourceParameterFileName);
             Parameter targetParameter = new Parameter(targetParameterFileName);
             
-            Connection sourceConnection = Importer.createConnection(sourceParameter);
-            Connection targetConnection = Importer.createConnection(targetParameter);
+            Connection sourceConnection = DB.createConnection(sourceParameter);
+            Connection targetConnection = DB.createConnection(targetParameter);
             
             IntermediateDB iDB = new IntermediateDB(sourceConnection, sourceParameter.getSchema());
             
@@ -908,13 +701,13 @@ public class Inter2OHDM extends Importer {
             
             try {
                 ohdmImporter.forgetPreviousImport();
-                ohdmImporter.dropOHDMTables(targetConnection);
+                OHDM_DB.dropOHDMTables(targetConnection, targetSchema);
             }
             catch(Exception e) {
                 System.err.println("problems during setting old data (non-fatal): " + e.getLocalizedMessage());
             }
             
-            ohdmImporter.createOHDMTables(targetConnection);
+            OHDM_DB.createOHDMTables(targetConnection, targetSchema);
             
             String stepLenString = sourceParameter.getReadStepLen();
             int stepLen = 10000;
@@ -932,9 +725,9 @@ public class Inter2OHDM extends Importer {
             
             sourceQueue = DB.createSQLStatementQueue(sourceConnection, sourceParameter);
             
-            exporter.processNodes(sourceQueue);
-            exporter.processWays(sourceQueue);
-            exporter.processRelations(sourceQueue);
+            exporter.processNodes(sourceQueue, false);
+            exporter.processWays(sourceQueue, true);
+            exporter.processRelations(sourceQueue, false);
             
             System.out.println(exporter.getStatistics());
   
@@ -949,7 +742,7 @@ public class Inter2OHDM extends Importer {
         return this.osmDummyObjectOHDM_ID;
     }
 
-    private boolean saveRelationAsRelatedObjects(OHDMRelation relation, 
+    private boolean saveRelationAsRelatedObjects(OSMRelation relation, 
             String ohdmIDString) throws SQLException {
         
         // get all ohdm ids and store it
@@ -962,13 +755,13 @@ public class Inter2OHDM extends Importer {
          */
 
         sq.append("INSERT INTO ");
-        sq.append(Inter2OHDM.GEOOBJECT_GEOMETRY);
+        sq.append(OHDM_DB.GEOOBJECT_GEOMETRY);
         sq.append("(id_geoobject_source, id_target, type_target, role,");
         sq.append(" valid_since, valid_until) VALUES ");
 
         boolean notFirstSet = false;
         for(int i = 0; i < relation.getMemberSize(); i++) {
-            OHDMElement member = relation.getMember(i);
+            OSMElement member = relation.getMember(i);
             String memberOHDMObjectIDString = this.getOHDMObject(member, true);
             if(memberOHDMObjectIDString == null) continue; // no identity
 
@@ -986,12 +779,12 @@ public class Inter2OHDM extends Importer {
             sq.append(", ");
             sq.append(memberOHDMObjectIDString); // id target
             sq.append(", ");
-            if(member instanceof OHDMNode) { // type_target
-                sq.append(Inter2OHDM.TARGET_POINT);
-            } else if(member instanceof OHDMWay) {
-                sq.append(Inter2OHDM.TARGET_LINESTRING);
+            if(member instanceof OSMNode) { // type_target
+                sq.append(OHDM_DB.TARGET_POINT);
+            } else if(member instanceof OSMWay) {
+                sq.append(OHDM_DB.TARGET_LINESTRING);
             } else {
-                sq.append(Inter2OHDM.TARGET_GEOOBJECT);
+                sq.append(OHDM_DB.TARGET_GEOOBJECT);
             }
             sq.append(", ");
             sq.append(roleName); // role
@@ -1012,7 +805,7 @@ public class Inter2OHDM extends Importer {
         return false;
     }
 
-    private boolean saveRelationAsMultipolygon(OHDMRelation relation) throws SQLException {
+    private boolean saveRelationAsMultipolygon(OSMRelation relation) throws SQLException {
         /* sometimes (actually quite often) relations contain only an inner
         and outer member but inner comes first which is not compatible with
         definition of a multipolygon.. We correct that problem here
@@ -1045,7 +838,7 @@ public class Inter2OHDM extends Importer {
             if(pID.equalsIgnoreCase("-1")) {
                 // this geometry is not yet in the database.. insert that polygon
                 targetQueue.append("INSERT INTO ");
-                targetQueue.append(DB.getFullTableName(this.targetSchema, Inter2OHDM.POLYGONS));
+                targetQueue.append(DB.getFullTableName(this.targetSchema, OHDM_DB.POLYGONS));
                 targetQueue.append(" (polygon, source_user_id) VALUES ('");
                 targetQueue.append(polygonWKT.get(i));
                 targetQueue.append("', ");
@@ -1070,7 +863,7 @@ public class Inter2OHDM extends Importer {
         if(polygonIDs.size() < 1) return false;
         
         // add relations
-        int targetType = Inter2OHDM.TARGET_POLYGON; // all targets are polygons
+        int targetType = OHDM_DB.TARGET_POLYGON; // all targets are polygons
         String classCodeString = relation.getClassCodeString();
         String sourceIDString = relation.getOHDMObjectID();
         if(sourceIDString == null) {

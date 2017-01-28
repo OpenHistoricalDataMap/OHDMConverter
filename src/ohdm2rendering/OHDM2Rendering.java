@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import osm.OSMClassification;
+import util.DB;
 import util.SQLStatementQueue;
 import util.Parameter;
 
@@ -31,7 +32,7 @@ public class OHDM2Rendering {
         Parameter sourceParameter = new Parameter(sourceParameterFileName);
         Parameter targetParameter = new Parameter(targetParameterFileName);
 
-        Connection connection = Importer.createConnection(targetParameter);
+        Connection connection = DB.createConnection(targetParameter);
 
         String targetSchema = targetParameter.getSchema();
         

@@ -2,13 +2,14 @@ package inter2ohdm;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import static osm2inter.InterDB.NODETABLE;
-import static osm2inter.InterDB.RELATIONMEMBER;
-import static osm2inter.InterDB.RELATIONTABLE;
-import static osm2inter.InterDB.WAYMEMBER;
-import static osm2inter.InterDB.WAYTABLE;
+import static util.InterDB.NODETABLE;
+import static util.InterDB.RELATIONMEMBER;
+import static util.InterDB.RELATIONTABLE;
+import static util.InterDB.WAYMEMBER;
+import static util.InterDB.WAYTABLE;
 import util.DB;
 import util.SQLStatementQueue;
 
@@ -20,23 +21,28 @@ public class IntermediateDB {
     private boolean debug = false;
     protected final Connection sourceConnection;
     private final String schema;
+    private boolean isNew;
+    private boolean changed;
+    private boolean deleted;
+    private boolean has_name;
+    private Date tstamp;
     
     IntermediateDB(Connection sourceConnection, String schema) {
         this.sourceConnection = sourceConnection;
         this.schema = schema;
     }
     
-    protected String getIntermediateTableName(OHDMElement element) {
-        if(element instanceof OHDMNode) {
+    protected String getIntermediateTableName(OSMElement element) {
+        if(element instanceof OSMNode) {
             return(DB.getFullTableName(this.schema, NODETABLE));
-        } else if(element instanceof OHDMWay) {
+        } else if(element instanceof OSMWay) {
             return(DB.getFullTableName(this.schema, WAYTABLE));
         } else {
             return(DB.getFullTableName(this.schema, RELATIONTABLE));
         } 
     }
     
-    public void setOHDM_IDs(OHDMElement element, String ohdmObjectIDString, 
+    public void setOHDM_IDs(OSMElement element, String ohdmObjectIDString, 
             String ohdmGeomIDString) throws SQLException {
         
         if(element == null) return;
@@ -73,14 +79,14 @@ public class IntermediateDB {
         sq.forceExecute();
     }
     
-    void remove(OHDMElement element) throws SQLException {
+    void remove(OSMElement element) throws SQLException {
         SQLStatementQueue sq = new SQLStatementQueue(this.sourceConnection);
         
         /*
         remove entries which refer to that element
         */
 
-        if(element instanceof OHDMRelation) {
+        if(element instanceof OSMRelation) {
             // remove line from relationsmember
             sq.append("DELETE FROM ");
 
@@ -90,7 +96,7 @@ public class IntermediateDB {
             sq.append(element.getOSMIDString());
             sq.append(";");
             sq.forceExecute();
-        } else if(element instanceof OHDMWay) {
+        } else if(element instanceof OSMWay) {
             // remove line from relationsmember
             sq.append("DELETE FROM ");
 
@@ -116,7 +122,7 @@ public class IntermediateDB {
         sq.forceExecute();
     }
     
-    OHDMWay addNodes2OHDMWay(OHDMWay way) throws SQLException {
+    OSMWay addNodes2OHDMWay(OSMWay way) throws SQLException {
         // find all associated nodes and add to that way
         /* SQL Query is like this
             select * from nodes_table where osm_id IN 
@@ -135,7 +141,7 @@ public class IntermediateDB {
         ResultSet qResultNode = sql.executeWithResult();
 
         while(qResultNode.next()) {
-            OHDMNode node = this.createOHDMNode(qResultNode);
+            OSMNode node = this.createOHDMNode(qResultNode);
             way.addNode(node);
         }
         
@@ -170,6 +176,14 @@ public class IntermediateDB {
         ohdmObjectIDString = this.extractBigDecimalAsString(qResult, "ohdm_object_id");
         ohdmGeomIDString = this.extractBigDecimalAsString(qResult, "ohdm_geom_id");
         valid = qResult.getBoolean("valid");
+        
+        this.isNew = qResult.getBoolean("new");
+        this.changed = qResult.getBoolean("changed");
+        this.deleted = qResult.getBoolean("deleted");
+        this.has_name = qResult.getBoolean("has_name");
+        
+        this.tstamp = qResult.getDate("tstamp");
+
     }
     
     private String extractBigDecimalAsString(ResultSet qResult, String columnName) throws SQLException {
@@ -180,33 +194,42 @@ public class IntermediateDB {
         return null;
     }
     
-    protected OHDMRelation createOHDMRelation(ResultSet qResult) throws SQLException {
+    protected OSMRelation createOHDMRelation(ResultSet qResult) throws SQLException {
         // get all data to create an ohdm way object
         this.readCommonColumns(qResult);
         memberIDs = qResult.getString("member_ids");
 
-        OHDMRelation relation = new OHDMRelation(this, osmIDString, classCodeString, sTags, memberIDs, ohdmObjectIDString, ohdmGeomIDString, valid);
+        OSMRelation relation = new OSMRelation(this, osmIDString, 
+                classCodeString, sTags, memberIDs, ohdmObjectIDString, 
+                ohdmGeomIDString, valid, this.isNew, this.changed, this.deleted, 
+                this.has_name, this.tstamp
+        );
         
         return relation;
     }
     
-    protected OHDMWay createOHDMWay(ResultSet qResult) throws SQLException {
+    protected OSMWay createOHDMWay(ResultSet qResult) throws SQLException {
         this.readCommonColumns(qResult);
         String nodeIDs = qResult.getString("node_ids");
-        boolean isPart = qResult.getBoolean("is_part");
 
-        OHDMWay way = new OHDMWay(this, osmIDString, classCodeString, sTags, nodeIDs, ohdmObjectIDString, ohdmGeomIDString, isPart, valid);
+        OSMWay way = new OSMWay(this, osmIDString, classCodeString, sTags, 
+                nodeIDs, ohdmObjectIDString, ohdmGeomIDString, valid, 
+                this.isNew, this.changed, this.deleted, 
+                this.has_name, this.tstamp
+        );
 
         return way;
     }
     
-    protected OHDMNode createOHDMNode(ResultSet qResult) throws SQLException {
+    protected OSMNode createOHDMNode(ResultSet qResult) throws SQLException {
         this.readCommonColumns(qResult);
         String longitude = qResult.getString("longitude");
         String latitude = qResult.getString("latitude");
-        boolean isPart = qResult.getBoolean("is_part");
         
-        OHDMNode node = new OHDMNode(this, osmIDString, classCodeString, sTags, longitude, latitude, ohdmObjectIDString, ohdmGeomIDString, isPart, valid);
+        OSMNode node = new OSMNode(this, osmIDString, classCodeString, sTags, 
+                longitude, latitude, ohdmObjectIDString, ohdmGeomIDString, 
+                valid, this.isNew, this.changed, this.deleted, 
+                this.has_name, this.tstamp);
 
         return node;
     }

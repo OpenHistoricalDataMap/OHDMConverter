@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import util.DB;
+import util.OHDM_DB;
 import util.Parameter;
 import util.SQLStatementQueue;
 import util.Util;
@@ -41,8 +42,8 @@ public class DebugInter2OHDM extends Inter2OHDM {
             Parameter sourceParameter = new Parameter(sourceParameterFileName);
             Parameter targetParameter = new Parameter(targetParameterFileName);
             
-            Connection sourceConnection = Importer.createConnection(sourceParameter);
-            Connection targetConnection = Importer.createConnection(targetParameter);
+            Connection sourceConnection = DB.createConnection(sourceParameter);
+            Connection targetConnection = DB.createConnection(targetParameter);
             
             IntermediateDB iDB = new IntermediateDB(sourceConnection, sourceParameter.getSchema());
             
@@ -60,13 +61,13 @@ public class DebugInter2OHDM extends Inter2OHDM {
             }
             
             try {
-                ohdmImporter.dropOHDMTables(targetConnection);
+                OHDM_DB.dropOHDMTables(targetConnection, targetSchema);
             }
             catch(Exception e) {
                 System.err.println("problems during setting old data (non-fatal): " + e.getLocalizedMessage());
             }
             
-            ohdmImporter.createOHDMTables(targetConnection);
+            OHDM_DB.createOHDMTables(targetConnection, targetSchema);
             
             String stepLenString = sourceParameter.getReadStepLen();
             int stepLen = 10000;
@@ -95,7 +96,7 @@ public class DebugInter2OHDM extends Inter2OHDM {
             while(qResult.next()) {
 //            exporter.processNode(qResult, sourceQueue, ExportIntermediateDB.RELATION);
 //            exporter.processWay(qResult, sourceQueue, ExportIntermediateDB.RELATION);
-            exporter.processElement(qResult, sourceQueue, ExportIntermediateDB.RELATION);
+            exporter.processElement(qResult, sourceQueue, ExportIntermediateDB.RELATION, true);
                 
             }
         } catch (Exception e) {

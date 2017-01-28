@@ -25,7 +25,7 @@ public class SQLStatementQueue {
     
     public static final int DEFAULT_MAX_SQL_STATEMENTS = 100;
     private final ArrayList<SQLExecute> execThreads = new ArrayList<>();
-    private static final int MAX_EXEC_THREADS = 2;
+    private static final int MAX_EXEC_THREADS = 1;
     
     private StringBuilder sqlQueue;
     

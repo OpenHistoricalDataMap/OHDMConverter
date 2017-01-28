@@ -1,5 +1,6 @@
 package inter2ohdm;
 
+import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
@@ -10,7 +11,7 @@ import osm.OSMClassification;
  *
  * @author thsc
  */
-public abstract class OHDMElement extends AbstractElement {
+public abstract class OSMElement extends AbstractElement {
     private final String osmIDString;
     private final String classCodeString;
     private int subClassCode;
@@ -22,13 +23,40 @@ public abstract class OHDMElement extends AbstractElement {
     
     protected boolean isPolygon = false;
     protected final IntermediateDB intermediateDB;
-    private final boolean isPart;
+    
+    private final boolean isNew;
+    private final boolean changed;
+    private final boolean deleted;
+    private final boolean has_name;
+    private String tstamp;
+    private final Date tstampDate;
+    
+    protected String wktString = null;
+    protected boolean wktStringProduced = false;
+
+    String getTimeStampString() {
+        if(this.tstamp == null) return null;
+        
+        if(tstamp.length() < 10) return null;
+        
+        // old (current importer produces that that format, return date only
+        // 2016-11-04T08:46:37Z
+
+        // remove following two lines (and comments) when importer are fixed
+        // new shall produce 1017-01-01 or so
+        if(tstamp.length() == 10) return this.tstamp;
+        this.tstamp = tstamp.substring(0, 11);
+        
+        return this.tstamp;
+    }
 
     public static enum GeometryType {POINT, LINESTRING, POLYGON, RELATION};
 
-    OHDMElement(IntermediateDB intermediateDB, String osmIDString, 
+    OSMElement(IntermediateDB intermediateDB, String osmIDString, 
             String classCodeString, String sTags, 
-            String ohdmObjectIDString, String ohdmGeomIDString, boolean isPart, boolean valid) {
+            String ohdmObjectIDString, String ohdmGeomIDString,  
+            boolean valid, boolean isNew, boolean changed, boolean deleted,
+            boolean has_name, Date tstampDate) {
         
         super(sTags);
 
@@ -43,8 +71,15 @@ public abstract class OHDMElement extends AbstractElement {
         this.classCodeString = classCodeString;
         this.ohdmObjectIDString = ohdmObjectIDString;
         this.ohdmGeomIDString = ohdmGeomIDString;
-        this.isPart = isPart;
         this.valid = valid;
+        
+        this.isNew = isNew;
+        this.changed = changed;
+        this.deleted = deleted;
+        this.has_name = has_name;
+        this.tstampDate = tstampDate;
+        
+        this.tstamp = tstampDate.toString();
     }
     
     /**
@@ -52,11 +87,28 @@ public abstract class OHDMElement extends AbstractElement {
      * @param orig
      * @return 
      */
-    public OHDMElement clone(OHDMElement orig) {
+    public OSMElement clone(OSMElement orig) {
         return null; // TODO
     }
     
-    abstract String getWKTGeometry();
+    boolean hasGeometry() {
+        if(!this.wktStringProduced) {
+            this.produceWKTGeometry();
+        }
+        
+        return this.wktString != null;
+    }
+    
+    // generate wkt string a store it into wktString! Set wktStringProduced to true!
+    abstract protected void produceWKTGeometry();
+    
+    final String getWKTGeometry() {
+        if(!this.wktStringProduced) {
+            this.produceWKTGeometry();
+        }
+        
+        return this.wktString;
+    }
     
     abstract GeometryType getGeometryType();
     
@@ -94,10 +146,6 @@ public abstract class OHDMElement extends AbstractElement {
         return this.ohdmGeomIDString;
     }
     
-    boolean isPart() {
-        return this.isPart;
-    }
-    
     /**
      * Remove this object from intermediate db .. use carefully!
      */
@@ -107,14 +155,6 @@ public abstract class OHDMElement extends AbstractElement {
     
     String getOSMIDString() {
         return osmIDString;
-    }
-    
-    String validSince() {
-        return "1970-01-01";
-    }
-
-    String validUntil() {
-        return "2020-01-01";
     }
     
     String getClassCodeString() {
@@ -190,8 +230,28 @@ public abstract class OHDMElement extends AbstractElement {
         
         return idList;
     }
+
+    boolean isNew() {
+        return this.isNew;
+    }
     
-    protected int addMember(OHDMElement newElement, ArrayList memberList, ArrayList<String> idList, boolean setall) {
+    boolean isChanged() {
+        return this.changed;
+    }
+    
+    boolean isDeleted() {
+        return this.deleted;
+    }
+    
+    boolean hasName() {
+        return this.has_name;
+    }
+    
+    Date getTimeStamp() {
+        return this.tstampDate;
+    }
+    
+    protected int addMember(OSMElement newElement, ArrayList memberList, ArrayList<String> idList, boolean setall) {
         String idString = newElement.getOSMIDString();
         
         int position = idList.indexOf(idString);
@@ -232,5 +292,62 @@ public abstract class OHDMElement extends AbstractElement {
         return this.isPolygon;
     }
     
+    boolean isConsistent() {
+        return true;
+    }
     
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        
+        sb.append("osmIDString: ");
+        sb.append(osmIDString);
+        sb.append("\t");
+        
+        sb.append("ohdmGeomIDString: ");
+        sb.append(ohdmGeomIDString);
+        sb.append("\t");
+        
+        sb.append("ohdmObjectIDString: ");
+        sb.append(ohdmObjectIDString);
+        sb.append("\t");
+        
+        sb.append("classCodeString: ");
+        sb.append(classCodeString);
+        sb.append("\t");
+        
+        sb.append("className: ");
+        sb.append(className);
+        sb.append("\t");
+        
+        sb.append("isPolygon: ");
+        sb.append(isPolygon);
+        sb.append("\n");
+        
+        sb.append("subClassCode: ");
+        sb.append(subClassCode);
+        sb.append("\t");
+        
+        sb.append("subClassName: ");
+        sb.append(subClassName);
+        sb.append("\t");
+        
+        sb.append("uid: ");
+        sb.append(uid);
+        sb.append("\t");
+        
+        sb.append("username: ");
+        sb.append(username);
+        sb.append("\t");
+        
+        sb.append("wktString: ");
+        sb.append(wktString);
+        sb.append("\t");
+        
+        sb.append("wktStringProduced: ");
+        sb.append(wktStringProduced);
+        sb.append("\t");
+        
+        return sb.toString();
+    }
 }

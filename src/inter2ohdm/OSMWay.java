@@ -1,5 +1,6 @@
 package inter2ohdm;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -7,21 +8,45 @@ import java.util.Iterator;
  *
  * @author thsc
  */
-public class OHDMWay extends OHDMElement {
-    private ArrayList<OHDMNode> nodes;
+public class OSMWay extends OSMElement {
+    private ArrayList<OSMNode> nodes;
     private ArrayList<String> nodeIDList;
     private final String nodeIDs;
 
-    OHDMWay(IntermediateDB intermediateDB, String osmIDString, String classCodeString, String sTags, String nodeIDs, String ohdmObjectIDString, String ohdmGeomIDString, boolean isPart, boolean valid) {
+    OSMWay(IntermediateDB intermediateDB, String osmIDString, 
+            String classCodeString, String sTags, String nodeIDs, 
+            String ohdmObjectIDString, String ohdmGeomIDString, 
+            boolean valid, boolean isNew, boolean changed, boolean deleted,
+            boolean has_name, Date tstampDate) {
+        
         // handle tags as attributes..
-        super(intermediateDB, osmIDString, classCodeString, sTags, ohdmObjectIDString, ohdmGeomIDString, isPart, valid);
+        super(intermediateDB, osmIDString, classCodeString, sTags, 
+                ohdmObjectIDString, ohdmGeomIDString, valid,
+                isNew, changed, deleted, has_name, tstampDate);
+        
         this.nodeIDs = nodeIDs;
+    }
+    
+    @Override
+    boolean isConsistent() {
+        if(this.nodeIDList == null || this.nodeIDList.isEmpty() ||
+                this.nodes == null || this.nodes.isEmpty()) {
+            return false;
+        }
+        
+        int i = this.isPolygon ? 1 : 0;
+        if(this.nodes.size() + i != this.nodeIDList.size()) {
+            return false;
+        }
+        
+        return super.isConsistent();
     }
 
     @Override
-    String getWKTGeometry() {
-        if(this.nodes == null || this.nodes.size() == 0) {
-            return "";
+    protected void produceWKTGeometry() {
+        if(this.nodes == null || this.nodes.isEmpty()) {
+            this.wktStringProduced = true;
+            return;
         }
         
         StringBuilder wkt = new StringBuilder();
@@ -32,7 +57,7 @@ public class OHDMWay extends OHDMElement {
             wkt.append("POLYGON((");
             this.appendAllLongLat(wkt);
             // we don't store last duplicate node internally. Add it to the end
-            OHDMNode firstNode = this.nodes.get(0);
+            OSMNode firstNode = this.nodes.get(0);
             wkt.append(", ");
             this.appendAllLongLat(wkt, firstNode);
             wkt.append("))");
@@ -43,7 +68,8 @@ public class OHDMWay extends OHDMElement {
             wkt.append(")");
         }
         
-        return wkt.toString();
+        this.wktString = wkt.toString();
+        this.wktStringProduced = true;
     }
     
     String getWKTPointsOnly() {
@@ -59,7 +85,7 @@ public class OHDMWay extends OHDMElement {
             // wkt.append("(");
             this.appendAllLongLat(wkt);
             // we don't store last duplicate node internally. Add it to the end
-            OHDMNode firstNode = this.nodes.get(0);
+            OSMNode firstNode = this.nodes.get(0);
             wkt.append(", ");
             this.appendAllLongLat(wkt, firstNode);
             // wkt.append(")");
@@ -73,14 +99,14 @@ public class OHDMWay extends OHDMElement {
         return wkt.toString();
     }
     
-    protected Iterator<OHDMNode> getNodeIter() {
+    protected Iterator<OSMNode> getNodeIter() {
         if(this.nodes == null) return null;
         
         return this.nodes.iterator();
     }
     
     private void appendAllLongLat(StringBuilder wkt) {
-        Iterator<OHDMNode> nodeIter = this.getNodeIter();
+        Iterator<OSMNode> nodeIter = this.getNodeIter();
         boolean first = true;
         while(nodeIter.hasNext()) {
             if(first) {
@@ -89,14 +115,14 @@ public class OHDMWay extends OHDMElement {
                 wkt.append(", ");
             }
 
-            OHDMNode node = nodeIter.next();
+            OSMNode node = nodeIter.next();
 //            node.getLatitude();
             
             this.appendAllLongLat(wkt, node);
         }
     }
     
-    private void appendAllLongLat(StringBuilder wkt, OHDMNode node) {
+    private void appendAllLongLat(StringBuilder wkt, OSMNode node) {
 //            node.getLatitude();
 
             wkt.append(node.getLatitude());
@@ -113,7 +139,7 @@ public class OHDMWay extends OHDMElement {
         }
     }
 
-    void addNode(OHDMNode node) {
+    void addNode(OSMNode node) {
         if (this.nodes == null) {
             // setup position list
             this.nodeIDList = this.setupIDList(this.nodeIDs);
@@ -143,7 +169,7 @@ public class OHDMWay extends OHDMElement {
         this.addMember(node, this.nodes, this.nodeIDList, true);
     }
 
-    OHDMNode getLastPoint() {
+    OSMNode getLastPoint() {
         if(this.nodes == null || this.nodes.size() < 1) return null;
         
         if(this.isPolygon) {
@@ -153,4 +179,21 @@ public class OHDMWay extends OHDMElement {
             return this.nodes.get(this.nodes.size()-1);
         }
     }
+    
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(super.toString());
+        
+        sb.append("\n");
+        sb.append("nodes.size()");
+        sb.append(this.nodes.size());
+        sb.append("\t");
+        sb.append("nodeIDList.size()");
+        sb.append(this.nodeIDList.size());
+        sb.append("\t");
+        
+        return sb.toString();
+    }
+    
 }

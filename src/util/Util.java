@@ -131,7 +131,7 @@ public class Util {
         Util.printExceptionMessage(System.err, e, sql, additionalMessage, true);
     }
     
-    static String getThreeDigitString(int value) {
+    static String getThreeDigitString(long value) {
         if(value >= 100) return String.valueOf(value);
         
         StringBuilder s = new StringBuilder();
@@ -167,12 +167,12 @@ public class Util {
         return s.toString();
     }
     
-    public static String getIntWithDots(int value) {
+    public static String getValueWithDots(long value) {
         if(value < 1000) {
             return String.valueOf(value);
         }
         
-        int rest = value % 1000;
+        long rest = value % 1000;
         
         String result = Util.getThreeDigitString(rest);
         value /= 1000;

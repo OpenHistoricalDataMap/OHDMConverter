@@ -1,5 +1,6 @@
 package inter2ohdm;
 
+import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -8,19 +9,27 @@ import java.util.Iterator;
  *
  * @author thsc
  */
-public class OHDMRelation extends OHDMElement {
+public class OSMRelation extends OSMElement {
     private final String memberIDs;
-    private ArrayList<OHDMElement> members;
+    private ArrayList<OSMElement> members;
     private ArrayList<String> memberRoles;
     private ArrayList<String> memberIDList;
     private ArrayList<String> roleMemberIDList;
     
-    OHDMRelation(IntermediateDB intermediateDB, String osmIDString, String classCodeString, String sTags, String memberIDs, String ohdmObjectIDString, String ohdmGeomIDString, boolean valid) {
-        super(intermediateDB, osmIDString, classCodeString, sTags, ohdmObjectIDString, ohdmGeomIDString, false, valid);
+    OSMRelation(IntermediateDB intermediateDB, String osmIDString, 
+            String classCodeString, String sTags, String memberIDs, 
+            String ohdmObjectIDString, String ohdmGeomIDString, 
+            boolean valid,
+            boolean isNew, boolean changed, boolean deleted,
+            boolean has_name, Date tstampDate) {
+        
+        super(intermediateDB, osmIDString, classCodeString, sTags, 
+                ohdmObjectIDString, ohdmGeomIDString, valid,
+                isNew, changed, deleted, has_name, tstampDate);
         this.memberIDs = memberIDs;
     }
     
-    OHDMElement getMember(int i) {
+    OSMElement getMember(int i) {
         return this.members.get(i);
     }
     
@@ -44,14 +53,14 @@ public class OHDMRelation extends OHDMElement {
         
         try {
             StringBuilder wktBuilder = null;
-            OHDMWay way = null;
-            OHDMWay next = (OHDMWay) this.members.get(0);
+            OSMWay way = null;
+            OSMWay next = (OSMWay) this.members.get(0);
             this.intermediateDB.addNodes2OHDMWay(next); // fill way with nodes
             
             int i = 0;
             boolean wayOutside;
             boolean nextOutside = true;
-            OHDMNode firstNode = null;
+            OSMNode firstNode = null;
             
             boolean lastLoop = false;
             
@@ -62,9 +71,9 @@ public class OHDMRelation extends OHDMElement {
 
                 // luck ahead if possible
                 if(++i < memberRoles.size()) {
-                    next = (OHDMWay) members.get(i);
+                    next = (OSMWay) members.get(i);
                     this.intermediateDB.addNodes2OHDMWay(next);
-                    nextOutside = this.memberRoles.get(i).equalsIgnoreCase(OHDMRelation.OUTER_ROLE);
+                    nextOutside = this.memberRoles.get(i).equalsIgnoreCase(OSMRelation.OUTER_ROLE);
                 } else {
                     // no more elements in queue - process final one
                     lastLoop = true;
@@ -209,37 +218,39 @@ public class OHDMRelation extends OHDMElement {
         throw new SQLException(s2);
     }
 
-    private String wkt = null;
     /**
      * See also http://wiki.openstreetmap.org/wiki/Relation:multipolygon
      * type : multipolygon
      * @return 
      */
     @Override
-    String getWKTGeometry() {
+    protected void produceWKTGeometry() {
+        this.wktStringProduced = true;
+        // TODO
+
         // already created wkt?
-        if(this.wkt != null) return this.wkt;
-        
-        if(!this.isPolygon()) return null;
-        
-        // we only create geometries out of mulitpolygons
-        if(!this.getType().equalsIgnoreCase("multipolygon")) return null;
-        
-        if(!this.memberRoles.get(0).equalsIgnoreCase(OHDMRelation.OUTER_ROLE)) {
-            System.err.println("multipolygon starts not with outside role");
-            return null; // must start outside
-        }
-        
-        return null;
+//        if(this.wkt != null) return this.wkt;
+//        
+//        if(!this.isPolygon()) return null;
+//        
+//        // we only create geometries out of mulitpolygons
+//        if(!this.getType().equalsIgnoreCase("multipolygon")) return null;
+//        
+//        if(!this.memberRoles.get(0).equalsIgnoreCase(OHDMRelation.OUTER_ROLE)) {
+//            System.err.println("multipolygon starts not with outside role");
+//            return null; // must start outside
+//        }
+//        
+//        return null;
         
     }
     
-    private boolean addWayToPolygon(OHDMNode firstNode, StringBuilder wkt, OHDMWay way) throws SQLException {
+    private boolean addWayToPolygon(OSMNode firstNode, StringBuilder wkt, OSMWay way) throws SQLException {
         // append all way points to wkt
         wkt.append(way.getWKTPointsOnly());
         
         // get last point
-        OHDMNode lastWayNode = way.getLastPoint();
+        OSMNode lastWayNode = way.getLastPoint();
         
         if(lastWayNode != null && lastWayNode.identical(firstNode)) {
             // polygon finished
@@ -251,11 +262,11 @@ public class OHDMRelation extends OHDMElement {
         return false;
     }
     
-    private void addPoints(ArrayList<OHDMWay> wayList, StringBuilder sb) {
-        Iterator<OHDMWay> wayIter = wayList.iterator();
+    private void addPoints(ArrayList<OSMWay> wayList, StringBuilder sb) {
+        Iterator<OSMWay> wayIter = wayList.iterator();
         boolean first = true;
         while(wayIter.hasNext()) {
-            OHDMWay way = wayIter.next();
+            OSMWay way = wayIter.next();
             if(way.isPolygon()) {
                 if(first) {
                     first = false;
@@ -275,7 +286,28 @@ public class OHDMRelation extends OHDMElement {
         return GeometryType.POLYGON;
     }
     
-    void addMember(OHDMElement element, String roleName) {
+    @Override
+    boolean isConsistent() {
+        // all member added?
+        if(this.memberIDList == null || this.memberIDList.isEmpty() ||
+            this.members == null || this.members.isEmpty() ||
+            this.memberRoles == null || this.memberRoles.isEmpty()) {
+            
+            // relation must have member and roles
+            return false;
+        }
+        
+        // all lists must have same size
+        if( this.members.size() != this.memberIDList.size() ||
+                this.members.size() != this.memberRoles.size() ||
+                this.memberRoles.size() != this.memberIDList.size()) {
+            return false;
+        }
+        
+        return super.isConsistent();
+    }
+    
+    void addMember(OSMElement element, String roleName) {
         if (this.members == null) {
             // setup position list
             this.memberIDList = this.setupIDList(this.memberIDs);
@@ -310,8 +342,8 @@ public class OHDMRelation extends OHDMElement {
         
         // check roles
         for (String roleName : this.memberRoles) {
-            if( !roleName.equalsIgnoreCase(OHDMRelation.INNER_ROLE)
-                    && !roleName.equalsIgnoreCase(OHDMRelation.OUTER_ROLE)
+            if( !roleName.equalsIgnoreCase(OSMRelation.INNER_ROLE)
+                    && !roleName.equalsIgnoreCase(OSMRelation.OUTER_ROLE)
             ) {
                 this.isPolygon = false;
                 break;
@@ -376,10 +408,43 @@ public class OHDMRelation extends OHDMElement {
         this.memberRoles.set(0, this.memberRoles.get(1));
         this.memberRoles.set(1, firstRole);
         
-        OHDMElement firstMember = this.members.get(0);
+        OSMElement firstMember = this.members.get(0);
         this.members.set(0, this.members.get(1));
         this.members.set(1, firstMember);
         
         return true;
+    }
+    
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(super.toString());
+        
+        sb.append("\n");
+        sb.append("members.size()");
+        if(this.members != null) {
+            sb.append(this.members.size());
+        } else {
+            sb.append("null");
+        }
+        sb.append("\t");
+        
+        
+        sb.append("memberIDList.size()");
+        if(this.members != null) {
+            sb.append(this.memberIDList.size());
+        } else {
+            sb.append("null");
+        }
+        sb.append("\t");
+        
+        sb.append("memberRoles.size()");
+        if(this.members != null) {
+            sb.append(this.memberRoles.size());
+        } else {
+            sb.append("null");
+        }
+        
+        return sb.toString();
     }
 }

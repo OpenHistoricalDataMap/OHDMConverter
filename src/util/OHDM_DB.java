@@ -10,6 +10,7 @@ import static util.InterDB.RELATIONMEMBER;
  * @author thsc
  */
 public class OHDM_DB {
+    // Table names
     public static final String POLYGONS = "polygons";
     public static final String CONTENT = "content";
     public static final String GEOOBJECT = "geoobject";
@@ -20,6 +21,11 @@ public class OHDM_DB {
     public static final String EXTERNAL_USERS = "external_users";
     public static final String CLASSIFICATION = "classification";
     public static final String SUBSEQUENT_GEOM_USER = "subsequent_geom_user";
+    public static final String EXTERNAL_SYSTEMS = "external_systems";
+    public static final String GEOOBJECT_CONTENT = "geoobject_content";
+    
+    public static final int UNKNOWN_USER_ID = -1;
+    public static final String URL = "url";
     
     // Geometry Types
     public static int TARGET_GEOOBJECT = 0;
@@ -27,11 +33,12 @@ public class OHDM_DB {
     public static int TARGET_LINESTRING = 2;
     public static int TARGET_POLYGON = 3;
     
-    // Table names
-    public static final String EXTERNAL_SYSTEMS = "external_systems";
-    public static final String GEOOBJECT_CONTENT = "geoobject_content";
-    public static final int UNKNOWN_USER_ID = -1;
-    public static final String URL = "url";
+    // same ? TODO
+    public static final int POINT = 1;
+    public static final int LINESTRING = 2;
+    public static final int POLYGON = 3;
+    public static final int RELATION = 0;
+    
 
     public static void dropOHDMTables(Connection targetConnection, String targetSchema) throws SQLException {
         DB.drop(targetConnection, targetSchema, EXTERNAL_SYSTEMS);
@@ -205,6 +212,7 @@ public class OHDM_DB {
         sq.append(DB.getCreateTableBegin(schema, SUBSEQUENT_GEOM_USER));
         // add table specifics
         sq.append(",");
+        sq.append("target_id bigint NOT NULL, ");
         sq.append("point_id bigint, ");
         sq.append("line_id bigint,");
         sq.append("polygon_id bigint");

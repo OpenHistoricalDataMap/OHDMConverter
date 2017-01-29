@@ -4,6 +4,8 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import util.OHDM_DB;
 
 /**
  *
@@ -41,7 +43,10 @@ public class OSMRelation extends OSMElement {
         return this.members.size();
     }
     
-    boolean fillRelatedGeometries(ArrayList<String> polygonIDs, ArrayList<String> polygonWKT) {
+    boolean fillRelatedGeometries(ArrayList<String> polygonIDs, 
+            ArrayList<String> polygonWKT,
+            ArrayList<OSMElement> waysWithIdentity,
+            ArrayList<OSMElement> nodesWithIdentity) {
         // now... we are going to construct a wkt out of OSM multipolygon... good luck :/
         
         // create a polygon with hole or multiple polygons
@@ -68,7 +73,36 @@ public class OSMRelation extends OSMElement {
                 // shift
                 way = next; // shift
                 wayOutside = nextOutside;
-
+                
+                /*
+                for update we must remember source of geometries.
+                In most cases that relation is already stored in intermediate db
+                But... But sometimes, e.g. ways have their own identity but also
+                add their geometry to e.g. a relation like here.
+                
+                In those cases, intermediate tables only contain their relations
+                to their (let's say first) identity but not to subsequent usages.
+                
+                Therefore we are going to collect all ways which already have
+                an identity.
+                */
+                if(way.hasOHDMObjectID()) {
+                    waysWithIdentity.add(way);
+                }
+                
+                /*
+                same goes for nodes of course. In rare cases, ways contain 
+                nodes with their own identity. Remember that relation
+                 */
+                List<OSMElement> iNodesList = way.getNodesWithIdentity();
+                if(iNodesList != null && !iNodesList.isEmpty()) {
+                    for(OSMElement n : iNodesList) {
+                        nodesWithIdentity.add(n);
+                    }
+                }
+                
+                // after all this pre-processing start loop now.
+                
                 // luck ahead if possible
                 if(++i < memberRoles.size()) {
                     next = (OSMWay) members.get(i);
@@ -282,8 +316,8 @@ public class OSMRelation extends OSMElement {
     }
 
     @Override
-    GeometryType getGeometryType() {
-        return GeometryType.POLYGON;
+    int getGeometryType() {
+        return OHDM_DB.POLYGON;
     }
     
     @Override

@@ -3,6 +3,8 @@ package inter2ohdm;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import util.OHDM_DB;
 
 /**
  *
@@ -131,11 +133,11 @@ public class OSMWay extends OSMElement {
     }
 
     @Override
-    GeometryType getGeometryType() {
+    int getGeometryType() {
         if(this.isPolygon) {
-            return GeometryType.POLYGON;
+            return OHDM_DB.POLYGON;
         } else {
-            return GeometryType.LINESTRING;
+            return OHDM_DB.LINESTRING;
         }
     }
 
@@ -178,6 +180,24 @@ public class OSMWay extends OSMElement {
         } else {
             return this.nodes.get(this.nodes.size()-1);
         }
+    }
+    
+    List<OSMElement> getNodesWithIdentity() {
+        if(this.nodes == null || this.nodes.isEmpty()) return null;
+        
+        ArrayList<OSMElement> iNodes = null;
+        
+        for(OSMNode n : this.nodes) {
+            // has identity?
+            if( n.hasOHDMObjectID() ) {
+                if(iNodes == null) {
+                    iNodes = new ArrayList<>();
+                }
+                iNodes.add(n);
+            }
+        }
+        
+        return iNodes;
     }
     
     @Override

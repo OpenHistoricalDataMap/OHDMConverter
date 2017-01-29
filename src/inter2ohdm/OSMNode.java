@@ -1,6 +1,7 @@
 package inter2ohdm;
 
 import java.sql.Date;
+import util.OHDM_DB;
 
 /**
  *
@@ -59,8 +60,8 @@ public class OSMNode extends OSMElement {
     }
 
     @Override
-    GeometryType getGeometryType() {
-        return GeometryType.POINT;
+    int getGeometryType() {
+        return OHDM_DB.POINT;
     }
 
     boolean identical(OSMNode node) {

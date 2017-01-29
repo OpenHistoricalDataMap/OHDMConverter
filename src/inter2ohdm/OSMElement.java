@@ -50,8 +50,6 @@ public abstract class OSMElement extends AbstractElement {
         return this.tstamp;
     }
 
-    public static enum GeometryType {POINT, LINESTRING, POLYGON, RELATION};
-
     OSMElement(IntermediateDB intermediateDB, String osmIDString, 
             String classCodeString, String sTags, 
             String ohdmObjectIDString, String ohdmGeomIDString,  
@@ -110,7 +108,7 @@ public abstract class OSMElement extends AbstractElement {
         return this.wktString;
     }
     
-    abstract GeometryType getGeometryType();
+    abstract int getGeometryType();
     
     void setOHDM_IDs(String ohdmObjectIDString, String ohdmGeomIDString, boolean persist) throws SQLException {
         if(persist) {
@@ -140,6 +138,11 @@ public abstract class OSMElement extends AbstractElement {
     
     String getOHDMObjectID() {
         return this.ohdmObjectIDString;
+    }
+    
+    boolean hasOHDMObjectID() {
+        return (this.ohdmObjectIDString != null 
+                && !this.ohdmObjectIDString.isEmpty());
     }
     
     String getOHDMGeomID() {

@@ -382,7 +382,15 @@ public class SQLStatementQueue {
     
     @Override
     public String toString() {
-        return "lastStatement:\n" + this.debugLastStatement;
+        StringBuilder sb = new StringBuilder();
+        if(this.sqlQueue != null) {
+            sb.append("currentStatement (not null): ");
+            sb.append(this.sqlQueue);
+        }
+        sb.append("lastStatement:\n");
+        sb.append(this.debugLastStatement);
+        
+        return sb.toString();
     }
 
     synchronized void done(SQLExecute execThread) {

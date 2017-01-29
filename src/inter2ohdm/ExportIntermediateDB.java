@@ -12,6 +12,7 @@ import static util.InterDB.RELATIONTABLE;
 import static util.InterDB.WAYMEMBER;
 import static util.InterDB.WAYTABLE;
 import util.DB;
+import util.OHDM_DB;
 import util.SQLStatementQueue;
 import util.Util;
 
@@ -176,24 +177,24 @@ public class ExportIntermediateDB extends IntermediateDB {
 
                 // extract member objects from their tables
                 BigDecimal id;
-                OSMElement.GeometryType type = null;
+                int type = -1;
 
                 sql.append("SELECT * FROM ");
 
                 id = qResultRelation.getBigDecimal("node_id");
                 if(id != null) {
                     sql.append(DB.getFullTableName(this.schema, NODETABLE));
-                    type = OSMElement.GeometryType.POINT;
+                    type = OHDM_DB.POINT;
                 } else {
                     id = qResultRelation.getBigDecimal("way_id");
                     if(id != null) {
                         sql.append(DB.getFullTableName(this.schema, WAYTABLE));
-                        type = OSMElement.GeometryType.LINESTRING;
+                        type = OHDM_DB.LINESTRING;
                     } else {
                         id = qResultRelation.getBigDecimal("member_rel_id");
                         if(id != null) {
                             sql.append(DB.getFullTableName(this.schema, RELATIONTABLE));
-                            type = OSMElement.GeometryType.RELATION;
+                            type = OHDM_DB.RELATION;
                         } else {
                             // we have a serious problem here.. or no member
                         }
@@ -213,13 +214,13 @@ public class ExportIntermediateDB extends IntermediateDB {
                     // this call can fail, see else branch
                     OSMElement memberElement = null;
                     switch(type) {
-                        case POINT: 
+                        case OHDM_DB.POINT: 
                             memberElement = this.createOHDMNode(memberResult);
                             break;
-                        case LINESTRING:
+                        case OHDM_DB.LINESTRING:
                             memberElement = this.createOHDMWay(memberResult);
                             break;
-                        case RELATION:
+                        case OHDM_DB.RELATION:
                             memberElement = this.createOHDMRelation(memberResult);
                             break;
                     }

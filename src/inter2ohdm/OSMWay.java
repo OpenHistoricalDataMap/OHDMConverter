@@ -127,9 +127,9 @@ public class OSMWay extends OSMElement {
     private void appendAllLongLat(StringBuilder wkt, OSMNode node) {
 //            node.getLatitude();
 
-            wkt.append(node.getLatitude());
-            wkt.append(" ");
             wkt.append(node.getLongitude());
+            wkt.append(" ");
+            wkt.append(node.getLatitude());
     }
 
     @Override

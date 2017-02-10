@@ -42,9 +42,9 @@ public class OSMNode extends OSMElement {
     @Override
     protected void produceWKTGeometry() {
         StringBuilder sb = new StringBuilder("POINT(");
-        sb.append(this.getLatitude());
-        sb.append(" ");
         sb.append(this.getLongitude());
+        sb.append(" ");
+        sb.append(this.getLatitude());
         sb.append(")");
         
         this.wktString = sb.toString();

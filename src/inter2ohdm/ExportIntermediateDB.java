@@ -306,7 +306,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                 sql.append(upperID.toString());
                 sql.append(" AND id > "); // excluding lower 
                 sql.append(lowerID.toString());
-                sql.append(" AND classcode != -1 "); // excluding lower 
+                sql.append(" AND classcode != -1 "); // excluding untyped entities 
                 if(importUnnamedEntities) {
                     sql.append(" AND serializedtags like '%004name%'"); // entities with a name
                 }

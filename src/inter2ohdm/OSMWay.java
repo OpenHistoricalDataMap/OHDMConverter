@@ -75,7 +75,7 @@ public class OSMWay extends OSMElement {
     }
     
     String getWKTPointsOnly() {
-        if(this.nodes == null || this.nodes.size() == 0) {
+        if(this.nodes == null || this.nodes.isEmpty()) {
             return "";
         }
         

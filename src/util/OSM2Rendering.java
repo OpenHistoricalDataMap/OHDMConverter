@@ -16,7 +16,7 @@ import osm2inter.SQL_OSM2Inter_Updater;
 public class OSM2Rendering {
 
     public static void main(String[] args) throws IOException, SQLException {
-        
+
         if(args.length < 4) {
             /* at least two parameter are required which are 
             defined with at least four arguments

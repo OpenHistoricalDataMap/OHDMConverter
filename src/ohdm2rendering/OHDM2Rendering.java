@@ -120,7 +120,7 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                         case 2: sql.append("line"); break; // select line in geom table
                         case 3: sql.append("polygon"); break; // select polygon in geom table
                         }
-                        sql.append(", subclassname, name, valid_since, valid_until, valid_since_offset, valid_until_offset) ");
+                        sql.append(", object_id, geom_id, subclassname, name, valid_since, valid_until, valid_since_offset, valid_until_offset) ");
                     }
 
                     sql.append("select g.");
@@ -129,7 +129,7 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                     case 2: sql.append("line"); break; // select line in geom table
                     case 3: sql.append("polygon"); break; // select polygon in geom table
                     }
-                    sql.append(", c.subclassname, o.name, gg.valid_since, ");
+                    sql.append(", o.id as object_id, g.id as geom_id, c.subclassname, o.name, gg.valid_since, ");
                     sql.append("gg.valid_until, gg.valid_since_offset, ");
                     sql.append("gg.valid_until_offset ");
 
@@ -141,12 +141,12 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
 
                     sql.append(" from");
                     
-                    // geoobject
+                    // geoobject o
                     sql.append(" (SELECT id, name from ");
                     sql.append(sourceSchema);
                     sql.append(".geoobject) as o, ");
                     
-                    // geoobject_geometry
+                    // geoobject_geometry gg
                     sql.append("(SELECT id_target, classification_id, type_target, id_geoobject_source, valid_since, ");
                     sql.append("valid_until, valid_since_offset, valid_until_offset FROM ");
                     sql.append(sourceSchema);
@@ -155,7 +155,7 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
 
                     sql.append(") as gg, ");
                     
-                    // geometry
+                    // geometry g
                     sql.append("(SELECT id, ");
                     switch(targetType) {
                     case 1: sql.append("point"); break; // select point in geom table
@@ -172,7 +172,7 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                     }
                     sql.append(") as g,");
                     
-                    // classification
+                    // classification c
                     sql.append("(SELECT subclassname FROM ");
                     sql.append(sourceSchema);
                     sql.append(".classification where id = ");

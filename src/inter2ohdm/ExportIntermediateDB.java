@@ -31,9 +31,15 @@ public class ExportIntermediateDB extends IntermediateDB {
 
     // for statistics
     private long number;
-    private long numberNodes = 0;
-    private long numberWays = 0;
-    private long numberRelations = 0;
+    private String nodesTableEntries = "?";
+    private String waysTableEntries = "?";
+    private String relationsTableEntries = "?";
+    private long numberCheckedNodes = 0;
+    private long numberCheckedWays = 0;
+    private long numberCheckedRelations = 0;
+    private long numberImportedNodes = 0;
+    private long numberImportedWays = 0;
+    private long numberImportedRelations = 0;
     private long historicInfos = 0;
     private final long startTime;
     
@@ -62,31 +68,41 @@ public class ExportIntermediateDB extends IntermediateDB {
     private BigDecimal initialMaxID;
     private final BigDecimal steps;
     
-    private void calculateInitialIDs(SQLStatementQueue sql, String tableName) {
+    private String calculateInitialIDs(SQLStatementQueue sql, String tableName) {
         // first: figure out min and max osm_id in nodes table
+        
+        String resultString = "unknown";
+        
         try {
-            sql.append("SELECT min(id) FROM ");
+            sql.append("SELECT count(id), min(id), max(id) FROM ");
             sql.append(DB.getFullTableName(this.schema, tableName));
             sql.append(";");
 
             ResultSet result = sql.executeWithResult();
             result.next();
-            BigDecimal minID = result.getBigDecimal(1);
-
+            
+            BigDecimal lines = result.getBigDecimal(1);
+            BigDecimal minID = result.getBigDecimal(2);
+/*
             sql.append("SELECT max(id) FROM ");
             sql.append(DB.getFullTableName(this.schema, tableName));
             sql.append(";");
 
             result = sql.executeWithResult();
             result.next();
-            this.initialMaxID = result.getBigDecimal(1);
+*/            
+            this.initialMaxID = result.getBigDecimal(3);
 
             this.initialLowerID = minID.subtract(new BigDecimal(1));
             this.initialUpperID = minID.add(this.steps);
+            
+            resultString = lines.toPlainString();
         }
         catch(SQLException se) {
             Util.printExceptionMessage(se, sql, "when calculating initial min max ids for select of nodes, ways or relations", false);
         }
+        
+        return resultString;
     }
     
     void processNode(ResultSet qResult, SQLStatementQueue sql, boolean importUnnamedEntities) {
@@ -94,11 +110,13 @@ public class ExportIntermediateDB extends IntermediateDB {
         try {
             node = this.createOHDMNode(qResult);
             this.currentElement = node;
+            
+            this.numberCheckedNodes++;
 
             if(node.isConsistent()) {
                 // now process that stuff
                 if(this.importer.importNode(node, importUnnamedEntities)) {
-                    this.numberNodes++;
+                    this.numberImportedNodes++;
                 }
 
                 if(this.importer.importPostProcessing(node, importUnnamedEntities)) {
@@ -128,11 +146,13 @@ public class ExportIntermediateDB extends IntermediateDB {
 //            if(!way.isPart() && way.getName() == null) notPartNumber++;
 
             this.addNodes2OHDMWay(way);
+            
+            this.numberCheckedWays++;
 
             if(way.isConsistent()) {
                 // process that stuff
                 if(this.importer.importWay(way, importUnnamedEntities)) {
-                    this.numberWays++;
+                    this.numberImportedWays++;
                 }
 
                 if(this.importer.importPostProcessing(way, importUnnamedEntities)) {
@@ -244,10 +264,12 @@ public class ExportIntermediateDB extends IntermediateDB {
                 if(!relationMemberComplete) break;
             }
             
+            this.numberCheckedRelations++;
+            
             if(relation.isConsistent()) {
                 // process that stuff
                 if(relationMemberComplete && this.importer.importRelation(relation, importUnnamedEntities)) {
-                    this.numberRelations++;
+                    this.numberImportedRelations++;
 
                     if(this.importer.importPostProcessing(relation, importUnnamedEntities)) {
                         this.historicInfos++;
@@ -264,19 +286,19 @@ public class ExportIntermediateDB extends IntermediateDB {
         }
     }
     
-    void processNodes(SQLStatementQueue sql, boolean importUnnamedEntities) {
-        this.processElements(sql, NODE, importUnnamedEntities);
+    void processNodes(SQLStatementQueue sql, boolean namedEntitiesOnly) {
+        this.processElements(sql, NODE, namedEntitiesOnly);
     }
     
-    void processWays(SQLStatementQueue sql, boolean importUnnamedEntities) {
-        this.processElements(sql, WAY, importUnnamedEntities);
+    void processWays(SQLStatementQueue sql, boolean namedEntitiesOnly) {
+        this.processElements(sql, WAY, namedEntitiesOnly);
     }
     
-    void processRelations(SQLStatementQueue sql, boolean importUnnamedEntities) {
-        this.processElements(sql, RELATION, importUnnamedEntities);
+    void processRelations(SQLStatementQueue sql, boolean namedEntitiesOnly) {
+        this.processElements(sql, RELATION, namedEntitiesOnly);
     }
     
-    void processElements(SQLStatementQueue sql, int elementType, boolean importUnnamedEntities) {
+    void processElements(SQLStatementQueue sql, int elementType, boolean namedEntitiesOnly) {
         String elementTableName = null;
         switch(elementType) {
             case NODE:
@@ -290,15 +312,30 @@ public class ExportIntermediateDB extends IntermediateDB {
                 break;
         }
         
-        this.calculateInitialIDs(sql, elementTableName);
+        String elementsNumberString = this.calculateInitialIDs(sql, elementTableName);
+        
+        switch(elementType) {
+            case NODE:
+                this.nodesTableEntries = elementsNumberString;
+                break;
+            case WAY:
+                this.waysTableEntries = elementsNumberString;
+                break;
+            case RELATION:
+                this.relationsTableEntries = elementsNumberString;
+                break;
+        }
+        
         // first: figure out min and max osm_id in nodes table
         BigDecimal lowerID = this.initialLowerID;
         BigDecimal upperID = this.initialUpperID;
         BigDecimal maxID = this.initialMaxID;
             
         try {
+            this.printStarted(elementTableName);
+            this.era = 0; // start new element type - reset for statistics
             do {
-                this.printSelectBetween(elementTableName, lowerID.toString(), upperID.toString());
+                this.printStatus();
         
                 sql.append("SELECT * FROM ");
                 sql.append(DB.getFullTableName(this.schema, elementTableName));
@@ -307,7 +344,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                 sql.append(" AND id > "); // excluding lower 
                 sql.append(lowerID.toString());
                 sql.append(" AND classcode != -1 "); // excluding untyped entities 
-                if(importUnnamedEntities) {
+                if(namedEntitiesOnly) {
                     sql.append(" AND serializedtags like '%004name%'"); // entities with a name
                 }
                 sql.append(";");
@@ -316,7 +353,7 @@ public class ExportIntermediateDB extends IntermediateDB {
                 while(qResult.next()) {
                     this.number++;
                     this.printStatistics();
-                    this.processElement(qResult, sql, elementType, importUnnamedEntities);
+                    this.processElement(qResult, sql, elementType, namedEntitiesOnly);
                 }
                 
                 // next bulk of data
@@ -385,7 +422,23 @@ public class ExportIntermediateDB extends IntermediateDB {
         return way;
     }
     
-    private void printSelectBetween(String what, String from, String to) {
+    private final String progressSign = "*";
+    private int progresslineCount = 0;
+    private long era = 0;
+    private void printStatus() {
+        if(++progresslineCount == 100) {
+//            System.out.println(this.progressSign);
+//            progresslineCount = 0;
+            
+            if(++era % 10 == 0) {
+                System.out.println(Util.getValueWithDots(this.era * 100) + " lines read");
+                System.out.println(this.getStatistics());
+            }
+        } else {
+//            System.out.print(this.progressSign);
+        }
+        
+        /*
         System.out.println("---------------------------------------");
         System.out.print("select ");
         System.out.print(Util.setDotsInStringValue(from));
@@ -394,30 +447,63 @@ public class ExportIntermediateDB extends IntermediateDB {
         System.out.print(".id =< ");
         System.out.println(Util.setDotsInStringValue(to));
         System.out.println("---------------------------------------");
+                */
+    }
+    
+    private void printStarted(String what) {
+        System.out.println("--------------------------------------------------------------------------------");
+        System.out.print("Start importing ");
+        System.out.println(what);
+        System.out.println(this.getStatistics());
+        System.out.println("--------------------------------------------------------------------------------");
     }
     
     private void printFinished(String what) {
-        System.out.println("********************************************************************************");
+        System.out.println("\n--------------------------------------------------------------------------------");
         System.out.print("Finished importing ");
         System.out.println(what);
         System.out.println(this.getStatistics());
-        System.out.println("********************************************************************************");
+        System.out.println("--------------------------------------------------------------------------------");
     }
     
     public String getStatistics() {
         StringBuilder sb = new StringBuilder();
         
-        sb.append("checked: ");
+        sb.append("tablesize: ");
+        sb.append("n:");
+        sb.append(Util.setDotsInStringValue(this.nodesTableEntries));
+        sb.append(",w:");
+        sb.append(Util.setDotsInStringValue(this.waysTableEntries));
+        sb.append(",r:");
+        sb.append(Util.setDotsInStringValue(this.relationsTableEntries));
+        sb.append("\n");
+        
+        sb.append("linesread:");
         sb.append(Util.getValueWithDots(this.number));
-        sb.append(" | imported: ");
-        sb.append(Util.getValueWithDots(this.numberNodes + this.numberWays + this.numberRelations));
+        sb.append(" | read steps: " + Util.setDotsInStringValue(this.steps.toPlainString()));
+        sb.append("\n");
+        
+        sb.append("checked:  ");
+        sb.append(Util.getValueWithDots(this.numberCheckedNodes + this.numberCheckedWays + this.numberCheckedRelations));
         sb.append(" (n:");
-        sb.append(Util.getValueWithDots(this.numberNodes));
-        sb.append(", w:");
-        sb.append(Util.getValueWithDots(this.numberWays));
-        sb.append(", r:");
-        sb.append(Util.getValueWithDots(this.numberRelations));
-        sb.append(") | h:");
+        sb.append(Util.getValueWithDots(this.numberCheckedNodes));
+        sb.append(",w:");
+        sb.append(Util.getValueWithDots(this.numberCheckedWays));
+        sb.append(",r:");
+        sb.append(Util.getValueWithDots(this.numberCheckedRelations));
+        sb.append(")\n");
+        
+        sb.append("imported: ");
+        sb.append(Util.getValueWithDots(this.numberImportedNodes + this.numberImportedWays + this.numberImportedRelations));
+        sb.append(" (n:");
+        sb.append(Util.getValueWithDots(this.numberImportedNodes));
+        sb.append(",w:");
+        sb.append(Util.getValueWithDots(this.numberImportedWays));
+        sb.append(",r:");
+        sb.append(Util.getValueWithDots(this.numberImportedRelations));
+        sb.append(") ");
+        
+        sb.append("historic: ");
         sb.append(Util.getValueWithDots(this.historicInfos));
         sb.append(" | elapsed: ");
         sb.append(Util.getElapsedTime(this.startTime));
@@ -425,10 +511,22 @@ public class ExportIntermediateDB extends IntermediateDB {
         return sb.toString();
     }
     
+    private int p = 0;
     private void printStatistics() {
+        // show little progress...
+        if(++p % 1000 == 0) {
+            System.out.print(".");
+        }
+        
+        if(p == 100 * 10) { // after ten lines
+            System.out.print(".");
+            p = 0;
+        }
+        
+        // show big steps
         if(++this.printEra >= PRINT_ERA_LENGTH) {
             this.printEra = 0;
-            System.out.println(this.getStatistics());
+            System.out.println("\n" + this.getStatistics());
         }
     }
     

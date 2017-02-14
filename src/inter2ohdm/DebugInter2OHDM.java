@@ -26,8 +26,12 @@ public class DebugInter2OHDM extends Inter2OHDM {
 //        System.exit(0);
         
         try {
+            /*
             String sourceParameterFileName = "db_inter_f4_test.txt";
             String targetParameterFileName = "db_ohdm_local.txt";
+            */
+            String sourceParameterFileName = "db_inter.txt";
+            String targetParameterFileName = "db_ohdm.txt";
             
             if(args.length > 0) {
                 sourceParameterFileName = args[0];

@@ -385,7 +385,7 @@ public class Inter2OHDM extends Importer {
         
     }
     
-    String getOHDMObject(OSMElement osmElement, boolean importUnnamedEntities) throws SQLException {
+    String getOHDMObject(OSMElement osmElement, boolean namedEntitiesOnly) throws SQLException {
         // already in OHDM DB?
         String ohdmIDString = osmElement.getOHDMObjectID();
         if(ohdmIDString != null) return ohdmIDString;
@@ -395,13 +395,14 @@ public class Inter2OHDM extends Importer {
             // osm elements don't have necessarily a name. Does this one?
             if(!this.elementHasIdentity(osmElement)) {
                 // no name - to be imported anyway?
-                if(importUnnamedEntities) {
+                if(!namedEntitiesOnly) {
                     // yes - fetch osm dummy object
                     ohdmIDString = this.getOSMDummyObject_OHDM_ID();
                     osmElement.setOHDMObjectID(ohdmIDString);
                     
                     return ohdmIDString;
                 } else {
+                    // no identity and we only accept entities with an identity.. null
                     return null;
                 }
             } else {
@@ -651,7 +652,7 @@ public class Inter2OHDM extends Importer {
      * @param osmElement
      * @return ohdm_id as string
      */
-    public String importOSMElement(OSMElement osmElement, boolean importUnnamedEntities, boolean importWithoutGeometry) {
+    public String importOSMElement(OSMElement osmElement, boolean namedEntitiesOnly, boolean importWithoutGeometry) {
         String osmID = osmElement.getOSMIDString();
         if(osmID.equalsIgnoreCase("188276804") || osmID.equalsIgnoreCase("301835391")) {
             // debug break
@@ -675,7 +676,7 @@ public class Inter2OHDM extends Importer {
             identity and importing of unnamed entities is not yet wished in that call
             null indicates a failure
             */
-            String ohdmObjectIDString = this.getOHDMObject(osmElement, importUnnamedEntities);
+            String ohdmObjectIDString = this.getOHDMObject(osmElement, namedEntitiesOnly);
 
             if(ohdmObjectIDString == null) {
                 System.err.println("cannot create or find ohdm object id (not even dummy osm) and importing of unnamed entites allowed");
@@ -797,13 +798,17 @@ public class Inter2OHDM extends Importer {
             
             sourceQueue = DB.createSQLStatementQueue(sourceConnection, sourceParameter);
             
-            exporter.processNodes(sourceQueue, false);
-            exporter.processWays(sourceQueue, true);
-            exporter.processRelations(sourceQueue, false);
+            System.out.println("start insert data into ohdm DB from intermediate DB");
+            System.out.println("select range is " + stepLen);
             
+            exporter.processNodes(sourceQueue, true);
+            exporter.processWays(sourceQueue, false);
+            exporter.processRelations(sourceQueue, true);
+            
+            System.out.println("done importing from intermediate DB to ohdm DB");
             System.out.println(exporter.getStatistics());
   
-        } catch (Exception e) {
+        } catch (IOException | SQLException e) {
             Util.printExceptionMessage(e, sourceQueue, "main method in Inter2OHDM", false);
         }
     }

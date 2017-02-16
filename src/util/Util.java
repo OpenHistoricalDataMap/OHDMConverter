@@ -127,6 +127,10 @@ public class Util {
     }
     
     public static void printExceptionMessage(PrintStream err, Throwable e, SQLStatementQueue sql) {
+        if(err == null) {
+            err = System.err;
+        }
+        
         err.println("........................................................................................");
         if(e != null ) err.println(e.getMessage());
         if(sql != null ) err.println(sql.toString());

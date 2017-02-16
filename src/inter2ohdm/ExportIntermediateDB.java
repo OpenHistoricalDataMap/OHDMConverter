@@ -14,19 +14,21 @@ import static util.InterDB.WAYTABLE;
 import util.DB;
 import util.OHDM_DB;
 import util.SQLStatementQueue;
+import util.Trigger;
+import util.TriggerRecipient;
 import util.Util;
 
 /**
  *
  * @author thsc
  */
-public class ExportIntermediateDB extends IntermediateDB {
+public class ExportIntermediateDB extends IntermediateDB implements TriggerRecipient {
     private final Importer importer;
     
     private final String schema;
     
     private int printEra = 0;
-    private final static int PRINT_ERA_LENGTH = 10000;
+    private final static int PRINT_ERA_LENGTH = 100000;
     private static final int DEFAULT_STEP_LEN = 1000;
 
     // for statistics
@@ -47,6 +49,8 @@ public class ExportIntermediateDB extends IntermediateDB {
     static final int WAY = 1;
     static final int RELATION = 2;
     private int steplen;
+    private String upperIDString;
+    private String lowerIDString;
     
     ExportIntermediateDB(Connection sourceConnection, String schema, Importer importer, int steplen) {
         super(sourceConnection, schema);
@@ -57,7 +61,9 @@ public class ExportIntermediateDB extends IntermediateDB {
         this.schema = schema;
         this.importer = importer;
         
-        if(steplen < 1) {
+        this.steplen = steplen;
+        
+        if(this.steplen < 1) {
             this.steplen = DEFAULT_STEP_LEN;
         }
         
@@ -346,6 +352,12 @@ public class ExportIntermediateDB extends IntermediateDB {
         BigDecimal upperID = this.initialUpperID;
         BigDecimal maxID = this.initialMaxID;
             
+        this.upperIDString = Util.setDotsInStringValue(upperID.toPlainString());
+        this.lowerIDString = Util.setDotsInStringValue(lowerID.toPlainString());
+        
+        System.out.println("Start processing entites with initial range: [");
+        System.out.println(this.getStatistics());
+        
         try {
             this.printStarted(elementTableName);
             this.era = 0; // start new element type - reset for statistics
@@ -376,6 +388,10 @@ public class ExportIntermediateDB extends IntermediateDB {
                 if(upperID.compareTo(initialMaxID) == 1 && lowerID.compareTo(initialMaxID) == -1) {
                     upperID = initialMaxID; // last round
                 }
+                
+                this.upperIDString = Util.setDotsInStringValue(upperID.toPlainString());
+                this.lowerIDString = Util.setDotsInStringValue(lowerID.toPlainString());
+                
             } while(!(upperID.compareTo(initialMaxID) == 1));
         } 
         catch (SQLException ex) {
@@ -467,9 +483,10 @@ public class ExportIntermediateDB extends IntermediateDB {
         sb.append(Util.setDotsInStringValue(this.relationsTableEntries));
         sb.append("\n");
         
-        sb.append("linesread:");
-        sb.append(Util.getValueWithDots(this.number));
-        sb.append(" | read steps: " + Util.getValueWithDots(this.steplen));
+        sb.append(this.lowerIDString);
+        sb.append(" < current range <= ");
+        sb.append(this.upperIDString);
+        sb.append(") | read steps: " + Util.getValueWithDots(this.steplen));
         sb.append("\n");
         
         sb.append("checked:  ");
@@ -505,18 +522,18 @@ public class ExportIntermediateDB extends IntermediateDB {
     
     private void printStatistics() {
         // show little progress...
-        if(++p % P_MAX == 0) {
-            System.out.print(".");
-        }
-        
-        // line break
-        if(p % (P_MAX * 50) == 0) { // 50 signs each line
-            System.out.println(".");
-            // stats
-            if(p % (P_MAX * 500) == 0) { // after ten lines
-                System.out.println(Util.getValueWithDots(p * this.steplen * P_MAX * 500) + " lines read");
-            }
-        }
+//        if(++p % P_MAX == 0) {
+//            System.out.print(".");
+//        }
+//        
+//        // line break
+//        if(p % (P_MAX * 50) == 0) { // 50 signs each line
+//            System.out.println(".");
+//            // stats
+//            if(p % (P_MAX * 500) == 0) { // after ten lines
+//                System.out.println(Util.getValueWithDots(p * this.steplen * P_MAX * 500) + " lines read");
+//            }
+//        }
         
         // show big steps
         if(++this.printEra >= PRINT_ERA_LENGTH) {
@@ -564,5 +581,10 @@ public class ExportIntermediateDB extends IntermediateDB {
             Util.printExceptionMessage(t, sql, "uncatched throwable when processing element from intermediate db", true);
             System.err.println("---------------------------------------------------------------------------");
         }
+    }
+
+    @Override
+    public void trigger() {
+        System.out.println("\n" + this.getStatistics());
     }
 }

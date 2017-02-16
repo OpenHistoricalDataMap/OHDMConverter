@@ -16,6 +16,7 @@ import util.DB;
 import util.OHDM_DB;
 import util.SQLStatementQueue;
 import util.Parameter;
+import util.Trigger;
 import util.Util;
 
 /**
@@ -763,7 +764,8 @@ public class Inter2OHDM extends Importer {
                     targetConnection, sourceSchema, targetSchema);
             
             try {
-                ohdmImporter.forgetPreviousImport();
+//                ohdmImporter.forgetPreviousImport();
+                System.out.println("We DONT reset intermediate DB... works nicely in first try");
                 OHDM_DB.dropOHDMTables(targetConnection, targetSchema);
             }
             catch(Exception e) {
@@ -791,9 +793,17 @@ public class Inter2OHDM extends Importer {
             System.out.println("start insert data into ohdm DB from intermediate DB");
             System.out.println("select range is " + stepLen);
             
+        
+            // start stats trigger: 5 minutes
+            Trigger trigger = new Trigger(exporter, 1000 * 60 * 5);
+            trigger.start();
+            
             exporter.processNodes(sourceQueue, true);
             exporter.processWays(sourceQueue, false);
             exporter.processRelations(sourceQueue, true);
+            
+            trigger.end();
+            trigger.interrupt();
             
             System.out.println("done importing from intermediate DB to ohdm DB");
             System.out.println(exporter.getStatistics());

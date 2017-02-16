@@ -113,9 +113,8 @@ public class Util {
         err.println("****************************************************************************************");
 
         if(additionalMessage != null ) System.err.println(additionalMessage);
-        if(e != null ) err.println(e.getMessage());
-        if(sql != null ) err.println(sql.toString());
-        if(e != null ) e.printStackTrace(System.err);
+        
+        Util.printExceptionMessage(err, e, sql);
         
         if(!goahead) {
             err.println("FATAL.. stop executing");
@@ -125,6 +124,14 @@ public class Util {
         }
         
         err.println("****************************************************************************************");
+    }
+    
+    public static void printExceptionMessage(PrintStream err, Throwable e, SQLStatementQueue sql) {
+        err.println("........................................................................................");
+        if(e != null ) err.println(e.getMessage());
+        if(sql != null ) err.println(sql.toString());
+        if(e != null ) e.printStackTrace(System.err);
+        err.println("........................................................................................");
     }
     
     public static void printExceptionMessage(Throwable e, SQLStatementQueue sql, String additionalMessage) {

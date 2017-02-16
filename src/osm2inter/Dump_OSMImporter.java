@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.DefaultHandler;
 import osm.OSMClassification;
-import util.AbstractElement;
+import inter2ohdm.AbstractElement;
 import util.DB;
 import util.Parameter;
 import util.SQLStatementQueue;

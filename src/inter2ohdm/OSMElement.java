@@ -4,7 +4,6 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
-import util.AbstractElement;
 import osm.OSMClassification;
 
 /**
@@ -302,6 +301,8 @@ public abstract class OSMElement extends AbstractElement {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
+        
+        sb.append(super.toString());
         
         sb.append("osmIDString: ");
         sb.append(osmIDString);

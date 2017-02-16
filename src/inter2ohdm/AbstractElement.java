@@ -1,8 +1,9 @@
-package util;
+package inter2ohdm;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.StringTokenizer;
 
 /**
@@ -11,6 +12,7 @@ import java.util.StringTokenizer;
  */
 public class AbstractElement {
     private final HashMap<String, String> attributes;
+    private String sTags;
     
     public HashMap<String, String> getAttributes() {
         return this.attributes;
@@ -28,9 +30,15 @@ public class AbstractElement {
 
     public AbstractElement(String serializedAttrAndTags) {
 //        this.attributes = new HashMap<>();
+        this.sTags = serializedAttrAndTags; // only for debugging purpose
         this.attributes = this.deserializeAttributes(serializedAttrAndTags);
         
 //        this.tags2attributes();
+    }
+    
+    @Override
+    public String toString() {
+        return "sTags: " + this.sTags + "\n";
     }
     
     /**
@@ -277,28 +285,118 @@ public class AbstractElement {
      * duration / names pairs  of old names as there are found in osm
      * @return can return null if no old name is found.
      */
-    public HashMap<String, String> getOldNameStrings() {
-        //old_name:[lang]:1906-1933
-        
-        HashMap<String, String> oldNames = null;
+    List<OldName> getOldNames() {
+        ArrayList<OldName> oldNames = null;
         // iterate attributes
+        
         for(String name : this.attributes.keySet()) {
             if(name.startsWith("old_name")) {
                 // extract time from key
                 int last = name.lastIndexOf(":");
                 if(last == -1) continue;
-                String durationString = name.substring(last+1);
-                String oldName = this.attributes.get(name);
                 
-                if(oldName != null && oldName.length() > 0) {
+                // there is an old name - keep it somewhere
+                OldName oldName = new OldName();
+                
+                // get duration string
+                String durationString = name.substring(last+1);
+
+                // no valid duration string? forget it
+                if(!this.addDuration(oldName, durationString)) {
+                    continue;
+                }
+                
+                // remember old name
+                oldName.oldname = this.attributes.get(name);
+                
+                // valid name?
+                if(oldName.oldname != null && oldName.oldname.length() > 0) {
                     if(oldNames == null) {
-                        oldNames = new HashMap<>();
+                        oldNames = new ArrayList<>();
                     }
-                    oldNames.put(durationString, oldName);
+                    
+                    oldNames.add(oldName);
                 }
             }
         }
-        
         return oldNames;
+    }
+
+    private boolean addDuration(OldName oldName, String durationString) {
+        /*
+        old_name:[lang]:1906-1933
+        old_name:[lang]:-193302
+        old_name:[lang]:193002-193302
+        */
+        
+        // at least there is a comma
+        int dashIndex = durationString.indexOf("-");
+        if(dashIndex == -1) return false;
+        
+        String toString = this.getWellformedTimeString(durationString.substring(dashIndex+1));
+
+        if(toString == null) {
+            return false;
+        }
+        
+        String fromString = this.getWellformedTimeString(durationString.substring(0, dashIndex));
+        
+        if(fromString == null) {
+            // make a guess: at least a year earlier
+            String toYearString = toString.substring(0, 4);
+            try {
+                int toYear = Integer.parseInt(toYearString);
+                fromString = String.valueOf(toYear-1);
+                
+                if(toString.length() > 4) {
+                    fromString += toString.substring(4);
+                }
+            }
+            catch(RuntimeException e) {
+                return false;
+            }
+        }
+        
+        // set from and to
+        oldName.fromYear = fromString;
+        oldName.toYear = toString;
+        
+        return true;
+    }
+    
+    private String getWellformedTimeString(String timeString) {
+        // try to parse
+        /*
+         * 193302, 1930, 19300202 
+         */
+        if(timeString == null || timeString.length() == 0) {
+            return null;
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        
+        // four characters.. just a year
+        if(timeString.length() == 4) {
+            // 2000
+            sb.append(timeString);
+            sb.append("-01-01");
+        } else if(timeString.length() == 6) {
+            // 200002
+            sb.append(timeString.substring(0, 4));
+            sb.append("-");
+            sb.append(timeString.substring(4));
+            sb.append("-01");
+        } else if(timeString.length() == 8) {
+            // 200002
+            sb.append(timeString.substring(0, 4));
+            sb.append("-");
+            sb.append(timeString.substring(4, 6));
+            sb.append("-");
+            sb.append(timeString.substring(6));
+        } else {
+            return null;
+        }
+        
+        return sb.toString();
     }
 }

@@ -210,7 +210,7 @@ public class Inter2OHDM extends Importer {
     @Override
     public boolean importPostProcessing(OSMElement element, boolean importUnnamedEntities) throws SQLException {
         // are there historic names?
-        HashMap<String, String> oldNames = element.getOldNameStrings();
+        List<OldName> oldNames = element.getOldNames();
         if(oldNames == null) return false;
         
         /* we have a list of pairs like
@@ -224,60 +224,50 @@ public class Inter2OHDM extends Importer {
         int targetType = this.getTargetTypeInt(element);
         String classCodeString = element.getClassCodeString(); // just a guess, might have changed over time.
         int externalUserID = this.getOHDM_ID_ExternalUser(element);
-        
-        // we keep all newly created elements in that map: name / ohdmID
-        HashMap<String, String> newOldElements = new HashMap<>();
-        for(String oldTimeSpan : oldNames.keySet()) {
-            int i = oldTimeSpan.indexOf("-");
-            if(i == -1) continue;
-            
-            String fromYear = oldTimeSpan.substring(0, i) + "-01-01";
-            String toYear = oldTimeSpan.substring(i+1) + "-01-01";
-            
-            String oldName = oldNames.get(oldTimeSpan);
-            
-            /*
-            It not seldom that e.g. a place is renamed for a while
-            and get's its name back after a regime change. That happend
-            e.g. in Germany between 1933-1945 but also after 1949-1989
-            in Eastgermany.
-            Thus, maybe that old could have already been used
-             */
-            
-            String newOldOHDMID = newOldElements.get(oldName);
 
-            // if this not already exist..create
-            if(newOldOHDMID == null || newOldOHDMID.length() == 0) {
-                newOldOHDMID = this.addOHDMObject(oldName, this.getOHDM_ID_ExternalUser(element));
+        HashMap<String,String> newOldObject_Name_ID = new HashMap<>();
+        
+        Iterator<OldName> oldNamesIter = oldNames.iterator();        
+        while(oldNamesIter.hasNext()) {
+            OldName oldName = oldNamesIter.next();
+            
+            // each new old name is a new object
+            
+            // have we already created a new old object?
+            String newOldOHDMID = newOldObject_Name_ID.get(oldName.oldname);
+            
+            if(newOldOHDMID == null) {
+                // not yet created.. do it
+                newOldOHDMID = this.addOHDMObject(oldName.oldname, 
+                        this.getOHDM_ID_ExternalUser(element));
+                
                 // remember
-                newOldElements.put(oldName, newOldOHDMID);
+                newOldObject_Name_ID.put(oldName.oldname, newOldOHDMID);
             }
             
             String targetIDString;
             if(element instanceof OSMRelation) {
                 // relations can have more than one associated geometry
                 OSMRelation relation = (OSMRelation) element;
-                for(i = 0; i < relation.getMemberSize(); i++) {
+                for(int i = 0; i < relation.getMemberSize(); i++) {
                     OSMElement member = relation.getMember(i);
                     
                     targetIDString = member.getOHDMGeomID();
                     this.addValidity(this.targetQueue, targetType, 
                             classCodeString, newOldOHDMID, targetIDString, 
-                            externalUserID, fromYear, toYear);
+                            externalUserID, oldName.fromYear, oldName.toYear);
                 }
             } else {
                 targetIDString = element.getOHDMGeomID();
                 if(targetIDString != null && targetIDString.length() > 0) {
                     this.addValidity(this.targetQueue, targetType, 
                             classCodeString, newOldOHDMID, targetIDString, 
-                            externalUserID, fromYear, toYear);
+                            externalUserID, oldName.fromYear, oldName.toYear);
                 }
             }
-            
-            
         }
         
-        if(newOldElements.isEmpty()) return false;
+        if(newOldObject_Name_ID.isEmpty()) return false;
         
         this.targetQueue.forceExecute();
         

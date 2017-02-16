@@ -2,7 +2,6 @@ package util;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -200,11 +199,12 @@ public class SQLStatementQueue {
      * @param recordEntry
      * @throws SQLException
      * @throws IOException 
+     * @deprecated 
      */
     public void forceExecute(String recordEntry) 
             throws SQLException, IOException {
         
-        this.forceExecute(true, recordEntry);
+        this.forceExecute(false, recordEntry);
     }
             
     public void forceExecute(boolean parallel) 
@@ -330,6 +330,7 @@ public class SQLStatementQueue {
                 SQLExecute.doExec(conn, this.sqlQueue.toString());
             }
             catch(SQLException e) {
+                Util.printExceptionMessage(errStream, e, this);
                 throw e;
             }
             finally {

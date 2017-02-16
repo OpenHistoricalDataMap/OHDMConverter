@@ -38,6 +38,33 @@ class SQLExecute extends Thread {
                 System.err.println("cannot execute empty (null) sqlStatement - continue");
                 return;
             }
+/*
+import from osm file into intermediate db
+Exception in thread "Thread-446720582" java.lang.ArrayIndexOutOfBoundsException
+        at java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:597
+)
+        at java.lang.StringBuilder.append(StringBuilder.java:190)
+        at org.postgresql.core.Parser.parseSql(Parser.java:1026)
+        at org.postgresql.core.Parser.replaceProcessing(Parser.java:972)
+        at org.postgresql.core.CachedQueryCreateAction.create(CachedQueryCreateA
+ction.java:41)
+        at org.postgresql.core.CachedQueryCreateAction.create(CachedQueryCreateA
+ction.java:17)
+        at org.postgresql.util.LruCache.borrow(LruCache.java:115)
+        at org.postgresql.core.QueryExecutorBase.borrowQuery(QueryExecutorBase.j
+ava:266)
+        at org.postgresql.jdbc.PgConnection.borrowQuery(PgConnection.java:143)
+        at org.postgresql.jdbc.PgPreparedStatement.<init>(PgPreparedStatement.ja
+va:88)
+        at org.postgresql.jdbc.PgConnection.prepareStatement(PgConnection.java:1
+256)
+        at org.postgresql.jdbc.PgConnection.prepareStatement(PgConnection.java:1
+622)
+        at org.postgresql.jdbc.PgConnection.prepareStatement(PgConnection.java:4
+15)
+        at util.SQLExecute.doExec(SQLExecute.java:41)
+        at util.SQLExecute.run(SQLExecute.java:62)            
+            */            
             stmt = connection.prepareStatement(sqlStatement);
             stmt.execute();
             stmt.close();

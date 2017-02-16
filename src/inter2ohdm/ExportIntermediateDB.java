@@ -46,6 +46,7 @@ public class ExportIntermediateDB extends IntermediateDB {
     static final int NODE = 0;
     static final int WAY = 1;
     static final int RELATION = 2;
+    private int steplen;
     
     ExportIntermediateDB(Connection sourceConnection, String schema, Importer importer, int steplen) {
         super(sourceConnection, schema);
@@ -57,10 +58,10 @@ public class ExportIntermediateDB extends IntermediateDB {
         this.importer = importer;
         
         if(steplen < 1) {
-            steplen = DEFAULT_STEP_LEN;
+            this.steplen = DEFAULT_STEP_LEN;
         }
         
-        this.steps = new BigDecimal(steplen);
+        this.steps = new BigDecimal(this.steplen);
     }
 
     private BigDecimal initialLowerID;
@@ -111,6 +112,10 @@ public class ExportIntermediateDB extends IntermediateDB {
             node = this.createOHDMNode(qResult);
             this.currentElement = node;
             
+            if(node.getOSMIDString().equalsIgnoreCase("20246240")) {
+                int i = 42;
+            }
+            
             this.numberCheckedNodes++;
 
             if(node.isConsistent()) {
@@ -127,8 +132,10 @@ public class ExportIntermediateDB extends IntermediateDB {
             }
         }
         catch(SQLException se) {
-            System.err.println("node osm_id: " + node.getOSMIDString());
+            System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+            System.err.println("exception when handling node osm_id: " + node.getOSMIDString());
             Util.printExceptionMessage(se, sql, "failure when processing node.. non fatal", true);
+            System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         }
     }
     
@@ -142,6 +149,10 @@ public class ExportIntermediateDB extends IntermediateDB {
         try {
             way = this.createOHDMWay(qResult);
             this.currentElement = way;
+            
+            if(way.getOSMIDString().equalsIgnoreCase("4557344")) {
+                int i = 42;
+            }
 
 //            if(!way.isPart() && way.getName() == null) notPartNumber++;
 
@@ -163,8 +174,10 @@ public class ExportIntermediateDB extends IntermediateDB {
             }
         }
         catch(SQLException se) {
-            System.err.println("way: " + way);
+            System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+            System.err.println("exception when processing way: " + way);
             Util.printExceptionMessage(se, sql, "failure when processing way.. non fatal", true);
+            System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         }
     }
     
@@ -281,8 +294,10 @@ public class ExportIntermediateDB extends IntermediateDB {
             }
         }
         catch(SQLException se) {
+            System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
             System.err.println("relation osm_id: " + relation.getOSMIDString());
             Util.printExceptionMessage(se, sql, "failure when processing relation.. non fatal", true);
+            System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         }
     }
     
@@ -335,8 +350,6 @@ public class ExportIntermediateDB extends IntermediateDB {
             this.printStarted(elementTableName);
             this.era = 0; // start new element type - reset for statistics
             do {
-                this.printStatus();
-        
                 sql.append("SELECT * FROM ");
                 sql.append(DB.getFullTableName(this.schema, elementTableName));
                 sql.append(" where id <= "); // including upper
@@ -425,31 +438,7 @@ public class ExportIntermediateDB extends IntermediateDB {
     private final String progressSign = "*";
     private int progresslineCount = 0;
     private long era = 0;
-    private void printStatus() {
-        if(++progresslineCount == 100) {
-//            System.out.println(this.progressSign);
-//            progresslineCount = 0;
-            
-            if(++era % 10 == 0) {
-                System.out.println(Util.getValueWithDots(this.era * 100) + " lines read");
-                System.out.println(this.getStatistics());
-            }
-        } else {
-//            System.out.print(this.progressSign);
-        }
-        
-        /*
-        System.out.println("---------------------------------------");
-        System.out.print("select ");
-        System.out.print(Util.setDotsInStringValue(from));
-        System.out.print(" < ");
-        System.out.print(what);
-        System.out.print(".id =< ");
-        System.out.println(Util.setDotsInStringValue(to));
-        System.out.println("---------------------------------------");
-                */
-    }
-    
+
     private void printStarted(String what) {
         System.out.println("--------------------------------------------------------------------------------");
         System.out.print("Start importing ");
@@ -480,7 +469,7 @@ public class ExportIntermediateDB extends IntermediateDB {
         
         sb.append("linesread:");
         sb.append(Util.getValueWithDots(this.number));
-        sb.append(" | read steps: " + Util.setDotsInStringValue(this.steps.toPlainString()));
+        sb.append(" | read steps: " + Util.getValueWithDots(this.steplen));
         sb.append("\n");
         
         sb.append("checked:  ");
@@ -511,16 +500,22 @@ public class ExportIntermediateDB extends IntermediateDB {
         return sb.toString();
     }
     
-    private int p = 0;
+    private long p = 0;
+    private static final int P_MAX = 100;
+    
     private void printStatistics() {
         // show little progress...
-        if(++p % 1000 == 0) {
+        if(++p % P_MAX == 0) {
             System.out.print(".");
         }
         
-        if(p == 100 * 10) { // after ten lines
-            System.out.print(".");
-            p = 0;
+        // line break
+        if(p % (P_MAX * 50) == 0) { // 50 signs each line
+            System.out.println(".");
+            // stats
+            if(p % (P_MAX * 500) == 0) { // after ten lines
+                System.out.println(Util.getValueWithDots(p * this.steplen * P_MAX * 500) + " lines read");
+            }
         }
         
         // show big steps

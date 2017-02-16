@@ -7,7 +7,6 @@ import java.io.PrintStream;
 import java.sql.SQLException;
 import ohdm2rendering.OHDM2Rendering;
 import osm2inter.OSM2Inter;
-import osm2inter.SQL_OSM2Inter_Updater;
 
 /**
  *
@@ -117,7 +116,8 @@ public class OSM2Rendering {
         }
         
         if(updateInterDBConfig != null &&  ohdmDBConfig != null) {
-            SQL_OSM2Inter_Updater.main(new String[]{updateInterDBConfig, ohdmDBConfig});
+            // TODO
+//            SQL_OSM2Inter_Updater.main(new String[]{updateInterDBConfig, ohdmDBConfig});
         }
         
         if(ohdmDBConfig != null &&  renderingDBConfig != null) {

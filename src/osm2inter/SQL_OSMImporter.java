@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.DefaultHandler;
 import osm.OSMClassification;
-import util.AbstractElement;
+import inter2ohdm.AbstractElement;
 import util.DB;
 import util.Parameter;
 import util.SQLStatementQueue;
@@ -451,9 +451,9 @@ public class SQL_OSMImporter extends DefaultHandler {
                 Util.printExceptionMessage(e, insertQueue, "exception when starting index creation on way table over osm_id");
             }
 
-            this.insertQueue.append("CREATE INDEX waynodes_node_id ON ");
+            this.insertQueue.append("CREATE INDEX waynodes_node_way_id ON ");
             this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.WAYMEMBER));
-            this.insertQueue.append(" (node_id);");
+            this.insertQueue.append(" (node_id, way_id);");
             System.out.println("index on waymember table over node_id");
             try {
                 this.insertQueue.forceExecute(true);
@@ -462,16 +462,16 @@ public class SQL_OSMImporter extends DefaultHandler {
                 Util.printExceptionMessage(e, insertQueue, "exception when starting index creation on waymember table over node_id");
             }
             
-            this.insertQueue.append("CREATE INDEX waynodes_way_id ON ");
-            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.WAYMEMBER));
-            this.insertQueue.append(" (way_id);");
-            System.out.println("index on waymember table over way_id");
-            try {
-                this.insertQueue.forceExecute(true);
-            }
-            catch(Exception e) {
-                Util.printExceptionMessage(e, insertQueue, "exception during index creation on waymember table over node_id");
-            }
+//            this.insertQueue.append("CREATE INDEX waynodes_way_id ON ");
+//            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.WAYMEMBER));
+//            this.insertQueue.append(" (way_id);");
+//            System.out.println("index on waymember table over way_id");
+//            try {
+//                this.insertQueue.forceExecute(true);
+//            }
+//            catch(Exception e) {
+//                Util.printExceptionMessage(e, insertQueue, "exception during index creation on waymember table over node_id");
+//            }
 
             this.insertQueue.append("CREATE INDEX relation_osm_id ON ");
             this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONTABLE));
@@ -494,9 +494,9 @@ public class SQL_OSMImporter extends DefaultHandler {
             CREATE INDEX relationmember_node_id ON 
             intermediate.relationmember (node_id);            
             */
-            this.insertQueue.append("CREATE INDEX relationmember_node_id ON ");
+            this.insertQueue.append("CREATE INDEX relationmember_ids ON ");
             this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONMEMBER));
-            this.insertQueue.append(" (node_id);");
+            this.insertQueue.append(" (relation_id, node_id, way_id, member_rel_id);");
             System.out.println("index on relation member table over node_id");
             System.out.flush();
             this.insertQueue.forceExecute(true);
@@ -505,12 +505,12 @@ public class SQL_OSMImporter extends DefaultHandler {
             CREATE INDEX relationmember_way_id ON 
             intermediate.relationmember (node_id);            
             */
-            this.insertQueue.append("CREATE INDEX relationmember_way_id ON ");
-            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONMEMBER));
-            this.insertQueue.append(" (way_id);");
-            System.out.println("index on relation member table over way_id");
-            System.out.flush();
-            this.insertQueue.forceExecute();
+//            this.insertQueue.append("CREATE INDEX relationmember_way_id ON ");
+//            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONMEMBER));
+//            this.insertQueue.append(" (way_id);");
+//            System.out.println("index on relation member table over way_id");
+//            System.out.flush();
+//            this.insertQueue.forceExecute();
             
             this.insertQueue.close();
             System.out.println("index creation successfully");

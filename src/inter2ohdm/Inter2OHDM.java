@@ -659,27 +659,35 @@ public class Inter2OHDM extends Importer {
             // get external user id from ohdm
             int id_ExternalUser = this.getOHDM_ID_ExternalUser(osmElement);
 
-            // try to add a geometry.. can be null if importWithoutGeometry is true
-            String ohdmGeomIDString = this.addGeometry(osmElement, id_ExternalUser);
-
             /*
-              get ohdm object. That call returns null only of that object has no
+              get ohdm object. That call returns null only if that object has no
             identity and importing of unnamed entities is not yet wished in that call
             null indicates a failure
             */
             String ohdmObjectIDString = this.getOHDMObject(osmElement, namedEntitiesOnly);
 
             if(ohdmObjectIDString == null) {
+                /*
                 System.err.println("cannot create or find ohdm object id (not even dummy osm) and importing of unnamed entites allowed");
                 System.err.println(osmElement);
+                */
 
+                // try to add a geometry
+                String ohdmGeomIDString = this.addGeometry(osmElement, id_ExternalUser);
+                
                 if(ohdmGeomIDString != null) {
                     // remeber geometry in inter db
                     this.intermediateDB.setOHDM_IDs(osmElement, null, ohdmGeomIDString);
                 }
-                
+
+                // geometry added but no object.. we are finished here
                 return null;
             }
+
+            // we have an object.. try to add geometry
+            
+            // try to add a geometry
+            String ohdmGeomIDString = this.addGeometry(osmElement, id_ExternalUser);
             
             // combine object and geometry if there is a geometry
             if(ohdmGeomIDString != null) {
@@ -692,7 +700,7 @@ public class Inter2OHDM extends Importer {
                 this.intermediateDB.setOHDM_IDs(osmElement, ohdmObjectIDString, ohdmGeomIDString);
             }
 
-            // keep some special tags (url etc, see wiki)
+            // keep some special tags (url etc, see wiki) for the object
             this.addContentAndURL(osmElement, ohdmObjectIDString);
             
             return ohdmObjectIDString;
@@ -762,10 +770,13 @@ public class Inter2OHDM extends Importer {
             
             Inter2OHDM ohdmImporter = new Inter2OHDM(iDB, sourceConnection, 
                     targetConnection, sourceSchema, targetSchema);
-            
+
             try {
-//                ohdmImporter.forgetPreviousImport();
-                System.out.println("We DONT reset intermediate DB... works nicely in first try");
+                if(targetParameter.forgetPreviousImport()) {
+                    System.out.println("remove ohdm entries in intermediate database");
+                    ohdmImporter.forgetPreviousImport();
+                }
+                
                 OHDM_DB.dropOHDMTables(targetConnection, targetSchema);
             }
             catch(Exception e) {
@@ -791,16 +802,28 @@ public class Inter2OHDM extends Importer {
             sourceQueue = DB.createSQLStatementQueue(sourceConnection, sourceParameter);
             
             System.out.println("start insert data into ohdm DB from intermediate DB");
-            System.out.println("select range is " + stepLen);
-            
         
             // start stats trigger: 5 minutes
             Trigger trigger = new Trigger(exporter, 1000 * 60 * 5);
             trigger.start();
             
-            exporter.processNodes(sourceQueue, true);
-            exporter.processWays(sourceQueue, false);
-            exporter.processRelations(sourceQueue, true);
+            if(targetParameter.importNodes()) {
+                exporter.processNodes(sourceQueue, true);
+            } else {
+                System.out.println("skip nodes import.. see importNodes in ohdm parameter file");
+            }
+            
+            if(targetParameter.importWays()) {
+                exporter.processWays(sourceQueue, false);
+            } else {
+                System.out.println("skip ways import.. see importWays in ohdm parameter file");
+            }
+
+            if(targetParameter.importRelations()) {
+                exporter.processRelations(sourceQueue, true);
+            } else {
+                System.out.println("skip relations import.. see importRelations in ohdm parameter file");
+            }
             
             trigger.end();
             trigger.interrupt();

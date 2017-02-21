@@ -36,6 +36,10 @@ public class Parameter {
     
     private static final String STDOUT = "stdout";
     private static final String STDERR = "stderr";
+    private boolean forgetPreviousImport = true;
+    private boolean importNodes = true;
+    private boolean importWays = true;
+    private boolean importRelations = true;
     
     public Parameter(String filename) throws FileNotFoundException, IOException {
         long now = System.currentTimeMillis();
@@ -76,6 +80,10 @@ public class Parameter {
                         case "logFile": this.logFile = value; break;
                         case "errFile": this.errFile = value; break;
                         case "useJDBC": this.useJDBC = value.equalsIgnoreCase("yes"); break;
+                        case "forgetPreviousImport": this.forgetPreviousImport = value.equalsIgnoreCase("yes"); break;
+                        case "importNodes": this.importNodes = value.equalsIgnoreCase("yes"); break;
+                        case "importWays": this.importWays = value.equalsIgnoreCase("yes"); break;
+                        case "importRelations": this.importRelations = value.equalsIgnoreCase("yes"); break;
                     }
                 }
             }
@@ -96,7 +104,10 @@ public class Parameter {
     
     public String getPath() { return this.getdbName() ;}
     public boolean useJDBC() { return this.useJDBC ;}
-    
+    public boolean forgetPreviousImport() { return this.forgetPreviousImport; }
+    public boolean importNodes() { return this.importNodes; }
+    public boolean importWays() { return this.importWays; }
+    public boolean importRelations() { return this.importRelations; }
     
     public PrintStream getOutStream() throws FileNotFoundException { 
         if(this.outStream == null) {

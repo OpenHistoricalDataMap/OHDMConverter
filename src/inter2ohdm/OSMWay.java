@@ -43,7 +43,7 @@ public class OSMWay extends OSMElement {
         
         return super.isConsistent();
     }
-
+    
     @Override
     protected void produceWKTGeometry() {
         if(this.nodes == null || this.nodes.isEmpty()) {
@@ -139,6 +139,16 @@ public class OSMWay extends OSMElement {
         } else {
             return OHDM_DB.LINESTRING;
         }
+    }
+    
+    /**
+     * return iterator of all nodes which make up that way
+     * @return 
+     */
+    public Iterator<String> getNodeIDs() {
+        if(this.nodeIDs == null | this.nodeIDs.length() < 1) return null;
+        
+        return this.setupIDList(this.nodeIDs).iterator();
     }
 
     void addNode(OSMNode node) {

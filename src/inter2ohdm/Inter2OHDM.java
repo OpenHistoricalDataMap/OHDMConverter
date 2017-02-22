@@ -139,6 +139,7 @@ public class Inter2OHDM extends Importer {
             sql.append(e.getOHDMObjectID());
             sql.append(")");
         }
+        sql.append("; ");
     }
 
     /**
@@ -713,23 +714,34 @@ public class Inter2OHDM extends Importer {
         return null;
     }
     
-    void forgetPreviousImport() throws SQLException {
+    void forgetPreviousNodesImport() throws SQLException {
         SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
 
-        System.out.println("remove all ohdm entries from intermediate db - a reset");
-        System.out.println("reset nodes");
+        System.out.println("reset nodes entries in intermediate db");
         sql.append("UPDATE ");
         sql.append(DB.getFullTableName(this.sourceSchema, "nodes"));
         sql.append(" SET ohdm_geom_id=null, ohdm_object_id=null;");
         sql.forceExecute(true);
         
-        System.out.println("reset ways");
+        sql.join();
+    }
+      
+    void forgetPreviousWaysImport() throws SQLException {
+        SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
+
+        System.out.println("reset ways entries in intermediate db");
         sql.append("UPDATE ");
         sql.append(DB.getFullTableName(this.sourceSchema, "ways"));
         sql.append(" SET ohdm_geom_id=null, ohdm_object_id=null;");
         sql.forceExecute(true);
         
-        System.out.println("reset relations");
+        sql.join();
+    }
+      
+    void forgetPreviousRelationsImport() throws SQLException {
+        SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
+
+        System.out.println("reset relations entries in intermediate db");
         sql.append("UPDATE ");
         sql.append(DB.getFullTableName(this.sourceSchema, "relations"));
         sql.append(" SET ohdm_geom_id=null, ohdm_object_id=null;");
@@ -737,7 +749,7 @@ public class Inter2OHDM extends Importer {
         
         sql.join();
     }
-    
+      
     public static void main(String args[]) throws IOException {
         // let's fill OHDM database
         System.out.println("Start importing ODHM data from intermediate DB");
@@ -773,16 +785,42 @@ public class Inter2OHDM extends Importer {
 
             try {
                 if(targetParameter.forgetPreviousImport()) {
-                    System.out.println("remove ohdm entries in intermediate database");
-                    ohdmImporter.forgetPreviousImport();
+                    System.out.println("remove ohdm entries in intermediate database");            
+                    
+                    if(targetParameter.importNodes()) {
+                        ohdmImporter.forgetPreviousNodesImport();
+                    }
+                    if(targetParameter.importWays()) {
+                        ohdmImporter.forgetPreviousWaysImport();
+                    }
+                    if(targetParameter.importRelations()) {
+                        ohdmImporter.forgetPreviousRelationsImport();
+                    }
                 }
                 
-                OHDM_DB.dropOHDMTables(targetConnection, targetSchema);
+                if(targetParameter.importNodes() && 
+                        targetParameter.importWays() &&
+                        targetParameter.importRelations()) {
+                    // remove all
+                    OHDM_DB.dropOHDMTables(targetConnection, targetSchema);
+                } else {
+                    // drop only parts
+                    if(targetParameter.importNodes()) {
+                        OHDM_DB.dropNodeTables(targetConnection, targetSchema);
+                    }
+                    if(targetParameter.importWays()) {
+                        OHDM_DB.dropWayTables(targetConnection, targetSchema);
+                    }
+                    if(targetParameter.importRelations()) {
+                        OHDM_DB.dropRelationTables(targetConnection, targetSchema);
+                    }
+                }
             }
             catch(Exception e) {
                 System.err.println("problems during setting old data (non-fatal): " + e.getLocalizedMessage());
             }
             
+            // HIER WEITERMACHEN
             OHDM_DB.createOHDMTables(targetConnection, targetSchema);
             
             String stepLenString = sourceParameter.getReadStepLen();
@@ -1000,5 +1038,11 @@ public class Inter2OHDM extends Importer {
             Util.printExceptionMessage(se, targetQueue, "when writing relation tables", false);
         }
         return true;
+    }
+
+    void forgetPreviousImport() throws SQLException {
+        this.forgetPreviousNodesImport();
+        this.forgetPreviousWaysImport();
+        this.forgetPreviousWaysImport();
     }
 }

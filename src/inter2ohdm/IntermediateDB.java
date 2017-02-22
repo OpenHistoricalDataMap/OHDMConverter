@@ -18,7 +18,7 @@ import util.SQLStatementQueue;
  * @author thsc
  */
 public class IntermediateDB {
-    private boolean debug = false;
+    private final boolean debug = false;
     protected final Connection sourceConnection;
     private final String schema;
     private boolean isNew;

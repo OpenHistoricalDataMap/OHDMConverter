@@ -3,7 +3,6 @@ package util;
 import java.sql.Connection;
 import java.sql.SQLException;
 import osm.OSMClassification;
-import static util.InterDB.RELATIONMEMBER;
 
 /**
  *
@@ -56,6 +55,19 @@ public class OHDM_DB {
         DB.drop(targetConnection, targetSchema, SUBSEQUENT_GEOM_USER);
     }
 
+
+    public static void dropNodeTables(Connection targetConnection, String targetSchema) throws SQLException {
+        DB.drop(targetConnection, targetSchema, LINES);
+    }
+
+    public static void dropWayTables(Connection targetConnection, String targetSchema) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public static void dropRelationTables(Connection targetConnection, String targetSchema) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
     public static void createOHDMTables(Connection targetConnection, String schema) throws SQLException {
         SQLStatementQueue sq = new SQLStatementQueue(targetConnection);
 

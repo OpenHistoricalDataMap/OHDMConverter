@@ -355,7 +355,7 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
         this.upperIDString = Util.setDotsInStringValue(upperID.toPlainString());
         this.lowerIDString = Util.setDotsInStringValue(lowerID.toPlainString());
         
-        System.out.println("Start processing entites with initial range: [");
+        System.out.println("Start processing entites");
         System.out.println(this.getStatistics());
         
         try {

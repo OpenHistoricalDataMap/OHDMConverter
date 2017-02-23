@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 import osm.OSMClassification;
+import util.SQLStatementQueue;
 
 /**
  *
@@ -109,9 +110,9 @@ public abstract class OSMElement extends AbstractElement {
     
     abstract int getGeometryType();
     
-    void setOHDM_IDs(String ohdmObjectIDString, String ohdmGeomIDString, boolean persist) throws SQLException {
+    void setOHDM_IDs(SQLStatementQueue sql, String ohdmObjectIDString, String ohdmGeomIDString, boolean persist) throws SQLException {
         if(persist) {
-            this.intermediateDB.setOHDM_IDs(this, ohdmObjectIDString, ohdmGeomIDString);
+            this.intermediateDB.setOHDM_IDs(sql, this, ohdmObjectIDString, ohdmGeomIDString);
         }
 
         if(ohdmObjectIDString != null) {
@@ -123,16 +124,16 @@ public abstract class OSMElement extends AbstractElement {
         }
     }
     
-    void setOHDM_IDs(String ohdmObjectIDString, String ohdmGeomIDString) throws SQLException {
-        this.setOHDM_IDs(ohdmObjectIDString, ohdmGeomIDString, true);
+    void setOHDM_IDs(SQLStatementQueue sql, String ohdmObjectIDString, String ohdmGeomIDString) throws SQLException {
+        this.setOHDM_IDs(sql, ohdmObjectIDString, ohdmGeomIDString, true);
     }
     
-    void setOHDMObjectID(String ohdmObjectIDString) throws SQLException {
-        this.setOHDM_IDs(ohdmObjectIDString, null, true);
+    void setOHDMObjectID(SQLStatementQueue sql, String ohdmObjectIDString) throws SQLException {
+        this.setOHDM_IDs(sql, ohdmObjectIDString, null, true);
     }
     
-    void setOHDMGeometryID(String geometryIDString) throws SQLException {
-        this.setOHDM_IDs(null, geometryIDString, true);
+    void setOHDMGeometryID(SQLStatementQueue sql, String geometryIDString) throws SQLException {
+        this.setOHDM_IDs(sql, null, geometryIDString, true);
     }
     
     String getOHDMObjectID() {

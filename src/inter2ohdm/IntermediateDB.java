@@ -42,7 +42,7 @@ public class IntermediateDB {
         } 
     }
     
-    public void setOHDM_IDs(OSMElement element, String ohdmObjectIDString, 
+    public void setOHDM_IDs(SQLStatementQueue sql, OSMElement element, String ohdmObjectIDString, 
             String ohdmGeomIDString) throws SQLException {
         
         if(element == null) return;
@@ -52,31 +52,33 @@ public class IntermediateDB {
         /*
         UPDATE [waysTable] SET ohdm_id=[ohdmID] WHERE osm_id = [osmID];
         */
-        SQLStatementQueue sq = new SQLStatementQueue(this.sourceConnection);
-        sq.append("UPDATE ");
+//        SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
+        sql.append("UPDATE ");
         
-        sq.append(this.getIntermediateTableName(element));
+        sql.append(this.getIntermediateTableName(element));
         
-        sq.append(" SET ");
+        sql.append(" SET ");
         boolean parameterSet = false;
         if(ohdmObjectIDString != null) {
-            sq.append("ohdm_object_id = ");
-            sq.append(ohdmObjectIDString);
+            sql.append("ohdm_object_id = ");
+            sql.append(ohdmObjectIDString);
             parameterSet = true;
         }
         
         if(ohdmGeomIDString != null) {
             if(parameterSet) {
-                sq.append(", ");
+                sql.append(", ");
             }
-            sq.append("ohdm_geom_id = ");
-            sq.append(ohdmGeomIDString);
+            sql.append("ohdm_geom_id = ");
+            sql.append(ohdmGeomIDString);
         }
         
-        sq.append(" WHERE osm_id = ");
-        sq.append(element.getOSMIDString());
-        sq.append(";");
-        sq.forceExecute();
+        sql.append(" WHERE osm_id = ");
+        sql.append(element.getOSMIDString());
+        sql.append(";");
+        
+//        sql.forceExecute();
+        sql.couldExecute();
     }
     
     void remove(OSMElement element) throws SQLException {

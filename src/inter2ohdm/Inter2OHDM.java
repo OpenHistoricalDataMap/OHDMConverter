@@ -780,6 +780,8 @@ public class Inter2OHDM extends Importer {
             String sourceSchema = sourceParameter.getSchema();
             String targetSchema = targetParameter.getSchema();
             
+            
+            
             Inter2OHDM ohdmImporter = new Inter2OHDM(iDB, sourceConnection, 
                     targetConnection, sourceSchema, targetSchema);
 

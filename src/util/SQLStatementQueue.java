@@ -20,11 +20,9 @@ public class SQLStatementQueue {
     private List<Connection> connections = new ArrayList<>();
     private List<Boolean> freeConnection = new ArrayList<>();
     
-    private final int maxLength;
-    
-    public static final int DEFAULT_MAX_SQL_STATEMENTS = 100;
+    private static final long MAX_BUFFER_LENGTH = 512 * 1024; // 500 kByte
     private final ArrayList<SQLExecute> execThreads = new ArrayList<>();
-    private static final int MAX_EXEC_THREADS = 1;
+    private static final int DEFAULT_MAX_EXEC_THREADS = 1;
     
     private StringBuilder sqlQueue;
     
@@ -36,29 +34,15 @@ public class SQLStatementQueue {
     private PrintStream logStream = null;
     private PrintStream errStream = null;
     
-    public SQLStatementQueue(Connection connection, int maxStatements) {
+    public SQLStatementQueue(Connection connection) {
         this.connections.add(connection);
         this.freeConnection.add(Boolean.TRUE);
-        this.maxLength = maxStatements;
     }
     
 //    public SQLStatementQueue(Connection connection, MyLogger logger) {
 //        this(connection, DEFAULT_MAX_SQL_STATEMENTS, logger);
 //    }
     
-    public SQLStatementQueue(Connection connection) {
-        this(connection, (File)null);
-    }
-    
-    /**
-     * @deprecated 
-     * @param connection
-     * @param recordFile 
-     */
-    public SQLStatementQueue(Connection connection, File recordFile) {
-        this(connection, recordFile, MAX_EXEC_THREADS);
-    }
-
     /**
      * @deprecated 
      * @param connection
@@ -66,7 +50,7 @@ public class SQLStatementQueue {
      * @param maxThreads 
      */
     public SQLStatementQueue(Connection connection, File recordFile, int maxThreads) {
-        this(connection, DEFAULT_MAX_SQL_STATEMENTS);
+        this(connection);
         
         this.recordFile = recordFile;
         this.maxThreads = maxThreads;
@@ -189,9 +173,7 @@ public class SQLStatementQueue {
             this.sqlQueue.append(sqlStatement);
         }
         
-        if(++this.number >= this.maxLength) {
-            this.forceExecute();
-        }
+        this.couldExecute();
     }
     
     /**
@@ -310,6 +292,17 @@ public class SQLStatementQueue {
             catch(IndexOutOfBoundsException e) {
                 // was to slowly .. empty.. again
             }
+        }
+    }
+    
+    /**
+     * Accumulated sql statements could now be excecuted but don't have to.
+     * Use that method as often as possible. Can increase performance dramatically.
+     * @throws java.sql.SQLException
+     */
+    public void couldExecute() throws SQLException {
+        if(this.sqlQueue.length() > SQLStatementQueue.MAX_BUFFER_LENGTH) {
+            this.forceExecute();
         }
     }
     

@@ -62,12 +62,16 @@ public class SQLStatementQueue {
         this(parameter, maxThreads, null, null, true);
     }
     
+    public SQLStatementQueue(Parameter parameter) throws SQLException, FileNotFoundException {
+        this(parameter, SQLStatementQueue.DEFAULT_MAX_EXEC_THREADS, null, null, true);
+    }
+    
     public SQLStatementQueue(Parameter parameter, int maxThreads, PrintStream outStream, String name) throws SQLException, FileNotFoundException {
         this(parameter, maxThreads, outStream, name, false);
     }
     
     public SQLStatementQueue(Parameter parameter, int maxThreads, PrintStream outStream, String name, boolean forceJDBC) throws SQLException, FileNotFoundException {
-        this(null);
+        this((Connection)null);
         
         if(outStream != null) {
             this.outStream = outStream;

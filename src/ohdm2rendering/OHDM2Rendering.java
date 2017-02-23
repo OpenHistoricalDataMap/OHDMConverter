@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import osm.OSMClassification;
 import util.DB;
+import util.OHDM_DB;
 import util.SQLStatementQueue;
 import util.Parameter;
 
@@ -70,6 +71,24 @@ select l.line, c.subclassname, o.name, gg.valid_since, gg.valid_until, gg.valid_
 where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_source AND o.classification_id = c.id;
          */
             
+        // first.. set native srs explicitely.. will be removed when previous imports do that
+        System.out.println("set srs to 4326 in OHDM table.. remove this step as soon as the importers do that job");
+        SQLStatementQueue sqlSource = new SQLStatementQueue(sourceParameter);
+        sqlSource.append("update ");
+        sqlSource.append(DB.getFullTableName(sourceSchema, OHDM_DB.POINTS));
+        sqlSource.append(" set point = st_setsrid(point, 4326);");
+        
+        sqlSource.append("update ");
+        sqlSource.append(DB.getFullTableName(sourceSchema, OHDM_DB.LINES));
+        sqlSource.append(" set line = st_setsrid(line, 4326);");
+        
+        sqlSource.append("update ");
+        sqlSource.append(DB.getFullTableName(sourceSchema, OHDM_DB.POLYGONS));
+        sqlSource.append(" set polygon = st_setsrid(polygon, 4326);");
+        
+        sqlSource.forceExecute();
+        System.out.println("done setting srs to 4326");
+        
         OSMClassification classification = OSMClassification.getOSMClassification();
         for(String featureClassString : classification.osmFeatureClasses.keySet()) {
 

@@ -759,6 +759,7 @@ public class Inter2OHDM extends Importer {
         System.out.println("Start importing ODHM data from intermediate DB");
         SQLStatementQueue sourceQueue = null;
         
+        Trigger trigger = null;
         try {
             String sourceParameterFileName = "db_inter.txt";
             String targetParameterFileName = "db_ohdm.txt";
@@ -771,8 +772,6 @@ public class Inter2OHDM extends Importer {
                 targetParameterFileName = args[1];
             }
             
-//            Connection sourceConnection = Importer.createLocalTestSourceConnection();
-//            Connection targetConnection = Importer.createLocalTestTargetConnection();
             Parameter sourceParameter = new Parameter(sourceParameterFileName);
             Parameter targetParameter = new Parameter(targetParameterFileName);
             
@@ -848,35 +847,61 @@ public class Inter2OHDM extends Importer {
             System.out.println("start insert data into ohdm DB from intermediate DB");
         
             // start stats trigger: 5 minutes
-            Trigger trigger = new Trigger(exporter, 1000 * 60 * 5);
+            trigger = new Trigger(exporter, 1000 * 60 * 5);
             trigger.start();
             
+            SQLStatementQueue targetQueue = new SQLStatementQueue(targetParameter);
             if(targetParameter.importNodes()) {
                 exporter.processNodes(sourceQueue, true);
+                
+                System.out.println("set srs to 4326 in OHDM table.. remove this step as soon as the importers do that job");
+                targetQueue.append("update ");
+                targetQueue.append(DB.getFullTableName(targetSchema, OHDM_DB.POINTS));
+                targetQueue.append(" set point = st_setsrid(point, 4326);");
+                targetQueue.forceExecute(true);
             } else {
                 System.out.println("skip nodes import.. see importNodes in ohdm parameter file");
             }
             
             if(targetParameter.importWays()) {
                 exporter.processWays(sourceQueue, false);
+                
+                System.out.println("set srs to 4326 in OHDM table.. remove this step as soon as the importers do that job");
+                targetQueue.append("update ");
+                targetQueue.append(DB.getFullTableName(targetSchema, OHDM_DB.LINES));
+                targetQueue.append(" set line = st_setsrid(line, 4326);");
+                targetQueue.append("update ");
+                targetQueue.append(DB.getFullTableName(targetSchema, OHDM_DB.POLYGONS));
+                targetQueue.append(" set polygon = st_setsrid(polygon, 4326);");
+                targetQueue.forceExecute(true);
             } else {
                 System.out.println("skip ways import.. see importWays in ohdm parameter file");
             }
 
             if(targetParameter.importRelations()) {
                 exporter.processRelations(sourceQueue, true);
+                
+                System.out.println("set srs to 4326 in OHDM table.. remove this step as soon as the importers do that job");
+                targetQueue.append("update ");
+                targetQueue.append(DB.getFullTableName(targetSchema, OHDM_DB.POLYGONS));
+                targetQueue.append(" set polygon = st_setsrid(polygon, 4326);");
+                targetQueue.forceExecute(true);
             } else {
                 System.out.println("skip relations import.. see importRelations in ohdm parameter file");
             }
-            
-            trigger.end();
-            trigger.interrupt();
-            
+
+            targetQueue.join();
             System.out.println("done importing from intermediate DB to ohdm DB");
             System.out.println(exporter.getStatistics());
   
         } catch (IOException | SQLException e) {
             Util.printExceptionMessage(e, sourceQueue, "main method in Inter2OHDM", false);
+        }
+        finally {
+            if(trigger != null) {
+                trigger.end();
+                trigger.interrupt();
+            }
         }
     }
 

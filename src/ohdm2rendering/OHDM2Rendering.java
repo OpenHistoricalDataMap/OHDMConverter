@@ -71,24 +71,6 @@ select l.line, c.subclassname, o.name, gg.valid_since, gg.valid_until, gg.valid_
 where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_source AND o.classification_id = c.id;
          */
             
-        // first.. set native srs explicitely.. will be removed when previous imports do that
-        System.out.println("set srs to 4326 in OHDM table.. remove this step as soon as the importers do that job");
-        SQLStatementQueue sqlSource = new SQLStatementQueue(sourceParameter);
-        sqlSource.append("update ");
-        sqlSource.append(DB.getFullTableName(sourceSchema, OHDM_DB.POINTS));
-        sqlSource.append(" set point = st_setsrid(point, 4326);");
-        
-        sqlSource.append("update ");
-        sqlSource.append(DB.getFullTableName(sourceSchema, OHDM_DB.LINES));
-        sqlSource.append(" set line = st_setsrid(line, 4326);");
-        
-        sqlSource.append("update ");
-        sqlSource.append(DB.getFullTableName(sourceSchema, OHDM_DB.POLYGONS));
-        sqlSource.append(" set polygon = st_setsrid(polygon, 4326);");
-        
-        sqlSource.forceExecute();
-        System.out.println("done setting srs to 4326");
-        
         OSMClassification classification = OSMClassification.getOSMClassification();
         for(String featureClassString : classification.osmFeatureClasses.keySet()) {
 
@@ -116,6 +98,17 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
 
                     SQLStatementQueue sql = new SQLStatementQueue(connection);
                     
+                    // what's the coloumn name of our geometry
+                    String geometryName = null;
+                    switch(targetType) {
+                        case 1: geometryName = "point"; break; // select point in geom table
+                        case 2: geometryName = "line"; break; // select line in geom table
+                        case 3: geometryName = "polygon"; break; // select polygon in geom table
+//                        case 1: sql.append("point"); break; // select point in geom table
+//                        case 2: sql.append("line"); break; // select line in geom table
+//                        case 3: sql.append("polygon"); break; // select polygon in geom table
+                    }
+                    
                     // drop table in first loop
                     if(first) {
                         sql.append("drop table ");
@@ -129,25 +122,27 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                         }
                     }
                     
+                    
                     // add data in following loops
                     if(!first) {
                         sql.append("INSERT INTO ");
                         sql.append(tableName);
                         sql.append("( ");
-                        switch(targetType) {
-                        case 1: sql.append("point"); break; // select point in geom table
-                        case 2: sql.append("line"); break; // select line in geom table
-                        case 3: sql.append("polygon"); break; // select polygon in geom table
-                        }
+                        
+                        sql.append(geometryName);
+                        
                         sql.append(", object_id, geom_id, subclassname, name, valid_since, valid_until, valid_since_offset, valid_until_offset) ");
                     }
 
                     sql.append("select g.");
-                    switch(targetType) {
-                    case 1: sql.append("point"); break; // select point in geom table
-                    case 2: sql.append("line"); break; // select line in geom table
-                    case 3: sql.append("polygon"); break; // select polygon in geom table
-                    }
+                    sql.append(geometryName);
+                    
+//                    switch(targetType) {
+//                    case 1: sql.append("point"); break; // select point in geom table
+//                    case 2: sql.append("line"); break; // select line in geom table
+//                    case 3: sql.append("polygon"); break; // select polygon in geom table
+//                    }
+                    
                     sql.append(", o.id as object_id, g.id as geom_id, c.subclassname, o.name, gg.valid_since, ");
                     sql.append("gg.valid_until, gg.valid_since_offset, ");
                     sql.append("gg.valid_until_offset ");
@@ -176,11 +171,12 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                     
                     // geometry g
                     sql.append("(SELECT id, ");
-                    switch(targetType) {
-                    case 1: sql.append("point"); break; // select point in geom table
-                    case 2: sql.append("line"); break; // select line in geom table
-                    case 3: sql.append("polygon"); break; // select polygon in geom table
-                    }
+                    sql.append(geometryName);
+//                    switch(targetType) {
+//                    case 1: sql.append("point"); break; // select point in geom table
+//                    case 2: sql.append("line"); break; // select line in geom table
+//                    case 3: sql.append("polygon"); break; // select polygon in geom table
+//                    }
                     sql.append(" FROM ");
                     sql.append(sourceSchema);
                     sql.append(".");
@@ -206,6 +202,16 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                     if(tableName.equalsIgnoreCase("ohdm_rendering.highway_lines")) {
                         int debuggingStop = 42;
                     }
+                    
+                    // transform geometries from wgs'84 (4326) to pseudo mercator (3857)
+                    sql.append("UPDATE ");
+                    sql.append(tableName);
+                    sql.append(" SET ");
+                    sql.append(geometryName);
+                    sql.append(" = ST_TRANSFORM(");
+                    sql.append(geometryName);
+                    sql.append(", 3857);");
+                    
                     sql.forceExecute();
                     
                     System.out.println("done: " + classID + " " + tableName + "| classes: " + featureClassString + "/" + subClassName);

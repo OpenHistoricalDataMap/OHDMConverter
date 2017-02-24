@@ -6,6 +6,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import util.InterDB;
 import static util.InterDB.NODETABLE;
 import static util.InterDB.RELATIONMEMBER;
@@ -81,15 +83,14 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
         String resultString = "unknown";
         
         try {
-            sql.append("SELECT count(id), min(id), max(id) FROM ");
+            sql.append("SELECT min(id), max(id) FROM ");
             sql.append(DB.getFullTableName(this.schema, tableName));
             sql.append(";");
 
             ResultSet result = sql.executeWithResult();
             result.next();
             
-            BigDecimal lines = result.getBigDecimal(1);
-            BigDecimal minID = result.getBigDecimal(2);
+            BigDecimal minID = result.getBigDecimal(1);
 /*
             sql.append("SELECT max(id) FROM ");
             sql.append(DB.getFullTableName(this.schema, tableName));
@@ -98,12 +99,12 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
             result = sql.executeWithResult();
             result.next();
 */            
-            this.initialMaxID = result.getBigDecimal(3);
+            this.initialMaxID = result.getBigDecimal(2);
 
             this.initialLowerID = minID.subtract(new BigDecimal(1));
             this.initialUpperID = minID.add(this.steps);
             
-            resultString = lines.toPlainString();
+            resultString = initialMaxID.toPlainString();
         }
         catch(SQLException se) {
             Util.printExceptionMessage(se, sql, "when calculating initial min max ids for select of nodes, ways or relations", false);
@@ -333,17 +334,17 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
                 break;
         }
         
-        String elementsNumberString = this.calculateInitialIDs(sql, elementTableName);
+        String maxIDString = this.calculateInitialIDs(sql, elementTableName);
         
         switch(elementType) {
             case NODE:
-                this.nodesTableEntries = elementsNumberString;
+                this.nodesTableEntries = maxIDString;
                 break;
             case WAY:
-                this.waysTableEntries = elementsNumberString;
+                this.waysTableEntries = maxIDString;
                 break;
             case RELATION:
-                this.relationsTableEntries = elementsNumberString;
+                this.relationsTableEntries = maxIDString;
                 break;
         }
         
@@ -505,10 +506,13 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
         System.out.println("--------------------------------------------------------------------------------");
     }
     
+    private long lastCheckedEntities = 0;
+    private long lastCheckTime;
+    
     public String getStatistics() {
         StringBuilder sb = new StringBuilder();
         
-        sb.append("tablesize: ");
+        sb.append("max ids: ");
         sb.append("n:");
         sb.append(Util.setDotsInStringValue(this.nodesTableEntries));
         sb.append(",w:");
@@ -523,8 +527,12 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
         sb.append(") | read steps: " + Util.getValueWithDots(this.steplen));
         sb.append("\n");
         
+        long newCheckedEntities =  this.numberCheckedNodes + this.numberCheckedWays + this.numberCheckedRelations;
+        long diffCheckedEntities = newCheckedEntities - this.lastCheckedEntities;
+        this.lastCheckedEntities = newCheckedEntities;
+        
         sb.append("checked:  ");
-        sb.append(Util.getValueWithDots(this.numberCheckedNodes + this.numberCheckedWays + this.numberCheckedRelations));
+        sb.append(Util.getValueWithDots(this.lastCheckedEntities));
         sb.append(" (n:");
         sb.append(Util.getValueWithDots(this.numberCheckedNodes));
         sb.append(",w:");
@@ -532,6 +540,23 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
         sb.append(",r:");
         sb.append(Util.getValueWithDots(this.numberCheckedRelations));
         sb.append(")\n");
+        
+        this.lastCheckTime = this.lastCheckTime > 0 ? this.lastCheckTime : this.startTime;
+        long now = System.currentTimeMillis();
+        long diffTime = now - this.lastCheckTime;
+        this.lastCheckTime = now;
+        
+        long diffInSeconds = diffTime / 1000;
+        if(diffInSeconds > 0) {
+            long speed = diffCheckedEntities / diffInSeconds;
+
+            sb.append("new    :  ");
+            sb.append(Util.getValueWithDots(diffCheckedEntities));
+            sb.append(" | speed: ");
+            sb.append(speed);
+            sb.append(" entries per second");
+            sb.append("\n");
+        }
         
         sb.append("imported: ");
         sb.append(Util.getValueWithDots(this.numberImportedNodes + this.numberImportedWays + this.numberImportedRelations));

@@ -70,6 +70,8 @@ select l.line, c.subclassname, o.name, gg.valid_since, gg.valid_until, gg.valid_
 (SELECT subclassname, id FROM ohdm.classification) as c
 where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_source AND o.classification_id = c.id;
          */
+        SQLStatementQueue sql = new SQLStatementQueue(connection);
+        String geometryName = null;
             
         OSMClassification classification = OSMClassification.getOSMClassification();
         for(String featureClassString : classification.osmFeatureClasses.keySet()) {
@@ -96,10 +98,7 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                 for(String subClassName : classification.osmFeatureClasses.get(featureClassString)) {
                     int classID = classification.getOHDMClassID(featureClassString, subClassName);
 
-                    SQLStatementQueue sql = new SQLStatementQueue(connection);
-                    
                     // what's the coloumn name of our geometry
-                    String geometryName = null;
                     switch(targetType) {
                         case 1: geometryName = "point"; break; // select point in geom table
                         case 2: geometryName = "line"; break; // select line in geom table
@@ -203,22 +202,23 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                         int debuggingStop = 42;
                     }
                     
-                    // transform geometries from wgs'84 (4326) to pseudo mercator (3857)
-                    sql.append("UPDATE ");
-                    sql.append(tableName);
-                    sql.append(" SET ");
-                    sql.append(geometryName);
-                    sql.append(" = ST_TRANSFORM(");
-                    sql.append(geometryName);
-                    sql.append(", 3857);");
-                    
                     sql.forceExecute();
                     
                     System.out.println("done: " + classID + " " + tableName + "| classes: " + featureClassString + "/" + subClassName);
                     
                     first = false;
                 }
+                
+                // transform geometries from wgs'84 (4326) to pseudo mercator (3857)
+                sql.append("UPDATE ");
+                sql.append(tableName);
+                sql.append(" SET ");
+                sql.append(geometryName);
+                sql.append(" = ST_TRANSFORM(");
+                sql.append(geometryName);
+                sql.append(", 3857);");
             }
         }
+        sql.forceExecute();
     }
 }

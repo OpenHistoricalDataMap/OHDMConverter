@@ -77,12 +77,17 @@ public class Util {
     }
     
     public static String getElapsedTime(long since) {
-        int days = 0;
-        int hours = 0;
-        int min = 0;
         long now = System.currentTimeMillis();
         long sec = (now - since) / 1000;
 
+        return Util.getTimeString(sec);
+    }
+    
+    public static String getTimeString(long sec) {
+        int days = 0;
+        int hours = 0;
+        int min = 0;
+        
         if(sec >= 60) {
             min = (int) (sec / 60);
             sec = sec % 60;
@@ -104,6 +109,7 @@ public class Util {
         
         return sb.toString();
     }
+    
     
     public static void printExceptionMessage(Throwable e, SQLStatementQueue sql, String additionalMessage, boolean goahead) {
         Util.printExceptionMessage(System.err, e, sql, additionalMessage, goahead);

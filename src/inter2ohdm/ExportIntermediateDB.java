@@ -510,6 +510,12 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
     private long lastCheckTime;
     
     public String getStatistics() {
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(ExportIntermediateDB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
         StringBuilder sb = new StringBuilder();
         
         sb.append("max ids: ");
@@ -531,7 +537,7 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
         long diffCheckedEntities = newCheckedEntities - this.lastCheckedEntities;
         this.lastCheckedEntities = newCheckedEntities;
         
-        sb.append("checked:  ");
+        sb.append("checked : ");
         sb.append(Util.getValueWithDots(this.lastCheckedEntities));
         sb.append(" (n:");
         sb.append(Util.getValueWithDots(this.numberCheckedNodes));
@@ -547,14 +553,41 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
         this.lastCheckTime = now;
         
         long diffInSeconds = diffTime / 1000;
+        long speed = 0;
         if(diffInSeconds > 0) {
-            long speed = diffCheckedEntities / diffInSeconds;
-
-            sb.append("new    :  ");
+            speed = diffCheckedEntities / diffInSeconds;
+        }
+        if(speed > 0) {
+            sb.append("new     : ");
             sb.append(Util.getValueWithDots(diffCheckedEntities));
-            sb.append(" | speed: ");
+            sb.append(" | ");
             sb.append(speed);
-            sb.append(" entries per second");
+            sb.append(" per sec ");
+            
+            if(speed > 0 && !this.nodesTableEntries.equalsIgnoreCase("?")) {
+                String currentEntriesMaxString;
+                long readEntities = 0;
+                
+                if(this.waysTableEntries.equalsIgnoreCase("?")) {
+                    currentEntriesMaxString = this.nodesTableEntries;
+                    readEntities = this.numberCheckedNodes;
+                } else if(this.relationsTableEntries.equalsIgnoreCase("?")) {
+                    currentEntriesMaxString = this.waysTableEntries;
+                    readEntities = this.numberCheckedWays;
+                } else {
+                    currentEntriesMaxString = this.relationsTableEntries;
+                    readEntities = this.numberCheckedRelations;
+                }
+
+                long maxID = Long.parseLong(currentEntriesMaxString);
+                
+                long remains = maxID - readEntities;
+                
+                long eta = (remains / speed);
+                
+                sb.append(" | eta: ");
+                sb.append(Util.getTimeString(eta));
+            }
             sb.append("\n");
         }
         

@@ -36,30 +36,6 @@ public class OHDM2Rendering {
         Connection connection = DB.createConnection(targetParameter);
 
         String targetSchema = targetParameter.getSchema();
-        
-//        String targetServerName = "localhost";
-//        String targetPortNumber = "5432";
-//        String targetUser = "admin";
-//        String targetPWD = "root";
-//        String targetPath = "ohdm_full";
-//
-        // connect to target OHDM DB - ohm
-//            String targetServerName = "ohm.f4.htw-berlin.de";
-//            String targetPortNumber = "5432";
-//            String targetUser = "...";
-//            String targetPWD = "...";
-//            String targetPath = "ohdm_rendering";
-
-//        Properties targetConnProps = new Properties();
-//        targetConnProps.put("user", targetUser);
-//        targetConnProps.put("password", targetPWD);
-//        Connection connection = DriverManager.getConnection(
-//            "jdbc:postgresql://" + targetServerName
-//                    + ":" + targetPortNumber + "/" + targetPath, targetConnProps);
-//        
-//        String sourceSchema = "ohdm";
-//        String targetSchema = "ohdm_rendering";
-//        String targetSchema = "osw";
             
         String sourceSchema = sourceParameter.getSchema();
 /*
@@ -72,7 +48,52 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
          */
         SQLStatementQueue sql = new SQLStatementQueue(connection);
         String geometryName = null;
-            
+        
+        /*
+        create function set creates bounding box based on bbox parameter 
+        from wms request:
+        CREATE OR REPLACE FUNCTION public.ohdm_createBBOXGeometry(boxstring character varying, srs integer)
+        RETURNS geometry AS $$DECLARE box geometry; BEGIN 
+        SELECT st_asewkt(ST_MakeEnvelope (
+        string_to_array[1]::double precision, 
+        string_to_array[2]::double precision, 
+        string_to_array[3]::double precision,  
+        string_to_array[4]::double precision, 
+        srs)) FROM (SELECT string_to_array(boxstring,',')) as a
+        INTO box;
+        RETURN box;
+        END;
+        $$ LANGUAGE plpgsql;
+        */            
+        
+        String createBBOXName = targetSchema + ".ohdm_bboxGeometry";
+        String createBBOXFunction = createBBOXName + "(boxstring character varying, srs integer)";
+        
+        sql.append("DROP FUNCTION ");
+        sql.append(createBBOXFunction);
+        sql.append(";");
+        try {
+            sql.forceExecute();
+        }
+        catch(SQLException e) {
+            System.err.println("exception ignored: " + e);
+        }
+        
+        sql.append("CREATE OR REPLACE FUNCTION ");
+        sql.append(createBBOXFunction);
+        sql.append(" RETURNS geometry AS $$ DECLARE box geometry; BEGIN ");
+        sql.append("SELECT st_asewkt(ST_MakeEnvelope (");
+        sql.append("string_to_array[1]::double precision, ");
+        sql.append("string_to_array[2]::double precision, ");
+        sql.append("string_to_array[3]::double precision,  ");
+        sql.append("string_to_array[4]::double precision, ");
+        sql.append("srs)) FROM (SELECT string_to_array(boxstring,',')) as a");
+        sql.append(" INTO box;");
+        sql.append(" RETURN box;");
+        sql.append(" END;");
+        sql.append(" $$ LANGUAGE plpgsql;");
+        sql.forceExecute();
+        
         OSMClassification classification = OSMClassification.getOSMClassification();
         for(String featureClassString : classification.osmFeatureClasses.keySet()) {
 
@@ -80,14 +101,16 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
              * produce tableName [classname]_[geometryType]
              */
             for(int targetType = 1; targetType <= 3; targetType++) {
-                
-                String tableName = targetSchema + "." + featureClassString + "_";
+
+                String tableName = featureClassString + "_";
                 switch(targetType) {
                     case 1: tableName += "points"; break;
                     case 2: tableName += "lines"; break;
                     case 3: tableName += "polygons"; break;
                 }
-            
+                
+                String fullTableName = targetSchema + "." + tableName;
+                        
                 /* iterate all subclasses of this class. Create 
                 rendering table in the first loop and fill it
                 with data from other subclasses in following loops
@@ -111,21 +134,20 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                     // drop table in first loop
                     if(first) {
                         sql.append("drop table ");
-                        sql.append(tableName);
-                        sql.append(";");
+                        sql.append(fullTableName);
+                        sql.append(" CASCADE;");
                         try {
                             sql.forceExecute();
                         }
                         catch(SQLException e) {
-                            System.err.println("ignore that sql exception:\n" + e.getMessage() + "\n" + sql.toString());
+                            // ignore
                         }
                     }
-                    
                     
                     // add data in following loops
                     if(!first) {
                         sql.append("INSERT INTO ");
-                        sql.append(tableName);
+                        sql.append(fullTableName);
                         sql.append("( ");
                         
                         sql.append(geometryName);
@@ -149,7 +171,7 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                     // create and fill in first loop
                     if(first) {
                         sql.append("into ");
-                        sql.append(tableName);
+                        sql.append(fullTableName);
                     }
 
                     sql.append(" from");
@@ -198,25 +220,63 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                     sql.append(targetType);
 
                     sql.append(" AND g.id = gg.id_target AND o.id = gg.id_geoobject_source;");
-                    if(tableName.equalsIgnoreCase("ohdm_rendering.highway_lines")) {
+                    if(fullTableName.equalsIgnoreCase("ohdm_rendering.highway_lines")) {
                         int debuggingStop = 42;
                     }
                     
                     sql.forceExecute();
                     
-                    System.out.println("done: " + classID + " " + tableName + "| classes: " + featureClassString + "/" + subClassName);
+                    System.out.println("done: " + classID + " " + fullTableName + "| classes: " + featureClassString + "/" + subClassName);
                     
                     first = false;
                 }
                 
                 // transform geometries from wgs'84 (4326) to pseudo mercator (3857)
                 sql.append("UPDATE ");
-                sql.append(tableName);
+                sql.append(fullTableName);
                 sql.append(" SET ");
                 sql.append(geometryName);
                 sql.append(" = ST_TRANSFORM(");
                 sql.append(geometryName);
                 sql.append(", 3857);");
+                sql.forceExecute();
+                
+                // create function for convient access in geoserver
+                /*
+    CREATE OR REPLACE FUNCTION public.ZZZ_test(date, character varying) RETURNS SETOF public.highway_lines AS $$
+        SELECT * FROM public.highway_lines where $1 between valid_since AND valid_until 
+            AND ST_INTERSECTS(line, public.ohdm_createBBOXGeometry($2, 3857));
+    $$ LANGUAGE SQL;
+                */
+                
+                String tableFunctionName = targetSchema + ".ohdm_" + 
+                        tableName + "(date, character varying)";
+                
+                sql.append("DROP FUNCTION ");
+                sql.append(tableFunctionName);
+                sql.append(";");
+                try {
+                    sql.forceExecute();
+                }
+                catch(SQLException e) {
+                    System.err.println("exception ignored: " + e);
+                }
+                
+                sql.append("CREATE OR REPLACE FUNCTION ");
+                sql.append(tableFunctionName);
+                sql.append(" RETURNS SETOF ");
+                sql.append(fullTableName);
+                sql.append(" AS $$ SELECT * FROM ");
+                sql.append(fullTableName);
+                sql.append(" where $1 between valid_since AND valid_until ");
+                sql.append("AND ST_INTERSECTS("); 
+                sql.append(geometryName);
+                sql.append(",  ");
+                sql.append(createBBOXName);
+                sql.append("($2, 3857));");
+                sql.append(" $$ LANGUAGE SQL;");
+                
+                sql.forceExecute();
             }
         }
         sql.forceExecute();

@@ -171,17 +171,6 @@ public class SQLStatementQueue {
         this.append(Long.toString(a));
     }
     
-    public void exec(String sqlStatement) throws SQLException {
-        // add sql statement to queue
-        if(this.sqlQueue == null) {
-            this.sqlQueue = new StringBuilder(sqlStatement);
-        } else {
-            this.sqlQueue.append(sqlStatement);
-        }
-        
-        this.couldExecute();
-    }
-    
     /**
      * Parallel execution of sql statement
      * @param recordEntry
@@ -401,10 +390,18 @@ public class SQLStatementQueue {
             sb.append("currentStatement (not null): ");
             sb.append(this.sqlQueue);
         }
-        sb.append("lastStatement:\n");
+        sb.append("\nlastStatement was:\n");
         sb.append(this.debugLastStatement);
         
         return sb.toString();
+    }
+    
+    public String getCurrentStatement() {
+        if(this.sqlQueue == null) {
+            return null;
+        }
+        
+        return this.sqlQueue.toString();
     }
 
     synchronized void done(SQLExecute execThread) {

@@ -926,7 +926,7 @@ public class Inter2OHDM extends Importer {
         sq.append("INSERT INTO ");
         sq.append(OHDM_DB.GEOOBJECT_GEOMETRY);
         sq.append("(id_geoobject_source, id_target, type_target, role,");
-        sq.append(" valid_since, valid_until) VALUES ");
+        sq.append(" classification_id, valid_since, valid_until) VALUES ");
 
         boolean notFirstSet = false;
         for(int i = 0; i < relation.getMemberSize(); i++) {
@@ -955,20 +955,23 @@ public class Inter2OHDM extends Importer {
             } else {
                 sq.append(OHDM_DB.TARGET_GEOOBJECT);
             }
-            sq.append(", ");
+            sq.append(", '");
             sq.append(roleName); // role
-            sq.append(", ");
+            sq.append("', ");
+            sq.append(relation.getClassCodeString()); // classification
+            sq.append(", '");
             sq.append(this.defaultSince); // since
-            sq.append(", ");
+            sq.append("', '");
             sq.append(this.defaultUntil); // until
-            sq.append(")"); // end that value set
+            sq.append("')"); // end that value set
         }
         sq.append(";"); // end that value set
 
         if(notFirstSet) {
             // there is at least one value set - excecute
             SQLStatementQueue sql = new SQLStatementQueue(this.targetConnection);
-            sql.exec(sq.toString());
+            sql.append(sq.toString());
+            sql.forceExecute();
             return true;
         }
         return false;

@@ -1,12 +1,10 @@
 package ohdm2rendering;
 
-import inter2ohdm.Importer;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import osm.OSMClassification;
 import util.DB;
-import util.OHDM_DB;
 import util.SQLStatementQueue;
 import util.Parameter;
 
@@ -70,8 +68,8 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
         String createBBOXFunction = createBBOXName + "(boxstring character varying, srs integer)";
         
         sql.append("DROP FUNCTION ");
-        sql.append(createBBOXFunction);
-        sql.append(";");
+        sql.append(createBBOXName);
+        sql.append("(character varying, integer);");
         try {
             sql.forceExecute();
         }
@@ -232,6 +230,7 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                 }
                 
                 // transform geometries from wgs'84 (4326) to pseudo mercator (3857)
+                System.out.println(fullTableName + ": transform geometry" + geometryName + " to pseude mercator EPSG:3857");
                 sql.append("UPDATE ");
                 sql.append(fullTableName);
                 sql.append(" SET ");
@@ -240,6 +239,7 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                 sql.append(geometryName);
                 sql.append(", 3857);");
                 sql.forceExecute();
+                System.out.println("..done");
                 
                 // create function for convient access in geoserver
                 /*
@@ -251,17 +251,24 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                 
                 String tableFunctionName = targetSchema + ".ohdm_" + 
                         tableName + "(date, character varying)";
+
+                /*
+                There is no need to drop that function. It's is dropped
+                as side effect of dropping associated the table with CASCADE option
+                */
+//                sql.append("DROP FUNCTION ");
+//                sql.append(tableFunctionName);
+//                sql.append(";");
+//                try {
+//                    System.out.println(sql.getCurrentStatement());
+//                    sql.forceExecute();
+//                }
+//                catch(SQLException e) {
+//                    System.err.println("exception ignored: " + e);
+//                }
+//                System.out.println("done");
                 
-                sql.append("DROP FUNCTION ");
-                sql.append(tableFunctionName);
-                sql.append(";");
-                try {
-                    sql.forceExecute();
-                }
-                catch(SQLException e) {
-                    System.err.println("exception ignored: " + e);
-                }
-                
+                System.out.println("create function " + tableFunctionName);
                 sql.append("CREATE OR REPLACE FUNCTION ");
                 sql.append(tableFunctionName);
                 sql.append(" RETURNS SETOF ");
@@ -269,14 +276,56 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
                 sql.append(" AS $$ SELECT * FROM ");
                 sql.append(fullTableName);
                 sql.append(" where $1 between valid_since AND valid_until ");
-                sql.append("AND ST_INTERSECTS("); 
+                sql.append("AND ("); 
                 sql.append(geometryName);
-                sql.append(",  ");
-                sql.append(createBBOXName);
+                sql.append(" &&  "); // bounding box intersection
+                sql.append(createBBOXName); // call bbox method to create bounding box geomtry of string
                 sql.append("($2, 3857));");
                 sql.append(" $$ LANGUAGE SQL;");
-                
                 sql.forceExecute();
+                System.out.println("done");
+                
+/*
+a call like this can now be used to retrieve valid geometries (from highway lines in that case)
+select * from ohdm_highway_lines('2017-01-01', '1444503.75,6861512.0,1532647.25,6922910.0');                
+                
+Note: SRS 3857 is implied in that call. Geoserver developer don't
+have to care about spatial reference systems.
+*/              
+                
+                // create a spatial index.. some table are expected to be huge. Like:
+                // CREATE INDEX highway_lines_gist ON public.highway_lines USING GIST (line);
+                sql.append(" CREATE INDEX  ");
+                sql.append(tableName);
+                sql.append("_gist ON ");
+                sql.append(fullTableName);
+                sql.append(" USING GIST (");
+                sql.append(geometryName);
+                sql.append("); ");
+                
+                System.out.println(sql.getCurrentStatement());
+                sql.forceExecute();
+                System.out.println("done");
+                
+/*
+Create an index on date
+CREATE INDEX waterway_polygons_date ON public.waterway_polygons (valid_since, valid_until);                
+*/                
+
+/* does not wotk - problems with index length.. fix it if necessary means if we run
+into serious performance problems.
+*/
+//                sql.append(" CREATE INDEX  ");
+//                sql.append(tableName);
+//                sql.append("_valid ON ");
+//                sql.append(fullTableName);
+//                sql.append(" (");
+//                sql.append(geometryName);
+//                sql.append("); ");
+//                
+//                System.out.println(sql.getCurrentStatement());
+//                sql.forceExecute();
+//                System.out.println("done");
             }
         }
         sql.forceExecute();

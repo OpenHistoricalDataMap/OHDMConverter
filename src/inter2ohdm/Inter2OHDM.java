@@ -855,11 +855,11 @@ public class Inter2OHDM extends Importer {
             if(targetParameter.importNodes()) {
                 exporter.processNodes(sourceQueue, true);
                 
-                System.out.println("set srs to 4326 in OHDM table.. remove this step as soon as the importers do that job");
-                targetQueue.append("update ");
-                targetQueue.append(DB.getFullTableName(targetSchema, OHDM_DB.POINTS));
-                targetQueue.append(" set point = st_setsrid(point, 4326);");
-                targetQueue.forceExecute(true);
+//                System.out.println("set srs to 4326 in OHDM table.. remove this step as soon as the importers do that job");
+//                targetQueue.append("update ");
+//                targetQueue.append(DB.getFullTableName(targetSchema, OHDM_DB.POINTS));
+//                targetQueue.append(" set point = st_setsrid(point, 4326);");
+//                targetQueue.forceExecute(true);
             } else {
                 System.out.println("skip nodes import.. see importNodes in ohdm parameter file");
             }
@@ -867,14 +867,14 @@ public class Inter2OHDM extends Importer {
             if(targetParameter.importWays()) {
                 exporter.processWays(sourceQueue, false);
                 
-                System.out.println("set srs to 4326 in OHDM table.. remove this step as soon as the importers do that job");
-                targetQueue.append("update ");
-                targetQueue.append(DB.getFullTableName(targetSchema, OHDM_DB.LINES));
-                targetQueue.append(" set line = st_setsrid(line, 4326);");
-                targetQueue.append("update ");
-                targetQueue.append(DB.getFullTableName(targetSchema, OHDM_DB.POLYGONS));
-                targetQueue.append(" set polygon = st_setsrid(polygon, 4326);");
-                targetQueue.forceExecute(true);
+//                System.out.println("set srs to 4326 in OHDM table.. remove this step as soon as the importers do that job");
+//                targetQueue.append("update ");
+//                targetQueue.append(DB.getFullTableName(targetSchema, OHDM_DB.LINES));
+//                targetQueue.append(" set line = st_setsrid(line, 4326);");
+//                targetQueue.append("update ");
+//                targetQueue.append(DB.getFullTableName(targetSchema, OHDM_DB.POLYGONS));
+//                targetQueue.append(" set polygon = st_setsrid(polygon, 4326);");
+//                targetQueue.forceExecute(true);
             } else {
                 System.out.println("skip ways import.. see importWays in ohdm parameter file");
             }
@@ -882,11 +882,11 @@ public class Inter2OHDM extends Importer {
             if(targetParameter.importRelations()) {
                 exporter.processRelations(sourceQueue, true);
                 
-                System.out.println("set srs to 4326 in OHDM table.. remove this step as soon as the importers do that job");
-                targetQueue.append("update ");
-                targetQueue.append(DB.getFullTableName(targetSchema, OHDM_DB.POLYGONS));
-                targetQueue.append(" set polygon = st_setsrid(polygon, 4326);");
-                targetQueue.forceExecute(true);
+//                System.out.println("set srs to 4326 in OHDM table.. remove this step as soon as the importers do that job");
+//                targetQueue.append("update ");
+//                targetQueue.append(DB.getFullTableName(targetSchema, OHDM_DB.POLYGONS));
+//                targetQueue.append(" set polygon = st_setsrid(polygon, 4326);");
+//                targetQueue.forceExecute(true);
             } else {
                 System.out.println("skip relations import.. see importRelations in ohdm parameter file");
             }

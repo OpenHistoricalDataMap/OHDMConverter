@@ -105,7 +105,11 @@ public abstract class OSMElement extends AbstractElement {
             this.produceWKTGeometry();
         }
         
-        return this.wktString;
+        if(this.wktString == null || this.wktString.isEmpty()) {
+            return null;
+        }
+        
+        return "SRID=4326;" + this.wktString;
     }
     
     abstract int getGeometryType();

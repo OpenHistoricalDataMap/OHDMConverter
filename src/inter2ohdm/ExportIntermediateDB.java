@@ -12,7 +12,6 @@ import util.InterDB;
 import static util.InterDB.NODETABLE;
 import static util.InterDB.RELATIONMEMBER;
 import static util.InterDB.RELATIONTABLE;
-import static util.InterDB.WAYMEMBER;
 import static util.InterDB.WAYTABLE;
 import util.DB;
 import util.OHDM_DB;

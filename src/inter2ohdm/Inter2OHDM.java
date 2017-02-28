@@ -47,6 +47,7 @@ public class Inter2OHDM extends Importer {
         this.intermediateDB = intermediateDB;
         
         this.sourceUpdateQueue = new SQLStatementQueue(sourceConnection);
+        
         this.targetSelectQueue = new SQLStatementQueue(targetConnection);
         this.targetInsertQueue = new SQLStatementQueue(targetConnection);
         

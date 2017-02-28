@@ -326,6 +326,7 @@ public class SQLStatementQueue {
         
         if(!this.useJDBC()) {
             this.doNonJDBCExec();
+            this.resetStatement();
         } else { // JDBC
             Connection conn = this.getFreeConnection();
             try {

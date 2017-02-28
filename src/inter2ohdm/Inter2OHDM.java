@@ -1017,6 +1017,7 @@ public class Inter2OHDM extends Importer {
                 targetSelectQueue.append("INSERT INTO ");
                 targetSelectQueue.append(DB.getFullTableName(this.targetSchema, OHDM_DB.POLYGONS));
                 targetSelectQueue.append(" (polygon, source_user_id) VALUES ('");
+                targetSelectQueue.append("SRID=4326;"); // make it an ewkt
                 targetSelectQueue.append(polygonWKT.get(i));
                 targetSelectQueue.append("', ");
                 int ohdmUserID = this.getOHDM_ID_ExternalUser(relation);

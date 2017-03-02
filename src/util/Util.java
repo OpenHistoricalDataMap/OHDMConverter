@@ -203,4 +203,8 @@ public class Util {
         result = value + "." + result;
         return result;
     }
+
+    public static void feedPSQL(String currentUpdateFileName) {
+        System.err.println("feedPSQL not yet implemented. Parameter: " + currentUpdateFileName);
+    }
 }

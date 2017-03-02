@@ -26,7 +26,7 @@ public class SQLStatementQueue {
     private final ArrayList<SQLExecute> execThreads = new ArrayList<>();
     private static final int DEFAULT_MAX_EXEC_THREADS = 1;
     
-    private StringBuilder sqlQueue;
+    protected StringBuilder sqlQueue;
     
     private int number = 0;
     private File recordFile = null;
@@ -70,8 +70,13 @@ public class SQLStatementQueue {
         this(parameter, maxThreads, outStream, name, false);
     }
     
-    public SQLStatementQueue(Parameter parameter, int maxThreads, PrintStream outStream, String name, boolean forceJDBC) throws SQLException, FileNotFoundException {
+    public SQLStatementQueue() {
+        // that look sooo ugly.. TODO
         this((Connection)null);
+    }
+    
+    public SQLStatementQueue(Parameter parameter, int maxThreads, PrintStream outStream, String name, boolean forceJDBC) throws SQLException, FileNotFoundException {
+        this();
         
         if(outStream != null) {
             this.outStream = outStream;

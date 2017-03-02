@@ -15,8 +15,9 @@ import util.Util;
  */
 public class DebugInter2OHDM extends Inter2OHDM {
 
+    // TODO TODO... set updateStream!!
     public DebugInter2OHDM(IntermediateDB intermediateDB, Connection sourceConnection, Connection targetConnection, String sourceSchema, String targetSchema) {
-        super(intermediateDB, sourceConnection, targetConnection, sourceSchema, targetSchema);
+        super(intermediateDB, sourceConnection, targetConnection, sourceSchema, targetSchema, null);
     }
     
     public static void main(String args[]) throws IOException {
@@ -54,8 +55,10 @@ public class DebugInter2OHDM extends Inter2OHDM {
             String sourceSchema = sourceParameter.getSchema();
             String targetSchema = targetParameter.getSchema();
             
+            
+            // TODO TODO remove that null
             Inter2OHDM ohdmImporter = new Inter2OHDM(iDB, sourceConnection, 
-                    targetConnection, sourceSchema, targetSchema);
+                    targetConnection, sourceSchema, targetSchema, null);
             
             try {
                 ohdmImporter.forgetPreviousImport();

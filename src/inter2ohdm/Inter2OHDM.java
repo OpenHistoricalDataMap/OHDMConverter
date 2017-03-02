@@ -1,6 +1,7 @@
 package inter2ohdm;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,6 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import util.DB;
 import util.OHDM_DB;
+import util.OutStreamSQLStatementQueue;
 import util.SQLStatementQueue;
 import util.Parameter;
 import util.Trigger;
@@ -38,7 +40,7 @@ public class Inter2OHDM extends Importer {
     
     public Inter2OHDM(IntermediateDB intermediateDB, 
             Connection sourceConnection, Connection targetConnection, 
-            String sourceSchema, String targetSchema) {
+            String sourceSchema, String targetSchema, SQLStatementQueue updateQueue) {
         
         super(sourceConnection, targetConnection);
         
@@ -46,7 +48,8 @@ public class Inter2OHDM extends Importer {
         this.targetSchema = targetSchema;
         this.intermediateDB = intermediateDB;
         
-        this.sourceUpdateQueue = new SQLStatementQueue(sourceConnection);
+//        this.sourceUpdateQueue = new SQLStatementQueue(sourceConnection);
+        this.sourceUpdateQueue = updateQueue;
         
         this.targetSelectQueue = new SQLStatementQueue(targetConnection);
         this.targetInsertQueue = new SQLStatementQueue(targetConnection);
@@ -754,7 +757,7 @@ public class Inter2OHDM extends Importer {
         
         sql.join();
     }
-      
+    
     public static void main(String args[]) throws IOException {
         // let's fill OHDM database
         System.out.println("Start importing ODHM data from intermediate DB");
@@ -784,10 +787,13 @@ public class Inter2OHDM extends Importer {
             String sourceSchema = sourceParameter.getSchema();
             String targetSchema = targetParameter.getSchema();
             
-            SQLStatementQueue sourceUpdateQueue;
+            // create File to keep update commands
+            String currentUpdateFileName = "updateNodes.sql";
+            PrintStream updateCommmands = new PrintStream(currentUpdateFileName);
+            OutStreamSQLStatementQueue updateQueue = new OutStreamSQLStatementQueue(updateCommmands);
             
             Inter2OHDM ohdmImporter = new Inter2OHDM(iDB, sourceConnection, 
-                    targetConnection, sourceSchema, targetSchema);
+                    targetConnection, sourceSchema, targetSchema, updateQueue);
 
             try {
                 if(targetParameter.forgetPreviousImport()) {
@@ -855,11 +861,16 @@ public class Inter2OHDM extends Importer {
             if(targetParameter.importNodes()) {
                 exporter.processNodes(sourceQueue, true);
                 
-//                System.out.println("set srs to 4326 in OHDM table.. remove this step as soon as the importers do that job");
-//                targetQueue.append("update ");
-//                targetQueue.append(DB.getFullTableName(targetSchema, OHDM_DB.POINTS));
-//                targetQueue.append(" set point = st_setsrid(point, 4326);");
-//                targetQueue.forceExecute(true);
+                // cut off update stream and let psql process that stuff
+                String nextFileName = "updateWays.sql";
+                updateCommmands = new PrintStream(nextFileName);
+                updateQueue.switchStream(updateCommmands);
+                
+                // now process stored updates... that process must be performed before processing ways or relations
+                Util.feedPSQL(currentUpdateFileName);
+                
+                // remember new update filename
+                currentUpdateFileName = nextFileName;
             } else {
                 System.out.println("skip nodes import.. see importNodes in ohdm parameter file");
             }
@@ -867,14 +878,16 @@ public class Inter2OHDM extends Importer {
             if(targetParameter.importWays()) {
                 exporter.processWays(sourceQueue, false);
                 
-//                System.out.println("set srs to 4326 in OHDM table.. remove this step as soon as the importers do that job");
-//                targetQueue.append("update ");
-//                targetQueue.append(DB.getFullTableName(targetSchema, OHDM_DB.LINES));
-//                targetQueue.append(" set line = st_setsrid(line, 4326);");
-//                targetQueue.append("update ");
-//                targetQueue.append(DB.getFullTableName(targetSchema, OHDM_DB.POLYGONS));
-//                targetQueue.append(" set polygon = st_setsrid(polygon, 4326);");
-//                targetQueue.forceExecute(true);
+                // cut off update stream and let psql process that stuff
+                String nextFileName = "updateRelations.sql";
+                updateCommmands = new PrintStream(nextFileName);
+                updateQueue.switchStream(updateCommmands);
+                
+                // now process stored updates... that process must be performed before processing ways or relations
+                Util.feedPSQL(currentUpdateFileName);
+                
+                // remember new update filename
+                currentUpdateFileName = nextFileName;
             } else {
                 System.out.println("skip ways import.. see importWays in ohdm parameter file");
             }
@@ -882,11 +895,11 @@ public class Inter2OHDM extends Importer {
             if(targetParameter.importRelations()) {
                 exporter.processRelations(sourceQueue, true);
                 
-//                System.out.println("set srs to 4326 in OHDM table.. remove this step as soon as the importers do that job");
-//                targetQueue.append("update ");
-//                targetQueue.append(DB.getFullTableName(targetSchema, OHDM_DB.POLYGONS));
-//                targetQueue.append(" set polygon = st_setsrid(polygon, 4326);");
-//                targetQueue.forceExecute(true);
+                // close update stream and let psql process that stuff
+                updateQueue.close();
+                
+                // now process stored updates... that process must be performed before processing ways or relations
+                Util.feedPSQL(currentUpdateFileName);
             } else {
                 System.out.println("skip relations import.. see importRelations in ohdm parameter file");
             }

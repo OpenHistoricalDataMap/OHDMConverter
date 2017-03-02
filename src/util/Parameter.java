@@ -40,6 +40,7 @@ public class Parameter {
     private boolean importNodes = true;
     private boolean importWays = true;
     private boolean importRelations = true;
+    private String fullPSQLPath = "psql";
     
     public Parameter(String filename) throws FileNotFoundException, IOException {
         long now = System.currentTimeMillis();
@@ -84,6 +85,7 @@ public class Parameter {
                         case "importNodes": this.importNodes = value.equalsIgnoreCase("yes"); break;
                         case "importWays": this.importWays = value.equalsIgnoreCase("yes"); break;
                         case "importRelations": this.importRelations = value.equalsIgnoreCase("yes"); break;
+                        case "fullPSQLPath": this.fullPSQLPath = value; break;
                     }
                 }
             }
@@ -108,6 +110,10 @@ public class Parameter {
     public boolean importNodes() { return this.importNodes; }
     public boolean importWays() { return this.importWays; }
     public boolean importRelations() { return this.importRelations; }
+    
+
+    public String getFullPSQLPath() { return this.fullPSQLPath;  }
+    
     
     public PrintStream getOutStream() throws FileNotFoundException { 
         if(this.outStream == null) {

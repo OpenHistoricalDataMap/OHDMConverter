@@ -1,6 +1,9 @@
 package util;
 
+import java.io.IOException;
 import java.io.PrintStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -204,7 +207,28 @@ public class Util {
         return result;
     }
 
-    public static void feedPSQL(String currentUpdateFileName) {
-        System.err.println("feedPSQL not yet implemented. Parameter: " + currentUpdateFileName);
+    public static void feedPSQL(Parameter parameter, String sqlFileName) throws IOException {
+        // create command line
+        // psql -d intermediate -f test.sql -h localhost -p 5432 -U admin 
+        
+//        sqlFileName = System.getProperty("user.dir") + "/" + sqlFileName;
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(parameter.getFullPSQLPath());
+        sb.append(" -d ");
+        sb.append(parameter.getdbName());
+        sb.append(" -f ");
+        sb.append(sqlFileName);
+        sb.append(" -h localhost -p 5432 -U ");
+        sb.append(parameter.getUserName());
+        
+        ProcessBuilder pb = new ProcessBuilder(sb.toString());
+        Process psqlProcess = pb.start();
+        
+        try {
+            psqlProcess.waitFor();
+        } catch (InterruptedException ex) {
+            // wont happen
+        }
     }
 }

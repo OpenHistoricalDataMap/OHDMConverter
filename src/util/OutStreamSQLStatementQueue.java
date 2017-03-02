@@ -16,6 +16,15 @@ public class OutStreamSQLStatementQueue extends SQLStatementQueue {
         this.outStream = out;
     }
     
+    @Override
+    public void forceExecute(boolean parallel, String recordEntry) {
+        this.forceExcecute();
+    }
+    
+    public void forceExcecute(boolean parallel) {
+        this.forceExcecute();
+    }
+    
     public void forceExcecute() {
         if(this.sqlQueue == null || this.sqlQueue.length() < 1) {
             return;
@@ -28,12 +37,13 @@ public class OutStreamSQLStatementQueue extends SQLStatementQueue {
     }
     
     public void switchStream(PrintStream out) {
-        this.outStream.close();
+        this.close();
         this.outStream = out;
     }
     
     @Override
     public void close() {
+        this.forceExcecute();
         this.outStream.close();
     }
 }

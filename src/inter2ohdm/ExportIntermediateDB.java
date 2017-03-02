@@ -14,6 +14,7 @@ import static util.InterDB.RELATIONMEMBER;
 import static util.InterDB.RELATIONTABLE;
 import static util.InterDB.WAYTABLE;
 import util.DB;
+import static util.InterDB.WAYMEMBER;
 import util.OHDM_DB;
 import util.SQLStatementQueue;
 import util.TriggerRecipient;
@@ -429,59 +430,59 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
             (SELECT node_id FROM waynodes_table where way_id = ID_of_way);            
         */ 
 
-        Iterator<String> nodeIDIter = way.getNodeIDs();
-        if(nodeIDIter != null) {
-            // add actual nodes to that way
-            SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
-            
-            sql.append("select * from ");
-            sql.append(DB.getFullTableName(this.schema, NODETABLE));
-            sql.append(" where osm_id in (");
-            
-            boolean first = true;
-            while(nodeIDIter.hasNext()) {
-                String nodeID = nodeIDIter.next();
-                
-                if(first) {
-                    first = false;
-                } else {
-                    sql.append(", ");
-                }
-                
-                sql.append(nodeID);
-            }
-            sql.append(");");  
-        
-            ResultSet qResultNode = sql.executeWithResult();
-
-            while(qResultNode.next()) {
-                OSMNode node = this.createOHDMNode(qResultNode);
-                way.addNode(node);
-            }
-            
-            qResultNode.close();
-        }
+//        Iterator<String> nodeIDIter = way.getNodeIDs();
+//        if(nodeIDIter != null) {
+//            // add actual nodes to that way
+//            SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
+//            
+//            sql.append("select * from ");
+//            sql.append(DB.getFullTableName(this.schema, NODETABLE));
+//            sql.append(" where osm_id in (");
+//            
+//            boolean first = true;
+//            while(nodeIDIter.hasNext()) {
+//                String nodeID = nodeIDIter.next();
+//                
+//                if(first) {
+//                    first = false;
+//                } else {
+//                    sql.append(", ");
+//                }
+//                
+//                sql.append(nodeID);
+//            }
+//            sql.append(");");  
+//        
+//            ResultSet qResultNode = sql.executeWithResult();
+//
+//            while(qResultNode.next()) {
+//                OSMNode node = this.createOHDMNode(qResultNode);
+//                way.addNode(node);
+//            }
+//            
+//            qResultNode.close();
+//        }
         
         // believe it or not but that's faster with index on waynodemember
         // I don't believe it's true for huge data
-//        SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
-//
-//        sql.append("select * from ");
-//        sql.append(DB.getFullTableName(this.schema, NODETABLE));
-//        sql.append(" where osm_id IN (SELECT node_id FROM ");            
-//        sql.append(DB.getFullTableName(this.schema, WAYMEMBER));
-//        sql.append(" where way_id = ");            
-//        sql.append(way.getOSMIDString());
-//        sql.append(");");  
-//
-//        ResultSet qResultNode = sql.executeWithResult();
-//
-//        while(qResultNode.next()) {
-//            OSMNode node = this.createOHDMNode(qResultNode);
-//            way.addNode(node);
-//        }
-//
-//        qResultNode.close();
+        SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
+
+        sql.append("select * from ");
+        sql.append(DB.getFullTableName(this.schema, NODETABLE));
+        sql.append(" where osm_id IN (SELECT node_id FROM ");            
+        sql.append(DB.getFullTableName(this.schema, WAYMEMBER));
+        sql.append(" where way_id = ");            
+        sql.append(way.getOSMIDString());
+        sql.append(");");  
+
+        ResultSet qResultNode = sql.executeWithResult();
+
+        while(qResultNode.next()) {
+            OSMNode node = this.createOHDMNode(qResultNode);
+            way.addNode(node);
+        }
+
+        qResultNode.close();
         
         return way;
     }

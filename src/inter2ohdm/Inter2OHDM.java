@@ -867,7 +867,9 @@ public class Inter2OHDM extends Importer {
                 updateQueue.switchStream(updateCommmands);
                 
                 // now process stored updates... that process must be performed before processing ways or relations
-                Util.feedPSQL(sourceParameter, currentUpdateFileName);
+                System.out.println("psql is executing node update commands..");
+                Util.feedPSQL(sourceParameter, currentUpdateFileName, false);
+                System.out.println("..done");
                 
                 // remember new update filename
                 currentUpdateFileName = nextFileName;
@@ -884,7 +886,9 @@ public class Inter2OHDM extends Importer {
                 updateQueue.switchStream(updateCommmands);
                 
                 // now process stored updates... that process must be performed before processing ways or relations
-                Util.feedPSQL(sourceParameter, currentUpdateFileName);
+                System.out.println("psql is executing way update commands..");
+                Util.feedPSQL(sourceParameter, currentUpdateFileName, false);
+                System.out.println("..done");
                 
                 // remember new update filename
                 currentUpdateFileName = nextFileName;
@@ -899,7 +903,9 @@ public class Inter2OHDM extends Importer {
                 updateQueue.close();
                 
                 // now process stored updates... that process must be performed before processing ways or relations
-                Util.feedPSQL(sourceParameter, currentUpdateFileName);
+                System.out.println("psql is executing relation update commands..");
+                Util.feedPSQL(sourceParameter, currentUpdateFileName, false);
+                System.out.println("..done");
                 
             } else {
                 System.out.println("skip relations import.. see importRelations in ohdm parameter file");

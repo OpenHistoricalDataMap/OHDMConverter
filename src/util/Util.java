@@ -1,7 +1,10 @@
 package util;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -207,10 +210,11 @@ public class Util {
         return result;
     }
 
-    public static void feedPSQL(Parameter parameter, String sqlFileName) throws IOException {
-        // create command line
-        // psql -d intermediate -f test.sql -h localhost -p 5432 -U admin 
+    public static void feedPSQL(Parameter parameter, String sqlFileName, 
+            boolean parallel) throws IOException {
         
+        // create command line
+        // psql -d intermediate -f test.sql -h localhost -p 5432 -U admin
 //        sqlFileName = System.getProperty("user.dir") + "/" + sqlFileName;
 
         StringBuilder sb = new StringBuilder();
@@ -221,14 +225,45 @@ public class Util {
         sb.append(sqlFileName);
         sb.append(" -h localhost -p 5432 -U ");
         sb.append(parameter.getUserName());
+        sb.append(" -p ");
         
-        ProcessBuilder pb = new ProcessBuilder(sb.toString());
+        Runtime runtime = Runtime.getRuntime();
+        Process psqlProcess = runtime.exec(sb.toString());
+                
+/*                
+        ArrayList<String> cmdList = new ArrayList<>();
+        cmdList.add(parameter.getFullPSQLPath());
+        cmdList.add(" -d " + parameter.getdbName());
+        cmdList.add(" -f " + sqlFileName);
+        cmdList.add(" -h localhost");
+        cmdList.add(" -p 5432 ");
+        cmdList.add(" -U " + parameter.getUserName());
+        cmdList.add(" -w ");
+        ProcessBuilder pb = new ProcessBuilder(cmdList);
         Process psqlProcess = pb.start();
+*/
         
-        try {
-            psqlProcess.waitFor();
-        } catch (InterruptedException ex) {
-            // wont happen
+//        InputStream inputStream = psqlProcess.getInputStream();
+//        InputStream errorStream = psqlProcess.getErrorStream();
+//        
+//        int b = inputStream.read();
+//        while(b > -1) {
+//            System.out.print(b);
+//            b = inputStream.read();
+//        }
+//        
+//        b = errorStream.read();
+//        while(b > -1) {
+//            System.err.print(b);
+//            b = errorStream.read();
+//        }
+        
+        if(!parallel) {
+            try {
+                psqlProcess.waitFor();
+            } catch (InterruptedException ex) {
+                // wont happen
+            }
         }
     }
 }

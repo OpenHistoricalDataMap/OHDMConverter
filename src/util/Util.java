@@ -1,5 +1,6 @@
 package util;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -211,12 +212,9 @@ public class Util {
     }
 
     public static void feedPSQL(Parameter parameter, String sqlFileName, 
-            boolean parallel) throws IOException {
+            boolean parallel, boolean removeFile) throws IOException {
         
         // create command line
-        // psql -d intermediate -f test.sql -h localhost -p 5432 -U admin
-//        sqlFileName = System.getProperty("user.dir") + "/" + sqlFileName;
-
         StringBuilder sb = new StringBuilder();
         sb.append(parameter.getFullPSQLPath());
         sb.append(" -d ");
@@ -225,45 +223,25 @@ public class Util {
         sb.append(sqlFileName);
         sb.append(" -h localhost -p 5432 -U ");
         sb.append(parameter.getUserName());
-        sb.append(" -p ");
+        sb.append(" -q "); // quiet
         
         Runtime runtime = Runtime.getRuntime();
+        
+//        System.out.println("performing: " + sb.toString());
         Process psqlProcess = runtime.exec(sb.toString());
-                
-/*                
-        ArrayList<String> cmdList = new ArrayList<>();
-        cmdList.add(parameter.getFullPSQLPath());
-        cmdList.add(" -d " + parameter.getdbName());
-        cmdList.add(" -f " + sqlFileName);
-        cmdList.add(" -h localhost");
-        cmdList.add(" -p 5432 ");
-        cmdList.add(" -U " + parameter.getUserName());
-        cmdList.add(" -w ");
-        ProcessBuilder pb = new ProcessBuilder(cmdList);
-        Process psqlProcess = pb.start();
-*/
-        
-//        InputStream inputStream = psqlProcess.getInputStream();
-//        InputStream errorStream = psqlProcess.getErrorStream();
-//        
-//        int b = inputStream.read();
-//        while(b > -1) {
-//            System.out.print(b);
-//            b = inputStream.read();
-//        }
-//        
-//        b = errorStream.read();
-//        while(b > -1) {
-//            System.err.print(b);
-//            b = errorStream.read();
-//        }
-        
+                        
         if(!parallel) {
             try {
-                psqlProcess.waitFor();
+                int retCode = psqlProcess.waitFor();
+//                System.out.println("..process finished with " + waitFor);
             } catch (InterruptedException ex) {
-                // wont happen
+                // won't happen.. no plans to send interrupt 
+//                System.out.println("..process produced exception: " + ex.getMessage());
             }
+        }
+        
+        if(removeFile) {
+            (new File(sqlFileName)).delete();
         }
     }
 }

@@ -1,5 +1,6 @@
 package inter2ohdm;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.Connection;
@@ -868,7 +869,7 @@ public class Inter2OHDM extends Importer {
                 
                 // now process stored updates... that process must be performed before processing ways or relations
                 System.out.println("psql is executing node update commands..");
-                Util.feedPSQL(sourceParameter, currentUpdateFileName, false);
+                Util.feedPSQL(sourceParameter, currentUpdateFileName, false, true);
                 System.out.println("..done");
                 
                 // remember new update filename
@@ -887,7 +888,7 @@ public class Inter2OHDM extends Importer {
                 
                 // now process stored updates... that process must be performed before processing ways or relations
                 System.out.println("psql is executing way update commands..");
-                Util.feedPSQL(sourceParameter, currentUpdateFileName, false);
+                Util.feedPSQL(sourceParameter, currentUpdateFileName, false, true);
                 System.out.println("..done");
                 
                 // remember new update filename
@@ -904,7 +905,7 @@ public class Inter2OHDM extends Importer {
                 
                 // now process stored updates... that process must be performed before processing ways or relations
                 System.out.println("psql is executing relation update commands..");
-                Util.feedPSQL(sourceParameter, currentUpdateFileName, false);
+                Util.feedPSQL(sourceParameter, currentUpdateFileName, false, true);
                 System.out.println("..done");
                 
             } else {

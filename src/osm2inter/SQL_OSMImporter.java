@@ -46,8 +46,8 @@ public class SQL_OSMImporter extends DefaultHandler {
     private String schema;
     private File recordFile;
     private int maxThreads;
-    private SQLStatementQueue insertQueue;
-    private SQLStatementQueue memberQueue;
+    private final SQLStatementQueue insertQueue;
+    private final SQLStatementQueue memberQueue;
     
     private String currentElementID;
 

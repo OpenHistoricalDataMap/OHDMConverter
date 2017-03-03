@@ -32,13 +32,20 @@ public class DB {
     
     // primary key are created identically
     static public String getCreatePrimaryKeyDescription(String schema, String tableName) {
-        return "id bigint NOT NULL DEFAULT nextval('"
+        return "id bigint PRIMARY KEY DEFAULT nextval('"
                 + DB.getSequenceName(DB.getFullTableName(schema, tableName))
-                + "'::regclass),"
-                + " CONSTRAINT "
-                + tableName
-                + "_pkey PRIMARY KEY (id)";
+                + "'::regclass)";
     }
+    
+    // primary key are created identically
+//    static public String getCreatePrimaryKeyDescription(String schema, String tableName) {
+//        return "id bigint NOT NULL DEFAULT nextval('"
+//                + DB.getSequenceName(DB.getFullTableName(schema, tableName))
+//                + "'::regclass),"
+//                + " CONSTRAINT "
+//                + tableName
+//                + "_pkey PRIMARY KEY (id)";
+//    }
     
     static public void createSequence(Connection targetConnection, String schema, String tableName) throws SQLException {
         DB.createSequence(new SQLStatementQueue(targetConnection), schema, tableName);

@@ -44,4 +44,9 @@ public class OutStreamSQLStatementQueue extends SQLStatementQueue {
         this.forceExcecute();
         this.outStream.close();
     }
+    
+    @Override
+    public void join() {
+        // nothing todo
+    }
 }

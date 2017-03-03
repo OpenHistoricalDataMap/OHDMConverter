@@ -56,6 +56,7 @@ public class SQL_OSMImporter extends DefaultHandler {
     private long lastReconnect;
     private int era = 0;
     private final long startTime;
+    private boolean hasName = false;
     
     public SQL_OSMImporter(Parameter parameter, OSMClassification osmClassification) throws Exception {
         this.parameter = parameter;
@@ -123,6 +124,7 @@ public class SQL_OSMImporter extends DefaultHandler {
         this.wayFound = false;
         this.relationMemberFound = false;
         this.currentClassID = -1;
+        this.hasName = false;
         
         // reset attributes
         this.sAttributes = new StringBuilder();
@@ -136,7 +138,7 @@ public class SQL_OSMImporter extends DefaultHandler {
             case STATUS_NODE: 
                 
                 this.insertQueue.append(DB.getFullTableName(schema, InterDB.NODETABLE));
-                this.insertQueue.append("(valid, longitude, latitude, osm_id, tstamp, classcode, serializedtags) VALUES (true, ");
+                this.insertQueue.append("(valid, longitude, latitude, osm_id, tstamp, classcode, serializedtags, has_name) VALUES (true, ");
                 this.insertQueue.append(attributes.getValue("lon"));
                 this.insertQueue.append(", ");
                 this.insertQueue.append(attributes.getValue("lat"));
@@ -151,7 +153,7 @@ public class SQL_OSMImporter extends DefaultHandler {
                     this.wayProcessed = true;
                 }
                 this.insertQueue.append(DB.getFullTableName(schema, InterDB.WAYTABLE));
-                this.insertQueue.append("(valid, osm_id, tstamp, classcode, serializedtags, node_ids) VALUES (true, ");
+                this.insertQueue.append("(valid, osm_id, tstamp, classcode, serializedtags, has_name, node_ids) VALUES (true, ");
                 
                 this.memberQueue.append("INSERT INTO ");
                 this.memberQueue.append(DB.getFullTableName(schema, InterDB.WAYMEMBER));
@@ -177,7 +179,7 @@ public class SQL_OSMImporter extends DefaultHandler {
                     this.relationProcessed = true;
                 }
                 this.insertQueue.append(DB.getFullTableName(schema, InterDB.RELATIONTABLE));
-                this.insertQueue.append("(valid, osm_id, tstamp, classcode, serializedtags, member_ids) VALUES (true, ");
+                this.insertQueue.append("(valid, osm_id, tstamp, classcode, serializedtags, has_name, member_ids) VALUES (true, ");
 
                 break;
         }
@@ -223,6 +225,11 @@ public class SQL_OSMImporter extends DefaultHandler {
                       attributes.getValue(i), 
                       attributes.getValue(i+1)
                 );
+                
+                // is it even a name
+                if(attributes.getValue(i).equalsIgnoreCase("name")) {
+                    this.hasName = true;
+                }
             }
             i+=2;
         } 
@@ -340,7 +347,9 @@ public class SQL_OSMImporter extends DefaultHandler {
         this.insertQueue.append(this.currentClassID);
         this.insertQueue.append(", '");
         this.insertQueue.append(this.sAttributes.toString());
-        this.insertQueue.append("');");
+        this.insertQueue.append("', ");
+        this.insertQueue.append(Boolean.toString(this.hasName));
+        this.insertQueue.append(");");
     }
 
     private void endWay() {
@@ -356,7 +365,9 @@ public class SQL_OSMImporter extends DefaultHandler {
             this.insertQueue.append(this.currentClassID);
             this.insertQueue.append(", '");
             this.insertQueue.append(this.sAttributes.toString());
-            this.insertQueue.append("', '");
+            this.insertQueue.append("', ");
+            this.insertQueue.append(Boolean.toString(hasName));
+            this.insertQueue.append(", '");
             this.insertQueue.append(this.nodeIDs.toString());
             this.insertQueue.append("');");
 
@@ -388,7 +399,9 @@ public class SQL_OSMImporter extends DefaultHandler {
             this.insertQueue.append(this.currentClassID);
             this.insertQueue.append(", '");
             this.insertQueue.append(this.sAttributes.toString());
-            this.insertQueue.append("', '");
+            this.insertQueue.append("', ");
+            this.insertQueue.append(Boolean.toString(hasName));
+            this.insertQueue.append(", '");
             this.insertQueue.append(this.memberIDs.toString());
             this.insertQueue.append("');");
             

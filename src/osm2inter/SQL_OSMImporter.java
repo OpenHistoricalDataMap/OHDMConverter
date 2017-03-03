@@ -451,10 +451,15 @@ public class SQL_OSMImporter extends DefaultHandler {
                 Util.printExceptionMessage(e, insertQueue, "exception when starting index creation on way table over osm_id");
             }
 
-            this.insertQueue.append("CREATE INDEX waynodes_node_way_id ON ");
+            this.insertQueue.append("CREATE INDEX waynodes_node_id ON ");
             this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.WAYMEMBER));
-            this.insertQueue.append(" (node_id, way_id);");
+            this.insertQueue.append(" (node_id);");
             System.out.println("index on waymember table over node_id");
+            
+            this.insertQueue.append("CREATE INDEX waynodes_way_id ON ");
+            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.WAYMEMBER));
+            this.insertQueue.append(" (way_id);");
+            System.out.println("index on waymember table over way_id");
             try {
                 this.insertQueue.forceExecute(true);
             }

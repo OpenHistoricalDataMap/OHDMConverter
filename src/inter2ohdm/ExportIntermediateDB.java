@@ -32,7 +32,7 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
     private int printEra = 0;
     private final static int PRINT_ERA_LENGTH = 100000;
     private static final int DEFAULT_STEP_LEN = 1000;
-
+    
     // for statistics
     private long number;
     private String nodesTableEntries = "?";
@@ -363,6 +363,7 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
             this.printStarted(elementTableName);
             this.era = 0; // start new element type - reset for statistics
             do {
+                long before = System.currentTimeMillis();
                 sql.append("SELECT * FROM ");
                 sql.append(DB.getFullTableName(this.schema, elementTableName));
                 sql.append(" where id <= "); // including upper
@@ -375,11 +376,16 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
                 }
                 sql.append(";");
                 ResultSet qResult = sql.executeWithResult();
+                long after = System.currentTimeMillis();
+                this.noteTime(after-before, TIME_SELECT_ELEMENTS);
                 
                 while(qResult.next()) {
                     this.number++;
                     this.printStatistics();
+                    before = System.currentTimeMillis();
                     this.processElement(qResult, sql, elementType, namedEntitiesOnly);
+                    after = System.currentTimeMillis();
+                    this.noteTime(after-before, TIME_PROCESS_ELEMENTS);
                 }
                 
                 // next bulk of data
@@ -430,6 +436,8 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
             (SELECT node_id FROM waynodes_table where way_id = ID_of_way);            
         */ 
 
+        long before = System.currentTimeMillis();
+        
 //        Iterator<String> nodeIDIter = way.getNodeIDs();
 //        if(nodeIDIter != null) {
 //            // add actual nodes to that way
@@ -478,12 +486,17 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
         ResultSet qResultNode = sql.executeWithResult();
 
         while(qResultNode.next()) {
+            long beforeNode = System.currentTimeMillis();
             OSMNode node = this.createOHDMNode(qResultNode);
+            long afterNode = System.currentTimeMillis();
+            this.noteTime(afterNode-beforeNode, TIME_CREATE_NODE);
             way.addNode(node);
         }
 
         qResultNode.close();
-        
+        long after = System.currentTimeMillis();
+        this.noteTime(after-before, TIME_ADD_NODES);
+                
         return way;
     }
     
@@ -538,6 +551,9 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
         long diffCheckedEntities = newCheckedEntities - this.lastCheckedEntities;
         this.lastCheckedEntities = newCheckedEntities;
         
+        //////////////////////////////////////////////////////////////////////
+        //                             checked                              //
+        //////////////////////////////////////////////////////////////////////
         sb.append("checked : ");
         sb.append(Util.getValueWithDots(this.lastCheckedEntities));
         sb.append(" (n:");
@@ -547,6 +563,30 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
         sb.append(",r:");
         sb.append(Util.getValueWithDots(this.numberCheckedRelations));
         sb.append(")\n");
+
+        //////////////////////////////////////////////////////////////////////
+        //                             imported                             //
+        //////////////////////////////////////////////////////////////////////
+        sb.append("imported: ");
+        sb.append(Util.getValueWithDots(this.numberImportedNodes + this.numberImportedWays + this.numberImportedRelations));
+        sb.append(" (n:");
+        sb.append(Util.getValueWithDots(this.numberImportedNodes));
+        sb.append(",w:");
+        sb.append(Util.getValueWithDots(this.numberImportedWays));
+        sb.append(",r:");
+        sb.append(Util.getValueWithDots(this.numberImportedRelations));
+        sb.append(") ");
+        
+        sb.append("historic: ");
+        sb.append(Util.getValueWithDots(this.historicInfos));
+        sb.append(" | elapsed: ");
+        sb.append(Util.getElapsedTime(this.startTime));
+        sb.append("\n");
+        
+        
+        //////////////////////////////////////////////////////////////////////
+        //                          new / speed                             //
+        //////////////////////////////////////////////////////////////////////
         
         this.lastCheckTime = this.lastCheckTime > 0 ? this.lastCheckTime : this.startTime;
         long now = System.currentTimeMillis();
@@ -590,22 +630,40 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
                 sb.append(Util.getTimeString(eta));
             }
             sb.append("\n");
+
+            long avgTime = getAndResetAvgTime(TIME_SELECT_ELEMENTS);
+            sb.append("avg time: ");
+            sb.append("select (" + Util.getValueWithDots(this.steplen) + "): ");
+            sb.append(Util.getValueWithDots(avgTime));
+            sb.append(" ms ");
+            
+            avgTime = getAndResetAvgTime(TIME_PROCESS_ELEMENTS);
+            if(avgTime > -1) { 
+                sb.append(" | ");
+                sb.append("process(" + this.avgTimeScale + "): ");
+                sb.append(Util.getValueWithDots(avgTime));
+                sb.append(" ms ");
+            }
+            
+            sb.append("\n");
+            sb.append("          ");
+            avgTime = getAndResetAvgTime(TIME_ADD_NODES);
+            if(avgTime > -1) { 
+                sb.append("addNodes(" + this.avgTimeScale + "): ");
+                sb.append(Util.getValueWithDots(avgTime));
+                sb.append(" ms ");
+            }
+            
+            avgTime = getAndResetAvgTime(TIME_CREATE_NODE);
+            if(avgTime > -1) { 
+                sb.append(" | ");
+                sb.append("createNode(" + this.avgTimeScale + "): ");
+                sb.append(Util.getValueWithDots(avgTime));
+                sb.append(" ms ");
+            }
+            
+            sb.append("\n");
         }
-        
-        sb.append("imported: ");
-        sb.append(Util.getValueWithDots(this.numberImportedNodes + this.numberImportedWays + this.numberImportedRelations));
-        sb.append(" (n:");
-        sb.append(Util.getValueWithDots(this.numberImportedNodes));
-        sb.append(",w:");
-        sb.append(Util.getValueWithDots(this.numberImportedWays));
-        sb.append(",r:");
-        sb.append(Util.getValueWithDots(this.numberImportedRelations));
-        sb.append(") ");
-        
-        sb.append("historic: ");
-        sb.append(Util.getValueWithDots(this.historicInfos));
-        sb.append(" | elapsed: ");
-        sb.append(Util.getElapsedTime(this.startTime));
         
         return sb.toString();
     }
@@ -679,5 +737,91 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
     @Override
     public void trigger() {
         System.out.println("\n" + this.getStatistics());
+    }
+
+    private static final int TIME_SELECT_ELEMENTS = 0;
+    private static final int TIME_PROCESS_ELEMENTS = 1;
+    private static final int TIME_ADD_NODES = 2;
+    private static final int TIME_CREATE_NODE = 3;
+    
+    private int selectCount = 0;
+    private long selectTime = 0;
+    
+    private int processCount = 0;
+    private long processTime = 0;
+    
+    private int addNodesCount = 0;
+    private long addNodesTime = 0;
+    
+    private int createNodesCount = 0;
+    private long createNodesTime = 0;
+    
+    private void noteTime(long time, int what) {
+        switch(what) {
+            case TIME_SELECT_ELEMENTS: 
+                this.selectCount++;
+                this.selectTime += time;
+                break;
+                
+            case TIME_PROCESS_ELEMENTS: 
+                this.processCount++;
+                this.processTime += time;
+                break;
+                
+            case TIME_ADD_NODES: 
+                this.addNodesCount++;
+                this.addNodesTime += time;
+                break;
+                
+            case TIME_CREATE_NODE: 
+                this.createNodesCount++;
+                this.createNodesTime += time;
+                break;
+        }
+    }
+    
+    private int avgTimeScale = 100;
+
+    private long getAndResetAvgTime(int what) {
+        long avg = 0;
+        
+        switch(what) {
+            case TIME_SELECT_ELEMENTS: 
+                if(this.selectCount == 0) return -1;
+                
+                avg = this.selectTime / this.selectCount;
+                this.selectCount = 0;
+                this.selectTime = 0;
+                break;
+                
+            case TIME_PROCESS_ELEMENTS: 
+                this.processCount /= avgTimeScale;
+                if(this.processCount == 0) return -1;
+
+                avg = this.processTime / this.processCount;
+                this.processCount = 0;
+                this.processTime = 0;
+                break;
+                
+            case TIME_ADD_NODES: 
+                this.addNodesCount /= avgTimeScale;
+                if(this.addNodesCount == 0) return -1;
+                
+                avg = this.addNodesTime / this.addNodesCount;
+                this.addNodesCount = 0;
+                this.addNodesTime = 0;
+                break;
+                
+            case TIME_CREATE_NODE: 
+                this.createNodesCount /= avgTimeScale;
+                if(this.createNodesCount == 0) return -1;
+                
+                avg = this.createNodesTime / this.createNodesCount;
+                this.createNodesCount = 0;
+                this.createNodesTime = 0;
+                break;
+        }
+        
+        return avg;
     }
 }

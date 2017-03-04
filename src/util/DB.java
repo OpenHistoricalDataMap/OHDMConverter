@@ -112,6 +112,7 @@ public class DB {
         connProps.put("user", parameter.getUserName());
         connProps.put("password", parameter.getPWD());
         
+        connProps.put("tcpKeepAlive", "true");
         
         Driver d = null;
 //        System.out.println("debugging: find jdbc driver by class name: org.postgresql.Driver");

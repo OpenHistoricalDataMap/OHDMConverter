@@ -1,9 +1,6 @@
 package util;
 
 import java.sql.SQLException;
-import util.DB;
-import util.SQLStatementQueue;
-import util.Util;
 
 /**
  *

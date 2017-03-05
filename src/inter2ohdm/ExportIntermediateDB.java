@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import util.InterDB;
@@ -687,7 +686,7 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
 //        }
         
         // show big steps
-        if(++this.printEra >= PRINT_ERA_LENGTH) {
+        if(++this.printEra > PRINT_ERA_LENGTH) {
             this.printEra = 0;
             System.out.println("\n" + this.getStatistics());
         }
@@ -780,7 +779,7 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
         }
     }
     
-    private int avgTimeScale = 100;
+    private int avgTimeScale = 1000;
 
     private long getAndResetAvgTime(int what) {
         long avg = 0;

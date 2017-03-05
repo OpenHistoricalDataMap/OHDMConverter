@@ -9,7 +9,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.StringTokenizer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author thsc
@@ -26,16 +29,17 @@ public class Parameter {
     private String readStepLen;
     private boolean useJDBC = true;
     
-    private String outFile;
-    private String logFile;
-    private String errFile;
+    private static final String STDOUT = "stdout";
+    private static final String STDERR = "stderr";
+    
+    private String outFile = STDOUT;
+    private String logFile = STDOUT;
+    private String errFile = STDERR;
     
     private PrintStream outStream;
     private PrintStream logStream;
     private PrintStream errStream;
     
-    private static final String STDOUT = "stdout";
-    private static final String STDERR = "stderr";
     private boolean forgetPreviousImport = true;
     private boolean importNodes = true;
     private boolean importWays = true;
@@ -44,11 +48,6 @@ public class Parameter {
     
     public Parameter(String filename) throws FileNotFoundException, IOException {
         long now = System.currentTimeMillis();
-        this.logFile = STDOUT;
-        this.errFile = STDERR;
-//        this.logFile = "log_" + now;
-//        this.errFile = "err_" + now;
-        this.outFile = "out_" + now;
         
         FileInputStream fInput = new FileInputStream(filename);
         File file = new File(filename);
@@ -117,7 +116,7 @@ public class Parameter {
     
     public PrintStream getOutStream() throws FileNotFoundException { 
         if(this.outStream == null) {
-            this.outStream = this.getOutStream(null);
+            this.outStream = this.getOutStream(this.outFile);
         }
         
         return this.outStream;
@@ -129,7 +128,7 @@ public class Parameter {
     
     public PrintStream getLogStream() throws FileNotFoundException { 
         if(this.logStream == null) {
-            this.logStream = this.getOutStream(null);
+            this.logStream = this.getOutStream(this.logFile);
         }
         
         return this.logStream;
@@ -141,7 +140,7 @@ public class Parameter {
     
     public PrintStream getErrStream() throws FileNotFoundException { 
         if(this.errStream == null) {
-            this.errStream = this.getOutStream(null);
+            this.errStream = this.getOutStream(this.errFile);
         }
         
         return this.errStream;
@@ -169,7 +168,7 @@ public class Parameter {
         else {
             // open file and create PrintStream
             if(name != null) {
-                outFile = outFile + "_" + name;
+                outFile = name;
             }
             try {
                 stream = new PrintStream(new FileOutputStream(outFile), true, "UTF-8");

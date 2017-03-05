@@ -20,7 +20,7 @@ public class SQLStatementQueue {
     private List<Connection> connections = new ArrayList<>();
     private List<Boolean> freeConnection = new ArrayList<>();
     
-    private static final long MAX_BUFFER_LENGTH = 512 * 1024; // 500 kByte
+    private static final long MAX_BUFFER_LENGTH = 60 * 1024; // 500 kByte
 //    private static final long MAX_BUFFER_LENGTH = 200; // 500 kByte
     
     private final ArrayList<SQLExecute> execThreads = new ArrayList<>();

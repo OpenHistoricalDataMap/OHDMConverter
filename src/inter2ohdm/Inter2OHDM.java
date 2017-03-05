@@ -16,7 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import util.DB;
 import util.OHDM_DB;
-import util.OutStreamSQLStatementQueue;
+import util.FileSQLStatementQueue;
 import util.SQLStatementQueue;
 import util.Parameter;
 import util.Trigger;
@@ -790,8 +790,8 @@ public class Inter2OHDM extends Importer {
             
             // create File to keep update commands
             String currentUpdateFileName = "updateNodes.sql";
-            PrintStream updateCommmands = new PrintStream(currentUpdateFileName);
-            OutStreamSQLStatementQueue updateQueue = new OutStreamSQLStatementQueue(updateCommmands);
+            File updateCommmands = new File(currentUpdateFileName);
+            FileSQLStatementQueue updateQueue = new FileSQLStatementQueue(updateCommmands);
             
             Inter2OHDM ohdmImporter = new Inter2OHDM(iDB, sourceConnection, 
                     targetConnection, sourceSchema, targetSchema, updateQueue);
@@ -864,13 +864,16 @@ public class Inter2OHDM extends Importer {
                 
                 // cut off update stream and let psql process that stuff
                 String nextFileName = "updateWays.sql";
-                updateCommmands = new PrintStream(nextFileName);
-                updateQueue.switchStream(updateCommmands);
+                updateCommmands = new File(nextFileName);
+                updateQueue.switchFile(updateCommmands);
                 
+                trigger.setMilliseconds(1000 * 60 * 30); // 30 minutes
                 // now process stored updates... that process must be performed before processing ways or relations
                 System.out.println("psql is executing node update commands..");
                 Util.feedPSQL(sourceParameter, currentUpdateFileName, false, true);
                 System.out.println("..done");
+                trigger.setMilliseconds(1000 * 60 * 5); // 5 minutes again
+                trigger.interrupt();
                 
                 // remember new update filename
                 currentUpdateFileName = nextFileName;
@@ -883,13 +886,16 @@ public class Inter2OHDM extends Importer {
                 
                 // cut off update stream and let psql process that stuff
                 String nextFileName = "updateRelations.sql";
-                updateCommmands = new PrintStream(nextFileName);
-                updateQueue.switchStream(updateCommmands);
+                updateCommmands = new File(nextFileName);
+                updateQueue.switchFile(updateCommmands);
                 
+                trigger.setMilliseconds(1000 * 60 * 30); // 30 minutes
                 // now process stored updates... that process must be performed before processing ways or relations
                 System.out.println("psql is executing way update commands..");
                 Util.feedPSQL(sourceParameter, currentUpdateFileName, false, true);
                 System.out.println("..done");
+                trigger.setMilliseconds(1000 * 60 * 5); // 5 minutes
+                trigger.interrupt();
                 
                 // remember new update filename
                 currentUpdateFileName = nextFileName;
@@ -904,9 +910,12 @@ public class Inter2OHDM extends Importer {
                 updateQueue.close();
                 
                 // now process stored updates... that process must be performed before processing ways or relations
+                trigger.setMilliseconds(1000 * 60 * 30); // 30 minutes
                 System.out.println("psql is executing relation update commands..");
                 Util.feedPSQL(sourceParameter, currentUpdateFileName, false, true);
                 System.out.println("..done");
+                trigger.setMilliseconds(1000 * 60 * 5); // 5 minutes
+                trigger.interrupt();
                 
             } else {
                 System.out.println("skip relations import.. see importRelations in ohdm parameter file");

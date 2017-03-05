@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 public class Trigger extends Thread {
     private final TriggerRecipient rec;
     private boolean stopped;
-    private final long milliseconds;
+    private long milliseconds;
     
     public Trigger(TriggerRecipient rec, long milliseconds) {
         this.rec = rec;
@@ -20,6 +20,10 @@ public class Trigger extends Thread {
     
     public void end() {
         this.stopped = true;
+    }
+    
+    public void setMilliseconds(long milliseconds) {
+        this.milliseconds = milliseconds;
     }
     
     @Override

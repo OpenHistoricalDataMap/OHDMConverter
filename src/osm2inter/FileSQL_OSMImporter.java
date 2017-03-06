@@ -95,9 +95,9 @@ public class FileSQL_OSMImporter extends DefaultHandler {
         
         this.managementQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
         
-        this.insertQueue = new ManagedFileSQLStatementQueue("sql_insertOSM2Inter", parameter);
+        this.insertQueue = new ManagedFileSQLStatementQueue("sql_O2I_insertOSM2Inter", parameter);
 //        this.insertQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
-        this.memberQueue = new ManagedFileSQLStatementQueue("sql_memberOSM2Inter", parameter);
+        this.memberQueue = new ManagedFileSQLStatementQueue("sql_O2I_memberOSM2Inter", parameter);
 //        this.memberQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
 
         InterDB.createTables(managementQueue, schema);
@@ -107,7 +107,6 @@ public class FileSQL_OSMImporter extends DefaultHandler {
         
         this.startTime = System.currentTimeMillis();
         this.lastReconnect = this.startTime;
-        
     }
     
     /*
@@ -559,6 +558,11 @@ public class FileSQL_OSMImporter extends DefaultHandler {
             this.managementQueue.close();
             
             this.outStream.println("index creation successfully");
+            
+            // wait for outstanding psql processes
+            this.memberQueue.join();
+            this.insertQueue.join();
+
             this.outStream.println("----------------------------------------------------------------");
             this.outStream.println("OSM import ended");
             this.printStatus();

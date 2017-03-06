@@ -206,7 +206,7 @@ public class Util {
         return result;
     }
 
-    public static void feedPSQL(Parameter parameter, String sqlFileName, 
+    public static Process feedPSQL(Parameter parameter, String sqlFileName, 
             boolean parallel, boolean removeFile) throws IOException {
         
         // create command line
@@ -224,11 +224,11 @@ public class Util {
         
 //        System.out.println("performing: " + sb.toString());
         Process psqlProcess = runtime.exec(sb.toString());
-                        
+        
         if(!parallel) {
             try {
                 int retCode = psqlProcess.waitFor();
-//                System.out.println("..process finished with " + waitFor);
+//                System.out.println("..process finished with " + retCode);
             } catch (InterruptedException ex) {
                 // won't happen.. no plans to send interrupt 
 //                System.out.println("..process produced exception: " + ex.getMessage());
@@ -237,9 +237,11 @@ public class Util {
         
         if(removeFile) {
             File f = new File(sqlFileName);
-            if(!f.delete()) {
+//            if(!f.delete()) {
                 f.deleteOnExit();
-            }
+//            }
         }
+        
+        return psqlProcess;
     }
 }

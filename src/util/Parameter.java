@@ -43,6 +43,7 @@ public class Parameter {
     private boolean importRelations = true;
     private String fullPSQLPath = "psql";
     private int maxSQLFileSize = 1;
+    private int maxPSQLProcesses = 1;
     
     public Parameter(String filename) throws FileNotFoundException, IOException {
         long now = System.currentTimeMillis();
@@ -84,6 +85,7 @@ public class Parameter {
                         case "importRelations": this.importRelations = value.equalsIgnoreCase("yes"); break;
                         case "fullPSQLPath": this.fullPSQLPath = value; break;
                         case "maxSQLFileSize": this.maxSQLFileSize = Integer.parseInt(value); break;
+                        case "maxPSQLProcesses": this.maxPSQLProcesses = Integer.parseInt(value); break;
                     }
                 }
             }
@@ -109,6 +111,7 @@ public class Parameter {
     public boolean importWays() { return this.importWays; }
     public boolean importRelations() { return this.importRelations; }
     public int getMaxSQLFileSize() { return this.maxSQLFileSize; }
+    public int getMaxPSQLProcesses() { return this.maxPSQLProcesses; }
 
     public String getFullPSQLPath() { return this.fullPSQLPath;  }
     

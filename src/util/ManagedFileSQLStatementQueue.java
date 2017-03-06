@@ -3,6 +3,7 @@ package util;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  *
@@ -17,11 +18,11 @@ public class ManagedFileSQLStatementQueue extends FileSQLStatementQueue {
     private String currentFileName;
     
     public ManagedFileSQLStatementQueue(String name, Parameter parameter) throws FileNotFoundException {
-        super(new File(name));
+        super(new File(name + "0"));
         this.name = name;
         this.parameter = parameter;
-        this.currentFileName = name;
-        this.currentFile = new File(name);
+        this.currentFileName = this.name + "0";
+        this.currentFile = new File(this.name);
         this.maxMByte = parameter.getMaxSQLFileSize();
     }
     
@@ -37,6 +38,16 @@ public class ManagedFileSQLStatementQueue extends FileSQLStatementQueue {
         // hang out file and give it psql
         this.executeFileAndSetupNew();
         
+    }
+    
+    private int nextFileNumber() {
+        if(this.currentFileNumber > this.parameter.getMaxPSQLProcesses() * 10) {
+            this.currentFileNumber = 0;
+        } else {
+            this.currentFileNumber++;
+        }
+        
+        return this.currentFileNumber;
     }
     
     private void executeFileAndSetupNew() {
@@ -55,9 +66,11 @@ public class ManagedFileSQLStatementQueue extends FileSQLStatementQueue {
             anything to do here after switching the file
             */
             this.switchFile(new File(this.currentFileName));
-            System.out.println("feed sql file to psql when switching file: " + fileName);
+            System.out.println("spawn new psql process to execute: " + fileName);
             // false: not parallel, true: delete tmp sql file
-            Util.feedPSQL(parameter, this.currentFileName, false, true);
+            this.rememberPSQLProcess(Util.feedPSQL(parameter, fileName, 
+                    this.launchParallelPSQL(), 
+                    false));
 
 
         } catch (IOException ex) {
@@ -66,14 +79,46 @@ public class ManagedFileSQLStatementQueue extends FileSQLStatementQueue {
         
     }
     
+    ArrayList<Process> psqlProcessses = new ArrayList<>();
+    
+    /**
+     * 
+     * @return true is empty
+     */
+    private void clearPSQLProcessList() {
+        ArrayList<Process> dead = new ArrayList<>();
+        
+        for(Process p : this.psqlProcessses) {
+            if(!p.isAlive()) {
+                System.out.println("psql process dead and removed: " + p.toString());
+                dead.add(p);
+            }
+        }
+        
+        for(Process deadP : dead) {
+            this.psqlProcessses.remove(deadP);
+        }
+    }
+    
+    private boolean launchParallelPSQL() {
+        // check who is alive
+        this.clearPSQLProcessList();
+        
+        return this.parameter.getMaxPSQLProcesses() > this.psqlProcessses.size();
+    }
+    
+    private void rememberPSQLProcess(Process psqlProcess) {
+        System.out.println("remember psql process: " + psqlProcess.toString());
+        this.psqlProcessses.add(psqlProcess);
+    }
+    
     @Override
     public void couldExecute() {
         // propagate to super method
         super.couldExecute();
         
         // if file has exceed max length. Hang up and let it executed
-//        if(this.currentFile.length() > this.maxMByte*1024*1024) {
-        if(this.currentFile.length() > this.maxMByte*1024*1024) { // each time for debugging
+        if(this.writtenByte > this.maxMByte*1024*1024) { // unit: megabyte
             
             // clear memory
             super.forceExecute();
@@ -92,9 +137,22 @@ public class ManagedFileSQLStatementQueue extends FileSQLStatementQueue {
         try {
             // false: not parallel, false: don't delete tmp sql file
 //            Util.feedPSQL(parameter, this.currentFileName, false, false);
-            Util.feedPSQL(parameter, this.currentFileName, false, true);
+            this.rememberPSQLProcess(Util.feedPSQL(parameter, this.currentFileName, false, false));
         } catch (IOException ex) {
             System.err.println("could not start psql: " + ex);
+        }
+    }
+    
+    private final int sleepTime = 10*1000; // 10 seconds
+    @Override
+    public void join() {
+        while(this.psqlProcessses.isEmpty()) {
+            try {
+                Thread.sleep(this.sleepTime);
+                this.clearPSQLProcessList();
+            } catch (InterruptedException ex) {
+                // next loop
+            }
         }
     }
 }

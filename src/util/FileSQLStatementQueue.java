@@ -40,6 +40,8 @@ public class FileSQLStatementQueue extends SQLStatementQueue {
         }
     }
     
+    protected long writtenByte = 0;
+    
     private void flush2File() {
         if(this.sqlQueue == null || this.sqlQueue.length() < 1) {
             return;
@@ -47,6 +49,8 @@ public class FileSQLStatementQueue extends SQLStatementQueue {
         
         this.fileOutStream.print(this.sqlQueue.toString());
         this.fileOutStream.flush();
+        
+        this.writtenByte += this.sqlQueue.length();
 
         this.resetStatement();
     }
@@ -71,6 +75,7 @@ public class FileSQLStatementQueue extends SQLStatementQueue {
         this.fileOutStream.close();
         this.sqlFile = newFile;
         this.fileOutStream = this.createFileOutputStream(this.sqlFile);
+        this.writtenByte =0;
     }
     
     @Override

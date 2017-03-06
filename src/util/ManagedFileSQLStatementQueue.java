@@ -41,7 +41,7 @@ public class ManagedFileSQLStatementQueue extends FileSQLStatementQueue {
     }
     
     private int nextFileNumber() {
-        if(this.currentFileNumber > this.parameter.getMaxPSQLProcesses() * 10) {
+        if(this.currentFileNumber > this.parameter.getMaxPSQLProcesses() * 5) {
             this.currentFileNumber = 0;
         } else {
             this.currentFileNumber++;
@@ -56,7 +56,7 @@ public class ManagedFileSQLStatementQueue extends FileSQLStatementQueue {
             String fileName = this.currentFileName;
 
             // create new sql file
-            this.currentFileName = this.name + this.currentFileNumber++;
+            this.currentFileName = this.name + this.nextFileNumber();
             this.currentFile = new File(this.currentFileName);
 
             // end, flush, close old and enter new PrintStream
@@ -66,11 +66,10 @@ public class ManagedFileSQLStatementQueue extends FileSQLStatementQueue {
             anything to do here after switching the file
             */
             this.switchFile(new File(this.currentFileName));
-            System.out.println("spawn new psql process to execute: " + fileName);
+//            System.out.println("spawn new psql process to execute: " + fileName);
             // false: not parallel, true: delete tmp sql file
-            this.rememberPSQLProcess(Util.feedPSQL(parameter, fileName, 
-                    this.launchParallelPSQL(), 
-                    false));
+            this.wait4FreeSlot();
+            this.rememberPSQLProcess(Util.feedPSQL(parameter, fileName, true, false));
 
 
         } catch (IOException ex) {
@@ -90,7 +89,7 @@ public class ManagedFileSQLStatementQueue extends FileSQLStatementQueue {
         
         for(Process p : this.psqlProcessses) {
             if(!p.isAlive()) {
-                System.out.println("psql process dead and removed: " + p.toString());
+//                System.out.println("psql process dead and removed: " + p.toString());
                 dead.add(p);
             }
         }
@@ -100,15 +99,8 @@ public class ManagedFileSQLStatementQueue extends FileSQLStatementQueue {
         }
     }
     
-    private boolean launchParallelPSQL() {
-        // check who is alive
-        this.clearPSQLProcessList();
-        
-        return this.parameter.getMaxPSQLProcesses() > this.psqlProcessses.size();
-    }
-    
     private void rememberPSQLProcess(Process psqlProcess) {
-        System.out.println("remember psql process: " + psqlProcess.toString());
+//        System.out.println("remember psql process: " + psqlProcess.toString());
         this.psqlProcessses.add(psqlProcess);
     }
     
@@ -133,7 +125,7 @@ public class ManagedFileSQLStatementQueue extends FileSQLStatementQueue {
         super.close();
         
         // feed final file to psql
-        System.out.println("feed sql file to psql after closing: " + this.currentFileName);
+//        System.out.println("feed sql file to psql after closing: " + this.currentFileName);
         try {
             // false: not parallel, false: don't delete tmp sql file
 //            Util.feedPSQL(parameter, this.currentFileName, false, false);
@@ -143,10 +135,21 @@ public class ManagedFileSQLStatementQueue extends FileSQLStatementQueue {
         }
     }
     
-    private final int sleepTime = 10*1000; // 10 seconds
+    private final int sleepTime = 10*100; // 1 seconds
     @Override
     public void join() {
         while(this.psqlProcessses.isEmpty()) {
+            try {
+                Thread.sleep(this.sleepTime);
+                this.clearPSQLProcessList();
+            } catch (InterruptedException ex) {
+                // next loop
+            }
+        }
+    }
+    
+    public void wait4FreeSlot() {
+        while(this.psqlProcessses.size() >= parameter.getMaxPSQLProcesses()) {
             try {
                 Thread.sleep(this.sleepTime);
                 this.clearPSQLProcessList();

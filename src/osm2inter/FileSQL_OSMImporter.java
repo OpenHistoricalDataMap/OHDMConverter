@@ -9,7 +9,10 @@ import org.xml.sax.Attributes;
 import org.xml.sax.helpers.DefaultHandler;
 import osm.OSMClassification;
 import inter2ohdm.AbstractElement;
+import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import util.DB;
 import util.ManagedFileSQLStatementQueue;
 import util.Parameter;
@@ -19,7 +22,7 @@ import util.Util;
 /**
  * @author thsc
  */
-public class StreamSQL_OSMImporter extends DefaultHandler {
+public class FileSQL_OSMImporter extends DefaultHandler {
     private StringBuilder sAttributes;
     private StringBuilder nodeIDs;
     private StringBuilder memberIDs;
@@ -49,7 +52,7 @@ public class StreamSQL_OSMImporter extends DefaultHandler {
     private File recordFile;
     private int maxThreads;
     private final SQLStatementQueue insertQueue;
-    private final SQLStatementQueue memberQueue;
+    private SQLStatementQueue memberQueue;
     
     private String currentElementID;
 
@@ -61,8 +64,9 @@ public class StreamSQL_OSMImporter extends DefaultHandler {
     private boolean hasName = false;
     private final PrintStream errStream;
     private final PrintStream outStream;
+    private SQLStatementQueue managementQueue;
     
-    public StreamSQL_OSMImporter(Parameter parameter, OSMClassification osmClassification) throws Exception {
+    public FileSQL_OSMImporter(Parameter parameter, OSMClassification osmClassification) throws Exception {
         this.parameter = parameter;
         this.osmClassification = osmClassification;
     
@@ -89,11 +93,17 @@ public class StreamSQL_OSMImporter extends DefaultHandler {
         this.updateWaysQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
         */
         
-        this.insertQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
-        this.memberQueue = new ManagedFileSQLStatementQueue("sql_memberOSM2Inter", parameter, 10);
+        this.managementQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
+        
+        this.insertQueue = new ManagedFileSQLStatementQueue("sql_insertOSM2Inter", parameter);
+//        this.insertQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
+        this.memberQueue = new ManagedFileSQLStatementQueue("sql_memberOSM2Inter", parameter);
 //        this.memberQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
 
-        InterDB.createTables(insertQueue, schema);
+        InterDB.createTables(managementQueue, schema);
+        
+        this.managementQueue.join();
+        this.managementQueue.close();
         
         this.startTime = System.currentTimeMillis();
         this.lastReconnect = this.startTime;
@@ -447,48 +457,52 @@ public class StreamSQL_OSMImporter extends DefaultHandler {
         this.outStream.print("\nRelation import ended.. wait for import threads to end..\n");
         this.printStatus();
         this.outStream.println("----------------------------------------------------------------");
-
+        
         try {
 //            this.outStream.println("last member queue sql query");
 //            this.outStream.println(this.memberQueue);
-            memberQueue.close(); // executes psql process
-            
+            this.memberQueue.close(); // executes psql process
+            this.insertQueue.close();
+    
+            // do the rest with jdbc
+            this.managementQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
+
             this.printStatus();
             this.outStream.println("create indexes...");
 
-            this.insertQueue.append("CREATE INDEX node_osm_id ON ");
-            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.NODETABLE));
-            this.insertQueue.append(" (osm_id);");
+            this.managementQueue.append("CREATE INDEX node_osm_id ON ");
+            this.managementQueue.append(DB.getFullTableName(this.schema, InterDB.NODETABLE));
+            this.managementQueue.append(" (osm_id);");
             this.outStream.println("----------------------------------------------------------------");
             this.outStream.println("created index on nodes table over osm_id");
             this.printStatus();
             this.outStream.println("----------------------------------------------------------------");
             
-            this.insertQueue.append("CREATE INDEX way_osm_id ON ");
-            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.WAYTABLE));
-            this.insertQueue.append(" (osm_id);");
+            this.managementQueue.append("CREATE INDEX way_osm_id ON ");
+            this.managementQueue.append(DB.getFullTableName(this.schema, InterDB.WAYTABLE));
+            this.managementQueue.append(" (osm_id);");
             this.outStream.println("index on way table over osm_id");
             try {
-                this.insertQueue.forceExecute(true);
+                this.managementQueue.forceExecute(true);
             }
             catch(Exception e) {
-                Util.printExceptionMessage(e, insertQueue, "exception when starting index creation on way table over osm_id");
+                Util.printExceptionMessage(e, managementQueue, "exception when starting index creation on way table over osm_id");
             }
 
-            this.insertQueue.append("CREATE INDEX waynodes_node_id ON ");
-            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.WAYMEMBER));
-            this.insertQueue.append(" (node_id);");
+            this.managementQueue.append("CREATE INDEX waynodes_node_id ON ");
+            this.managementQueue.append(DB.getFullTableName(this.schema, InterDB.WAYMEMBER));
+            this.managementQueue.append(" (node_id);");
             this.outStream.println("index on waymember table over node_id");
             
-            this.insertQueue.append("CREATE INDEX waynodes_way_id ON ");
-            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.WAYMEMBER));
-            this.insertQueue.append(" (way_id);");
+            this.managementQueue.append("CREATE INDEX waynodes_way_id ON ");
+            this.managementQueue.append(DB.getFullTableName(this.schema, InterDB.WAYMEMBER));
+            this.managementQueue.append(" (way_id);");
             this.outStream.println("index on waymember table over way_id");
             try {
-                this.insertQueue.forceExecute(true);
+                this.managementQueue.forceExecute(true);
             }
             catch(Exception e) {
-                Util.printExceptionMessage(e, insertQueue, "exception when starting index creation on waymember table over node_id");
+                Util.printExceptionMessage(e, managementQueue, "exception when starting index creation on waymember table over node_id");
             }
             
 //            this.insertQueue.append("CREATE INDEX waynodes_way_id ON ");
@@ -502,35 +516,34 @@ public class StreamSQL_OSMImporter extends DefaultHandler {
 //                Util.printExceptionMessage(e, insertQueue, "exception during index creation on waymember table over node_id");
 //            }
 
-            this.insertQueue.append("CREATE INDEX relation_osm_id ON ");
-            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONTABLE));
-            this.insertQueue.append(" (osm_id);");
+            this.managementQueue.append("CREATE INDEX relation_osm_id ON ");
+            this.managementQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONTABLE));
+            this.managementQueue.append(" (osm_id);");
             this.outStream.println("index on relation table over osm_id");
-            this.insertQueue.forceExecute(true);
+            this.managementQueue.forceExecute(true);
             
             /*
             CREATE INDEX relationmember_member_rel_id ON 
             intermediate.relationmember (member_rel_id);
             */
-            this.insertQueue.append("CREATE INDEX relationmember_member_rel_id ON ");
-            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONMEMBER));
-            this.insertQueue.append(" (member_rel_id);");
+            this.managementQueue.append("CREATE INDEX relationmember_member_rel_id ON ");
+            this.managementQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONMEMBER));
+            this.managementQueue.append(" (member_rel_id);");
             this.outStream.println("index on relation member table over member_rel_id");
             this.outStream.flush();
-            this.insertQueue.forceExecute(true);
+            this.managementQueue.forceExecute(true);
                         
             /*
             CREATE INDEX relationmember_node_id ON 
             intermediate.relationmember (node_id);            
             */
-            this.insertQueue.append("CREATE INDEX relationmember_ids ON ");
-            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONMEMBER));
-            this.insertQueue.append(" (relation_id, node_id, way_id, member_rel_id);");
+            this.managementQueue.append("CREATE INDEX relationmember_ids ON ");
+            this.managementQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONMEMBER));
+            this.managementQueue.append(" (relation_id, node_id, way_id, member_rel_id);");
             this.outStream.println("index on relation member table over node_id");
             this.outStream.flush();
-            this.insertQueue.forceExecute(true);
+            this.managementQueue.forceExecute(true);
             
-            this.insertQueue.close();
 
             /*
             CREATE INDEX relationmember_way_id ON 
@@ -543,7 +556,8 @@ public class StreamSQL_OSMImporter extends DefaultHandler {
 //            this.outStream.flush();
 //            this.insertQueue.forceExecute();
             
-            this.insertQueue.close();
+            this.managementQueue.close();
+            
             this.outStream.println("index creation successfully");
             this.outStream.println("----------------------------------------------------------------");
             this.outStream.println("OSM import ended");
@@ -551,7 +565,9 @@ public class StreamSQL_OSMImporter extends DefaultHandler {
             this.outStream.println("----------------------------------------------------------------");
         }
         catch(SQLException se) {
-            Util.printExceptionMessage(se, this.insertQueue, "error while creating index");
+            Util.printExceptionMessage(se, this.managementQueue, "error while creating index");
+        } catch (FileNotFoundException ex) {
+            Util.printExceptionMessage(ex, this.managementQueue, "error while creating managementQueue");
         }
     }
     

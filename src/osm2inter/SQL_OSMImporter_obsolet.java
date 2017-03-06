@@ -17,7 +17,7 @@ import util.Util;
 /**
  * @author thsc
  */
-public class SQL_OSMImporter extends DefaultHandler {
+public class SQL_OSMImporter_obsolet extends DefaultHandler {
     private StringBuilder sAttributes;
     private StringBuilder nodeIDs;
     private StringBuilder memberIDs;
@@ -58,7 +58,7 @@ public class SQL_OSMImporter extends DefaultHandler {
     private final long startTime;
     private boolean hasName = false;
     
-    public SQL_OSMImporter(Parameter parameter, OSMClassification osmClassification) throws Exception {
+    public SQL_OSMImporter_obsolet(Parameter parameter, OSMClassification osmClassification) throws Exception {
         this.parameter = parameter;
         this.osmClassification = osmClassification;
     

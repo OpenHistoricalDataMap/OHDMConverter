@@ -9,10 +9,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.util.StringTokenizer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author thsc
@@ -45,6 +42,7 @@ public class Parameter {
     private boolean importWays = true;
     private boolean importRelations = true;
     private String fullPSQLPath = "psql";
+    private int maxSQLFileSize = 1;
     
     public Parameter(String filename) throws FileNotFoundException, IOException {
         long now = System.currentTimeMillis();
@@ -85,6 +83,7 @@ public class Parameter {
                         case "importWays": this.importWays = value.equalsIgnoreCase("yes"); break;
                         case "importRelations": this.importRelations = value.equalsIgnoreCase("yes"); break;
                         case "fullPSQLPath": this.fullPSQLPath = value; break;
+                        case "maxSQLFileSize": this.maxSQLFileSize = Integer.parseInt(value); break;
                     }
                 }
             }
@@ -109,7 +108,7 @@ public class Parameter {
     public boolean importNodes() { return this.importNodes; }
     public boolean importWays() { return this.importWays; }
     public boolean importRelations() { return this.importRelations; }
-    
+    public int getMaxSQLFileSize() { return this.maxSQLFileSize; }
 
     public String getFullPSQLPath() { return this.fullPSQLPath;  }
     

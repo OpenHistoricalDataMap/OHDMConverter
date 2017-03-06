@@ -236,7 +236,10 @@ public class Util {
         }
         
         if(removeFile) {
-            (new File(sqlFileName)).delete();
+            File f = new File(sqlFileName);
+            if(!f.delete()) {
+                f.deleteOnExit();
+            }
         }
     }
 }

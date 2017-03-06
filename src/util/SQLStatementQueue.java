@@ -20,7 +20,7 @@ public class SQLStatementQueue {
     private List<Connection> connections = new ArrayList<>();
     private List<Boolean> freeConnection = new ArrayList<>();
     
-    private static final long MAX_BUFFER_LENGTH = 60 * 1024; // 500 kByte
+    protected static final long MAX_BUFFER_LENGTH = 60 * 1024; // 500 kByte
 //    private static final long MAX_BUFFER_LENGTH = 200; // 500 kByte
     
     private final ArrayList<SQLExecute> execThreads = new ArrayList<>();
@@ -301,9 +301,12 @@ public class SQLStatementQueue {
      * @throws java.sql.SQLException
      */
     public void couldExecute() throws SQLException {
+        if(this.sqlQueue == null) return;
+        
         if(this.alwaysForce) {
             this.forceExecute();
         }
+        
         if(this.sqlQueue.length() > SQLStatementQueue.MAX_BUFFER_LENGTH) {
             this.forceExecute(true);
         }

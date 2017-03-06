@@ -31,7 +31,29 @@ public class FileSQLStatementQueue extends SQLStatementQueue {
     
     @Override
     public void couldExecute() {
-        this.forceExecute();
+        if(this.sqlQueue == null || this.sqlQueue.length() < 1) {
+            return;
+        }
+        
+        if(this.sqlQueue.length() >= MAX_BUFFER_LENGTH) {
+            this.flush2File();
+        }
+    }
+    
+    private void flush2File() {
+        if(this.sqlQueue == null || this.sqlQueue.length() < 1) {
+            return;
+        }
+        
+        this.fileOutStream.print(this.sqlQueue.toString());
+        this.fileOutStream.flush();
+
+        this.resetStatement();
+    }
+    
+    @Override
+    public void forceExecute() {
+        this.flush2File();
     }
     
     @Override
@@ -44,29 +66,16 @@ public class FileSQLStatementQueue extends SQLStatementQueue {
         this.forceExecute();
     }
     
-    @Override
-    public void forceExecute() {
-        if(this.sqlQueue == null || this.sqlQueue.length() < 1) {
-            return;
-        }
-//        byte[] utf8Bytes = this.sqlQueue.toString().getBytes(StandardCharsets.UTF_8);
-//        String utf8String = new String(utf8Bytes, StandardCharsets.UTF_8);
-//        this.outStream.print(utf8String);
-        this.fileOutStream.print(this.sqlQueue.toString());
-        this.fileOutStream.flush();
-
-        this.resetStatement();
-    }
-    
     public void switchFile(File newFile) throws FileNotFoundException {
-        this.close();
+        this.flush2File();
+        this.fileOutStream.close();
         this.sqlFile = newFile;
         this.fileOutStream = this.createFileOutputStream(this.sqlFile);
     }
     
     @Override
     public void close() {
-        this.forceExecute();
+        this.flush2File();
         this.fileOutStream.close();
     }
     

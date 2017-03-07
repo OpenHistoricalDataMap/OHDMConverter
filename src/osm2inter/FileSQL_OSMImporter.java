@@ -65,10 +65,14 @@ public class FileSQL_OSMImporter extends DefaultHandler {
     private final PrintStream errStream;
     private final PrintStream outStream;
     private SQLStatementQueue managementQueue;
+    private int admin_level;
+    private int currentClassID = -1;
+    private int boundaryAdminClassID = -1;
     
     public FileSQL_OSMImporter(Parameter parameter, OSMClassification osmClassification) throws Exception {
         this.parameter = parameter;
         this.osmClassification = osmClassification;
+        this.boundaryAdminClassID = osmClassification.getOHDMClassID("boundary", "administrative");
     
         this.schema = parameter.getSchema();
         
@@ -142,6 +146,7 @@ public class FileSQL_OSMImporter extends DefaultHandler {
         this.relationMemberFound = false;
         this.currentClassID = -1;
         this.hasName = false;
+        this.admin_level = 0;
         
         // could flush sql streams
         
@@ -213,7 +218,6 @@ public class FileSQL_OSMImporter extends DefaultHandler {
     
     OSMClassification osmClassification = OSMClassification.getOSMClassification();
 
-    private int currentClassID = -1;
     // just a set of new attributes.. add serialized to sAttrib builder
     private void addAttributesFromTag(Attributes attributes) {
 //        if(this.currentElementID.equalsIgnoreCase("28237510")) {
@@ -229,6 +233,7 @@ public class FileSQL_OSMImporter extends DefaultHandler {
         
         int i = 0;
         while(i < number) {
+            
             // handle key: does it describe a osm class
             if(this.osmClassification.osmFeatureClasses.keySet().
                         contains(attributes.getValue(i))) {
@@ -239,6 +244,14 @@ public class FileSQL_OSMImporter extends DefaultHandler {
                       attributes.getValue(i), 
                       attributes.getValue(i+1)
                 );
+                // describes an admin level
+            } else if(attributes.getValue(i).equalsIgnoreCase("admin_level")) {
+                try {
+                    this.admin_level = Integer.parseInt(attributes.getValue(i+1));
+                }
+                catch(NumberFormatException nfe) {
+                    this.errStream.println("not an integer in admin_level: " + attributes.getValue(i+1));
+                }
             } else {
                 // its an ordinary key/value pair
                 Util.serializeAttributes(this.sAttributes, 
@@ -619,9 +632,26 @@ public class FileSQL_OSMImporter extends DefaultHandler {
         default:
     }
 }
+
+    private void adjustClasscode() {
+        /* 
+        boundary / adminstrative / admin_level becomes 
+        bondary / admin_level_[level]
+        */
+        if(this.boundaryAdminClassID == this.currentClassID) {
+            if(this.admin_level > 0) { // adminlevel_1
+                this.currentClassID = this.osmClassification.getOHDMClassID(
+                            "boundary", 
+                            "adminlevel_" + this.admin_level);
+            }
+        }
+    }
     
     @Override
     public void endElement(String uri, String localName, String qName) {
+        // maybe adjust something, like boundary / admin-level
+        this.adjustClasscode();
+        
         try {
             switch (qName) {
                 case "node":

@@ -207,6 +207,18 @@ public class OSMClassification {
         // fill with all known subclasses
         subClasses.add(UNDEFINED);
         subClasses.add("administrative");
+        subClasses.add("adminlevel_1");
+        subClasses.add("adminlevel_2");
+        subClasses.add("adminlevel_3");
+        subClasses.add("adminlevel_4");
+        subClasses.add("adminlevel_5");
+        subClasses.add("adminlevel_6");
+        subClasses.add("adminlevel_7");
+        subClasses.add("adminlevel_8");
+        subClasses.add("adminlevel_9");
+        subClasses.add("adminlevel_10");
+        subClasses.add("adminlevel_11");
+        subClasses.add("adminlevel_12");
         subClasses.add("historic");
         subClasses.add("maritime");
         subClasses.add("national_park");
@@ -1189,25 +1201,6 @@ public class OSMClassification {
                 // is this key name of a feature class?
                 if(this.isClassName(key)) {
                     String value = osmElement.getValue(key);
-
-                    // find id of class / subclass
-                    return this.getOHDMClassID(key, value);
-                }
-        }
-
-        // there is no class description - sorry
-        return -1;
-    }
-    
-    public int getOHDMClassID(HashMap<String, String> attributes) {
-            // get attributes of that tag
-            Iterator<String> keyIter = attributes.keySet().iterator();
-            while(keyIter.hasNext()) {
-                String key = keyIter.next();
-
-                // is this key name of a feature class?
-                if(this.isClassName(key)) {
-                    String value = attributes.get(key);
 
                     // find id of class / subclass
                     return this.getOHDMClassID(key, value);

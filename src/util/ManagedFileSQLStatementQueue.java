@@ -17,6 +17,8 @@ public class ManagedFileSQLStatementQueue extends FileSQLStatementQueue {
     private final String name;
     private String currentFileName;
     
+    ArrayList<Process> psqlProcessses = new ArrayList<>();
+    
     public ManagedFileSQLStatementQueue(String name, Parameter parameter) throws FileNotFoundException {
         super(new File(name + "0"));
         this.name = name;
@@ -41,7 +43,7 @@ public class ManagedFileSQLStatementQueue extends FileSQLStatementQueue {
     }
     
     private int nextFileNumber() {
-        if(this.currentFileNumber > this.parameter.getMaxPSQLProcesses() * 5) {
+        if(this.currentFileNumber > this.parameter.getMaxPSQLProcesses() * 3) {
             this.currentFileNumber = 0;
         } else {
             this.currentFileNumber++;
@@ -77,8 +79,6 @@ public class ManagedFileSQLStatementQueue extends FileSQLStatementQueue {
         }
         
     }
-    
-    ArrayList<Process> psqlProcessses = new ArrayList<>();
     
     /**
      * 

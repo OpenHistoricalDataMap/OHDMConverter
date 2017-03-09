@@ -207,18 +207,6 @@ public class OSMClassification {
         // fill with all known subclasses
         subClasses.add(UNDEFINED);
         subClasses.add("administrative");
-        subClasses.add("adminlevel_1");
-        subClasses.add("adminlevel_2");
-        subClasses.add("adminlevel_3");
-        subClasses.add("adminlevel_4");
-        subClasses.add("adminlevel_5");
-        subClasses.add("adminlevel_6");
-        subClasses.add("adminlevel_7");
-        subClasses.add("adminlevel_8");
-        subClasses.add("adminlevel_9");
-        subClasses.add("adminlevel_10");
-        subClasses.add("adminlevel_11");
-        subClasses.add("adminlevel_12");
         subClasses.add("historic");
         subClasses.add("maritime");
         subClasses.add("national_park");
@@ -1140,6 +1128,22 @@ public class OSMClassification {
         subClasses.add("fuel");
              
         osmFeatureClasses.put("waterway", subClasses);   
+        
+        subClasses = new ArrayList<>();
+        subClasses.add("adminlevel_1");
+        subClasses.add("adminlevel_2");
+        subClasses.add("adminlevel_3");
+        subClasses.add("adminlevel_4");
+        subClasses.add("adminlevel_5");
+        subClasses.add("adminlevel_6");
+        subClasses.add("adminlevel_7");
+        subClasses.add("adminlevel_8");
+        subClasses.add("adminlevel_9");
+        subClasses.add("adminlevel_10");
+        subClasses.add("adminlevel_11");
+        subClasses.add("adminlevel_12");
+        
+        osmFeatureClasses.put("ohdm_boundary", subClasses);        
                 
         this.setupClassIDs_Names();
     }
@@ -1173,6 +1177,13 @@ public class OSMClassification {
     }
     
     public static String createFullClassName(String className, String subclassname) {
+        /* special handling of admin_level:
+           we convert admin_level to boundary / admin_level
+        */
+        if(className.equalsIgnoreCase("admin_level")) {
+            return "ohdm_boundary_adminlevel_" + subclassname;
+        }
+        
         return className + "_" + subclassname;
     }
     
@@ -1185,30 +1196,6 @@ public class OSMClassification {
         }
         
         return nothing;
-    }
-    
-    /**
-     * TODO: Add here translation of unused OSM types to OHDM types etc.
-     * @param osmElement
-     * @return 
-     */
-    public int getOHDMClassID(AbstractElement osmElement) {
-            // get attributes of that tag
-            Iterator<String> keyIter = osmElement.getAttributes().keySet().iterator();
-            while(keyIter.hasNext()) {
-                String key = keyIter.next();
-
-                // is this key name of a feature class?
-                if(this.isClassName(key)) {
-                    String value = osmElement.getValue(key);
-
-                    // find id of class / subclass
-                    return this.getOHDMClassID(key, value);
-                }
-        }
-
-        // there is no class description - sorry
-        return -1;
     }
     
     /**
@@ -1349,5 +1336,14 @@ public class OSMClassification {
         }
         
         sq.forceExecute();
+    }
+    
+    // for some naive tests
+    public static void main(String args[]) {
+        OSMClassification c = OSMClassification.getOSMClassification();
+        
+        String classname = OSMClassification.createFullClassName("admin_level", "12");
+        int id = c.getOHDMClassID("admin_level", "12");
+        System.out.println(classname + " / id: " + id);
     }
 }

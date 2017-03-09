@@ -9,7 +9,12 @@ import org.xml.sax.Attributes;
 import org.xml.sax.helpers.DefaultHandler;
 import osm.OSMClassification;
 import inter2ohdm.AbstractElement;
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import util.DB;
+import util.ManagedFileSQLStatementQueue;
 import util.Parameter;
 import util.SQLStatementQueue;
 import util.Util;
@@ -17,7 +22,7 @@ import util.Util;
 /**
  * @author thsc
  */
-public class SQL_OSMImporter_obsolet extends DefaultHandler {
+public class SQL_OSMImporter extends DefaultHandler {
     private StringBuilder sAttributes;
     private StringBuilder nodeIDs;
     private StringBuilder memberIDs;
@@ -47,7 +52,7 @@ public class SQL_OSMImporter_obsolet extends DefaultHandler {
     private File recordFile;
     private int maxThreads;
     private final SQLStatementQueue insertQueue;
-    private final SQLStatementQueue memberQueue;
+    private SQLStatementQueue memberQueue;
     
     private String currentElementID;
 
@@ -57,12 +62,22 @@ public class SQL_OSMImporter_obsolet extends DefaultHandler {
     private int era = 0;
     private final long startTime;
     private boolean hasName = false;
+    private final PrintStream errStream;
+    private final PrintStream outStream;
+    private SQLStatementQueue managementQueue;
+    private int admin_level;
+    private int currentClassID = -1;
+    private int boundaryAdminClassID = -1;
     
-    public SQL_OSMImporter_obsolet(Parameter parameter, OSMClassification osmClassification) throws Exception {
+    public SQL_OSMImporter(Parameter parameter, OSMClassification osmClassification) throws Exception {
         this.parameter = parameter;
         this.osmClassification = osmClassification;
+        this.boundaryAdminClassID = osmClassification.getOHDMClassID("boundary", "administrative");
     
         this.schema = parameter.getSchema();
+        
+        this.errStream = parameter.getErrStream();
+        this.outStream = parameter.getOutStream();
         
         this.recordFile = new File(this.parameter.getRecordFileName());
         try {
@@ -71,7 +86,7 @@ public class SQL_OSMImporter_obsolet extends DefaultHandler {
             this.maxThreads = this.maxThreads > 0 ? this.maxThreads : 1; // we have at least 4 threads
         }
         catch(NumberFormatException e) {
-            System.err.println("no integer value (run single threaded instead): " + this.parameter.getMaxThread());
+            this.errStream.println("no integer value (run single threaded instead): " + this.parameter.getMaxThread());
             this.maxThreads = 1;
         }
       
@@ -82,14 +97,23 @@ public class SQL_OSMImporter_obsolet extends DefaultHandler {
         this.updateWaysQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
         */
         
-        this.insertQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
-        this.memberQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
+        this.managementQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
+        
+        if(parameter.useJDBC()) {
+            this.insertQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
+            this.memberQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
+        } else {
+            this.insertQueue = new ManagedFileSQLStatementQueue("sql_O2I_insertOSM2Inter", parameter);
+            this.memberQueue = new ManagedFileSQLStatementQueue("sql_O2I_memberOSM2Inter", parameter);
+        }
 
-        InterDB.createTables(insertQueue, schema);
+        InterDB.createTables(managementQueue, schema);
+        
+        this.managementQueue.join();
+        this.managementQueue.close();
         
         this.startTime = System.currentTimeMillis();
         this.lastReconnect = this.startTime;
-        
     }
     
     /*
@@ -125,6 +149,10 @@ public class SQL_OSMImporter_obsolet extends DefaultHandler {
         this.relationMemberFound = false;
         this.currentClassID = -1;
         this.hasName = false;
+        this.admin_level = 0;
+        
+        // could flush sql streams
+        
         
         // reset attributes
         this.sAttributes = new StringBuilder();
@@ -193,7 +221,6 @@ public class SQL_OSMImporter_obsolet extends DefaultHandler {
     
     OSMClassification osmClassification = OSMClassification.getOSMClassification();
 
-    private int currentClassID = -1;
     // just a set of new attributes.. add serialized to sAttrib builder
     private void addAttributesFromTag(Attributes attributes) {
 //        if(this.currentElementID.equalsIgnoreCase("28237510")) {
@@ -209,6 +236,7 @@ public class SQL_OSMImporter_obsolet extends DefaultHandler {
         
         int i = 0;
         while(i < number) {
+            
             // handle key: does it describe a osm class
             if(this.osmClassification.osmFeatureClasses.keySet().
                         contains(attributes.getValue(i))) {
@@ -219,6 +247,14 @@ public class SQL_OSMImporter_obsolet extends DefaultHandler {
                       attributes.getValue(i), 
                       attributes.getValue(i+1)
                 );
+                // describes an admin level
+            } else if(attributes.getValue(i).equalsIgnoreCase("admin_level")) {
+                try {
+                    this.admin_level = Integer.parseInt(attributes.getValue(i+1));
+                }
+                catch(NumberFormatException nfe) {
+                    this.errStream.println("not an integer in admin_level: " + attributes.getValue(i+1));
+                }
             } else {
                 // its an ordinary key/value pair
                 Util.serializeAttributes(this.sAttributes, 
@@ -379,9 +415,9 @@ public class SQL_OSMImporter_obsolet extends DefaultHandler {
 //            this.updateNodesQueue.append(";");
 //            this.updateNodesQueue.forceExecute(this.currentElementID);
 //        } catch (SQLException ex) {
-//            System.err.println("while saving node: " + ex.getMessage() + "\n" + this.insertQueue.toString());
+//            this.errStream.println("while saving node: " + ex.getMessage() + "\n" + this.insertQueue.toString());
 //        } catch (IOException ex) {
-//            System.err.println("while saving node: " + ex.getClass().getName() + "\n" + ex.getMessage());
+//            this.errStream.println("while saving node: " + ex.getClass().getName() + "\n" + ex.getMessage());
 //        }
         
     }
@@ -415,75 +451,79 @@ public class SQL_OSMImporter_obsolet extends DefaultHandler {
 //            this.updateWaysQueue.forceExecute(this.currentElementID);
             
 //        } catch (SQLException ex) {
-//            System.err.println("while saving node: " + ex.getMessage() + "\n" + this.insertQueue.toString());
+//            this.errStream.println("while saving node: " + ex.getMessage() + "\n" + this.insertQueue.toString());
 //        } catch (IOException ex) {
-//            System.err.println("while saving node: " + ex.getClass().getName() + "\n" + ex.getMessage());
+//            this.errStream.println("while saving node: " + ex.getClass().getName() + "\n" + ex.getMessage());
 //        }
     }
 
     @Override
     public void startDocument() {
         status = STATUS_OUTSIDE;
-        System.out.println("----------------------------------------------------------------");
-        System.out.println("Start import from OSM file.. ");
+        this.outStream.println("----------------------------------------------------------------");
+        this.outStream.println("Start import from OSM file.. ");
         this.printStatus();
-        System.out.println("----------------------------------------------------------------");
+        this.outStream.println("----------------------------------------------------------------");
     }
 
     @Override
     public void endDocument() {
-        System.out.print("----------------------------------------------------------------");
-        System.out.print("\nRelation import ended.. wait for import threads to end..\n");
+        this.outStream.print("----------------------------------------------------------------");
+        this.outStream.print("\nRelation import ended.. wait for import threads to end..\n");
         this.printStatus();
-        System.out.println("----------------------------------------------------------------");
-
+        this.outStream.println("----------------------------------------------------------------");
+        
         try {
-//            System.out.println("last member queue sql query");
-//            System.out.println(this.memberQueue);
-            memberQueue.close();
-            
-            this.printStatus();
-            System.out.println("create indexes...");
+//            this.outStream.println("last member queue sql query");
+//            this.outStream.println(this.memberQueue);
+            this.memberQueue.close(); // executes psql process
+            this.insertQueue.close();
+    
+            // do the rest with jdbc
+            this.managementQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
 
-            this.insertQueue.append("CREATE INDEX node_osm_id ON ");
-            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.NODETABLE));
-            this.insertQueue.append(" (osm_id);");
-            System.out.println("----------------------------------------------------------------");
-            System.out.println("created index on nodes table over osm_id");
             this.printStatus();
-            System.out.println("----------------------------------------------------------------");
+            this.outStream.println("create indexes...");
+
+            this.managementQueue.append("CREATE INDEX node_osm_id ON ");
+            this.managementQueue.append(DB.getFullTableName(this.schema, InterDB.NODETABLE));
+            this.managementQueue.append(" (osm_id);");
+            this.outStream.println("----------------------------------------------------------------");
+            this.outStream.println("created index on nodes table over osm_id");
+            this.printStatus();
+            this.outStream.println("----------------------------------------------------------------");
             
-            this.insertQueue.append("CREATE INDEX way_osm_id ON ");
-            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.WAYTABLE));
-            this.insertQueue.append(" (osm_id);");
-            System.out.println("index on way table over osm_id");
+            this.managementQueue.append("CREATE INDEX way_osm_id ON ");
+            this.managementQueue.append(DB.getFullTableName(this.schema, InterDB.WAYTABLE));
+            this.managementQueue.append(" (osm_id);");
+            this.outStream.println("index on way table over osm_id");
             try {
-                this.insertQueue.forceExecute(true);
+                this.managementQueue.forceExecute(true);
             }
             catch(Exception e) {
-                Util.printExceptionMessage(e, insertQueue, "exception when starting index creation on way table over osm_id");
+                Util.printExceptionMessage(e, managementQueue, "exception when starting index creation on way table over osm_id");
             }
 
-            this.insertQueue.append("CREATE INDEX waynodes_node_id ON ");
-            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.WAYMEMBER));
-            this.insertQueue.append(" (node_id);");
-            System.out.println("index on waymember table over node_id");
+            this.managementQueue.append("CREATE INDEX waynodes_node_id ON ");
+            this.managementQueue.append(DB.getFullTableName(this.schema, InterDB.WAYMEMBER));
+            this.managementQueue.append(" (node_id);");
+            this.outStream.println("index on waymember table over node_id");
             
-            this.insertQueue.append("CREATE INDEX waynodes_way_id ON ");
-            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.WAYMEMBER));
-            this.insertQueue.append(" (way_id);");
-            System.out.println("index on waymember table over way_id");
+            this.managementQueue.append("CREATE INDEX waynodes_way_id ON ");
+            this.managementQueue.append(DB.getFullTableName(this.schema, InterDB.WAYMEMBER));
+            this.managementQueue.append(" (way_id);");
+            this.outStream.println("index on waymember table over way_id");
             try {
-                this.insertQueue.forceExecute(true);
+                this.managementQueue.forceExecute(true);
             }
             catch(Exception e) {
-                Util.printExceptionMessage(e, insertQueue, "exception when starting index creation on waymember table over node_id");
+                Util.printExceptionMessage(e, managementQueue, "exception when starting index creation on waymember table over node_id");
             }
             
 //            this.insertQueue.append("CREATE INDEX waynodes_way_id ON ");
 //            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.WAYMEMBER));
 //            this.insertQueue.append(" (way_id);");
-//            System.out.println("index on waymember table over way_id");
+//            this.outStream.println("index on waymember table over way_id");
 //            try {
 //                this.insertQueue.forceExecute(true);
 //            }
@@ -491,33 +531,34 @@ public class SQL_OSMImporter_obsolet extends DefaultHandler {
 //                Util.printExceptionMessage(e, insertQueue, "exception during index creation on waymember table over node_id");
 //            }
 
-            this.insertQueue.append("CREATE INDEX relation_osm_id ON ");
-            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONTABLE));
-            this.insertQueue.append(" (osm_id);");
-            System.out.println("index on relation table over osm_id");
-            this.insertQueue.forceExecute(true);
+            this.managementQueue.append("CREATE INDEX relation_osm_id ON ");
+            this.managementQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONTABLE));
+            this.managementQueue.append(" (osm_id);");
+            this.outStream.println("index on relation table over osm_id");
+            this.managementQueue.forceExecute(true);
             
             /*
             CREATE INDEX relationmember_member_rel_id ON 
             intermediate.relationmember (member_rel_id);
             */
-            this.insertQueue.append("CREATE INDEX relationmember_member_rel_id ON ");
-            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONMEMBER));
-            this.insertQueue.append(" (member_rel_id);");
-            System.out.println("index on relation member table over member_rel_id");
-            System.out.flush();
-            this.insertQueue.forceExecute(true);
+            this.managementQueue.append("CREATE INDEX relationmember_member_rel_id ON ");
+            this.managementQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONMEMBER));
+            this.managementQueue.append(" (member_rel_id);");
+            this.outStream.println("index on relation member table over member_rel_id");
+            this.outStream.flush();
+            this.managementQueue.forceExecute(true);
                         
             /*
             CREATE INDEX relationmember_node_id ON 
             intermediate.relationmember (node_id);            
             */
-            this.insertQueue.append("CREATE INDEX relationmember_ids ON ");
-            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONMEMBER));
-            this.insertQueue.append(" (relation_id, node_id, way_id, member_rel_id);");
-            System.out.println("index on relation member table over node_id");
-            System.out.flush();
-            this.insertQueue.forceExecute(true);
+            this.managementQueue.append("CREATE INDEX relationmember_ids ON ");
+            this.managementQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONMEMBER));
+            this.managementQueue.append(" (relation_id, node_id, way_id, member_rel_id);");
+            this.outStream.println("index on relation member table over node_id");
+            this.outStream.flush();
+            this.managementQueue.forceExecute(true);
+            
 
             /*
             CREATE INDEX relationmember_way_id ON 
@@ -526,19 +567,27 @@ public class SQL_OSMImporter_obsolet extends DefaultHandler {
 //            this.insertQueue.append("CREATE INDEX relationmember_way_id ON ");
 //            this.insertQueue.append(DB.getFullTableName(this.schema, InterDB.RELATIONMEMBER));
 //            this.insertQueue.append(" (way_id);");
-//            System.out.println("index on relation member table over way_id");
-//            System.out.flush();
+//            this.outStream.println("index on relation member table over way_id");
+//            this.outStream.flush();
 //            this.insertQueue.forceExecute();
             
-            this.insertQueue.close();
-            System.out.println("index creation successfully");
-            System.out.println("----------------------------------------------------------------");
-            System.out.println("OSM import ended");
+            this.managementQueue.close();
+            
+            this.outStream.println("index creation successfully");
+            
+            // wait for outstanding psql processes
+            this.memberQueue.join();
+            this.insertQueue.join();
+
+            this.outStream.println("----------------------------------------------------------------");
+            this.outStream.println("OSM import ended");
             this.printStatus();
-            System.out.println("----------------------------------------------------------------");
+            this.outStream.println("----------------------------------------------------------------");
         }
         catch(SQLException se) {
-            Util.printExceptionMessage(se, this.insertQueue, "error while creating index");
+            Util.printExceptionMessage(se, this.managementQueue, "error while creating index");
+        } catch (FileNotFoundException ex) {
+            Util.printExceptionMessage(ex, this.managementQueue, "error while creating managementQueue");
         }
     }
     
@@ -549,7 +598,7 @@ public class SQL_OSMImporter_obsolet extends DefaultHandler {
         switch (qName) {
         case "node": {
             if (status != STATUS_OUTSIDE) {
-                System.err.println("node found but not outside");
+                this.errStream.println("node found but not outside");
             }
             this.status = STATUS_NODE;
             this.newElement(attributes);
@@ -557,7 +606,7 @@ public class SQL_OSMImporter_obsolet extends DefaultHandler {
         break; // single original node
         case "way": {
             if (status != STATUS_OUTSIDE) {
-                System.err.println("way found but not outside");
+                this.errStream.println("way found but not outside");
             }
             this.status = STATUS_WAY;
             this.newElement(attributes);
@@ -565,7 +614,7 @@ public class SQL_OSMImporter_obsolet extends DefaultHandler {
         break; // original way
         case "relation": {
             if (status != STATUS_OUTSIDE) {
-                System.err.println("relation found but not outside");
+                this.errStream.println("relation found but not outside");
             }
             this.status = STATUS_RELATION;
             this.newElement(attributes);
@@ -586,9 +635,26 @@ public class SQL_OSMImporter_obsolet extends DefaultHandler {
         default:
     }
 }
+
+    private void adjustClasscode() {
+        /* 
+        boundary / adminstrative / admin_level becomes 
+        bondary / admin_level_[level]
+        */
+        if(this.boundaryAdminClassID == this.currentClassID) {
+            if(this.admin_level > 0) { // adminlevel_1
+                this.currentClassID = this.osmClassification.getOHDMClassID(
+                            "boundary", 
+                            "adminlevel_" + this.admin_level);
+            }
+        }
+    }
     
     @Override
     public void endElement(String uri, String localName, String qName) {
+        // maybe adjust something, like boundary / admin-level
+        this.adjustClasscode();
+        
         try {
             switch (qName) {
                 case "node":
@@ -633,65 +699,43 @@ public class SQL_OSMImporter_obsolet extends DefaultHandler {
                     break; // inside a relation
             }
         } catch (Exception eE) {
-            System.err.println("while saving element: " + eE.getClass().getName() + "\n" + eE.getMessage());
-            eE.printStackTrace(System.err);
+            this.errStream.println("while saving element: " + eE.getClass().getName() + "\n" + eE.getMessage());
+            eE.printStackTrace(this.errStream);
         }
     }
     
     private void flush() {
         try {
             this.all++;
+            this.insertQueue.couldExecute();
+            this.memberQueue.couldExecute();
+            
             if(this.flushSteps <= this.all) {
                 this.all = 0;
-                this.insertQueue.forceExecute(this.currentElementID);
-                this.memberQueue.forceExecute(this.currentElementID);
-                
-//                System.err.println(this.memberQueue);
-                
-                /* no update any longer
-                this.updateNodesQueue.forceExecute(this.currentElementID);
-                this.updateWaysQueue.forceExecute(this.currentElementID);
-                */
-                
-//                this.updateNodesQueue.resetStatement();
-//                this.updateWaysQueue.resetStatement();
+//                this.insertQueue.forceExecute(this.currentElementID);
+//                this.memberQueue.forceExecute(this.currentElementID);
                 
                 if(++this.era >= LOG_STEPS / this.flushSteps) {
                     this.era = 0;
                     this.printStatus();
-                
                 } 
-                
-                // re-establish db connection from time to time
-//                long now = System.currentTimeMillis();
-//                if(now - this.lastReconnect > RECONNECTIONTIME) {
-//                    System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-//                    System.out.println("hung up and re-connect with database");
-//                    this.resetDBConnection();
-//                    this.printStatus();
-//                    this.lastReconnect = now;
-//                    System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-//                }
             }
         } catch (SQLException sqlE) {
-            System.err.println("while saving element: " + sqlE.getMessage() + "\n" + this.insertQueue.toString());
-            sqlE.printStackTrace(System.err);
-        } catch (IOException ioE) {
-            System.err.println("while saving element: " + ioE.getClass().getName() + "\n" + ioE.getMessage());
-            ioE.printStackTrace(System.err);
+            this.errStream.println("while saving element: " + sqlE.getMessage() + "\n" + this.insertQueue.toString());
+            sqlE.printStackTrace(this.errStream);
         } catch (Throwable eE) {
-            System.err.println("while saving element: " + eE.getClass().getName() + "\n" + eE.getMessage());
-            eE.printStackTrace(System.err);
+            this.errStream.println("while saving element: " + eE.getClass().getName() + "\n" + eE.getMessage());
+            eE.printStackTrace(this.errStream);
         }
     }
     
     private void printStatus() {
-        System.out.print("nodes: " + Util.getValueWithDots(this.nA));
-        System.out.print(" | ways: " + Util.getValueWithDots(this.wA));
-        System.out.print(" | relations: " + Util.getValueWithDots(this.rA));
-//        System.out.print(" | entries per star: " + this.flushSteps);
+        this.outStream.print("nodes: " + Util.getValueWithDots(this.nA));
+        this.outStream.print(" | ways: " + Util.getValueWithDots(this.wA));
+        this.outStream.print(" | relations: " + Util.getValueWithDots(this.rA));
+//        this.outStream.print(" | entries per star: " + this.flushSteps);
 
-        System.out.print(" | elapsed time:  ");
-        System.out.println(Util.getElapsedTime(this.startTime));
+        this.outStream.print(" | elapsed time:  ");
+        this.outStream.println(Util.getElapsedTime(this.startTime));
     }
 }

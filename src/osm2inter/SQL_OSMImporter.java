@@ -99,12 +99,12 @@ public class SQL_OSMImporter extends DefaultHandler {
         
         this.managementQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
         
-        if(parameter.useJDBC()) {
-            this.insertQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
-            this.memberQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
-        } else {
+        if(parameter.usePSQL()) {
             this.insertQueue = new ManagedFileSQLStatementQueue("sql_O2I_insertOSM2Inter", parameter);
             this.memberQueue = new ManagedFileSQLStatementQueue("sql_O2I_memberOSM2Inter", parameter);
+        } else {
+            this.insertQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
+            this.memberQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
         }
 
         InterDB.createTables(managementQueue, schema);

@@ -48,10 +48,11 @@ public class FileSQLStatementQueue extends SQLStatementQueue {
         }
         
         this.fileOutStream.print(this.sqlQueue.toString());
+        this.fileOutStream.print("COMMIT;");
+        
         this.fileOutStream.flush();
         
         this.writtenByte += this.sqlQueue.length();
-
         this.resetStatement();
     }
     

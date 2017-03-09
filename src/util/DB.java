@@ -150,7 +150,8 @@ public class DB {
                 stmt.execute();
             }
         
-        return connection;
+//            connection.setAutoCommit(false);
+            return connection;
         
         } catch (SQLException ex) {
             System.err.println("cannot connect to database - fatal - exit\n" + ex.getMessage());

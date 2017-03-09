@@ -24,7 +24,7 @@ public class Parameter {
     private String maxThreads = "2";
     private String recordFileName = "recordFile.txt";
     private String readStepLen;
-    private boolean useJDBC = true;
+    private boolean usePSQL = false;
     
     private static final String STDOUT = "stdout";
     private static final String STDERR = "stderr";
@@ -78,11 +78,11 @@ public class Parameter {
                         case "outFile": this.outFile = value; break;
                         case "logFile": this.logFile = value; break;
                         case "errFile": this.errFile = value; break;
-                        case "useJDBC": this.useJDBC = value.equalsIgnoreCase("yes"); break;
-                        case "forgetPreviousImport": this.forgetPreviousImport = value.equalsIgnoreCase("yes"); break;
-                        case "importNodes": this.importNodes = value.equalsIgnoreCase("yes"); break;
-                        case "importWays": this.importWays = value.equalsIgnoreCase("yes"); break;
-                        case "importRelations": this.importRelations = value.equalsIgnoreCase("yes"); break;
+                        case "usePSQL": this.usePSQL = this.getTrueOrFalse(value); break;
+                        case "forgetPreviousImport": this.forgetPreviousImport = this.getTrueOrFalse(value); break;
+                        case "importNodes": this.importNodes = this.getTrueOrFalse(value); break;
+                        case "importWays": this.importWays = this.getTrueOrFalse(value); break;
+                        case "importRelations": this.importRelations = this.getTrueOrFalse(value); break;
                         case "fullPSQLPath": this.fullPSQLPath = value; break;
                         case "maxSQLFileSize": this.maxSQLFileSize = Integer.parseInt(value); break;
                         case "maxPSQLProcesses": this.maxPSQLProcesses = Integer.parseInt(value); break;
@@ -92,6 +92,11 @@ public class Parameter {
             // next line
             inLine = br.readLine();
         }
+    }
+    
+    private boolean getTrueOrFalse(String value) {
+        return (value.equalsIgnoreCase("yes")
+                || value.equalsIgnoreCase("true"));
     }
     
     public String getServerName() { return this.servername ;}
@@ -105,7 +110,7 @@ public class Parameter {
     public String getReadStepLen() { return this.readStepLen; }
     
     public String getPath() { return this.getdbName() ;}
-    public boolean useJDBC() { return this.useJDBC ;}
+    public boolean usePSQL() { return this.usePSQL ;}
     public boolean forgetPreviousImport() { return this.forgetPreviousImport; }
     public boolean importNodes() { return this.importNodes; }
     public boolean importWays() { return this.importWays; }

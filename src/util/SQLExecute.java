@@ -68,6 +68,7 @@ va:88)
             stmt = connection.prepareStatement(sqlStatement);
             stmt.execute();
             stmt.close();
+//            connection.commit();
         } catch (SQLException ex) {
             e = ex;
         }

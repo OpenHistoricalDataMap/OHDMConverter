@@ -91,7 +91,7 @@ public class SQLStatementQueue {
         this.freeConnection.clear();
         this.maxThreads = maxThreads;
         
-        if(parameter.useJDBC() || forceJDBC) {
+        if(parameter.usePSQL() || forceJDBC) {
             // set up connections
             try {
                 // try to create first

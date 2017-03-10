@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.StringTokenizer;
+import ohdm2rendering.OHDM2Rendering;
 
 /**
  * @author thsc
@@ -44,6 +45,7 @@ public class Parameter {
     private String fullPSQLPath = "psql";
     private int maxSQLFileSize = 1;
     private int maxPSQLProcesses = 1;
+    private String renderoutput = OHDM2Rendering.GENERIC;
     
     public Parameter(String filename) throws FileNotFoundException, IOException {
         long now = System.currentTimeMillis();
@@ -86,6 +88,7 @@ public class Parameter {
                         case "fullPSQLPath": this.fullPSQLPath = value; break;
                         case "maxSQLFileSize": this.maxSQLFileSize = Integer.parseInt(value); break;
                         case "maxPSQLProcesses": this.maxPSQLProcesses = Integer.parseInt(value); break;
+                        case "renderoutput": this.renderoutput = value; break;
                     }
                 }
             }
@@ -119,6 +122,9 @@ public class Parameter {
     public int getMaxPSQLProcesses() { return this.maxPSQLProcesses; }
 
     public String getFullPSQLPath() { return this.fullPSQLPath;  }
+    
+    public String getRenderoutput() { return this.renderoutput;  }
+
     
     
     public PrintStream getOutStream() throws FileNotFoundException { 

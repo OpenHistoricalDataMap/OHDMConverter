@@ -27,10 +27,10 @@ public class OHDM_DB {
     public static final String URL = "url";
     
     // Geometry Types
-    public static int TARGET_GEOOBJECT = 0;
-    public static int TARGET_POINT = 1;
-    public static int TARGET_LINESTRING = 2;
-    public static int TARGET_POLYGON = 3;
+    public static final int OHDM_GEOOBJECT_GEOMTYPE = 0;
+    public static final int OHDM_POINT_GEOMTYPE = 1;
+    public static final int OHDM_LINESTRING_GEOMTYPE = 2;
+    public static final int OHDM_POLYGON_GEOMTYPE = 3;
     
     // same ? TODO
     public static final int POINT = 1;
@@ -38,6 +38,15 @@ public class OHDM_DB {
     public static final int POLYGON = 3;
     public static final int RELATION = 0;
     
+    public static String getGeometryName(int type) {
+        switch(type) {
+            case OHDM_DB.OHDM_POINT_GEOMTYPE: return "point";
+            case OHDM_DB.OHDM_LINESTRING_GEOMTYPE: return "line";
+            case OHDM_DB.OHDM_POLYGON_GEOMTYPE: return "polygon";
+        }
+        
+        return null;
+    }
 
     public static void dropOHDMTables(Connection targetConnection, String targetSchema) throws SQLException {
         DB.drop(targetConnection, targetSchema, EXTERNAL_SYSTEMS);

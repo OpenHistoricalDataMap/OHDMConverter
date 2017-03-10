@@ -203,13 +203,13 @@ public class Inter2OHDM extends Importer {
         int targetType = 0;
         switch(ohdmElement.getGeometryType()) {
             case OHDM_DB.POINT: 
-                targetType = OHDM_DB.TARGET_POINT;
+                targetType = OHDM_DB.OHDM_POINT_GEOMTYPE;
                 break;
             case OHDM_DB.LINESTRING: 
-                targetType = OHDM_DB.TARGET_LINESTRING;
+                targetType = OHDM_DB.OHDM_LINESTRING_GEOMTYPE;
                 break;
             case OHDM_DB.POLYGON: 
-                targetType = OHDM_DB.TARGET_POLYGON;
+                targetType = OHDM_DB.OHDM_POLYGON_GEOMTYPE;
                 break;
         }
         
@@ -513,13 +513,13 @@ public class Inter2OHDM extends Importer {
         int targetType = 0;
         switch(osmElement.getGeometryType()) {
             case OHDM_DB.POINT: 
-                targetType = OHDM_DB.TARGET_POINT;
+                targetType = OHDM_DB.OHDM_POINT_GEOMTYPE;
                 break;
             case OHDM_DB.LINESTRING: 
-                targetType = OHDM_DB.TARGET_LINESTRING;
+                targetType = OHDM_DB.OHDM_LINESTRING_GEOMTYPE;
                 break;
             case OHDM_DB.POLYGON: 
-                targetType = OHDM_DB.TARGET_POLYGON;
+                targetType = OHDM_DB.OHDM_POLYGON_GEOMTYPE;
                 break;
         }
         
@@ -979,11 +979,11 @@ public class Inter2OHDM extends Importer {
             sq.append(memberOHDMObjectIDString); // id target
             sq.append(", ");
             if(member instanceof OSMNode) { // type_target
-                sq.append(OHDM_DB.TARGET_POINT);
+                sq.append(OHDM_DB.OHDM_POINT_GEOMTYPE);
             } else if(member instanceof OSMWay) {
-                sq.append(OHDM_DB.TARGET_LINESTRING);
+                sq.append(OHDM_DB.OHDM_LINESTRING_GEOMTYPE);
             } else {
-                sq.append(OHDM_DB.TARGET_GEOOBJECT);
+                sq.append(OHDM_DB.OHDM_GEOOBJECT_GEOMTYPE);
             }
             sq.append(", '");
             sq.append(roleName); // role
@@ -1070,7 +1070,7 @@ public class Inter2OHDM extends Importer {
         if(polygonIDs.size() < 1) return false;
         
         // add relations
-        int targetType = OHDM_DB.TARGET_POLYGON; // all targets are polygons
+        int targetType = OHDM_DB.OHDM_POLYGON_GEOMTYPE; // all targets are polygons
         String classCodeString = relation.getClassCodeString();
         String sourceIDString = relation.getOHDMObjectID();
         

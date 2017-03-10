@@ -1192,7 +1192,8 @@ public class OSMClassification {
         String nothing = "undefined";
         
         if(classCode > -1 && this.fullClassNames.size() > classCode) {
-            return this.fullClassNames.get(classCode);
+            // classIds start with 1 but index with 0
+            return this.fullClassNames.get(classCode-1);
         }
         
         return nothing;

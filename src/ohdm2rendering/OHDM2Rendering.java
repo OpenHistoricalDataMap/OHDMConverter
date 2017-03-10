@@ -447,7 +447,7 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
         tableClasses = new ArrayList<>();
         
         tableName = "highway_path_lines";
-        tableClasses.add(new OHDM_Class("highway", "truck"));
+        tableClasses.add(new OHDM_Class("highway", "track"));
         tableClasses.add(new OHDM_Class("highway", "path"));
         
         this.createRenderingTable(sql, sourceSchema, targetSchema, 
@@ -460,7 +460,7 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
         
         tableName = "highway_small_lines";
         tableClasses.add(new OHDM_Class("highway", "unclassified"));
-        tableClasses.add(new OHDM_Class("highway", "residential"));
+        tableClasses.add(new OHDM_Class("highway", "living_street"));
         tableClasses.add(new OHDM_Class("highway", "service"));
         tableClasses.add(new OHDM_Class("highway", "footway"));
         

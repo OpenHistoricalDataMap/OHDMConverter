@@ -46,6 +46,7 @@ public class Parameter {
     private int maxSQLFileSize = 1;
     private int maxPSQLProcesses = 1;
     private String renderoutput = OHDM2Rendering.GENERIC;
+    private int logMessageInterval = 5;
     
     public Parameter(String filename) throws FileNotFoundException, IOException {
         long now = System.currentTimeMillis();
@@ -115,6 +116,7 @@ public class Parameter {
                             case "maxSQLFileSize": this.maxSQLFileSize = Integer.parseInt(value); break;
                             case "maxPSQLProcesses": this.maxPSQLProcesses = Integer.parseInt(value); break;
                             case "renderoutput": this.renderoutput = value; break;
+                            case "logMessageInterval": this.logMessageInterval = Integer.parseInt(value); break;
                         }
                     }
                 }
@@ -142,6 +144,8 @@ public class Parameter {
     public String getPath() { return this.getdbName() ;}
     public boolean usePSQL() { return this.usePSQL ;}
     public boolean forgetPreviousImport() { return this.forgetPreviousImport; }
+    
+    public int getLogMessageInterval() {return this.logMessageInterval; }
     
     /*
     public boolean importNodes() { return this.importNodes; }

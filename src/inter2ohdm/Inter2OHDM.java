@@ -870,8 +870,9 @@ public class Inter2OHDM extends Importer {
             
             System.out.println("start insert data into ohdm DB from intermediate DB");
         
-            // start stats trigger: 5 minutes
-            trigger = new Trigger(exporter, 1000 * 60 * 5);
+            // start stats trigger each [interval] minutes (default 5)
+            int logMessageInterval = targetParameter.getLogMessageInterval();
+            trigger = new Trigger(exporter, 1000 * 60 * logMessageInterval);
             trigger.start();
             
             if(targetParameter.importNodes()) {

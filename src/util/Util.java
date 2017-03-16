@@ -216,13 +216,17 @@ public class Util {
         sb.append(parameter.getdbName());
         sb.append(" -f ");
         sb.append(sqlFileName);
-        sb.append(" -h localhost -p 5432 -U ");
+        sb.append(" -h ");
+        sb.append(parameter.getServerName());
+        sb.append(" -p ");
+        sb.append(parameter.getPortNumber());
+        sb.append(" -U ");
         sb.append(parameter.getUserName());
         sb.append(" -q "); // quiet
         
         Runtime runtime = Runtime.getRuntime();
         
-//        System.out.println("performing: " + sb.toString());
+        System.out.println("performing: " + sb.toString());
         Process psqlProcess = runtime.exec(sb.toString());
         
         if(!parallel) {

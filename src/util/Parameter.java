@@ -57,38 +57,65 @@ public class Parameter {
         BufferedReader br = new BufferedReader(fr);
         
         String inLine = br.readLine();
+        
+        boolean first = true;
+        boolean inComment = false;
+        boolean skip = false;
+        
         while(inLine != null) {
-            StringTokenizer st = new StringTokenizer(inLine, ":");
-            if(st.hasMoreTokens()) {
-                String key, value;
-                key = st.nextToken();
+            skip = false;
+            
+            // ignore comments like // 
+            if(inLine.startsWith("//")) {
+                skip = true;
+            }
+            
+            if(!inComment) {
+                if(inLine.startsWith("/*")) {
+                    inComment = true;
+                    skip = true;
+                }
+            } else { // in comment
+                if(inLine.contains("*/")) {
+                    inComment = false;
+                }
+                // in any case:
+                skip = true;
+            }
+        
+            if(!skip) {
+                StringTokenizer st = new StringTokenizer(inLine, ":");
                 if(st.hasMoreTokens()) {
-                    value = st.nextToken();
-                    value = value.trim();
-                
-                    // fill parameters
-                    switch(key) {
-                        case "servername": this.servername = value; break;
-                        case "portnumber": this.portnumber = value; break;
-                        case "username": this.username = value; break;
-                        case "pwd": this.pwd = value; break;
-                        case "dbname": this.dbname = value; break;
-                        case "schema": this.schema = value; break;
-                        case "maxThreads": this.maxThreads = value; break;
-                        case "recordFileName": this.recordFileName = value; break;
-                        case "readsteplen": this.readStepLen = value; break;
-                        case "outFile": this.outFile = value; break;
-                        case "logFile": this.logFile = value; break;
-                        case "errFile": this.errFile = value; break;
-                        case "usePSQL": this.usePSQL = this.getTrueOrFalse(value); break;
-                        case "forgetPreviousImport": this.forgetPreviousImport = this.getTrueOrFalse(value); break;
-                        case "importNodes": this.importNodes = this.getTrueOrFalse(value); break;
-                        case "importWays": this.importWays = this.getTrueOrFalse(value); break;
-                        case "importRelations": this.importRelations = this.getTrueOrFalse(value); break;
-                        case "fullPSQLPath": this.fullPSQLPath = value; break;
-                        case "maxSQLFileSize": this.maxSQLFileSize = Integer.parseInt(value); break;
-                        case "maxPSQLProcesses": this.maxPSQLProcesses = Integer.parseInt(value); break;
-                        case "renderoutput": this.renderoutput = value; break;
+                    String key, value;
+                    key = st.nextToken();
+                    if(st.hasMoreTokens()) {
+                        value = st.nextToken();
+                        value = value.trim();
+
+                        // fill parameters
+                        switch(key) {
+                            case "servername": this.servername = value; break;
+                            case "portnumber": this.portnumber = value; break;
+                            case "username": this.username = value; break;
+                            case "pwd": this.pwd = value; break;
+                            case "dbname": this.dbname = value; break;
+                            case "schema": this.schema = value; break;
+                            case "maxThreads": this.maxThreads = value; break;
+                            case "recordFileName": this.recordFileName = value; break;
+                            case "readsteplen": this.readStepLen = value; break;
+                            case "outFile": this.outFile = value; break;
+                            case "logFile": this.logFile = value; break;
+                            case "errFile": this.errFile = value; break;
+                            case "usePSQL": this.usePSQL = this.getTrueOrFalse(value); break;
+                            case "forgetPreviousImport": this.forgetPreviousImport = this.getTrueOrFalse(value); break;
+                            case "importNodes": this.importNodes = this.getTrueOrFalse(value); break;
+                            case "importWays": this.importWays = this.getTrueOrFalse(value); break;
+                            case "importRelations": this.importRelations = this.getTrueOrFalse(value); break;
+                            case "fullPSQLPath": this.fullPSQLPath = value; break;
+                            case "maxSQLFileSize": this.maxSQLFileSize = Integer.parseInt(value); break;
+                            case "maxPSQLProcesses": this.maxPSQLProcesses = Integer.parseInt(value); break;
+                            case "renderoutput": this.renderoutput = value; break;
+                        }
                     }
                 }
             }
@@ -115,9 +142,26 @@ public class Parameter {
     public String getPath() { return this.getdbName() ;}
     public boolean usePSQL() { return this.usePSQL ;}
     public boolean forgetPreviousImport() { return this.forgetPreviousImport; }
+    
+    /*
     public boolean importNodes() { return this.importNodes; }
     public boolean importWays() { return this.importWays; }
     public boolean importRelations() { return this.importRelations; }
+    */
+    
+    public boolean importNodes() { 
+        System.out.println("TODO (remove that option): parameter.importNodes always returns true");
+        return true; 
+    }
+    public boolean importWays() { 
+        System.out.println("TODO (remove that option): parameter.importWays always returns true");
+        return true; 
+    }
+    public boolean importRelations() { 
+        System.out.println("TODO (remove that option): parameter.importRelations always returns true");
+        return true; 
+    }
+    
     public int getMaxSQLFileSize() { return this.maxSQLFileSize; }
     public int getMaxPSQLProcesses() { return this.maxPSQLProcesses; }
 

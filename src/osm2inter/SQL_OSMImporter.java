@@ -97,13 +97,18 @@ public class SQL_OSMImporter extends DefaultHandler {
         this.updateWaysQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
         */
         
+        System.out.println("intermediate management queue uses jdbc");
         this.managementQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
         
         if(parameter.usePSQL()) {
+            System.out.println("intermediate insert-osm-element queue uses psql and sql files.");
             this.insertQueue = new ManagedFileSQLStatementQueue("sql_O2I_insertOSM2Inter", parameter);
+            System.out.println("intermediate insert-member queue uses psql and sql files.");
             this.memberQueue = new ManagedFileSQLStatementQueue("sql_O2I_memberOSM2Inter", parameter);
         } else {
+            System.out.println("intermediate insert-osm-element queue uses jdbc");
             this.insertQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
+            System.out.println("intermediate insert-member queue uses jdbc");
             this.memberQueue = new SQLStatementQueue(this.parameter, this.maxThreads);
         }
 

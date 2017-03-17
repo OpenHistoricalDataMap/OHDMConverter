@@ -20,7 +20,7 @@ public class OHDM2Rendering {
     
     public static final String GENERIC = "generic";
     public static final String V1 = "v1";
-    
+    public static final String BOUNDARIES = "boundaries";
     
     public static void main(String[] args) throws SQLException, IOException {
         String sourceParameterFileName = "db_ohdm.txt";
@@ -67,35 +67,27 @@ public class OHDM2Rendering {
                 System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                 renderer.createV1(sql, sourceSchema, targetSchema);
                 break;
+            case BOUNDARIES:
+                System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                System.out.println("produce boundaries");
+                System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                renderer.createBoundaries(sql, sourceSchema, targetSchema);
+                break;
             default:
                 renderer.fatal("unknown rendering output (fatal): " + renderoutput);
         }
+        
+        System.out.println("Render tables creation finished");
     }
     
     void fatal(String message) {
         System.err.println(message);
+        System.err.println("stop excecuting");
         System.exit(1);
     }
     
     void setupRenderingDB(SQLStatementQueue sql, String targetSchema) throws SQLException {
         String geometryName = null;
-        
-        /*
-        create function set creates bounding box based on bbox parameter 
-        from wms request:
-        CREATE OR REPLACE FUNCTION public.ohdm_createBBOXGeometry(boxstring character varying, srs integer)
-        RETURNS geometry AS $$DECLARE box geometry; BEGIN 
-        SELECT st_asewkt(ST_MakeEnvelope (
-        string_to_array[1]::double precision, 
-        string_to_array[2]::double precision, 
-        string_to_array[3]::double precision,  
-        string_to_array[4]::double precision, 
-        srs)) FROM (SELECT string_to_array(boxstring,',')) as a
-        INTO box;
-        RETURN box;
-        END;
-        $$ LANGUAGE plpgsql;
-        */            
         
         String createBBOXName = targetSchema + ".ohdm_bboxGeometry";
         String createBBOXFunction = createBBOXName + "(boxstring character varying, srs integer)";
@@ -379,6 +371,28 @@ where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_sour
         // finally produce function and index
         this.produceFunctionAndIndex(sql, targetSchema, tableName, geometryType);
         
+    }
+
+    void createBoundaries(SQLStatementQueue sql, String sourceSchema, 
+            String targetSchema) throws SQLException {
+        
+        List<OHDM_Class> tableClasses;
+        String tableName;
+        
+        /**************************************************************/
+        /**      highway_huge_lines: motorway + trunk + their links   */
+        /**************************************************************/
+        String tableNameBegin = "boundaries_admin_";
+        
+        for(int level = 1; level <= 12; level++) {
+            tableClasses = new ArrayList<>(); // empty each loop
+            tableName = tableNameBegin + level;
+            String subclassname = "adminlevel_" + level;
+            tableClasses.add(new OHDM_Class("ohdm_boundary", subclassname));
+            
+            this.createRenderingTable(sql, sourceSchema, targetSchema, 
+                    tableName, tableClasses, OHDM_DB.OHDM_LINESTRING_GEOMTYPE);
+        }
     }
     
     void createV1(SQLStatementQueue sql, String sourceSchema, 

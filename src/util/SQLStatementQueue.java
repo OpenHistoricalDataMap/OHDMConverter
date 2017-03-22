@@ -119,6 +119,7 @@ public class SQLStatementQueue {
     }
     
     public void close() throws SQLException {
+        this.forceExecute();
         this.join();
         if(this.connections != null) {
             for(Connection conn : this.connections) {

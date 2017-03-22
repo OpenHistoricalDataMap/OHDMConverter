@@ -13,7 +13,7 @@ import util.Util;
  *
  * @author thsc
  */
-public class DebugInter2OHDM extends OSMExtract {
+public class DebugInter2OHDM extends OHDMImporter {
 
     // TODO TODO... set updateStream!!
     public DebugInter2OHDM(IntermediateDB intermediateDB, Connection sourceConnection, Connection targetConnection, String sourceSchema, String targetSchema) {
@@ -57,7 +57,7 @@ public class DebugInter2OHDM extends OSMExtract {
             
             
             // TODO TODO remove that null
-            OSMExtract ohdmImporter = new OSMExtract(iDB, sourceConnection, 
+            OHDMImporter ohdmImporter = new OHDMImporter(iDB, sourceConnection, 
                     targetConnection, sourceSchema, targetSchema, null);
             
             try {

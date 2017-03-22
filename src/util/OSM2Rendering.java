@@ -1,12 +1,12 @@
 package util;
 
 
-import inter2ohdm.OSMExtract;
+import inter2ohdm.OHDMImporter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.SQLException;
 import ohdm2rendering.OHDM2Rendering;
-import osm2inter.OSM2Inter;
+import osm2inter.OSMImport;
 
 /**
  *
@@ -108,11 +108,11 @@ public class OSM2Rendering {
         }
         
         if(osmFile != null && importInterDBConfig != null) {
-            OSM2Inter.main(new String[]{osmFile, importInterDBConfig});
+            OSMImport.main(new String[]{osmFile, importInterDBConfig});
         }
 
         if(importInterDBConfig != null &&  ohdmDBConfig != null) {
-            OSMExtract.main(new String[]{importInterDBConfig, ohdmDBConfig});
+            OHDMImporter.main(new String[]{importInterDBConfig, ohdmDBConfig});
         }
         
         if(updateInterDBConfig != null &&  ohdmDBConfig != null) {

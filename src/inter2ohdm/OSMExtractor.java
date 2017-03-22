@@ -91,6 +91,10 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
             
             BigDecimal minID = result.getBigDecimal(1);
             if(minID == null) {
+                this.initialMaxID = null;
+
+                this.initialLowerID = null;
+                this.initialUpperID = null;
                 throw new SQLException("table is empty: " + DB.getFullTableName(this.schema, tableName));
             }
 /*
@@ -109,7 +113,7 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
             resultString = initialMaxID.toPlainString();
         }
         catch(SQLException se) {
-            Util.printExceptionMessage(se, sql, "when calculating initial min max ids for select of nodes, ways or relations", false);
+            Util.printExceptionMessage(se, sql, "when calculating initial min max ids for select of nodes, ways or relations", true);
         }
         
         return resultString;
@@ -338,6 +342,9 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
         }
         
         String maxIDString = this.calculateInitialIDs(sql, elementTableName);
+        if(this.initialMaxID == null) {
+            return;
+        }
         
         switch(elementType) {
             case NODE:

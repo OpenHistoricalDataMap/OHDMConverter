@@ -12,7 +12,7 @@ import util.Util;
  *
  * @author thsc
  */
-public class OSM2Inter {
+public class OSMImport {
     private static final String DEFAULT_OSM_FILENAME = "sample.osm";
     private static final String INTER_DB_SETTINGS_FILENAME = "db_inter.txt";
 

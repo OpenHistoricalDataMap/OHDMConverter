@@ -27,7 +27,7 @@ import util.Util;
  * 
  * @author thsc
  */
-public class OSMExtract extends Importer {
+public class OHDMImporter extends Importer {
     private final String sourceSchema;
     private final String targetSchema;
     private final IntermediateDB intermediateDB;
@@ -38,7 +38,7 @@ public class OSMExtract extends Importer {
     private String defaultSince = "1970-01-01";
     private String defaultUntil = "2017-01-01";
     
-    public OSMExtract(IntermediateDB intermediateDB, 
+    public OHDMImporter(IntermediateDB intermediateDB, 
             Connection sourceConnection, Connection targetConnection, 
             String sourceSchema, String targetSchema, SQLStatementQueue updateQueue) {
         
@@ -303,7 +303,7 @@ public class OSMExtract extends Importer {
                 this.idExternalSystemOSM = result.getInt(1);
 
             } catch (SQLException ex) {
-                Logger.getLogger(OSMExtract.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(OHDMImporter.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         
@@ -763,12 +763,16 @@ public class OSMExtract extends Importer {
         sql.join();
     }
     
-    public static void main(String args[]) throws IOException {
+    public static void main(String args[]) throws IOException, SQLException {
         // let's fill OHDM database
         System.out.println("Start importing ODHM data from intermediate DB");
         SQLStatementQueue sourceQueue = null;
         
         Trigger trigger = null;
+        OSMExtractor extractor = null;
+        OHDMImporter ohdmImporter = null;
+        SQLStatementQueue targetQueue = null;
+        
         try {
             String sourceParameterFileName = "db_inter.txt";
             String targetParameterFileName = "db_ohdm.txt";
@@ -808,7 +812,7 @@ public class OSMExtract extends Importer {
                 updateQueue = new SQLStatementQueue(sourceParameter);
             }
             
-            OSMExtract ohdmImporter = new OSMExtract(iDB, sourceConnection, 
+            ohdmImporter = new OHDMImporter(iDB, sourceConnection, 
                     targetConnection, sourceSchema, targetSchema, updateQueue);
 
             /* TODO: remove those separation between nodes, way and relations.
@@ -864,14 +868,13 @@ public class OSMExtract extends Importer {
                     // ignore and work with default
             }
 
-            OSMExtractor extractor = 
-                    new OSMExtractor(sourceConnection, sourceSchema, ohdmImporter, stepLen);
+            extractor = new OSMExtractor(sourceConnection, sourceSchema, ohdmImporter, stepLen);
             
             System.out.println("intermediate select queue uses jdbc");
             sourceQueue = DB.createSQLStatementQueue(sourceConnection, sourceParameter);
             
             System.out.println("ohdm insert queue uses jdbc");
-            SQLStatementQueue targetQueue = new SQLStatementQueue(targetParameter);
+            targetQueue = new SQLStatementQueue(targetParameter);
             
             System.out.println("start insert data into ohdm DB from intermediate DB");
         
@@ -947,11 +950,6 @@ public class OSMExtract extends Importer {
                 System.out.println("skip relations import.. see importRelations in ohdm parameter file");
             }
 
-            targetQueue.join();
-            ohdmImporter.close();
-            System.out.println("done importing from intermediate DB to ohdm DB");
-            System.out.println(extractor.getStatistics());
-  
         } catch (IOException | SQLException e) {
             Util.printExceptionMessage(e, sourceQueue, "main method in Inter2OHDM", false);
         }
@@ -960,6 +958,14 @@ public class OSMExtract extends Importer {
                 trigger.end();
                 trigger.interrupt();
             }
+            
+            if(targetQueue != null) {
+                targetQueue.forceExecute();
+                targetQueue.join();
+            }
+            if(ohdmImporter != null) ohdmImporter.close();
+            System.out.println("done importing from intermediate DB to ohdm DB");
+            System.out.println(extractor.getStatistics());
         }
     }
 

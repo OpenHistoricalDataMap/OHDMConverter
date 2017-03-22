@@ -90,6 +90,9 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
             result.next();
             
             BigDecimal minID = result.getBigDecimal(1);
+            if(minID == null) {
+                throw new SQLException("table is empty: " + DB.getFullTableName(this.schema, tableName));
+            }
 /*
             sql.append("SELECT max(id) FROM ");
             sql.append(DB.getFullTableName(this.schema, tableName));

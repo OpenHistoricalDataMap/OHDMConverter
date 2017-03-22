@@ -4,8 +4,11 @@ import java.io.PrintStream;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.StringTokenizer;
 import osm.OSMClassification;
+import util.InterDB;
 import util.SQLStatementQueue;
 
 /**
@@ -15,6 +18,8 @@ import util.SQLStatementQueue;
 public abstract class OSMElement extends AbstractElement {
     private final String osmIDString;
     private final String classCodeString;
+    List<String> otherClassCodeList;
+    
     private int subClassCode;
     
     private String ohdmObjectIDString;
@@ -52,7 +57,7 @@ public abstract class OSMElement extends AbstractElement {
     }
 
     OSMElement(IntermediateDB intermediateDB, String osmIDString, 
-            String classCodeString, String sTags, 
+            String classCodeString, String otherClassCodes, String sTags,  
             String ohdmObjectIDString, String ohdmGeomIDString,  
             boolean valid, boolean isNew, boolean changed, boolean deleted,
             boolean has_name, Date tstampDate) {
@@ -79,6 +84,8 @@ public abstract class OSMElement extends AbstractElement {
         this.tstampDate = tstampDate;
         
         this.tstamp = tstampDate.toString();
+        
+        this.otherClassCodeList = InterDB.getIDList(otherClassCodes);
     }
     
     /**
@@ -359,5 +366,9 @@ public abstract class OSMElement extends AbstractElement {
         sb.append("\t");
         
         return sb.toString();
+    }
+
+    Iterator<String> getOtherClassIDs() {
+        return this.otherClassCodeList.iterator();
     }
 }

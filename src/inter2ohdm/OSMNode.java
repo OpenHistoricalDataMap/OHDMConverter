@@ -12,26 +12,26 @@ public class OSMNode extends OSMElement {
     private String latitude;
 
     OSMNode(IntermediateDB intermediateDB, String osmIDString, 
-            String classCodeString, String sTags, 
+            String classCodeString, String otherClassCodes, String sTags, 
             String ohdmObjectIDString, String ohdmGeomIDString, 
             boolean valid,
             boolean isNew, boolean changed, boolean deleted,
             boolean has_name, Date tstampDate) {
         
-        super(intermediateDB, osmIDString, classCodeString, sTags, 
+        super(intermediateDB, osmIDString, classCodeString, otherClassCodes, sTags, 
                 ohdmObjectIDString, ohdmGeomIDString, valid,
                 isNew, changed, deleted, has_name, tstampDate);
     }
 
     OSMNode(IntermediateDB intermediateDB, String osmIDString, 
-            String classCodeString, String sTags, String longitude, 
+            String classCodeString, String otherClassCodes, String sTags, String longitude, 
             String latitude, String ohdmObjectIDString, 
             String ohdmGeomIDString, boolean valid,
             boolean isNew, boolean changed, boolean deleted,
             boolean has_name, Date tstampDate) {
         
         
-        this(intermediateDB, osmIDString, classCodeString, sTags, 
+        this(intermediateDB, osmIDString, classCodeString, otherClassCodes, sTags, 
                 ohdmObjectIDString, ohdmGeomIDString, valid,
                 isNew, changed, deleted, has_name, tstampDate);
         

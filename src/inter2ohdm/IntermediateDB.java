@@ -18,6 +18,7 @@ import util.SQLStatementQueue;
  * @author thsc
  */
 public class IntermediateDB {
+
     private final boolean debug = false;
     protected final Connection sourceConnection;
     private final String schema;
@@ -159,6 +160,7 @@ public class IntermediateDB {
     
     private String osmIDString;
     private String classCodeString;
+    private String otherClassCodes;
     private String sTags;
     private String ohdmObjectIDString;
     private String ohdmGeomIDString;
@@ -174,6 +176,7 @@ public class IntermediateDB {
             int i = 42;
         }
         classCodeString = this.extractBigDecimalAsString(qResult, "classcode");
+        
         sTags = qResult.getString("serializedtags");
         ohdmObjectIDString = this.extractBigDecimalAsString(qResult, "ohdm_object_id");
         ohdmGeomIDString = this.extractBigDecimalAsString(qResult, "ohdm_geom_id");
@@ -185,7 +188,12 @@ public class IntermediateDB {
         this.has_name = qResult.getBoolean("has_name");
         
         this.tstamp = qResult.getDate("tstamp");
-
+        try {
+            otherClassCodes = qResult.getString("otherClassCodes");
+        }
+        catch(SQLException sw) {
+            // maybe not yet implemented in that intermediate db version. ignore.
+        }
     }
     
     private String extractBigDecimalAsString(ResultSet qResult, String columnName) throws SQLException {
@@ -202,7 +210,7 @@ public class IntermediateDB {
         memberIDs = qResult.getString("member_ids");
 
         OSMRelation relation = new OSMRelation(this, osmIDString, 
-                classCodeString, sTags, memberIDs, ohdmObjectIDString, 
+                classCodeString, otherClassCodes, sTags, memberIDs, ohdmObjectIDString, 
                 ohdmGeomIDString, valid, this.isNew, this.changed, this.deleted, 
                 this.has_name, this.tstamp
         );
@@ -214,7 +222,7 @@ public class IntermediateDB {
         this.readCommonColumns(qResult);
         String nodeIDs = qResult.getString("node_ids");
 
-        OSMWay way = new OSMWay(this, osmIDString, classCodeString, sTags, 
+        OSMWay way = new OSMWay(this, osmIDString, classCodeString, otherClassCodes, sTags, 
                 nodeIDs, ohdmObjectIDString, ohdmGeomIDString, valid, 
                 this.isNew, this.changed, this.deleted, 
                 this.has_name, this.tstamp
@@ -228,12 +236,11 @@ public class IntermediateDB {
         String longitude = qResult.getString("longitude");
         String latitude = qResult.getString("latitude");
         
-        OSMNode node = new OSMNode(this, osmIDString, classCodeString, sTags, 
+        OSMNode node = new OSMNode(this, osmIDString, classCodeString, otherClassCodes, sTags, 
                 longitude, latitude, ohdmObjectIDString, ohdmGeomIDString, 
                 valid, this.isNew, this.changed, this.deleted, 
                 this.has_name, this.tstamp);
 
         return node;
-    }
-    
+    } 
 }

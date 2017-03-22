@@ -1,6 +1,10 @@
 package util;
 
+import inter2ohdm.IntermediateDB;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
 
 /**
  *
@@ -12,6 +16,7 @@ public class InterDB {
     public static final String RELATIONTABLE = "relations";
     public static final String WAYMEMBER = "waynodes";
     public static final String WAYTABLE = "ways";
+    public static final String STRING_DELIMITER = ",";
     
     static void dropTables(SQLStatementQueue sql, String targetSchema) throws SQLException {
         // drop
@@ -44,6 +49,7 @@ public class InterDB {
             sql.append("osm_id bigint,");
             sql.append("tstamp date,");
             sql.append("classcode bigint,");
+            sql.append("otherclasscodes character varying,");
             sql.append("serializedTags character varying,");
             sql.append("longitude character varying,");
             sql.append("latitude character varying,");
@@ -67,6 +73,7 @@ public class InterDB {
             sql.append("osm_id bigint,");
             sql.append("tstamp date,");
             sql.append("classcode bigint,");
+            sql.append("otherclasscodes character varying,");
             sql.append("serializedTags character varying,");
             sql.append("ohdm_geom_id bigint,");
             sql.append("ohdm_object_id bigint,");
@@ -89,6 +96,7 @@ public class InterDB {
             sql.append("osm_id bigint,");
             sql.append("tstamp date,");
             sql.append("classcode bigint,");
+            sql.append("otherclasscodes character varying,");
             sql.append("serializedTags character varying,");
             sql.append("ohdm_geom_id bigint,");
             sql.append("ohdm_object_id bigint,");
@@ -131,5 +139,44 @@ public class InterDB {
         } catch (SQLException e) {
             Util.printExceptionMessage(e, sql, "when creating database", false);
         }
+    }
+
+    public static List<String> getIDList(String commaSeparatedStrings) {
+        List<String> l = new ArrayList<>();
+        if (commaSeparatedStrings == null) {
+            return l;
+        }
+        StringTokenizer st = new StringTokenizer(commaSeparatedStrings, InterDB.STRING_DELIMITER);
+        while (st.hasMoreTokens()) {
+            String token = st.nextToken().trim();
+         
+            try {
+                // an integer?
+                Integer.parseInt(token);
+                // yes
+                l.add(token);
+            }
+            catch(NumberFormatException e) {
+                // no number, go ahead - should happen. It's only my program.
+            }
+        }
+        return l;
+    }
+
+    public static String getString(List<Integer> elements) {
+        if (elements == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (Integer eString : elements) {
+            if (first) {
+                first = false;
+            } else {
+                sb.append(InterDB.STRING_DELIMITER);
+            }
+            sb.append(eString);
+        }
+        return sb.toString();
     }
 }

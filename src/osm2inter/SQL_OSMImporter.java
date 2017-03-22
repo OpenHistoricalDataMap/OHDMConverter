@@ -11,6 +11,8 @@ import osm.OSMClassification;
 import inter2ohdm.AbstractElement;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import util.DB;
@@ -68,6 +70,7 @@ public class SQL_OSMImporter extends DefaultHandler {
     private int admin_level;
     private int currentClassID = -1;
     private int boundaryAdminClassID = -1;
+    private List<Integer> otherClassIDs;
     
     public SQL_OSMImporter(Parameter parameter, OSMClassification osmClassification) throws Exception {
         this.parameter = parameter;
@@ -153,6 +156,7 @@ public class SQL_OSMImporter extends DefaultHandler {
         this.wayFound = false;
         this.relationMemberFound = false;
         this.currentClassID = -1;
+        this.otherClassIDs = null;
         this.hasName = false;
         this.admin_level = 0;
         
@@ -171,7 +175,7 @@ public class SQL_OSMImporter extends DefaultHandler {
             case STATUS_NODE: 
                 
                 this.insertQueue.append(DB.getFullTableName(schema, InterDB.NODETABLE));
-                this.insertQueue.append("(valid, longitude, latitude, osm_id, tstamp, classcode, serializedtags, has_name) VALUES (true, ");
+                this.insertQueue.append("(valid, longitude, latitude, osm_id, tstamp, classcode, otherclasscodes, serializedtags, has_name) VALUES (true, ");
                 this.insertQueue.append(attributes.getValue("lon"));
                 this.insertQueue.append(", ");
                 this.insertQueue.append(attributes.getValue("lat"));
@@ -186,7 +190,7 @@ public class SQL_OSMImporter extends DefaultHandler {
                     this.wayProcessed = true;
                 }
                 this.insertQueue.append(DB.getFullTableName(schema, InterDB.WAYTABLE));
-                this.insertQueue.append("(valid, osm_id, tstamp, classcode, serializedtags, has_name, node_ids) VALUES (true, ");
+                this.insertQueue.append("(valid, osm_id, tstamp, classcode, otherclasscodes, serializedtags, has_name, node_ids) VALUES (true, ");
                 
                 this.memberQueue.append("INSERT INTO ");
                 this.memberQueue.append(DB.getFullTableName(schema, InterDB.WAYMEMBER));
@@ -212,7 +216,7 @@ public class SQL_OSMImporter extends DefaultHandler {
                     this.relationProcessed = true;
                 }
                 this.insertQueue.append(DB.getFullTableName(schema, InterDB.RELATIONTABLE));
-                this.insertQueue.append("(valid, osm_id, tstamp, classcode, serializedtags, has_name, member_ids) VALUES (true, ");
+                this.insertQueue.append("(valid, osm_id, tstamp, classcode, otherclasscodes, serializedtags, has_name, member_ids) VALUES (true, ");
 
                 break;
         }
@@ -248,10 +252,21 @@ public class SQL_OSMImporter extends DefaultHandler {
                 /* yes: next value is the subclass
                     value describes subclass
                 */
-                this.currentClassID = this.osmClassification.getOHDMClassID(
-                      attributes.getValue(i), 
-                      attributes.getValue(i+1)
+                int classID = this.osmClassification.getOHDMClassID(
+                        attributes.getValue(i), 
+                        attributes.getValue(i+1)
                 );
+
+                // is there already a classID
+                if(this.currentClassID == -1) {
+                    this.currentClassID = classID;
+                } else {
+                    // that's an additional class id
+                    if(this.otherClassIDs == null) {
+                        this.otherClassIDs = new ArrayList<>();
+                    }
+                    this.otherClassIDs.add(classID);
+                }
                 // describes an admin level
             } else if(attributes.getValue(i).equalsIgnoreCase("admin_level")) {
                 try {
@@ -387,6 +402,8 @@ public class SQL_OSMImporter extends DefaultHandler {
         */
         this.insertQueue.append(this.currentClassID);
         this.insertQueue.append(", '");
+        this.insertQueue.append(InterDB.getString(this.otherClassIDs));
+        this.insertQueue.append("', '");
         this.insertQueue.append(this.sAttributes.toString());
         this.insertQueue.append("', ");
         this.insertQueue.append(Boolean.toString(this.hasName));
@@ -405,6 +422,8 @@ public class SQL_OSMImporter extends DefaultHandler {
             // add remaining parameter; 
             this.insertQueue.append(this.currentClassID);
             this.insertQueue.append(", '");
+            this.insertQueue.append(InterDB.getString(this.otherClassIDs));
+            this.insertQueue.append("', '");
             this.insertQueue.append(this.sAttributes.toString());
             this.insertQueue.append("', ");
             this.insertQueue.append(Boolean.toString(hasName));
@@ -439,6 +458,8 @@ public class SQL_OSMImporter extends DefaultHandler {
 //        try {
             this.insertQueue.append(this.currentClassID);
             this.insertQueue.append(", '");
+            this.insertQueue.append(InterDB.getString(this.otherClassIDs));
+            this.insertQueue.append("', '");
             this.insertQueue.append(this.sAttributes.toString());
             this.insertQueue.append("', ");
             this.insertQueue.append(Boolean.toString(hasName));

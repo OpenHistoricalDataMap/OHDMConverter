@@ -17,13 +17,13 @@ public class OSMWay extends OSMElement {
     private final String nodeIDs;
 
     OSMWay(IntermediateDB intermediateDB, String osmIDString, 
-            String classCodeString, String sTags, String nodeIDs, 
+            String classCodeString, String otherClassCodes, String sTags, String nodeIDs, 
             String ohdmObjectIDString, String ohdmGeomIDString, 
             boolean valid, boolean isNew, boolean changed, boolean deleted,
             boolean has_name, Date tstampDate) {
         
         // handle tags as attributes..
-        super(intermediateDB, osmIDString, classCodeString, sTags, 
+        super(intermediateDB, osmIDString, classCodeString, otherClassCodes, sTags, 
                 ohdmObjectIDString, ohdmGeomIDString, valid,
                 isNew, changed, deleted, has_name, tstampDate);
         

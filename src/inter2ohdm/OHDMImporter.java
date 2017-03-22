@@ -267,14 +267,14 @@ public class OHDMImporter extends Importer {
                     OSMElement member = relation.getMember(i);
                     
                     targetIDString = member.getOHDMGeomID();
-                    this.addValidity(this.targetSelectQueue, targetType, 
+                    this.addValidity(this.targetSelectQueue, element, targetType, 
                             classCodeString, newOldOHDMID, targetIDString, 
                             externalUserID, oldName.fromYear, oldName.toYear);
                 }
             } else {
                 targetIDString = element.getOHDMGeomID();
                 if(targetIDString != null && targetIDString.length() > 0) {
-                    this.addValidity(this.targetSelectQueue, targetType, 
+                    this.addValidity(this.targetSelectQueue, element, targetType, 
                             classCodeString, newOldOHDMID, targetIDString, 
                             externalUserID, oldName.fromYear, oldName.toYear);
                 }
@@ -528,6 +528,8 @@ public class OHDMImporter extends Importer {
                 break;
         }
         
+        // there can be more than one classcode...
+        
         this.addValidity(this.targetInsertQueue, osmElement, targetType, 
                 osmElement.getClassCodeString(), ohdmIDString, 
                 ohdmGeomIDString, externalUserID);
@@ -571,10 +573,12 @@ public class OHDMImporter extends Importer {
             sinceString = this.defaultSince;
         }
         
-        this.addValidity(sq, targetType, classCodeString, sourceIDString, targetIDString, externalUserID, sinceString, this.defaultUntil);
+        this.addValidity(sq, osmElement, targetType, classCodeString, 
+                sourceIDString, targetIDString, externalUserID, 
+                sinceString, this.defaultUntil);
     }
     
-    void addValidity(SQLStatementQueue sq, int targetType, 
+    void addValidity(SQLStatementQueue sq, OSMElement osmElement, int targetType, 
             String classCodeString, String sourceIDString, 
             String targetIDString, int externalUserID, String sinceString, 
             String untilString) throws SQLException {
@@ -584,24 +588,37 @@ public class OHDMImporter extends Importer {
             System.err.println("source id must not be null");
         }
         
-        sq.append("INSERT INTO ");
-        sq.append(DB.getFullTableName(this.targetSchema, OHDM_DB.GEOOBJECT_GEOMETRY));
-        sq.append(" (type_target, classification_id, id_geoobject_source, id_target, valid_since, valid_until, source_user_id) VALUES (");
+        // some osm elements are tagged with more than one feature class
+        Iterator<String> classIDIter = osmElement.getOtherClassIDs();
+        
+        boolean again = false;
+        do {
+            again = false;
+            sq.append("INSERT INTO ");
+            sq.append(DB.getFullTableName(this.targetSchema, OHDM_DB.GEOOBJECT_GEOMETRY));
+            sq.append(" (type_target, classification_id, id_geoobject_source, id_target, valid_since, valid_until, source_user_id) VALUES (");
 
-        sq.append(targetType);
-        sq.append(", ");
-        sq.append(classCodeString);
-        sq.append(", ");
-        sq.append(sourceIDString);
-        sq.append(", ");
-        sq.append(targetIDString);
-        sq.append(", '");
-        sq.append(sinceString);
-        sq.append("', '"); 
-        sq.append(untilString);
-        sq.append("', "); // until
-        sq.append(externalUserID);
-        sq.append(");");
+            sq.append(targetType);
+            sq.append(", ");
+            sq.append(classCodeString);
+            sq.append(", ");
+            sq.append(sourceIDString);
+            sq.append(", ");
+            sq.append(targetIDString);
+            sq.append(", '");
+            sq.append(sinceString);
+            sq.append("', '"); 
+            sq.append(untilString);
+            sq.append("', "); // until
+            sq.append(externalUserID);
+            sq.append(");");
+            sq.couldExecute();
+            
+            if(classIDIter.hasNext()) {
+                classCodeString = classIDIter.next();
+                again = true;
+            }
+        } while(again);
     }
     
     void addContentAndURL(OSMElement osmElement, String ohdmIDString) {

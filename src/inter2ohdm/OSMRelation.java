@@ -20,13 +20,13 @@ public class OSMRelation extends OSMElement {
     private ArrayList<String> roleMemberIDList;
     
     OSMRelation(IntermediateDB intermediateDB, String osmIDString, 
-            String classCodeString, String sTags, String memberIDs, 
+            String classCodeString, String otherClassCodes, String sTags, String memberIDs, 
             String ohdmObjectIDString, String ohdmGeomIDString, 
             boolean valid,
             boolean isNew, boolean changed, boolean deleted,
             boolean has_name, Date tstampDate) {
         
-        super(intermediateDB, osmIDString, classCodeString, sTags, 
+        super(intermediateDB, osmIDString, classCodeString, otherClassCodes, sTags, 
                 ohdmObjectIDString, ohdmGeomIDString, valid,
                 isNew, changed, deleted, has_name, tstampDate);
         this.memberIDs = memberIDs;

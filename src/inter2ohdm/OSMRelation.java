@@ -1,5 +1,6 @@
 package inter2ohdm;
 
+import java.io.PrintStream;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -321,13 +322,14 @@ public class OSMRelation extends OSMElement {
     }
     
     @Override
-    boolean isConsistent() {
+    boolean isConsistent(PrintStream p) {
         // all member added?
         if(this.memberIDList == null || this.memberIDList.isEmpty() ||
             this.members == null || this.members.isEmpty() ||
             this.memberRoles == null || this.memberRoles.isEmpty()) {
             
             // relation must have member and roles
+            p.println("isConsistent: relation must have member and roles");
             return false;
         }
         
@@ -335,10 +337,11 @@ public class OSMRelation extends OSMElement {
         if( this.members.size() != this.memberIDList.size() ||
                 this.members.size() != this.memberRoles.size() ||
                 this.memberRoles.size() != this.memberIDList.size()) {
+            p.println("isConsistent: all lists must have same size");
             return false;
         }
         
-        return super.isConsistent();
+        return super.isConsistent(p);
     }
     
     void addMember(OSMElement element, String roleName) {

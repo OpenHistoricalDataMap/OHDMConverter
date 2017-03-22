@@ -673,6 +673,7 @@ public class SQL_OSMImporter extends DefaultHandler {
                     if(!this.wayProcessed) {
                         // join with all inserts
                         this.insertQueue.join();
+                        this.printStatus();
                     }
                     this.wA++;
                     
@@ -687,6 +688,7 @@ public class SQL_OSMImporter extends DefaultHandler {
                     if(!this.relationProcessed) {
                         // join with all inserts
                         this.insertQueue.join();
+                        this.printStatus();
                     }
                     this.rA++;
                     

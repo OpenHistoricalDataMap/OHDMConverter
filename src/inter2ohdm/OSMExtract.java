@@ -27,7 +27,7 @@ import util.Util;
  * 
  * @author thsc
  */
-public class Inter2OHDM extends Importer {
+public class OSMExtract extends Importer {
     private final String sourceSchema;
     private final String targetSchema;
     private final IntermediateDB intermediateDB;
@@ -38,7 +38,7 @@ public class Inter2OHDM extends Importer {
     private String defaultSince = "1970-01-01";
     private String defaultUntil = "2017-01-01";
     
-    public Inter2OHDM(IntermediateDB intermediateDB, 
+    public OSMExtract(IntermediateDB intermediateDB, 
             Connection sourceConnection, Connection targetConnection, 
             String sourceSchema, String targetSchema, SQLStatementQueue updateQueue) {
         
@@ -56,6 +56,11 @@ public class Inter2OHDM extends Importer {
         
         this.defaultSince = "2016-01-01";
         this.defaultUntil = this.getTodayString();
+    }
+    
+    void close() throws SQLException {
+        this.targetInsertQueue.forceExecute();
+        this.targetInsertQueue.close();
     }
     
     private String getTodayString() {
@@ -298,7 +303,7 @@ public class Inter2OHDM extends Importer {
                 this.idExternalSystemOSM = result.getInt(1);
 
             } catch (SQLException ex) {
-                Logger.getLogger(Inter2OHDM.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(OSMExtract.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         
@@ -803,7 +808,7 @@ public class Inter2OHDM extends Importer {
                 updateQueue = new SQLStatementQueue(sourceParameter);
             }
             
-            Inter2OHDM ohdmImporter = new Inter2OHDM(iDB, sourceConnection, 
+            OSMExtract ohdmImporter = new OSMExtract(iDB, sourceConnection, 
                     targetConnection, sourceSchema, targetSchema, updateQueue);
 
             /* TODO: remove those separation between nodes, way and relations.
@@ -859,8 +864,8 @@ public class Inter2OHDM extends Importer {
                     // ignore and work with default
             }
 
-            ExportIntermediateDB exporter = 
-                    new ExportIntermediateDB(sourceConnection, sourceSchema, ohdmImporter, stepLen);
+            OSMExtractor extractor = 
+                    new OSMExtractor(sourceConnection, sourceSchema, ohdmImporter, stepLen);
             
             System.out.println("intermediate select queue uses jdbc");
             sourceQueue = DB.createSQLStatementQueue(sourceConnection, sourceParameter);
@@ -872,11 +877,11 @@ public class Inter2OHDM extends Importer {
         
             // start stats trigger each [interval] minutes (default 5)
             int logMessageInterval = targetParameter.getLogMessageInterval();
-            trigger = new Trigger(exporter, 1000 * 60 * logMessageInterval);
+            trigger = new Trigger(extractor, 1000 * 60 * logMessageInterval);
             trigger.start();
             
             if(targetParameter.importNodes()) {
-                exporter.processNodes(sourceQueue, true);
+                extractor.processNodes(sourceQueue, true);
                 
                 if(fileUpdateQueue != null) {
                     // cut off update stream and let psql process that stuff
@@ -900,7 +905,7 @@ public class Inter2OHDM extends Importer {
             }
             
             if(targetParameter.importWays()) {
-                exporter.processWays(sourceQueue, false);
+                extractor.processWays(sourceQueue, false);
                 
                 if(fileUpdateQueue != null) {
                     // cut off update stream and let psql process that stuff
@@ -924,7 +929,7 @@ public class Inter2OHDM extends Importer {
             }
 
             if(targetParameter.importRelations()) {
-                exporter.processRelations(sourceQueue, true);
+                extractor.processRelations(sourceQueue, false);
                 
                 if(fileUpdateQueue != null) {
                     // close update stream and let psql process that stuff
@@ -943,8 +948,9 @@ public class Inter2OHDM extends Importer {
             }
 
             targetQueue.join();
+            ohdmImporter.close();
             System.out.println("done importing from intermediate DB to ohdm DB");
-            System.out.println(exporter.getStatistics());
+            System.out.println(extractor.getStatistics());
   
         } catch (IOException | SQLException e) {
             Util.printExceptionMessage(e, sourceQueue, "main method in Inter2OHDM", false);

@@ -18,6 +18,7 @@ import util.Parameter;
 public class OHDM2Rendering {
     public static final String BBOX_FUNCTION_TAIL = ".ohdm_bboxGeometry";
     
+    public static final String ALL = "all";
     public static final String GENERIC = "generic";
     public static final String V1 = "v1";
     public static final String BOUNDARIES = "boundaries";
@@ -55,29 +56,52 @@ public class OHDM2Rendering {
         String renderoutput = targetParameter.getRenderoutput();
         
         switch(renderoutput) {
+            case ALL:
+                renderer.doGeneric(sql, sourceSchema, targetSchema);
+                renderer.doV1(sql, sourceSchema, targetSchema);
+                renderer.doBoundaries(sql, sourceSchema, targetSchema);
+                break;
             case GENERIC:
-                System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-                System.out.println("produce generic rendering tables");
-                System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-                renderer.createGeneric(sql, sourceSchema, targetSchema);
+                renderer.doGeneric(sql, sourceSchema, targetSchema);
                 break;
             case V1:
-                System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-                System.out.println("produce rendering tables version 1");
-                System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-                renderer.createV1(sql, sourceSchema, targetSchema);
+                renderer.doV1(sql, sourceSchema, targetSchema);
                 break;
             case BOUNDARIES:
-                System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-                System.out.println("produce boundaries");
-                System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-                renderer.createBoundaries(sql, sourceSchema, targetSchema);
+                renderer.doBoundaries(sql, sourceSchema, targetSchema);
                 break;
             default:
                 renderer.fatal("unknown rendering output (fatal): " + renderoutput);
         }
         
         System.out.println("Render tables creation finished");
+    }
+    
+    private void doGeneric(SQLStatementQueue sql, String sourceSchema, 
+            String targetSchema) throws SQLException {
+        
+        System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        System.out.println("produce generic rendering tables");
+        System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        this.createGeneric(sql, sourceSchema, targetSchema);
+    }
+    
+    private void doV1(SQLStatementQueue sql, String sourceSchema, 
+            String targetSchema) throws SQLException {
+        
+        System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        System.out.println("produce rendering tables version 1");
+        System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        this.createGeneric(sql, sourceSchema, targetSchema);
+    }
+    
+    private void doBoundaries(SQLStatementQueue sql, String sourceSchema, 
+            String targetSchema) throws SQLException {
+        
+        System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        System.out.println("produce boundaries");
+        System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        this.createGeneric(sql, sourceSchema, targetSchema);
     }
     
     void fatal(String message) {
@@ -172,6 +196,13 @@ select l.line, c.subclassname, o.name, gg.valid_since, gg.valid_until, gg.valid_
 (SELECT id, line FROM ohdm.lines) as l,
 (SELECT subclassname, id FROM ohdm.classification) as c
 where gg.type_target = 2 AND l.id = gg.id_target AND o.id = gg.id_geoobject_source AND o.classification_id = c.id;
+            
+select o.name, st_asewkt(p.polygon), c.class, c.subclassname from
+(SELECT id, name from ohdm.geoobject) as o,
+(SELECT id_target, type_target, classification_id, id_geoobject_source, valid_since, valid_until, valid_since_offset, valid_until_offset FROM ohdm.geoobject_geometry) as gg,
+(SELECT id, polygon FROM ohdm.polygons) as p,
+(SELECT class, subclassname, id FROM ohdm.classification) as c
+where gg.type_target = 3 AND p.id = gg.id_target AND o.id = gg.id_geoobject_source AND gg.classification_id = c.id;            
          */
         
         

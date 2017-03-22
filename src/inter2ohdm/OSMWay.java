@@ -1,5 +1,6 @@
 package inter2ohdm;
 
+import java.io.PrintStream;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -30,18 +31,21 @@ public class OSMWay extends OSMElement {
     }
     
     @Override
-    boolean isConsistent() {
+    boolean isConsistent(PrintStream p) {
         if(this.nodeIDList == null || this.nodeIDList.isEmpty() ||
                 this.nodes == null || this.nodes.isEmpty()) {
+            
+            p.println("isConsistent: way has no nodes in lists");
             return false;
         }
         
         int i = this.isPolygon ? 1 : 0;
         if(this.nodes.size() + i != this.nodeIDList.size()) {
+            p.println("isConsistent: nodes list and nodes id list have different length");
             return false;
         }
         
-        return super.isConsistent();
+        return super.isConsistent(p);
     }
     
     @Override

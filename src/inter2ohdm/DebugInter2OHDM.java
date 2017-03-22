@@ -13,7 +13,7 @@ import util.Util;
  *
  * @author thsc
  */
-public class DebugInter2OHDM extends Inter2OHDM {
+public class DebugInter2OHDM extends OSMExtract {
 
     // TODO TODO... set updateStream!!
     public DebugInter2OHDM(IntermediateDB intermediateDB, Connection sourceConnection, Connection targetConnection, String sourceSchema, String targetSchema) {
@@ -57,7 +57,7 @@ public class DebugInter2OHDM extends Inter2OHDM {
             
             
             // TODO TODO remove that null
-            Inter2OHDM ohdmImporter = new Inter2OHDM(iDB, sourceConnection, 
+            OSMExtract ohdmImporter = new OSMExtract(iDB, sourceConnection, 
                     targetConnection, sourceSchema, targetSchema, null);
             
             try {
@@ -87,8 +87,8 @@ public class DebugInter2OHDM extends Inter2OHDM {
                     // ignore and work with default
             }
 
-            ExportIntermediateDB exporter = 
-                    new ExportIntermediateDB(sourceConnection, sourceSchema, ohdmImporter, stepLen);
+            OSMExtractor exporter = 
+                    new OSMExtractor(sourceConnection, sourceSchema, ohdmImporter, stepLen);
             
             sourceQueue = DB.createSQLStatementQueue(sourceConnection, sourceParameter);
             
@@ -103,7 +103,7 @@ public class DebugInter2OHDM extends Inter2OHDM {
             while(qResult.next()) {
 //            exporter.processNode(qResult, sourceQueue, ExportIntermediateDB.RELATION);
 //            exporter.processWay(qResult, sourceQueue, ExportIntermediateDB.RELATION);
-            exporter.processElement(qResult, sourceQueue, ExportIntermediateDB.RELATION, true);
+            exporter.processElement(qResult, sourceQueue, OSMExtractor.RELATION, true);
                 
             }
         } catch (Exception e) {

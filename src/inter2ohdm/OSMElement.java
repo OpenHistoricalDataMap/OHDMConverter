@@ -1,5 +1,6 @@
 package inter2ohdm;
 
+import java.io.PrintStream;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -299,7 +300,7 @@ public abstract class OSMElement extends AbstractElement {
         return this.isPolygon;
     }
     
-    boolean isConsistent() {
+    boolean isConsistent(PrintStream p) {
         return true;
     }
     

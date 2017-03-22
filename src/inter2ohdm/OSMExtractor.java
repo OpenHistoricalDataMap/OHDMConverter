@@ -23,7 +23,7 @@ import util.Util;
  *
  * @author thsc
  */
-public class ExportIntermediateDB extends IntermediateDB implements TriggerRecipient {
+public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
     private final Importer importer;
     
     private final String schema;
@@ -53,7 +53,7 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
     private String upperIDString;
     private String lowerIDString;
     
-    ExportIntermediateDB(Connection sourceConnection, String schema, Importer importer, int steplen) {
+    OSMExtractor(Connection sourceConnection, String schema, Importer importer, int steplen) {
         super(sourceConnection, schema);
         
         this.startTime = System.currentTimeMillis();
@@ -124,7 +124,7 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
             
             this.numberCheckedNodes++;
 
-            if(node.isConsistent()) {
+            if(node.isConsistent(System.err)) {
                 // now process that stuff
                 if(this.importer.importNode(node, importUnnamedEntities)) {
                     this.numberImportedNodes++;
@@ -166,7 +166,7 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
             
             this.numberCheckedWays++;
 
-            if(way.isConsistent()) {
+            if(way.isConsistent(System.err)) {
                 // process that stuff
                 if(this.importer.importWay(way, importUnnamedEntities)) {
                     this.numberImportedWays++;
@@ -194,7 +194,7 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
             relation = this.createOHDMRelation(qResult);
             
             String r_id = relation.getOSMIDString();
-            if(r_id.equalsIgnoreCase("4451529")) {
+            if(r_id.equalsIgnoreCase("1611842")) {
                 int i = 42;
             }
 
@@ -263,6 +263,7 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
                             memberElement = this.createOHDMRelation(memberResult);
                             break;
                     }
+                    
                     relation.addMember(memberElement, roleString);
                 } else {
                     /* this call can fail
@@ -285,7 +286,7 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
             
             this.numberCheckedRelations++;
             
-            if(relation.isConsistent()) {
+            if(relation.isConsistent(System.err)) {
                 // process that stuff
                 if(relationMemberComplete && this.importer.importRelation(relation, importUnnamedEntities)) {
                     this.numberImportedRelations++;
@@ -526,7 +527,7 @@ public class ExportIntermediateDB extends IntermediateDB implements TriggerRecip
         try {
             Thread.sleep(2000);
         } catch (InterruptedException ex) {
-            Logger.getLogger(ExportIntermediateDB.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(OSMExtractor.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         StringBuilder sb = new StringBuilder();

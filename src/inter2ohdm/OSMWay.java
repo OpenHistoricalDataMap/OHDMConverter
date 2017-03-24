@@ -32,8 +32,7 @@ public class OSMWay extends OSMElement {
     
     @Override
     boolean isConsistent(PrintStream p) {
-        if(this.nodeIDList == null || this.nodeIDList.isEmpty() ||
-                this.nodes == null || this.nodes.isEmpty()) {
+        if(this.isEmpty()) {
             
             p.println("isConsistent: way has no nodes in lists");
             return false;
@@ -46,6 +45,13 @@ public class OSMWay extends OSMElement {
         }
         
         return super.isConsistent(p);
+    }
+    
+    @Override
+    boolean isEmpty() {
+        return(this.nodeIDList == null || this.nodeIDList.isEmpty() 
+                || this.nodes == null || this.nodes.isEmpty());
+        
     }
     
     @Override

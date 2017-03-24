@@ -329,7 +329,12 @@ public class OSMRelation extends OSMElement {
             this.memberRoles == null || this.memberRoles.isEmpty()) {
             
             // relation must have member and roles
-            p.println("isConsistent: relation must have member and roles");
+            p.print("relation #");
+            p.print(this.getOSMIDString());
+            p.println(" isConsistent: relation must have member and roles");
+            p.print("memberIDList null:" + Boolean.toString(memberIDList == null));
+            p.print(" / members null:" + Boolean.toString(members == null));
+            p.println(" / memberRoles null:" + Boolean.toString(memberRoles == null));
             return false;
         }
         
@@ -337,7 +342,11 @@ public class OSMRelation extends OSMElement {
         if( this.members.size() != this.memberIDList.size() ||
                 this.members.size() != this.memberRoles.size() ||
                 this.memberRoles.size() != this.memberIDList.size()) {
-            p.println("isConsistent: all lists must have same size");
+            p.print("relation #");
+            p.print(this.getOSMIDString());
+            p.println(" isConsistent: all lists must have same size");
+            p.print("members size:" + members.size());
+            p.println(" / memberRoles size:" + memberRoles.size());
             return false;
         }
         

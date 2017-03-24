@@ -201,7 +201,7 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
             relation = this.createOHDMRelation(qResult);
             
             String r_id = relation.getOSMIDString();
-            if(r_id.equalsIgnoreCase("1611842")) {
+            if(r_id.equalsIgnoreCase("55754")) {
                 int i = 42;
             }
 
@@ -265,6 +265,13 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
                             break;
                         case OHDM_DB.LINESTRING:
                             memberElement = this.createOHDMWay(memberResult);
+                            if(memberElement.noOHDMElement() && memberElement.isEmpty()) {
+                                /* that way isn't yet stored in OHDM
+                                fill it with all necessary data.
+                                */
+                                OSMWay wayMember = (OSMWay)memberElement;
+                                this.addNodes2OHDMWay(wayMember);
+                            }
                             break;
                         case OHDM_DB.RELATION:
                             memberElement = this.createOHDMRelation(memberResult);
@@ -284,7 +291,8 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
 //                            System.out.println("would removed relation: " + relation.getOSMIDString());
 //                    debug_alreadyPrinted = true;
                     //relation.remove();
-                    relationMemberComplete = false; 
+                    
+                    relationMemberComplete = false;
                 }
                 memberResult.close();
 
@@ -310,6 +318,7 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
         catch(SQLException se) {
             System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
             System.err.println("relation osm_id: " + relation.getOSMIDString());
+            System.err.println("relation ohdm object id: " + relation.getOHDMObjectID());
             Util.printExceptionMessage(se, sql, "failure when processing relation.. non fatal", true);
             System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         }
@@ -447,39 +456,6 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
         */ 
 
         long before = System.currentTimeMillis();
-        
-//        Iterator<String> nodeIDIter = way.getNodeIDs();
-//        if(nodeIDIter != null) {
-//            // add actual nodes to that way
-//            SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
-//            
-//            sql.append("select * from ");
-//            sql.append(DB.getFullTableName(this.schema, NODETABLE));
-//            sql.append(" where osm_id in (");
-//            
-//            boolean first = true;
-//            while(nodeIDIter.hasNext()) {
-//                String nodeID = nodeIDIter.next();
-//                
-//                if(first) {
-//                    first = false;
-//                } else {
-//                    sql.append(", ");
-//                }
-//                
-//                sql.append(nodeID);
-//            }
-//            sql.append(");");  
-//        
-//            ResultSet qResultNode = sql.executeWithResult();
-//
-//            while(qResultNode.next()) {
-//                OSMNode node = this.createOHDMNode(qResultNode);
-//                way.addNode(node);
-//            }
-//            
-//            qResultNode.close();
-//        }
         
         // believe it or not but that's faster with index on waynodemember
         // I don't believe it's true for huge data

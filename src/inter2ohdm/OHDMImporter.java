@@ -63,6 +63,11 @@ public class OHDMImporter extends Importer {
         this.targetInsertQueue.close();
     }
     
+    void forceExecute() throws SQLException {
+        this.sourceUpdateQueue.forceExecute();
+        this.targetInsertQueue.forceExecute();
+    }
+    
     private String getTodayString() {
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DATE, 0);
@@ -164,7 +169,7 @@ public class OHDMImporter extends Importer {
     @Override
     public boolean importRelation(OSMRelation relation, boolean importUnnamedEntities) throws SQLException {
         // debug stop
-        if(relation.getOSMIDString().equalsIgnoreCase("4451529")) {
+        if(relation.getOSMIDString().equalsIgnoreCase("55754")) {
             int i = 42;
         }
         
@@ -461,6 +466,12 @@ public class OHDMImporter extends Importer {
         ResultSet result = sql.executeWithResult();
         result.next();
         return result.getBigDecimal(1).toString();
+    }
+    
+    String addGeometry(OSMElement osmElement) throws SQLException {
+        return this.addGeometry(osmElement, 
+                this.getOHDM_ID_ExternalUser(osmElement));
+        
     }
     
     String addGeometry(OSMElement osmElement, int externalUserID) throws SQLException {
@@ -902,6 +913,7 @@ public class OHDMImporter extends Importer {
             
             if(targetParameter.importNodes()) {
                 extractor.processNodes(sourceQueue, true);
+                ohdmImporter.forceExecute();
                 
                 if(fileUpdateQueue != null) {
                     // cut off update stream and let psql process that stuff
@@ -926,6 +938,7 @@ public class OHDMImporter extends Importer {
             
             if(targetParameter.importWays()) {
                 extractor.processWays(sourceQueue, false);
+                ohdmImporter.forceExecute();
                 
                 if(fileUpdateQueue != null) {
                     // cut off update stream and let psql process that stuff
@@ -950,6 +963,7 @@ public class OHDMImporter extends Importer {
 
             if(targetParameter.importRelations()) {
                 extractor.processRelations(sourceQueue, false);
+                ohdmImporter.forceExecute();
                 
                 if(fileUpdateQueue != null) {
                     // close update stream and let psql process that stuff
@@ -1006,18 +1020,59 @@ public class OHDMImporter extends Importer {
 
         sq.append("INSERT INTO ");
         sq.append(OHDM_DB.GEOOBJECT_GEOMETRY);
-        sq.append("(id_geoobject_source, id_target, type_target, role,");
+        sq.append("(id_geoobject_source, source_user_id, id_target, type_target, role,");
         sq.append(" classification_id, valid_since, valid_until) VALUES ");
 
         boolean notFirstSet = false;
+        int ohdm_id_ExternalUser = this.getOHDM_ID_ExternalUser(relation);
         for(int i = 0; i < relation.getMemberSize(); i++) {
+            
+            // add member information
             OSMElement member = relation.getMember(i);
-            String memberOHDMObjectIDString = this.getOHDMObject(member, true);
-            if(memberOHDMObjectIDString == null) continue; // no identity
-
+            
+            /*
+            now it becomes interesting. That member can
+            a) its own identity which means: it has an object id and
+            probably a geometry id. We keep that object id
+            b) have no identity but a geometry - we take this
+            c) nothing at all - we create a geometry
+            */
+            
+            // remember if that member is an object or "only" a geometry
+            boolean isObject = false;
+            
+            // try to get OHDM ID
+            String memberOHDMIDString = member.getOHDMObjectID();
+            
+            if(memberOHDMIDString != null && memberOHDMIDString.length() > 0) {
+                // got one - that an object
+                isObject = true;
+            } else {
+                // no object but geometry?
+                memberOHDMIDString = member.getOHDMGeomID();
+            
+                if(memberOHDMIDString == null || memberOHDMIDString.length() == 0) {
+                    // that object has not yet save at all.
+                    
+                    memberOHDMIDString = this.addGeometry(member);
+                    
+                    if(memberOHDMIDString == null || 
+                            memberOHDMIDString.length() == 0) {
+                        /* this makes no sense. That thing cannot be written
+                        */
+                        System.err.print("when saving relation: member cannot be safed");
+                        System.err.print("relation ohdm object id" + relation.getOHDMObjectID());
+                        System.err.print(" / member osm id" + member.getOSMIDString());
+                        continue;
+                    }
+                }
+            }
+            
             // get role of that member in that relation
             String roleName = relation.getRoleName(i);
 
+            // now construct that insert statement
+            
             if(notFirstSet) {
                 sq.append(", ");
             } else {
@@ -1027,14 +1082,24 @@ public class OHDMImporter extends Importer {
             sq.append("(");
             sq.append(ohdmIDString); // id source
             sq.append(", ");
-            sq.append(memberOHDMObjectIDString); // id target
+            sq.append(ohdm_id_ExternalUser); // id source
             sq.append(", ");
-            if(member instanceof OSMNode) { // type_target
-                sq.append(OHDM_DB.OHDM_POINT_GEOMTYPE);
-            } else if(member instanceof OSMWay) {
-                sq.append(OHDM_DB.OHDM_LINESTRING_GEOMTYPE);
-            } else {
+
+            sq.append(memberOHDMIDString); // id target (geom or object)
+            
+            sq.append(", ");
+            if(isObject) {
+                // we have take the object id instead of geometry
                 sq.append(OHDM_DB.OHDM_GEOOBJECT_GEOMTYPE);
+            } else {
+                // decide by member type
+                if(member instanceof OSMNode) { // type_target
+                    sq.append(OHDM_DB.OHDM_POINT_GEOMTYPE);
+                } else if(member instanceof OSMWay) {
+                    sq.append(OHDM_DB.OHDM_LINESTRING_GEOMTYPE);
+                } else {
+                    sq.append(OHDM_DB.OHDM_GEOOBJECT_GEOMTYPE);
+                }
             }
             sq.append(", '");
             sq.append(roleName); // role
@@ -1097,7 +1162,7 @@ public class OHDMImporter extends Importer {
                 targetSelectQueue.append("INSERT INTO ");
                 targetSelectQueue.append(DB.getFullTableName(this.targetSchema, OHDM_DB.POLYGONS));
                 targetSelectQueue.append(" (polygon, source_user_id) VALUES ('");
-                targetSelectQueue.append("SRID=4326;"); // make it an ewkt
+//                targetSelectQueue.append("SRID=4326;"); // make it an ewkt
                 targetSelectQueue.append(polygonWKT.get(i));
                 targetSelectQueue.append("', ");
                 int ohdmUserID = this.getOHDM_ID_ExternalUser(relation);

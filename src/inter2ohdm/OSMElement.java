@@ -117,7 +117,11 @@ public abstract class OSMElement extends AbstractElement {
             return null;
         }
         
-        return "SRID=4326;" + this.wktString;
+        if(!this.wktString.startsWith("SRID")) {
+            this.wktString = "SRID=4326;" + this.wktString;
+        }
+        
+        return this.wktString;
     }
     
     abstract int getGeometryType();
@@ -245,6 +249,10 @@ public abstract class OSMElement extends AbstractElement {
         
         return idList;
     }
+    
+    boolean isEmpty() {
+        return false;
+    }
 
     boolean isNew() {
         return this.isNew;
@@ -370,5 +378,13 @@ public abstract class OSMElement extends AbstractElement {
 
     Iterator<String> getOtherClassIDs() {
         return this.otherClassCodeList.iterator();
+    }
+
+    boolean noOHDMElement() {
+        return (
+            this.ohdmGeomIDString == null ||
+            this.ohdmGeomIDString.length() == 0 ||
+            this.ohdmObjectIDString == null  ||
+            this.ohdmObjectIDString.length() == 0);
     }
 }

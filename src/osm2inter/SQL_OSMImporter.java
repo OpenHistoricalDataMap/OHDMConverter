@@ -159,6 +159,7 @@ public class SQL_OSMImporter extends DefaultHandler {
         this.otherClassIDs = null;
         this.hasName = false;
         this.admin_level = 0;
+        this.currentElementID = attributes.getValue("id");
         
         // could flush sql streams
         
@@ -221,7 +222,6 @@ public class SQL_OSMImporter extends DefaultHandler {
                 break;
         }
         
-        this.currentElementID = attributes.getValue("id");
         this.insertQueue.append(this.currentElementID);
         this.insertQueue.append(", '");
         this.insertQueue.append(attributes.getValue("timestamp"));
@@ -396,10 +396,9 @@ public class SQL_OSMImporter extends DefaultHandler {
 
     private AbstractElement dummyElement = new AbstractElement();
     
-    private void endNode() {
-        /*
-        insert into nodes (osm_id, longitude, latitude, classcode, serializedtags, valid) VALUES (..);
-        */
+    private void beginEnd() {
+        this.adjustClasscode();
+        
         this.insertQueue.append(this.currentClassID);
         this.insertQueue.append(", '");
         this.insertQueue.append(InterDB.getString(this.otherClassIDs));
@@ -407,6 +406,13 @@ public class SQL_OSMImporter extends DefaultHandler {
         this.insertQueue.append(this.sAttributes.toString());
         this.insertQueue.append("', ");
         this.insertQueue.append(Boolean.toString(this.hasName));
+    }
+    
+    private void endNode() {
+        /*
+        insert into nodes (osm_id, longitude, latitude, classcode, serializedtags, valid) VALUES (..);
+        */
+        this.beginEnd();
         this.insertQueue.append(");");
     }
 
@@ -420,30 +426,13 @@ public class SQL_OSMImporter extends DefaultHandler {
         
 //        try {
             // add remaining parameter; 
-            this.insertQueue.append(this.currentClassID);
-            this.insertQueue.append(", '");
-            this.insertQueue.append(InterDB.getString(this.otherClassIDs));
-            this.insertQueue.append("', '");
-            this.insertQueue.append(this.sAttributes.toString());
-            this.insertQueue.append("', ");
-            this.insertQueue.append(Boolean.toString(hasName));
+            this.beginEnd();
             this.insertQueue.append(", '");
             this.insertQueue.append(this.nodeIDs.toString());
             this.insertQueue.append("');");
 
             // finish insert member statement
             this.memberQueue.append(";");
-//            this.memberQueue.forceExecute(this.currentElementID);
-            
-            // finish update nodes statement
-//            this.updateNodesQueue.append(";");
-//            this.updateNodesQueue.forceExecute(this.currentElementID);
-//        } catch (SQLException ex) {
-//            this.errStream.println("while saving node: " + ex.getMessage() + "\n" + this.insertQueue.toString());
-//        } catch (IOException ex) {
-//            this.errStream.println("while saving node: " + ex.getClass().getName() + "\n" + ex.getMessage());
-//        }
-        
     }
 
     private void endRelation() {
@@ -456,31 +445,10 @@ public class SQL_OSMImporter extends DefaultHandler {
         */
         
 //        try {
-            this.insertQueue.append(this.currentClassID);
-            this.insertQueue.append(", '");
-            this.insertQueue.append(InterDB.getString(this.otherClassIDs));
-            this.insertQueue.append("', '");
-            this.insertQueue.append(this.sAttributes.toString());
-            this.insertQueue.append("', ");
-            this.insertQueue.append(Boolean.toString(hasName));
+            this.beginEnd();
             this.insertQueue.append(", '");
             this.insertQueue.append(this.memberIDs.toString());
             this.insertQueue.append("');");
-            
-//            this.memberQueue.append(";");
-//            this.memberQueue.forceExecute(this.currentElementID);
-            
-//            this.updateNodesQueue.append(";");
-//            this.updateNodesQueue.forceExecute(this.currentElementID);
-            
-//            this.updateWaysQueue.append(";");
-//            this.updateWaysQueue.forceExecute(this.currentElementID);
-            
-//        } catch (SQLException ex) {
-//            this.errStream.println("while saving node: " + ex.getMessage() + "\n" + this.insertQueue.toString());
-//        } catch (IOException ex) {
-//            this.errStream.println("while saving node: " + ex.getClass().getName() + "\n" + ex.getMessage());
-//        }
     }
 
     @Override
@@ -664,13 +632,13 @@ public class SQL_OSMImporter extends DefaultHandler {
 
     private void adjustClasscode() {
         /* 
-        boundary / adminstrative / admin_level becomes 
-        bondary / admin_level_[level]
+        boundary / adminstrative / admin_level x becomes 
+        ohdm_boundary / admin_level_[level]
         */
         if(this.boundaryAdminClassID == this.currentClassID) {
             if(this.admin_level > 0) { // adminlevel_1
                 this.currentClassID = this.osmClassification.getOHDMClassID(
-                            "boundary", 
+                            "ohdm_boundary", 
                             "adminlevel_" + this.admin_level);
             }
         }
@@ -679,8 +647,6 @@ public class SQL_OSMImporter extends DefaultHandler {
     @Override
     public void endElement(String uri, String localName, String qName) {
         // maybe adjust something, like boundary / admin-level
-        this.adjustClasscode();
-        
         try {
             switch (qName) {
                 case "node":

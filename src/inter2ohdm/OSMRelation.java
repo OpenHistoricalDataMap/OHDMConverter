@@ -133,7 +133,7 @@ public class OSMRelation extends OSMElement {
                                 wktBuilder = null;
                             } else {
                                 // there is a hole.. start hole wkt
-                                wktBuilder.append(", (");
+//                                wktBuilder.append(", (");
                             }
                             if(lastLoop) break; // done here
                         }
@@ -205,6 +205,7 @@ public class OSMRelation extends OSMElement {
                         if(way.isPolygon()) {
                             wktBuilder.append(", ( ");
                             this.addWayToPolygon(null, wktBuilder, way);
+                            // end complete inner polygon
                             wktBuilder.append(") ");
                         } else {
                             if(lastLoop) { // cannot open a new polygon

@@ -55,13 +55,14 @@ public class DebugInter2OHDM extends OHDMImporter {
             String sourceSchema = sourceParameter.getSchema();
             String targetSchema = targetParameter.getSchema();
             
+            SQLStatementQueue updateQueue = new SQLStatementQueue(sourceParameter);
             
             // TODO TODO remove that null
             OHDMImporter ohdmImporter = new OHDMImporter(iDB, sourceConnection, 
-                    targetConnection, sourceSchema, targetSchema, null);
+                    targetConnection, sourceSchema, targetSchema, updateQueue);
             
             try {
-                ohdmImporter.forgetPreviousImport();
+//                ohdmImporter.forgetPreviousImport();
             }
             catch(Exception e) {
                 System.err.println("problems during setting old data (non-fatal): " + e.getLocalizedMessage());
@@ -96,8 +97,8 @@ public class DebugInter2OHDM extends OHDMImporter {
             // do some sql here..
 //            sourceQueue.append("SELECT * FROM intermediate.nodes where osm_id = 6464945;");
 //            sourceQueue.append("SELECT * FROM intermediate.ways where osm_id = 6464945;");
-//            sourceQueue.append("SELECT * FROM intermediate.relations where osm_id = 6464945;");
-            sourceQueue.append("SELECT * FROM intermediate.relations;");
+            sourceQueue.append("SELECT * FROM berlin.relations where osm_id = 104807;");
+//            sourceQueue.append("SELECT * FROM intermediate.relations;");
             qResult = sourceQueue.executeWithResult();
             
             while(qResult.next()) {

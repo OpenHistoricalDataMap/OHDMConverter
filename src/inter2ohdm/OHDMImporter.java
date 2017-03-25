@@ -793,7 +793,7 @@ public class OHDMImporter extends Importer {
     
     public static void main(String args[]) throws IOException, SQLException {
         // let's fill OHDM database
-        System.out.println("Start importing ODHM data from intermediate DB");
+        System.out.println("Start extracting ODHM data from intermediate DB");
         SQLStatementQueue sourceQueue = null;
         
         Trigger trigger = null;
@@ -1129,16 +1129,16 @@ public class OHDMImporter extends Importer {
         definition of a multipolygon.. We correct that problem here
         */
         
+        // debugging stop
+        if(relation.getOSMIDString().equalsIgnoreCase("298853")) {
+            int i = 42;
+        }
+        
         /* 
             if a multipolygon relation has only two member, inner and outer,
             bring them into right order.
         */
         if(!relation.checkMultipolygonMemberOrder()) return false;
-        
-        // debugging stop
-        if(relation.getOSMIDString().equalsIgnoreCase("3323433")) {
-            int i = 42;
-        }
         
         // option b) it is a polygone or probably a multipolygon
         ArrayList<String> polygonIDs = new ArrayList<>();

@@ -104,7 +104,7 @@ public class OSMRelation extends OSMElement {
                 
                 // after all this pre-processing start loop now.
                 
-                // luck ahead if possible
+                // look ahead if possible
                 if(++i < memberRoles.size()) {
                     next = (OSMWay) members.get(i);
                     this.intermediateDB.addNodes2OHDMWay(next);
@@ -426,6 +426,62 @@ public class OSMRelation extends OSMElement {
     */
     boolean checkMultipolygonMemberOrder() {
         if(!this.isMultipolygon) return false;
+        
+        /**
+         * The following scenarios are handled here:
+         * a) There is only one outer way but no on top bring it up
+         * b) .. I don't know :/
+         */
+        
+        ////////////////////////////////////////////////////////////////
+        //                         Scenario a)                        //
+        ////////////////////////////////////////////////////////////////
+        
+        // does it start with an inner role?
+        if(this.memberRoles.get(0).equalsIgnoreCase("inner")) {
+            // maybe scenario a
+            
+            int outerRoleIndex = 0;
+            // start with 1 .. 0 is already inner.
+            for(int roleIndex = 1; roleIndex < this.memberRoles.size(); roleIndex++) {
+                if(this.memberRoles.get(roleIndex).equalsIgnoreCase("outer")) {
+                    // got one .. is it already the second one?
+                    if(outerRoleIndex != 0) {
+                        System.err.println("malformed multipolygon: starts with inner role but has more that one outer role.. cannot fix that");
+                        return false;
+                    } else {
+                        outerRoleIndex = roleIndex; // remember index
+                    }
+                }
+            }
+            
+            // survived that loop - we are in scenario a and can fix it
+            
+            // move outer role on the top
+            // all inner polygons must not overlap in that case. Can just swap
+
+            // remember outMember object
+            OSMElement outerMember = this.members.get(outerRoleIndex);
+            
+            // switch first inner role to outer role slot
+            this.members.set(outerRoleIndex, this.members.get(0));
+            
+            // set outer role on the top
+            this.members.set(0, outerMember);
+            
+            // change roles
+            this.memberRoles.set(0, "outer"); // first becomes outer
+            this.memberRoles.set(outerRoleIndex, "inner");
+            
+            // fixed
+            return true;
+        }
+        
+        ///////////////////////////////////////////////////////////////
+        //                               more??                      //
+        ///////////////////////////////////////////////////////////////
+        
+        // that scenario is just a special case of a - isn't it TODO
         
         // only two members?
         if(this.memberRoles.size() != 2) return true; // hope the best

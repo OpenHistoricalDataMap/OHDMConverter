@@ -10,18 +10,18 @@ import osm.OSMClassification;
  */
 public class OHDM_DB {
     // Table names
-    public static final String POLYGONS = "polygons";
-    public static final String CONTENT = "content";
-    public static final String GEOOBJECT = "geoobject";
-    public static final String POINTS = "points";
-    public static final String GEOOBJECT_GEOMETRY = "geoobject_geometry";
-    public static final String GEOOBJECT_URL = "geoobject_url";
-    public static final String LINES = "lines";
-    public static final String EXTERNAL_USERS = "external_users";
-    public static final String CLASSIFICATION = "classification";
-    public static final String SUBSEQUENT_GEOM_USER = "subsequent_geom_user";
-    public static final String EXTERNAL_SYSTEMS = "external_systems";
-    public static final String GEOOBJECT_CONTENT = "geoobject_content";
+    public static final String TABLE_POLYGONS = "polygons";
+    public static final String TABLE_CONTENT = "content";
+    public static final String TABLE_GEOOBJECT = "geoobject";
+    public static final String TABLE_POINTS = "points";
+    public static final String TABLE_GEOOBJECT_GEOMETRY = "geoobject_geometry";
+    public static final String TABLE_GEOOBJECT_URL = "geoobject_url";
+    public static final String TABLE_LINES = "lines";
+    public static final String TABLE_EXTERNAL_USERS = "external_users";
+    public static final String TABLE_CLASSIFICATION = "classification";
+    public static final String TABLE_SUBSEQUENT_GEOM_USER = "subsequent_geom_user";
+    public static final String TABLE_EXTERNAL_SYSTEMS = "external_systems";
+    public static final String TABLE_GEOOBJECT_CONTENT = "geoobject_content";
     
     public static final int UNKNOWN_USER_ID = -1;
     public static final String URL = "url";
@@ -50,24 +50,24 @@ public class OHDM_DB {
     }
 
     public static void dropOHDMTables(Connection targetConnection, String targetSchema) throws SQLException {
-        DB.drop(targetConnection, targetSchema, EXTERNAL_SYSTEMS);
-        DB.drop(targetConnection, targetSchema, EXTERNAL_USERS);
-        DB.drop(targetConnection, targetSchema, CLASSIFICATION);
-        DB.drop(targetConnection, targetSchema, CONTENT);
-        DB.drop(targetConnection, targetSchema, GEOOBJECT);
-        DB.drop(targetConnection, targetSchema, GEOOBJECT_CONTENT);
-        DB.drop(targetConnection, targetSchema, GEOOBJECT_GEOMETRY);
-        DB.drop(targetConnection, targetSchema, GEOOBJECT_URL);
-        DB.drop(targetConnection, targetSchema, LINES);
-        DB.drop(targetConnection, targetSchema, POINTS);
-        DB.drop(targetConnection, targetSchema, POLYGONS);
+        DB.drop(targetConnection, targetSchema, TABLE_EXTERNAL_SYSTEMS);
+        DB.drop(targetConnection, targetSchema, TABLE_EXTERNAL_USERS);
+        DB.drop(targetConnection, targetSchema, TABLE_CLASSIFICATION);
+        DB.drop(targetConnection, targetSchema, TABLE_CONTENT);
+        DB.drop(targetConnection, targetSchema, TABLE_GEOOBJECT);
+        DB.drop(targetConnection, targetSchema, TABLE_GEOOBJECT_CONTENT);
+        DB.drop(targetConnection, targetSchema, TABLE_GEOOBJECT_GEOMETRY);
+        DB.drop(targetConnection, targetSchema, TABLE_GEOOBJECT_URL);
+        DB.drop(targetConnection, targetSchema, TABLE_LINES);
+        DB.drop(targetConnection, targetSchema, TABLE_POINTS);
+        DB.drop(targetConnection, targetSchema, TABLE_POLYGONS);
         DB.drop(targetConnection, targetSchema, URL);
-        DB.drop(targetConnection, targetSchema, SUBSEQUENT_GEOM_USER);
+        DB.drop(targetConnection, targetSchema, TABLE_SUBSEQUENT_GEOM_USER);
     }
 
 
     public static void dropNodeTables(Connection targetConnection, String targetSchema) throws SQLException {
-        DB.drop(targetConnection, targetSchema, LINES);
+        DB.drop(targetConnection, targetSchema, TABLE_LINES);
     }
 
     public static void dropWayTables(Connection targetConnection, String targetSchema) {
@@ -82,21 +82,21 @@ public class OHDM_DB {
         SQLStatementQueue sq = new SQLStatementQueue(targetConnection);
 
         // EXTERNAL_SYSTEMS
-        DB.createSequence(targetConnection, schema, EXTERNAL_SYSTEMS);
-        sq.append(DB.getCreateTableBegin(schema, EXTERNAL_SYSTEMS));
+        DB.createSequence(targetConnection, schema, TABLE_EXTERNAL_SYSTEMS);
+        sq.append(DB.getCreateTableBegin(schema, TABLE_EXTERNAL_SYSTEMS));
         sq.append(",");
         sq.append("name character varying,");
         sq.append("description character varying");
         sq.append(");");
         sq.forceExecute();
         sq.append("INSERT INTO ");
-        sq.append(DB.getFullTableName(schema, EXTERNAL_SYSTEMS));
+        sq.append(DB.getFullTableName(schema, TABLE_EXTERNAL_SYSTEMS));
         sq.append(" (name, description) VALUES ('osm', 'Open Street Map');");
         sq.forceExecute();
         
         // EXTERNAL_USERS
-        DB.createSequence(targetConnection, schema, EXTERNAL_USERS);
-        sq.append(DB.getCreateTableBegin(schema, EXTERNAL_USERS));
+        DB.createSequence(targetConnection, schema, TABLE_EXTERNAL_USERS);
+        sq.append(DB.getCreateTableBegin(schema, TABLE_EXTERNAL_USERS));
         sq.append(",");
         sq.append("userid bigint,");
         sq.append("username character varying,");
@@ -105,9 +105,9 @@ public class OHDM_DB {
         sq.forceExecute();
         
         // CLASSIFICATION
-        DB.createSequence(targetConnection, schema, CLASSIFICATION);
+        DB.createSequence(targetConnection, schema, TABLE_CLASSIFICATION);
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, CLASSIFICATION));
+        sq.append(DB.getCreateTableBegin(schema, TABLE_CLASSIFICATION));
         sq.append(",");
         sq.append("class character varying,");
         sq.append("subclassname character varying");
@@ -115,12 +115,12 @@ public class OHDM_DB {
         sq.forceExecute();
         
         // fill classification table
-        OSMClassification.getOSMClassification().write2Table(targetConnection, DB.getFullTableName(schema, CLASSIFICATION));
+        OSMClassification.getOSMClassification().write2Table(targetConnection, DB.getFullTableName(schema, TABLE_CLASSIFICATION));
         
         // CONTENT
-        DB.createSequence(targetConnection, schema, CONTENT);
+        DB.createSequence(targetConnection, schema, TABLE_CONTENT);
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, CONTENT));
+        sq.append(DB.getCreateTableBegin(schema, TABLE_CONTENT));
         sq.append(",");
         sq.append("name character varying,");
         sq.append("value bytea NOT NULL,");
@@ -130,23 +130,23 @@ public class OHDM_DB {
         sq.forceExecute();
         
         // GEOOBJECT
-        DB.createSequence(targetConnection, schema, GEOOBJECT);
+        DB.createSequence(targetConnection, schema, TABLE_GEOOBJECT);
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, GEOOBJECT));
+        sq.append(DB.getCreateTableBegin(schema, TABLE_GEOOBJECT));
         sq.append(",");
         sq.append("name character varying,");
         sq.append("source_user_id bigint NOT NULL");
         sq.append(");");
         sq.forceExecute();
         sq.append("INSERT INTO ");
-        sq.append(DB.getFullTableName(schema, GEOOBJECT));
+        sq.append(DB.getFullTableName(schema, TABLE_GEOOBJECT));
         sq.append("(id, source_user_id) VALUES (0, 1);");
         sq.forceExecute();
         
         // GEOOBJECT_CONTENT
-        DB.createSequence(targetConnection, schema, GEOOBJECT_CONTENT);
+        DB.createSequence(targetConnection, schema, TABLE_GEOOBJECT_CONTENT);
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, GEOOBJECT_CONTENT));
+        sq.append(DB.getCreateTableBegin(schema, TABLE_GEOOBJECT_CONTENT));
         sq.append(",");
         sq.append("valid_since date NOT NULL,");
         sq.append("valid_until date NOT NULL,");
@@ -158,9 +158,9 @@ public class OHDM_DB {
         sq.forceExecute();
         
         // GEOOBJECT_GEOMETRY
-        DB.createSequence(targetConnection, schema, GEOOBJECT_GEOMETRY);
+        DB.createSequence(targetConnection, schema, TABLE_GEOOBJECT_GEOMETRY);
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, GEOOBJECT_GEOMETRY));
+        sq.append(DB.getCreateTableBegin(schema, TABLE_GEOOBJECT_GEOMETRY));
         sq.append(",");
         sq.append("id_target bigint,");
         sq.append("type_target bigint,");
@@ -176,9 +176,9 @@ public class OHDM_DB {
         sq.forceExecute();
         
         // GEOOBJECT_URL
-        DB.createSequence(targetConnection, schema, GEOOBJECT_URL);
+        DB.createSequence(targetConnection, schema, TABLE_GEOOBJECT_URL);
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, GEOOBJECT_URL));
+        sq.append(DB.getCreateTableBegin(schema, TABLE_GEOOBJECT_URL));
         sq.append(",");
         sq.append("geoobject_id bigint NOT NULL,");
         sq.append("url_id bigint NOT NULL,");
@@ -190,9 +190,9 @@ public class OHDM_DB {
         sq.forceExecute();
         
         // LINES
-        DB.createSequence(targetConnection, schema, LINES);
+        DB.createSequence(targetConnection, schema, TABLE_LINES);
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, LINES));
+        sq.append(DB.getCreateTableBegin(schema, TABLE_LINES));
         sq.append(",");
         sq.append("line geometry,");
         sq.append("source_user_id bigint");
@@ -200,9 +200,9 @@ public class OHDM_DB {
         sq.forceExecute();
         
         // POINTS
-        DB.createSequence(targetConnection, schema, POINTS);
+        DB.createSequence(targetConnection, schema, TABLE_POINTS);
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, POINTS));
+        sq.append(DB.getCreateTableBegin(schema, TABLE_POINTS));
         sq.append(",");
         sq.append("point geometry,");
         sq.append("source_user_id bigint");
@@ -210,9 +210,9 @@ public class OHDM_DB {
         sq.forceExecute();
         
         // POLYGONS
-        DB.createSequence(targetConnection, schema, POLYGONS);
+        DB.createSequence(targetConnection, schema, TABLE_POLYGONS);
         sq = new SQLStatementQueue(targetConnection);
-        sq.append(DB.getCreateTableBegin(schema, POLYGONS));
+        sq.append(DB.getCreateTableBegin(schema, TABLE_POLYGONS));
         sq.append(",");
         sq.append("polygon geometry,");
         sq.append("source_user_id bigint");
@@ -229,9 +229,9 @@ public class OHDM_DB {
         sq.append(");");
         
         // SUBSEQUENT_GEOM_USER
-        DB.createSequence(targetConnection, schema, SUBSEQUENT_GEOM_USER);
+        DB.createSequence(targetConnection, schema, TABLE_SUBSEQUENT_GEOM_USER);
         // table
-        sq.append(DB.getCreateTableBegin(schema, SUBSEQUENT_GEOM_USER));
+        sq.append(DB.getCreateTableBegin(schema, TABLE_SUBSEQUENT_GEOM_USER));
         // add table specifics
         sq.append(",");
         sq.append("target_id bigint NOT NULL, ");

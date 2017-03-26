@@ -2,6 +2,7 @@ package inter2ohdm;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,6 +17,7 @@ import java.util.logging.Logger;
 import util.DB;
 import util.OHDM_DB;
 import util.FileSQLStatementQueue;
+import util.InterDB;
 import util.SQLStatementQueue;
 import util.Parameter;
 import util.Trigger;
@@ -128,7 +130,7 @@ public class OHDMImporter extends Importer {
         INSERT INTO ohdm.subsequent_geom_user(target_id, point_id, line_id, polygon_id)
         */
         sql.append("INSERT INTO ");
-        sql.append(DB.getFullTableName(this.targetSchema, OHDM_DB.SUBSEQUENT_GEOM_USER));
+        sql.append(DB.getFullTableName(this.targetSchema, OHDM_DB.TABLE_SUBSEQUENT_GEOM_USER));
         sql.append(" (target_id, ");
         switch(sourceType) {
             case OHDM_DB.POINT:
@@ -299,7 +301,7 @@ public class OHDMImporter extends Importer {
             try {
                 StringBuilder sb = new StringBuilder();
                 sb.append("SELECT id FROM ");
-                sb.append(DB.getFullTableName(targetSchema, OHDM_DB.EXTERNAL_SYSTEMS));
+                sb.append(DB.getFullTableName(targetSchema, OHDM_DB.TABLE_EXTERNAL_SYSTEMS));
                 sb.append(" where name = 'OSM' OR name = 'osm';");
                 ResultSet result = 
                         this.executeQueryOnTarget(sb.toString());
@@ -351,7 +353,7 @@ public class OHDMImporter extends Importer {
             // SELECT id from external_users where userid = '43566';
             StringBuilder sb = new StringBuilder();
             sb.append("SELECT id from ");
-            sb.append(DB.getFullTableName(this.targetSchema, OHDM_DB.EXTERNAL_USERS));
+            sb.append(DB.getFullTableName(this.targetSchema, OHDM_DB.TABLE_EXTERNAL_USERS));
             sb.append(" where userid = '");
             sb.append(externalUserID);
             sb.append("' AND external_system_id = '");
@@ -371,7 +373,7 @@ public class OHDMImporter extends Importer {
                 StringBuilder s = new StringBuilder();
                 //SQLStatementQueue s = new SQLStatementQueue(this.targetConnection);
                 s.append("INSERT INTO ");
-                s.append(DB.getFullTableName(this.targetSchema, OHDM_DB.EXTERNAL_USERS));
+                s.append(DB.getFullTableName(this.targetSchema, OHDM_DB.TABLE_EXTERNAL_USERS));
                 s.append(" (userid, username, external_system_id) VALUES ('");
                 s.append(externalUserID);
                 s.append("', '");
@@ -456,7 +458,7 @@ public class OHDMImporter extends Importer {
     String addOHDMObject(String name, int externalUserID) throws SQLException {
         SQLStatementQueue sql = new SQLStatementQueue(this.targetConnection);
         sql.append("INSERT INTO ");
-        sql.append(DB.getFullTableName(this.targetSchema, OHDM_DB.GEOOBJECT));
+        sql.append(DB.getFullTableName(this.targetSchema, OHDM_DB.TABLE_GEOOBJECT));
         sql.append(" (name, source_user_id) VALUES ('");
         sql.append(name);
         sql.append("', ");
@@ -486,17 +488,17 @@ public class OHDMImporter extends Importer {
         
         switch(osmElement.getGeometryType()) {
             case OHDM_DB.POINT: 
-                fullTableName = DB.getFullTableName(this.targetSchema, OHDM_DB.POINTS);
+                fullTableName = DB.getFullTableName(this.targetSchema, OHDM_DB.TABLE_POINTS);
                 targetSelectQueue.append(fullTableName);
                 targetSelectQueue.append(" (point, ");
                 break;
             case OHDM_DB.LINESTRING: 
-                fullTableName = DB.getFullTableName(this.targetSchema, OHDM_DB.LINES);
+                fullTableName = DB.getFullTableName(this.targetSchema, OHDM_DB.TABLE_LINES);
                 targetSelectQueue.append(fullTableName);
                 targetSelectQueue.append(" (line, ");
                 break;
             case OHDM_DB.POLYGON: 
-                fullTableName = DB.getFullTableName(this.targetSchema, OHDM_DB.POLYGONS);
+                fullTableName = DB.getFullTableName(this.targetSchema, OHDM_DB.TABLE_POLYGONS);
                 targetSelectQueue.append(fullTableName);
                 targetSelectQueue.append(" (polygon, ");
                 break;
@@ -606,7 +608,7 @@ public class OHDMImporter extends Importer {
         do {
             again = false;
             sq.append("INSERT INTO ");
-            sq.append(DB.getFullTableName(this.targetSchema, OHDM_DB.GEOOBJECT_GEOMETRY));
+            sq.append(DB.getFullTableName(this.targetSchema, OHDM_DB.TABLE_GEOOBJECT_GEOMETRY));
             sq.append(" (type_target, classification_id, id_geoobject_source, id_target, valid_since, valid_until, source_user_id) VALUES (");
 
             sq.append(targetType);
@@ -1036,7 +1038,7 @@ public class OHDMImporter extends Importer {
          */
 
         sq.append("INSERT INTO ");
-        sq.append(OHDM_DB.GEOOBJECT_GEOMETRY);
+        sq.append(OHDM_DB.TABLE_GEOOBJECT_GEOMETRY);
         sq.append("(id_geoobject_source, source_user_id, id_target, type_target, role,");
         sq.append(" classification_id, valid_since, valid_until) VALUES ");
 
@@ -1191,7 +1193,7 @@ public class OHDMImporter extends Importer {
             if(pID.equalsIgnoreCase("-1")) {
                 // this geometry is not yet in the database.. insert that polygon
                 targetSelectQueue.append("INSERT INTO ");
-                targetSelectQueue.append(DB.getFullTableName(this.targetSchema, OHDM_DB.POLYGONS));
+                targetSelectQueue.append(DB.getFullTableName(this.targetSchema, OHDM_DB.TABLE_POLYGONS));
                 targetSelectQueue.append(" (polygon, source_user_id) VALUES ('");
 //                targetSelectQueue.append("SRID=4326;"); // make it an ewkt
                 targetSelectQueue.append(polygonWKT.get(i));
@@ -1265,8 +1267,55 @@ public class OHDMImporter extends Importer {
         importing all relations. Do it here.
         */
         
-        System.err.println("DONT FORGET TO IMPLEMENT OHDMImport.postProcessGGTable");
+        this.targetSelectQueue.append("SELECT id_target FROM ");
+        this.targetSelectQueue.append(DB.getFullTableName(this.targetSchema, OHDM_DB.TABLE_GEOOBJECT_GEOMETRY));
+        this.targetSelectQueue.append(" WHERE type_target = ");
+        this.targetSelectQueue.append(OHDM_DB.OHDM_GEOOBJECT_GEOMTYPE_OSM_ID);
+        this.targetSelectQueue.append(";");
         
+        ResultSet qResult = this.targetSelectQueue.executeWithResult();
         
+        SQLStatementQueue sourceSelectQueue = new SQLStatementQueue(this.sourceConnection);
+        
+        StringBuilder sourceSelectStartBuilder = new StringBuilder("SELECT ohdm_object_id FROM ");
+        sourceSelectStartBuilder.append(DB.getFullTableName(this.sourceSchema, InterDB.RELATIONTABLE));
+        sourceSelectStartBuilder.append(" WHERE osm_id = ");
+        String sourceSelectStart = sourceSelectStartBuilder.toString();
+
+        StringBuilder targetUpdateStartBuilder = new StringBuilder("UPDATE ");
+        targetUpdateStartBuilder.append(DB.getFullTableName(this.targetSchema, OHDM_DB.TABLE_GEOOBJECT_GEOMETRY));
+        targetUpdateStartBuilder.append(" SET type_target = ");
+        targetUpdateStartBuilder.append(OHDM_DB.OHDM_GEOOBJECT_GEOMTYPE);
+        targetUpdateStartBuilder.append(", id_target = ");
+        String targetUpdateStart = targetUpdateStartBuilder.toString();
+        
+        while(qResult.next()) {
+            BigDecimal relationOSMID = qResult.getBigDecimal(1);
+            
+            sourceSelectQueue.append(sourceSelectStart);
+            sourceSelectQueue.append(relationOSMID.toString());
+            sourceSelectQueue.append(";");
+            
+            ResultSet sResult = sourceSelectQueue.executeWithResult();
+            if (sResult.next()) {
+                BigDecimal ohdmID = sResult.getBigDecimal(1);
+                
+                this.targetInsertQueue.append(targetUpdateStart);
+                this.targetInsertQueue.append(ohdmID.toString());
+                this.targetInsertQueue.append(";");
+                this.targetInsertQueue.couldExecute();
+                
+            } else {
+                // failure
+                System.err.println("-----------------------------------------------------");
+                System.err.println("cannot update object osm by it ohdm id in geoobject_geometry table.. fatal");
+                System.err.println("methode OHDMImporter.postProcessGGTable()");
+                System.err.println("relation (OSM): " + relationOSMID.toString());
+                System.err.println("-----------------------------------------------------");
+            }
+        }
+        
+        // force updating
+        this.targetInsertQueue.forceExecute();
     }
 }

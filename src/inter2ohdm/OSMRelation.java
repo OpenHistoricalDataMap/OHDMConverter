@@ -202,8 +202,8 @@ public class OSMRelation extends OSMElement {
                         }
                     } else {
                         // first node is null.. this way at least starts another hole
+                        wktBuilder.append(", ( ");
                         if(way.isPolygon()) {
-                            wktBuilder.append(", ( ");
                             this.addWayToPolygon(null, wktBuilder, way);
                             // end complete inner polygon
                             wktBuilder.append(") ");
@@ -212,7 +212,6 @@ public class OSMRelation extends OSMElement {
                                 this.failed(wktBuilder, "3");
                             }
                             // start polygon inside
-                            wktBuilder.append(", ( ");
                             firstNode = way.getNodeIter().next();
                             this.addWayToPolygon(firstNode, wktBuilder, way);
                         }
@@ -221,25 +220,20 @@ public class OSMRelation extends OSMElement {
             }
             
             if(firstNode != null) {
+                // TODO
+                System.err.println("try to close those unclosed polygons in OSMRelation.fillRelatedGeometry()...");
+                
                 this.failed(wktBuilder, "polygon not closed");
             }
             
             if(wktBuilder != null && wktBuilder.length() > 0) {
-                // save final polygon.. it is a polygon with hole
+                // save last polygon.. it is a polygon with hole
                 polygonIDs.add("-1");
                 polygonWKT.add("SRID=4326;POLYGON(" + wktBuilder.toString() + ")");
             }
         } catch (SQLException ex) {
             return false;
         }
-        
-//        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-//        System.out.println("osmid: " + this.getOSMIDString());
-//        for(int i=0; i<polygonIDs.size();i++) {
-//            System.out.println("id: " + polygonIDs.get(i));
-//            System.out.println("wktstring:\n" + polygonWKT.get(i));
-//        }
-//        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         
         return true;
     }
@@ -262,23 +256,6 @@ public class OSMRelation extends OSMElement {
     @Override
     protected void produceWKTGeometry() {
         this.wktStringProduced = true;
-        // TODO
-
-        // already created wkt?
-//        if(this.wkt != null) return this.wkt;
-//        
-//        if(!this.isPolygon()) return null;
-//        
-//        // we only create geometries out of mulitpolygons
-//        if(!this.getType().equalsIgnoreCase("multipolygon")) return null;
-//        
-//        if(!this.memberRoles.get(0).equalsIgnoreCase(OHDMRelation.OUTER_ROLE)) {
-//            System.err.println("multipolygon starts not with outside role");
-//            return null; // must start outside
-//        }
-//        
-//        return null;
-        
     }
     
     private boolean addWayToPolygon(OSMNode firstNode, StringBuilder wkt, OSMWay way) throws SQLException {

@@ -288,10 +288,6 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
                     in that case .. remove whole relation: parts of it are 
                     outside our current scope
                     */
-//                            System.out.println("would removed relation: " + relation.getOSMIDString());
-//                    debug_alreadyPrinted = true;
-                    //relation.remove();
-                    
                     relationMemberComplete = false;
                 }
                 memberResult.close();
@@ -301,18 +297,24 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
             
             this.numberCheckedRelations++;
             
-            if(relation.isConsistent(System.err)) {
-                // process that stuff
-                if(relationMemberComplete && this.importer.importRelation(relation, importUnnamedEntities)) {
-                    this.numberImportedRelations++;
-
-                    if(this.importer.importPostProcessing(relation, importUnnamedEntities)) {
-                        this.historicInfos++;
-                    }
-
-                } 
+            if(!relationMemberComplete) {
+                System.err.println("----------------------------------------------------------------------");
+                System.err.println("could not find all members of relation (ok when not importing whole world): osm_id: " + relation.getOSMIDString());
+                System.err.println("----------------------------------------------------------------------");
             } else {
-                this.printError(System.err, "inconsistent relation\n" + relation);
+                if(relation.isConsistent(System.err)) {
+                    // process that stuff
+                    if(relationMemberComplete && this.importer.importRelation(relation, importUnnamedEntities)) {
+                        this.numberImportedRelations++;
+
+                        if(this.importer.importPostProcessing(relation, importUnnamedEntities)) {
+                            this.historicInfos++;
+                        }
+
+                    } 
+                } else {
+                    this.printError(System.err, "inconsistent relation\n" + relation);
+                }
             }
         }
         catch(SQLException se) {

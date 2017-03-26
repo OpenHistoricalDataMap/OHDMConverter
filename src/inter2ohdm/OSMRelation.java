@@ -129,7 +129,7 @@ public class OSMRelation extends OSMElement {
                             if(nextOutside) {
                                 // no hole
                                 polygonIDs.add("-1");
-                                polygonWKT.add("POLYGON(" + wktBuilder.toString() + ")");
+                                polygonWKT.add("SRID=4326;POLYGON(" + wktBuilder.toString() + ")");
                                 wktBuilder = null;
                             } else {
                                 // there is a hole.. start hole wkt
@@ -196,7 +196,7 @@ public class OSMRelation extends OSMElement {
                             if(nextOutside || lastLoop) {
                                 // whole polygon done
                                 polygonIDs.add("-1");
-                                polygonWKT.add("POLYGON(" + wktBuilder.toString() + ")");
+                                polygonWKT.add("SRID=4326;POLYGON(" + wktBuilder.toString() + ")");
                                 wktBuilder = null;
                             } // else // start next hole.. nothing todo
                         }
@@ -227,7 +227,7 @@ public class OSMRelation extends OSMElement {
             if(wktBuilder != null && wktBuilder.length() > 0) {
                 // save final polygon.. it is a polygon with hole
                 polygonIDs.add("-1");
-                polygonWKT.add("POLYGON(" + wktBuilder.toString() + ")");
+                polygonWKT.add("SRID=4326;POLYGON(" + wktBuilder.toString() + ")");
             }
         } catch (SQLException ex) {
             return false;

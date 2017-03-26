@@ -177,7 +177,7 @@ public class OHDMImporter extends Importer {
         
         if(ohdmIDString == null) return false;
         
-        // remember it ohdm incarnation...
+        // remember its ohdm incarnation in intermediate database
         relation.setOHDMObjectID(this.sourceUpdateQueue, ohdmIDString);
         
         /* now there are two options:
@@ -965,6 +965,15 @@ public class OHDMImporter extends Importer {
                 extractor.processRelations(sourceQueue, false);
                 ohdmImporter.forceExecute();
                 
+                // do some post processing:
+
+                /*
+                In some rare cases, relation are reference by their OSM id an not
+                OHDM ID in geoobject_geometry table. That problem can be fixed after
+                importing all relations. Do it here.
+                */
+                ohdmImporter.postProcessGGTable();
+                
                 if(fileUpdateQueue != null) {
                     // close update stream and let psql process that stuff
                     fileUpdateQueue.close();
@@ -1009,6 +1018,14 @@ public class OHDMImporter extends Importer {
     private boolean saveRelationAsRelatedObjects(OSMRelation relation, 
             String ohdmIDString) throws SQLException {
         
+        if(relation.getOSMIDString().equalsIgnoreCase("1216")) {
+            int debugStop = 42;
+        }
+        
+        if(relation.getOHDMObjectID().equalsIgnoreCase("1216")) {
+            int debugStop = 42;
+        }
+        
         // get all ohdm ids and store it
         StringBuilder sq = new StringBuilder();
 
@@ -1040,6 +1057,7 @@ public class OHDMImporter extends Importer {
             
             // remember if that member is an object or "only" a geometry
             boolean isObject = false;
+            boolean useOSMID = false;
             
             // try to get OHDM ID
             String memberOHDMIDString = member.getOHDMObjectID();
@@ -1048,22 +1066,33 @@ public class OHDMImporter extends Importer {
                 // got one - that an object
                 isObject = true;
             } else {
-                // no object but geometry?
-                memberOHDMIDString = member.getOHDMGeomID();
-            
-                if(memberOHDMIDString == null || memberOHDMIDString.length() == 0) {
-                    // that object has not yet save at all.
-                    
-                    memberOHDMIDString = this.addGeometry(member);
-                    
-                    if(memberOHDMIDString == null || 
-                            memberOHDMIDString.length() == 0) {
-                        /* this makes no sense. That thing cannot be written
-                        */
-                        System.err.print("when saving relation: member cannot be safed");
-                        System.err.print("relation ohdm object id" + relation.getOHDMObjectID());
-                        System.err.print(" / member osm id" + member.getOSMIDString());
-                        continue;
+                // maybe we have found a relations that is defined later.
+                if(member instanceof OSMRelation) {
+                    //get osm id instead and save it.
+                    memberOHDMIDString = member.getOSMIDString();
+                    useOSMID = true;
+                } else {
+                    // no relation
+                
+                    // no object but geometry?
+                    memberOHDMIDString = member.getOHDMGeomID();
+
+                    if(memberOHDMIDString == null || memberOHDMIDString.length() == 0) {
+                        // that object has not yet save at all.
+
+                        memberOHDMIDString = this.addGeometry(member);
+
+                        if(memberOHDMIDString == null || 
+                                memberOHDMIDString.length() == 0) {
+                            /* this makes no sense. That thing cannot be written
+                            */
+                            System.err.println("----------------------------------------------");
+                            System.err.print("when saving relation: member cannot be saved: ");
+                            System.err.print("relation ohdm object id: " + relation.getOHDMObjectID());
+                            System.err.println(" / member osm id: " + member.getOSMIDString());
+                            System.err.println("----------------------------------------------");
+                            continue;
+                        }
                     }
                 }
             }
@@ -1091,6 +1120,8 @@ public class OHDMImporter extends Importer {
             if(isObject) {
                 // we have take the object id instead of geometry
                 sq.append(OHDM_DB.OHDM_GEOOBJECT_GEOMTYPE);
+            } else if(useOSMID) {
+                sq.append(OHDM_DB.OHDM_GEOOBJECT_GEOMTYPE_OSM_ID);
             } else {
                 // decide by member type
                 if(member instanceof OSMNode) { // type_target
@@ -1225,5 +1256,17 @@ public class OHDMImporter extends Importer {
         this.forgetPreviousNodesImport();
         this.forgetPreviousWaysImport();
         this.forgetPreviousWaysImport();
+    }
+
+    private void postProcessGGTable() throws SQLException {
+        /*
+        In some rare cases, relation are reference by their OSM id an not
+        OHDM ID in geoobject_geometry table. That problem can be fixed after
+        importing all relations. Do it here.
+        */
+        
+        System.err.println("DONT FORGET TO IMPLEMENT OHDMImport.postProcessGGTable");
+        
+        
     }
 }

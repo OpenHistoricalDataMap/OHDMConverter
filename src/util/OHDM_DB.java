@@ -27,6 +27,7 @@ public class OHDM_DB {
     public static final String URL = "url";
     
     // Geometry Types
+    public static final int OHDM_GEOOBJECT_GEOMTYPE_OSM_ID = -1;
     public static final int OHDM_GEOOBJECT_GEOMTYPE = 0;
     public static final int OHDM_POINT_GEOMTYPE = 1;
     public static final int OHDM_LINESTRING_GEOMTYPE = 2;

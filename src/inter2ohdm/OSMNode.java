@@ -51,6 +51,10 @@ public class OSMNode extends OSMElement {
         this.wktStringProduced = true;
     }
     
+    String getWKTPointsOnly() {
+        return this.getLongitude() + " " + this.getLatitude();
+    }
+    
     String getLongitude() {
         return this.longitude;
     }

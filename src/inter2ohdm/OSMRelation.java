@@ -121,13 +121,11 @@ public class OSMRelation extends OSMElement {
                         // there a previous points
                         wktBuilder.append(", ");
                         if(this.addWayToPolygon(firstNode, wktBuilder, way)) {
-                            /* added and polygon is finished
-                             is there a hole?
-                            */
+                            // added point and and polygon is finished
                             firstNode = null; // remember.. polygon is closed
                             
                             if(nextOutside) {
-                                // no hole
+                                // no hole. close this polygon
                                 polygonIDs.add("-1");
                                 polygonWKT.add("SRID=4326;POLYGON(" + wktBuilder.toString() + ")");
                                 wktBuilder = null;
@@ -136,7 +134,7 @@ public class OSMRelation extends OSMElement {
 //                                wktBuilder.append(", (");
                             }
                             if(lastLoop) break; // done here
-                        }
+                        } 
                     } else {
                         // no previous ways in wkt
                         if(way.isPolygon()) {
@@ -183,6 +181,10 @@ public class OSMRelation extends OSMElement {
                             this.addWayToPolygon(firstNode, wktBuilder, way);
                         }
                     }
+                ///////////////////////////////////////////////    
+                //     processing inner polygon.. a hole     //    
+                ///////////////////////////////////////////////    
+                    
                 } else {
                     // inner polygons
                     // in any case.. a wkt string builder exist
@@ -217,6 +219,7 @@ public class OSMRelation extends OSMElement {
                             }
                             
                         } else {
+                            // no polygon by itself
                             if(lastLoop) { // cannot open a new polygon
                                 this.failed(wktBuilder, "3");
                             }
@@ -226,13 +229,95 @@ public class OSMRelation extends OSMElement {
                         }
                     }
                 }
+                
+                /* processed current way, about entering next loop
+                
+                wktBuilder == null means: whole polygon (with hole) is
+                written. A new polygon is to be started.. next must be
+                outerWay.
+                
+                firstNode == null means: A simple polygon (outer boundary
+                or inner whole) is finished. 
+                
+                It not a rare situation that simple polygons are not closed
+                because OSM users did not chose identical but similar point.
+                That situation can be detected when a switch occurs between
+                inner and outer or vice versa.
+                
+                a) outer -> inner requires firstNode == null
+                b) inner -> outer requires wktBuilder == null && firstNode == null
+                
+                We assume correctness of OSM data and fix that situation be
+                adding the missing first node and closing the (simple) polygon.
+                */
+                
+                // case a)
+                if(wayOutside && !nextOutside && firstNode != null) {
+                    // outer polygon is not yet closed.. fix it
+                    wktBuilder.append(",");
+                    wktBuilder.append(firstNode.getWKTPointsOnly());
+                    wktBuilder.append(")");
+                    firstNode = null;
+                    // inner polygon can no follow
+                    System.err.println("------------------------------------");
+                    System.err.print("fixed unclosed outer boundary in multipolygon ");
+                    System.err.print("relation osm_id: ");
+                    System.err.println(this.getOSMIDString());
+                    System.err.println("------------------------------------");
+                    
+                } 
+                // case b)
+                else if(!wayOutside && nextOutside && wktBuilder != null) {
+                    // close inner polygon
+                    wktBuilder.append(",");
+                    wktBuilder.append(firstNode.getWKTPointsOnly());
+                    wktBuilder.append(")");
+
+                    // finish whole polygon
+                    polygonIDs.add("-1");
+                    polygonWKT.add("SRID=4326;POLYGON(" + wktBuilder.toString() + ")");
+                    wktBuilder = null;
+                    firstNode = null;
+                    
+                    // next polygon can start here
+                    System.err.println("------------------------------------");
+                    System.err.print("fixed unclosed inner hole in multipolygon ");
+                    System.err.print("relation osm_id: ");
+                    System.err.println(this.getOSMIDString());
+                    System.err.println("------------------------------------");
+                }
             }
             
+//            // added points but polygon is not yet close
+//            if(!nextOutside) {
+//                // failure.. outside not close but followed by a hole
+//                this.fixUnclosedPolygon(wktBuilder);
+//                polygonIDs.add("-1");
+//                polygonWKT.add("SRID=4326;POLYGON(" + wktBuilder.toString() + ")");
+//                wktBuilder = null;
+//            }
+            
+            
             if(firstNode != null) {
-                // TODO
-                System.err.println("try to close those unclosed polygons in OSMRelation.fillRelatedGeometry()...");
+                // fix it
+                wktBuilder.append(",");
+                wktBuilder.append(firstNode.getWKTPointsOnly());
+                wktBuilder.append(")");
+
+                // finish whole polygon
+                polygonIDs.add("-1");
+                polygonWKT.add("SRID=4326;POLYGON(" + wktBuilder.toString() + ")");
+                wktBuilder = null;
+                firstNode = null;
+
+                // next polygon can start here
+                System.err.println("------------------------------------");
+                System.err.print("fixed unclosed multipolygon ");
+                System.err.print("relation osm_id: ");
+                System.err.println(this.getOSMIDString());
+                System.err.println("------------------------------------");
                 
-                this.failed(wktBuilder, "polygon not closed");
+//                this.failed(wktBuilder, "polygon not closed");
             }
             
             if(wktBuilder != null && wktBuilder.length() > 0) {
@@ -535,5 +620,9 @@ public class OSMRelation extends OSMElement {
         }
         
         return sb.toString();
+    }
+
+    private void fixUnclosedPolygon(StringBuilder wktBuilder) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

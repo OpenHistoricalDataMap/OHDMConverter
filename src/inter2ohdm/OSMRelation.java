@@ -53,7 +53,7 @@ public class OSMRelation extends OSMElement {
         // create a polygon with hole or multiple polygons
         // POLYGON ((10 10, 110 10, 110 110, 10 110), (20 20, 20 30, 30 30, 30 20), (40 20, 40 30, 50 30, 50 20))
 
-        if(this.getOSMIDString().equalsIgnoreCase("3323434")) {
+        if(this.getOSMIDString().equalsIgnoreCase("6780946")) {
             int debuggingStop = 42;
         }
         

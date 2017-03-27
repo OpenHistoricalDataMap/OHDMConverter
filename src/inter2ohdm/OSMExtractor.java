@@ -201,7 +201,7 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
             relation = this.createOHDMRelation(qResult);
             
             String r_id = relation.getOSMIDString();
-            if(r_id.equalsIgnoreCase("55754")) {
+            if(r_id.equalsIgnoreCase("6780946")) {
                 int i = 42;
             }
 

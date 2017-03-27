@@ -170,9 +170,21 @@ public class OSMWay extends OSMElement {
             String firstElement = this.nodeIDList.get(0);
             String lastElement = this.nodeIDList.get(this.nodeIDList.size() - 1);
             if (firstElement.equalsIgnoreCase(lastElement)) {
-                this.isPolygon = true;
-                // remove last entry in idlist
-                this.nodeIDList.set(this.nodeIDList.size()-1, "-1");
+                /*
+                there are a number cases in which a way has three (!) nodes and 
+                first and third are identical. It a stroke from first to 
+                second and back. Thats not a polygon.
+                */
+                if(this.nodeIDList.size() == 3) {
+                    ArrayList<String> realList = new ArrayList<>();
+                    realList.add(this.nodeIDList.get(0));
+                    realList.add(this.nodeIDList.get(1));
+                    this.nodeIDList = realList;
+                } else {
+                    this.isPolygon = true;
+                    // remove last entry in idlist
+                    this.nodeIDList.set(this.nodeIDList.size()-1, "-1");
+                }
             }
             
             // setup node list

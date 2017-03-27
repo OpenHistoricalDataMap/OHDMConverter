@@ -97,7 +97,7 @@ public class DebugInter2OHDM extends OHDMImporter {
             // do some sql here..
 //            sourceQueue.append("SELECT * FROM intermediate.nodes where osm_id = 6464945;");
 //            sourceQueue.append("SELECT * FROM intermediate.ways where osm_id = 6464945;");
-            sourceQueue.append("SELECT * FROM berlin.relations where osm_id = 104807;");
+            sourceQueue.append("SELECT * FROM berlin.relations where osm_id = 6780946;");
 //            sourceQueue.append("SELECT * FROM intermediate.relations;");
             qResult = sourceQueue.executeWithResult();
             

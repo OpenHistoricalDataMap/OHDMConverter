@@ -1163,7 +1163,7 @@ public class OHDMImporter extends Importer {
         */
         
         // debugging stop
-        if(relation.getOSMIDString().equalsIgnoreCase("298853")) {
+        if(relation.getOSMIDString().equalsIgnoreCase("6780946")) {
             int i = 42;
         }
         

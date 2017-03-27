@@ -171,7 +171,7 @@ public class OHDMImporter extends Importer {
     @Override
     public boolean importRelation(OSMRelation relation, boolean importUnnamedEntities) throws SQLException {
         // debug stop
-        if(relation.getOSMIDString().equalsIgnoreCase("55754")) {
+        if(relation.getOSMIDString().equalsIgnoreCase("173239")) {
             int i = 42;
         }
         
@@ -1163,7 +1163,7 @@ public class OHDMImporter extends Importer {
         */
         
         // debugging stop
-        if(relation.getOSMIDString().equalsIgnoreCase("6780946")) {
+        if(relation.getOSMIDString().equalsIgnoreCase("173239")) {
             int i = 42;
         }
         

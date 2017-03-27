@@ -207,6 +207,15 @@ public class OSMRelation extends OSMElement {
                             this.addWayToPolygon(null, wktBuilder, way);
                             // end complete inner polygon
                             wktBuilder.append(") ");
+                            
+                            if(nextOutside || lastLoop) {
+                                // whole polygon done
+                                polygonIDs.add("-1");
+                                polygonWKT.add("SRID=4326;POLYGON(" + wktBuilder.toString() + ")");
+                                wktBuilder = null;
+                                firstNode = null;
+                            }
+                            
                         } else {
                             if(lastLoop) { // cannot open a new polygon
                                 this.failed(wktBuilder, "3");

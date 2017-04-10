@@ -92,7 +92,7 @@ public class OHDM2Rendering {
         System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         System.out.println("produce rendering tables version 1");
         System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        this.createGeneric(sql, sourceSchema, targetSchema);
+        this.createV1(sql, sourceSchema, targetSchema);
     }
     
     private void doBoundaries(SQLStatementQueue sql, String sourceSchema, 
@@ -101,7 +101,7 @@ public class OHDM2Rendering {
         System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         System.out.println("produce boundaries");
         System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        this.createGeneric(sql, sourceSchema, targetSchema);
+        this.createBoundaries(sql, sourceSchema, targetSchema);
     }
     
     void fatal(String message) {

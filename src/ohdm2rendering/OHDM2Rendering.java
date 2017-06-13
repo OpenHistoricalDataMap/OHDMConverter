@@ -529,6 +529,10 @@ where gg.type_target = 3 AND p.id = gg.id_target AND o.id = gg.id_geoobject_sour
                 tableName, tableClasses, OHDM_DB.OHDM_POLYGON_GEOMTYPE);
         
         
+        ////////////////////////////////////////////////////////////////
+        //                      building tables                       // 
+        ////////////////////////////////////////////////////////////////
+        
         
     }
 }

@@ -88,6 +88,8 @@ public class OHDM2Rendering {
     
     private void doV1(SQLStatementQueue sql, String sourceSchema, 
             String targetSchema) throws SQLException {
+
+        this.doBoundaries(sql, sourceSchema, targetSchema);
         
         System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         System.out.println("produce rendering tables version 1");
@@ -525,14 +527,340 @@ where gg.type_target = 3 AND p.id = gg.id_target AND o.id = gg.id_geoobject_sour
         tableName = "building_apartments";
         tableClasses.add(new OHDM_Class("building", "apartments"));
         
-        this.createRenderingTable(sql, sourceSchema, targetSchema, 
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
                 tableName, tableClasses, OHDM_DB.OHDM_POLYGON_GEOMTYPE);
         
         
         ////////////////////////////////////////////////////////////////
-        //                      building tables                       // 
+        //                      landuse tables                        //
         ////////////////////////////////////////////////////////////////
-        
-        
+
+        tableClasses = new ArrayList<>();
+        tableName = "landuse_gardeningAndFarm"; // empty with german data Check!!
+        tableClasses.add(new OHDM_Class("landuse", "allotments"));
+        tableClasses.add(new OHDM_Class("landuse", "farmland"));
+        tableClasses.add(new OHDM_Class("landuse", "farmyard"));
+        tableClasses.add(new OHDM_Class("landuse", "greenhouse_horticulture"));
+        tableClasses.add(new OHDM_Class("landuse", "orchard"));
+        tableClasses.add(new OHDM_Class("landuse", "peat_cutting"));
+        tableClasses.add(new OHDM_Class("landuse", "plant_nursery"));
+        tableClasses.add(new OHDM_Class("landuse", "recreation_ground"));
+        tableClasses.add(new OHDM_Class("landuse", "village_green"));
+        tableClasses.add(new OHDM_Class("landuse", "vineyard"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POLYGON_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "landuse_freeGreenAndWood"; //
+        tableClasses.add(new OHDM_Class("landuse", "conservation"));
+        tableClasses.add(new OHDM_Class("landuse", "forest"));
+        tableClasses.add(new OHDM_Class("landuse", "grass"));
+        tableClasses.add(new OHDM_Class("landuse", "greenfield"));
+        tableClasses.add(new OHDM_Class("landuse", "meadow"));
+        tableClasses.add(new OHDM_Class("landuse", "pasture"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POLYGON_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "landuse_water";
+        tableClasses.add(new OHDM_Class("landuse", "basin"));
+        tableClasses.add(new OHDM_Class("landuse", "reservoir"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POLYGON_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "landuse_brown";
+        tableClasses.add(new OHDM_Class("landuse", "brownfield"));
+        tableClasses.add(new OHDM_Class("landuse", "construction"));
+        tableClasses.add(new OHDM_Class("landuse", "landfill"));
+        tableClasses.add(new OHDM_Class("landuse", "salt_pond"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POLYGON_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "landuse_residentalEtc";
+        tableClasses.add(new OHDM_Class("landuse", "cemetery"));
+        tableClasses.add(new OHDM_Class("landuse", "garages"));
+        tableClasses.add(new OHDM_Class("landuse", "residential"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POLYGON_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "landuse_commercialEtc";
+        tableClasses.add(new OHDM_Class("landuse", "commercial"));
+        tableClasses.add(new OHDM_Class("landuse", "retail"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POLYGON_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "landuse_industrial";
+        tableClasses.add(new OHDM_Class("landuse", "industrial"));
+        tableClasses.add(new OHDM_Class("landuse", "port"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POLYGON_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "landuse_military";
+        tableClasses.add(new OHDM_Class("landuse", "military"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POLYGON_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "landuse_transport";
+        tableClasses.add(new OHDM_Class("landuse", "railway"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POLYGON_GEOMTYPE);
+
+        ////////////////////////////////////////////////////////////////
+        //                      shop tables                           //
+        ////////////////////////////////////////////////////////////////
+
+        tableClasses = new ArrayList<>();
+        tableName = "shop_iconAlcohol";
+        tableClasses.add(new OHDM_Class("shop", "alcohol"));
+        tableClasses.add(new OHDM_Class("shop", "wine"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POINT_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "shop_iconBakery";
+        tableClasses.add(new OHDM_Class("shop", "bakery"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POINT_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "shop_iconBeverages";
+        tableClasses.add(new OHDM_Class("shop", "beverages"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POINT_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "shop_iconButcher";
+        tableClasses.add(new OHDM_Class("shop", "butcher"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POINT_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "shop_iconButcher";
+        tableClasses.add(new OHDM_Class("shop", "butcher"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POINT_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "shop_iconCoffee";
+        tableClasses.add(new OHDM_Class("shop", "coffee"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POINT_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "shop_iconConfectionery";
+        tableClasses.add(new OHDM_Class("shop", "confectionery"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POINT_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "shop_iconConvenience";
+        tableClasses.add(new OHDM_Class("shop", "convenience"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POINT_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "shop_iconDeli";
+        tableClasses.add(new OHDM_Class("shop", "deli"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POINT_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "shop_iconApple";
+        tableClasses.add(new OHDM_Class("shop", "farm"));
+        tableClasses.add(new OHDM_Class("shop", "greengrocer"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POINT_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "shop_iconIceCream";
+        tableClasses.add(new OHDM_Class("shop", "ice_cream"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POINT_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "shop_iconFish";
+        tableClasses.add(new OHDM_Class("shop", "seafood"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POINT_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "shop_iconTea";
+        tableClasses.add(new OHDM_Class("shop", "tea"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POINT_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "shop_iconShoppingMall";
+        tableClasses.add(new OHDM_Class("shop", "department_store"));
+        tableClasses.add(new OHDM_Class("shop", "mall"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POINT_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "shop_iconKiosk";
+        tableClasses.add(new OHDM_Class("shop", "kiosk"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POINT_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "shop_iconSupermarket";
+        tableClasses.add(new OHDM_Class("shop", "supermarket"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POINT_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "shop_iconClothes";
+        tableClasses.add(new OHDM_Class("shop", "clothes"));
+        tableClasses.add(new OHDM_Class("shop", "fashion"));
+        tableClasses.add(new OHDM_Class("shop", "boutique"));
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POINT_GEOMTYPE);
+
+
+        tableClasses = new ArrayList<>();
+        tableName = "shop_iconPoint";
+        tableClasses.add(new OHDM_Class("shop", "brewing_supplies"));
+        tableClasses.add(new OHDM_Class("shop", "cheese"));
+        tableClasses.add(new OHDM_Class("shop", "chocolate"));
+        tableClasses.add(new OHDM_Class("shop", "dairy"));
+        tableClasses.add(new OHDM_Class("shop", "organic"));
+        tableClasses.add(new OHDM_Class("shop", "pasta"));
+        tableClasses.add(new OHDM_Class("shop", "pastry"));
+        tableClasses.add(new OHDM_Class("shop", "spices"));
+        tableClasses.add(new OHDM_Class("shop", "general"));
+        tableClasses.add(new OHDM_Class("shop", "general"));
+        tableClasses.add(new OHDM_Class("shop", "baby_goods"));
+
+        tableClasses.add(new OHDM_Class("shop", "bag"));
+        tableClasses.add(new OHDM_Class("shop", "fabric"));
+        tableClasses.add(new OHDM_Class("shop", "jewelry"));
+        tableClasses.add(new OHDM_Class("shop", "leather"));
+        tableClasses.add(new OHDM_Class("shop", "shoes"));
+        tableClasses.add(new OHDM_Class("shop", "tailor"));
+        tableClasses.add(new OHDM_Class("shop", "watches"));
+        tableClasses.add(new OHDM_Class("shop", "charity"));
+        tableClasses.add(new OHDM_Class("shop", "second_hand"));
+        tableClasses.add(new OHDM_Class("shop", "variety_store"));
+        tableClasses.add(new OHDM_Class("shop", "beauty"));
+        tableClasses.add(new OHDM_Class("shop", "chemist"));
+        tableClasses.add(new OHDM_Class("shop", "cosmetics"));
+        tableClasses.add(new OHDM_Class("shop", "drugstore"));
+        tableClasses.add(new OHDM_Class("shop", "erotic"));
+        tableClasses.add(new OHDM_Class("shop", "hairdresser"));
+        tableClasses.add(new OHDM_Class("shop", "hearing_aids"));
+        tableClasses.add(new OHDM_Class("shop", "herbalist"));
+        tableClasses.add(new OHDM_Class("shop", "massage"));
+        tableClasses.add(new OHDM_Class("shop", "medical_supply"));
+        tableClasses.add(new OHDM_Class("shop", "nutrition_supplements"));
+        tableClasses.add(new OHDM_Class("shop", "optician"));
+        tableClasses.add(new OHDM_Class("shop", "perfumery"));
+        tableClasses.add(new OHDM_Class("shop", "tattoo"));
+        tableClasses.add(new OHDM_Class("shop", "bathroom_furnishing"));
+        tableClasses.add(new OHDM_Class("shop", "hearing_aids"));
+        tableClasses.add(new OHDM_Class("shop", "doityourself"));
+        tableClasses.add(new OHDM_Class("shop", "electrical"));
+
+        tableClasses.add(new OHDM_Class("shop", "energy"));
+        tableClasses.add(new OHDM_Class("shop", "electrical"));
+        tableClasses.add(new OHDM_Class("shop", "electrical"));
+        tableClasses.add(new OHDM_Class("shop", "electrical"));
+        tableClasses.add(new OHDM_Class("shop", "electrical"));
+        tableClasses.add(new OHDM_Class("shop", "electrical"));
+        tableClasses.add(new OHDM_Class("shop", "electrical"));
+        tableClasses.add(new OHDM_Class("shop", "electrical"));
+        tableClasses.add(new OHDM_Class("shop", "electrical"));
+        tableClasses.add(new OHDM_Class("shop", "electrical"));
+        tableClasses.add(new OHDM_Class("shop", "electrical"));
+/*
+        subClasses.add("fireplace");
+        subClasses.add("florist");
+        subClasses.add("garden_centre");
+        subClasses.add("garden_furniture");
+        subClasses.add("gas");
+        subClasses.add("glaziery");
+        subClasses.add("hardware");
+        subClasses.add("houseware");
+        subClasses.add("locksmith");
+        subClasses.add("paint");
+        subClasses.add("trade");
+        subClasses.add("antiques");
+        subClasses.add("bed");
+        subClasses.add("candles");
+        subClasses.add("carpet");
+        subClasses.add("curtain");
+        subClasses.add("furniture");
+        subClasses.add("interior_decoration");
+        subClasses.add("kitchen");
+        subClasses.add("lamps");
+        subClasses.add("tiles");
+        subClasses.add("window_blind");
+        subClasses.add("computer");
+        subClasses.add("electronics");
+        subClasses.add("hifi");
+        subClasses.add("mobile_phone");
+        subClasses.add("radiotechnics");
+        subClasses.add("vacuum_cleaner");
+        subClasses.add("bicycle");
+        subClasses.add("car");
+        subClasses.add("car_repair");
+        subClasses.add("car_parts");
+        subClasses.add("fuel");
+        subClasses.add("fishing");
+        subClasses.add("free_flying");
+        subClasses.add("hunting");
+        subClasses.add("motorcycle");
+        subClasses.add("outdoor");
+        subClasses.add("scuba_diving");
+        subClasses.add("sports");
+        subClasses.add("swimming_pool");
+        subClasses.add("tyres");
+        subClasses.add("art");
+        subClasses.add("collector");
+        subClasses.add("craft");
+        subClasses.add("frame");
+        subClasses.add("games");
+        subClasses.add("music");
+        subClasses.add("musical_instrument");
+        subClasses.add("photo");
+        subClasses.add("camera");
+        subClasses.add("trophy");
+        subClasses.add("video");
+        subClasses.add("video_games");
+        subClasses.add("anime");
+        subClasses.add("books");
+        subClasses.add("gift");
+        subClasses.add("lottery");
+        subClasses.add("newsagent");
+        subClasses.add("stationery");
+        subClasses.add("ticket");
+        subClasses.add("bookmaker");
+        subClasses.add("copyshop");
+        subClasses.add("dry_cleaning");
+        subClasses.add("e-cigarette");
+        subClasses.add("funeral_directors");
+        subClasses.add("laundry");
+        subClasses.add("money_lender");
+        subClasses.add("pawnbroker");
+        subClasses.add("pet");
+        subClasses.add("pyrotechnics");
+        subClasses.add("religion");
+        subClasses.add("tobacco");
+        subClasses.add("toys");
+        subClasses.add("travel_agency");
+        subClasses.add("vacant");
+        subClasses.add("weapons");
+
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POINT_GEOMTYPE);
+
+*/
+
+
     }
 }

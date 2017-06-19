@@ -460,6 +460,17 @@ where gg.type_target = 3 AND p.id = gg.id_target AND o.id = gg.id_geoobject_sour
         tableClasses.add(new OHDM_Class("landuse", "greenfield"));
         tableClasses.add(new OHDM_Class("landuse", "meadow"));
         tableClasses.add(new OHDM_Class("landuse", "pasture"));
+
+        tableClasses.add(new OHDM_Class("natural", "wood"));
+        tableClasses.add(new OHDM_Class("natural", "tree_row"));
+        tableClasses.add(new OHDM_Class("natural", "scrub"));
+        tableClasses.add(new OHDM_Class("natural", "heath"));
+        tableClasses.add(new OHDM_Class("natural", "moor"));
+        tableClasses.add(new OHDM_Class("natural", "grassland"));
+        tableClasses.add(new OHDM_Class("natural", "fell"));
+        tableClasses.add(new OHDM_Class("natural", "valley"));
+        tableClasses.add(new OHDM_Class("natural", "ridge"));
+
         this.createRenderingTable(sql, sourceSchema, targetSchema,
                 tableName, tableClasses, OHDM_DB.OHDM_POLYGON_GEOMTYPE);
 
@@ -467,8 +478,38 @@ where gg.type_target = 3 AND p.id = gg.id_target AND o.id = gg.id_geoobject_sour
         tableName = "landuse_water";
         tableClasses.add(new OHDM_Class("landuse", "basin"));
         tableClasses.add(new OHDM_Class("landuse", "reservoir"));
+
+        tableClasses.add(new OHDM_Class("natural", "water"));
+        tableClasses.add(new OHDM_Class("natural", "wetland"));
+        tableClasses.add(new OHDM_Class("natural", "bay"));
+        tableClasses.add(new OHDM_Class("natural", "beach"));
+        tableClasses.add(new OHDM_Class("natural", "coastline"));
+        tableClasses.add(new OHDM_Class("natural", "hot_spring"));
+        tableClasses.add(new OHDM_Class("natural", "geyser"));
+
         this.createRenderingTable(sql, sourceSchema, targetSchema,
                 tableName, tableClasses, OHDM_DB.OHDM_POLYGON_GEOMTYPE);
+
+        tableClasses = new ArrayList<>();
+        tableName = "landuse_grey";
+        tableClasses.add(new OHDM_Class("natural", "bare_rock"));
+        tableClasses.add(new OHDM_Class("natural", "scree"));
+        tableClasses.add(new OHDM_Class("natural", "shingle"));
+        tableClasses.add(new OHDM_Class("natural", "sand"));
+        tableClasses.add(new OHDM_Class("natural", "mud"));
+        tableClasses.add(new OHDM_Class("natural", "glacier"));
+        tableClasses.add(new OHDM_Class("natural", "arete"));
+        tableClasses.add(new OHDM_Class("natural", "cliff"));
+        tableClasses.add(new OHDM_Class("natural", "arete"));
+        tableClasses.add(new OHDM_Class("natural", "rock"));
+        tableClasses.add(new OHDM_Class("natural", "stone"));
+        tableClasses.add(new OHDM_Class("natural", "sinkhole"));
+        tableClasses.add(new OHDM_Class("natural", "cave_entrance"));
+
+
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_POLYGON_GEOMTYPE);
+
 
         tableClasses = new ArrayList<>();
         tableName = "landuse_brown";
@@ -786,6 +827,97 @@ where gg.type_target = 3 AND p.id = gg.id_target AND o.id = gg.id_geoobject_sour
 
     }
 
+    void createHighwayLines(SQLStatementQueue sql, String sourceSchema,
+                                            String targetSchema) throws SQLException {
+        List<OHDM_Class> tableClasses;
+        String tableName;
+
+        System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        System.out.println("produce highway lines");
+        System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+
+        ////////////////////////////////////////////////////////////////
+        //                      highway tables                        //
+        ////////////////////////////////////////////////////////////////
+
+        /**************************************************************/
+        /**      highway_huge_lines: motorway + trunk + their links   */
+        /**************************************************************/
+        tableClasses = new ArrayList<>();
+
+        tableName = "highway_huge_lines";
+        tableClasses.add(new OHDM_Class("highway", "motorway"));
+        tableClasses.add(new OHDM_Class("highway", "trunk"));
+        tableClasses.add(new OHDM_Class("highway", "motorway_link"));
+        tableClasses.add(new OHDM_Class("highway", "trunk_link"));
+
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_LINESTRING_GEOMTYPE);
+
+        /**************************************************************/
+        /*           highway_primary_lines: primary + links           */
+        /**************************************************************/
+        tableClasses = new ArrayList<>();
+
+        tableName = "highway_primary_lines";
+        tableClasses.add(new OHDM_Class("highway", "primary"));
+        tableClasses.add(new OHDM_Class("highway", "primary_link"));
+
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_LINESTRING_GEOMTYPE);
+
+        /**************************************************************/
+        /*           highway_secondary_lines: secondary + links           */
+        /**************************************************************/
+        tableClasses = new ArrayList<>();
+
+        tableName = "highway_secondary_lines";
+        tableClasses.add(new OHDM_Class("highway", "secondary"));
+        tableClasses.add(new OHDM_Class("highway", "secondary_link"));
+
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_LINESTRING_GEOMTYPE);
+
+        /**************************************************************/
+        /*           highway_tertiary_lines: tertiary + links           */
+        /**************************************************************/
+        tableClasses = new ArrayList<>();
+
+        tableName = "highway_tertiary_lines";
+        tableClasses.add(new OHDM_Class("highway", "tertiary"));
+        tableClasses.add(new OHDM_Class("highway", "tertiary_link"));
+
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_LINESTRING_GEOMTYPE);
+
+        /**************************************************************/
+        /*                        highway_path_lines                  */
+        /**************************************************************/
+        tableClasses = new ArrayList<>();
+
+        tableName = "highway_path_lines";
+        tableClasses.add(new OHDM_Class("highway", "track"));
+        tableClasses.add(new OHDM_Class("highway", "path"));
+
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_LINESTRING_GEOMTYPE);
+
+        /**************************************************************/
+        /*                    highway_small_lines                     */
+        /**************************************************************/
+        tableClasses = new ArrayList<>();
+
+        tableName = "highway_small_lines";
+        tableClasses.add(new OHDM_Class("highway", "unclassified"));
+        tableClasses.add(new OHDM_Class("highway", "living_street"));
+        tableClasses.add(new OHDM_Class("highway", "service"));
+        tableClasses.add(new OHDM_Class("highway", "footway"));
+
+        this.createRenderingTable(sql, sourceSchema, targetSchema,
+                tableName, tableClasses, OHDM_DB.OHDM_LINESTRING_GEOMTYPE);
+
+    }
+
     void createV1(SQLStatementQueue sql, String sourceSchema,
             String targetSchema) throws SQLException {
 
@@ -798,89 +930,12 @@ where gg.type_target = 3 AND p.id = gg.id_target AND o.id = gg.id_geoobject_sour
         // create shop points tables
         this.createShopPoints(sql, sourceSchema, targetSchema);
 
+        // create way tablees
+        this.createHighwayLines(sql, sourceSchema, targetSchema);
+
         List<OHDM_Class> tableClasses;
         String tableName;
 
-        ////////////////////////////////////////////////////////////////
-        //                      highway tables                        // 
-        ////////////////////////////////////////////////////////////////
-        
-        /**************************************************************/
-        /**      highway_huge_lines: motorway + trunk + their links   */
-        /**************************************************************/
-        tableClasses = new ArrayList<>();
-        
-        tableName = "highway_huge_lines";
-        tableClasses.add(new OHDM_Class("highway", "motorway"));
-        tableClasses.add(new OHDM_Class("highway", "trunk"));
-        tableClasses.add(new OHDM_Class("highway", "motorway_link"));
-        tableClasses.add(new OHDM_Class("highway", "trunk_link"));
-        
-        this.createRenderingTable(sql, sourceSchema, targetSchema, 
-                tableName, tableClasses, OHDM_DB.OHDM_LINESTRING_GEOMTYPE);
-        
-        /**************************************************************/
-        /*           highway_primary_lines: primary + links           */
-        /**************************************************************/
-        tableClasses = new ArrayList<>();
-        
-        tableName = "highway_primary_lines";
-        tableClasses.add(new OHDM_Class("highway", "primary"));
-        tableClasses.add(new OHDM_Class("highway", "primary_link"));
-        
-        this.createRenderingTable(sql, sourceSchema, targetSchema, 
-                tableName, tableClasses, OHDM_DB.OHDM_LINESTRING_GEOMTYPE);
-        
-        /**************************************************************/
-        /*           highway_secondary_lines: secondary + links           */
-        /**************************************************************/
-        tableClasses = new ArrayList<>();
-        
-        tableName = "highway_secondary_lines";
-        tableClasses.add(new OHDM_Class("highway", "secondary"));
-        tableClasses.add(new OHDM_Class("highway", "secondary_link"));
-        
-        this.createRenderingTable(sql, sourceSchema, targetSchema, 
-                tableName, tableClasses, OHDM_DB.OHDM_LINESTRING_GEOMTYPE);
-        
-        /**************************************************************/
-        /*           highway_tertiary_lines: tertiary + links           */
-        /**************************************************************/
-        tableClasses = new ArrayList<>();
-        
-        tableName = "highway_tertiary_lines";
-        tableClasses.add(new OHDM_Class("highway", "tertiary"));
-        tableClasses.add(new OHDM_Class("highway", "tertiary_link"));
-        
-        this.createRenderingTable(sql, sourceSchema, targetSchema, 
-                tableName, tableClasses, OHDM_DB.OHDM_LINESTRING_GEOMTYPE);
-        
-        /**************************************************************/
-        /*                        highway_path_lines                  */
-        /**************************************************************/
-        tableClasses = new ArrayList<>();
-        
-        tableName = "highway_path_lines";
-        tableClasses.add(new OHDM_Class("highway", "track"));
-        tableClasses.add(new OHDM_Class("highway", "path"));
-        
-        this.createRenderingTable(sql, sourceSchema, targetSchema, 
-                tableName, tableClasses, OHDM_DB.OHDM_LINESTRING_GEOMTYPE);
-        
-        /**************************************************************/
-        /*                    highway_small_lines                     */
-        /**************************************************************/
-        tableClasses = new ArrayList<>();
-        
-        tableName = "highway_small_lines";
-        tableClasses.add(new OHDM_Class("highway", "unclassified"));
-        tableClasses.add(new OHDM_Class("highway", "living_street"));
-        tableClasses.add(new OHDM_Class("highway", "service"));
-        tableClasses.add(new OHDM_Class("highway", "footway"));
-        
-        this.createRenderingTable(sql, sourceSchema, targetSchema, 
-                tableName, tableClasses, OHDM_DB.OHDM_LINESTRING_GEOMTYPE);
-        
         ////////////////////////////////////////////////////////////////
         //                      building tables                       // 
         ////////////////////////////////////////////////////////////////

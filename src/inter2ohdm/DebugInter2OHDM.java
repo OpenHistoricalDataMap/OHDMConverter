@@ -96,16 +96,18 @@ public class DebugInter2OHDM extends OHDMImporter {
             ResultSet qResult = null; 
             // do some sql here..
 //            sourceQueue.append("SELECT * FROM intermediate.nodes where osm_id = 6464945;");
-//            sourceQueue.append("SELECT * FROM intermediate.ways where osm_id = 6464945;");
-            sourceQueue.append("SELECT * FROM berlin.relations where osm_id = 173239;");
+            sourceQueue.append("SELECT * FROM germany.ways where osm_id = 236224563;");
+//            sourceQueue.append("SELECT * FROM berlin.relations where osm_id = 173239;");
 //            sourceQueue.append("SELECT * FROM intermediate.relations;");
             qResult = sourceQueue.executeWithResult();
             
             while(qResult.next()) {
-//            exporter.processNode(qResult, sourceQueue, ExportIntermediateDB.RELATION);
-//            exporter.processWay(qResult, sourceQueue, ExportIntermediateDB.RELATION);
-            exporter.processElement(qResult, sourceQueue, OSMExtractor.RELATION, true);
-                
+                exporter.processElement(qResult, sourceQueue, OSMExtractor.WAY, true);
+//                exporter.processElement(qResult, sourceQueue, OSMExtractor.RELATION, true);
+
+                updateQueue.forceExecute();
+                updateQueue.close();
+
             }
         } catch (Exception e) {
             Util.printExceptionMessage(e, sourceQueue, "main method in DebugInter2OHDM", false);

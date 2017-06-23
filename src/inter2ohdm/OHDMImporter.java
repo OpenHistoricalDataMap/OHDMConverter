@@ -724,7 +724,7 @@ public class OHDMImporter extends Importer {
                     this.intermediateDB.setOHDM_IDs(this.sourceUpdateQueue, osmElement, null, ohdmGeomIDString);
                 }
 
-                // geometry added but no object.. we are finished here
+                // geometry added but no object.. we are done here
                 return null;
             }
 

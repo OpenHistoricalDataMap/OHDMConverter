@@ -748,6 +748,10 @@ public class SQL_OSMImporter extends DefaultHandler {
             eE.printStackTrace(this.errStream);
         }
     }
+
+    public String getStatus() {
+        return "last osm element id: " + this.currentElementID;
+    }
     
     private void printStatus() {
         this.outStream.print("nodes: " + Util.getValueWithDots(this.nA));

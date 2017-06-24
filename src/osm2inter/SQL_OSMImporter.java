@@ -584,11 +584,21 @@ public class SQL_OSMImporter extends DefaultHandler {
             Util.printExceptionMessage(ex, this.managementQueue, "error while creating managementQueue");
         }
     }
-    
+
+    boolean startedProcessing = false;
+
     @Override
     public void startElement(String uri, String localName, String qName, 
             Attributes attributes) {
-        
+
+        if(!this.startedProcessing) {
+            if(this.parameter.getStartImportWith().equalsIgnoreCase(qName)) {
+                this.startedProcessing = true;
+            } else {
+                return;
+            }
+        }
+
         switch (qName) {
         case "node": {
             if (status != STATUS_OUTSIDE) {
@@ -647,7 +657,12 @@ public class SQL_OSMImporter extends DefaultHandler {
     @Override
     public void endElement(String uri, String localName, String qName) {
         // maybe adjust something, like boundary / admin-level
-        try {
+
+        if(!this.startedProcessing) {
+            return; // we are still about skipping parts of input file
+        }
+
+            try {
             switch (qName) {
                 case "node":
                     // node finished - save

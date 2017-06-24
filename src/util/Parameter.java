@@ -16,6 +16,7 @@ import ohdm2rendering.OHDM2Rendering;
  * @author thsc
  */
 public class Parameter {
+    private String startImportWith = "node";
     private String servername;
     private String portnumber;
     private String username;
@@ -117,6 +118,7 @@ public class Parameter {
                             case "maxPSQLProcesses": this.maxPSQLProcesses = Integer.parseInt(value); break;
                             case "renderoutput": this.renderoutput = value; break;
                             case "logMessageInterval": this.logMessageInterval = Integer.parseInt(value); break;
+                            case "startImportWith": this.startImportWith = value; break;
                         }
                     }
                 }
@@ -140,8 +142,19 @@ public class Parameter {
     public String getMaxThread() { return this.maxThreads ;}
     public String getRecordFileName() { return this.recordFileName; }
     public String getReadStepLen() { return this.readStepLen; }
-    
+
     public String getPath() { return this.getdbName() ;}
+    public String getStartImportWith() {
+        switch(this.startImportWith) {
+            case "node":
+            case "way":
+            case "relation":
+                return this.startImportWith;
+        };
+        System.out.println("startImportWith not set. start with node");
+        return "node";
+    }
+
     public boolean usePSQL() { return this.usePSQL ;}
     public boolean forgetPreviousImport() { return this.forgetPreviousImport; }
     

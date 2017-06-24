@@ -36,7 +36,8 @@ public class SQLStatementQueue {
     private PrintStream outStream = null;
     private PrintStream logStream = null;
     private PrintStream errStream = null;
-    
+    private long maxBufferLength = SQLStatementQueue.MAX_BUFFER_LENGTH;
+
     public SQLStatementQueue(Connection connection) {
         this.connections.add(connection);
         this.freeConnection.add(Boolean.TRUE);
@@ -309,9 +310,13 @@ public class SQLStatementQueue {
             this.forceExecute();
         }
         
-        if(this.sqlQueue.length() > SQLStatementQueue.MAX_BUFFER_LENGTH) {
+        if(this.sqlQueue.length() > this.maxBufferLength) {
             this.forceExecute(true);
         }
+    }
+
+    public void setMaxBufferLength(int maxLength) {
+        this.maxBufferLength = maxLength;
     }
     
     private boolean alwaysForce = false;

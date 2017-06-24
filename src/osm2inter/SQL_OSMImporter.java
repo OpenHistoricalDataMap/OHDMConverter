@@ -620,7 +620,18 @@ public class SQL_OSMImporter extends DefaultHandler {
             if (status != STATUS_OUTSIDE) {
                 this.errStream.println("relation found but not outside");
             }
+
+            if(this.status != STATUS_RELATION) {
+                // enter new status
+
+                /* set maximum buffer length to minimum to force jdbc to fire each statement immediately to data base
+                there are very long statement when importing planet file.
+                 */
+                this.insertQueue.setMaxBufferLength(1);
+                this.memberQueue.setMaxBufferLength(1);
+            }
             this.status = STATUS_RELATION;
+
             this.newElement(attributes);
         }
         break; // original relation
@@ -662,7 +673,7 @@ public class SQL_OSMImporter extends DefaultHandler {
             return; // we are still about skipping parts of input file
         }
 
-            try {
+        try {
             switch (qName) {
                 case "node":
                     // node finished - save

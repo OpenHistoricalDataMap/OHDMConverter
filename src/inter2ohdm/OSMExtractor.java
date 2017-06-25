@@ -683,17 +683,33 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
     
     OSMElement currentElement = null;
 
+    private boolean nodeProcessingStarted = false;
+    private boolean wayProcessingStarted = false;
+    private boolean relationProcessingStarted = false;
+
     void processElement(ResultSet qResult, SQLStatementQueue sql, int elementType, boolean importUnnamedEntities) {
         this.currentElement = null;
         try {
             switch(elementType) {
                 case NODE:
+                    if(!this.nodeProcessingStarted) {
+                        this.printEra = 0; // reset era counter for logging
+                        this.nodeProcessingStarted = true;
+                    }
                     this.processNode(qResult, sql, importUnnamedEntities);
                     break;
                 case WAY:
+                    if(!this.wayProcessingStarted) {
+                        this.printEra = 0; // reset era counter for logging
+                        this.wayProcessingStarted = true;
+                    }
                     this.processWay(qResult, sql, importUnnamedEntities);
                     break;
                 case RELATION:
+                    if(!this.relationProcessingStarted) {
+                        this.printEra = 0; // reset era counter for logging
+                        this.relationProcessingStarted = true;
+                    }
                     this.processRelation(qResult, sql, importUnnamedEntities);
                     break;
             }

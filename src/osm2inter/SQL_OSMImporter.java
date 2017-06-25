@@ -629,6 +629,14 @@ public class SQL_OSMImporter extends DefaultHandler {
                  */
                 this.insertQueue.setMaxBufferLength(1);
                 this.memberQueue.setMaxBufferLength(1);
+
+                // or use file queues
+                /*
+                System.out.println("intermediate insert-osm-element queue uses psql and sql files.");
+                this.insertQueue = new ManagedFileSQLStatementQueue("sql_O2I_insertOSM2Inter", parameter);
+                System.out.println("intermediate insert-member queue uses psql and sql files.");
+                this.memberQueue = new ManagedFileSQLStatementQueue("sql_O2I_memberOSM2Inter", parameter);
+                 */
             }
             this.status = STATUS_RELATION;
 

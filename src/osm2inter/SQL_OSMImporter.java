@@ -80,6 +80,10 @@ public class SQL_OSMImporter extends DefaultHandler {
         this.outStream = parameter.getOutStream();
         
         this.recordFile = new File(this.parameter.getRecordFileName());
+        
+        this.maxThreads = this.parameter.getMaxThreads() / 2; // there are two parallel queues
+
+/*        
         try {
             String v = this.parameter.getMaxThread();
             this.maxThreads = Integer.parseInt(v.trim()) / 4; // there are four parallel queues
@@ -89,7 +93,7 @@ public class SQL_OSMImporter extends DefaultHandler {
             this.errStream.println("no integer value (run single threaded instead): " + this.parameter.getMaxThread());
             this.maxThreads = 1;
         }
-      
+*/      
         /*
         this.insertQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
         this.memberQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);

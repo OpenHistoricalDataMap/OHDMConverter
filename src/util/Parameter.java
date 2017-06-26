@@ -48,6 +48,7 @@ public class Parameter {
     private int maxPSQLProcesses = 1;
     private String renderoutput = OHDM2Rendering.GENERIC;
     private int logMessageInterval = 5;
+    private int maxIntThreads = 0;
     
     public Parameter(String filename) throws FileNotFoundException, IOException {
         long now = System.currentTimeMillis();
@@ -139,7 +140,23 @@ public class Parameter {
     public String getPWD() { return this.pwd ;}
     public String getdbName() { return this.dbname ;}
     public String getSchema() { return this.schema ;}
-    public String getMaxThread() { return this.maxThreads ;}
+    
+    public int getMaxThreads() {
+        if(this.maxIntThreads > 0) return this.maxIntThreads; // already calculated
+        
+        try {
+            String v = this.maxThreads;
+            this.maxIntThreads = Integer.parseInt(v.trim());
+            maxIntThreads = maxIntThreads > 0 ? maxIntThreads : 1; // we have at least 4 threads
+        }
+        catch(NumberFormatException e) {
+            this.errStream.println("no integer value (run single threaded instead): " + this.maxThreads);
+            maxIntThreads = 1;
+        }
+        
+        return this.maxIntThreads;
+    }
+    
     public String getRecordFileName() { return this.recordFileName; }
     public String getReadStepLen() { return this.readStepLen; }
 

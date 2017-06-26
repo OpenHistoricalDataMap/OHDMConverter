@@ -164,17 +164,7 @@ public class DB {
     
     public static SQLStatementQueue createSQLStatementQueue(Connection target, Parameter parameter) {
         File recordFile = new File(parameter.getRecordFileName());
-        int maxThreads = 1;
-        try {
-            String v = parameter.getMaxThread();
-            maxThreads = Integer.parseInt(v.trim());
-            maxThreads = maxThreads > 0 ? maxThreads : 1;
-        }
-        catch(NumberFormatException e) {
-            System.err.println("no integer value (run single threaded instead): " + parameter.getMaxThread());
-            maxThreads = 1;
-        }
         
-        return new SQLStatementQueue(target, recordFile, maxThreads);
+        return new SQLStatementQueue(target, recordFile, parameter.getMaxThreads());
     }
 }

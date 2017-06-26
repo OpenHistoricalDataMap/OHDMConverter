@@ -150,6 +150,20 @@ public class Util {
         Util.printExceptionMessage(System.err, e, sql, additionalMessage, true);
     }
     
+    public static String escapeSpecialChar(String t) {
+        boolean wasQuoted = false;
+        if(t.startsWith("'")) {
+            t = t.substring(1, t.length()-1);
+            wasQuoted = true;
+        }
+        t = t.replace("'", "''");
+        
+        if(wasQuoted) {
+            t = "'" + t + "'";
+        }
+        return t;
+    }
+    
     static String getThreeDigitString(long value) {
         if(value >= 100) return String.valueOf(value);
         

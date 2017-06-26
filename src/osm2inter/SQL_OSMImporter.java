@@ -389,7 +389,7 @@ public class SQL_OSMImporter extends DefaultHandler {
         this.memberQueue.append(" VALUES ( ");
         this.memberQueue.append(this.currentElementID);
         this.memberQueue.append(", '");
-        this.memberQueue.append(attributes.getValue("role"));
+        this.memberQueue.append(Util.escapeSpecialChar(attributes.getValue("role")));
         this.memberQueue.append("', ");
         this.memberQueue.append(attributes.getValue("ref"));
         this.memberQueue.append("); ");
@@ -633,8 +633,8 @@ public class SQL_OSMImporter extends DefaultHandler {
                     /* set maximum buffer length to minimum to force jdbc to fire each statement immediately to data base
                     there are very long statement when importing planet file.
                      */
-                    this.insertQueue.setMaxBufferLength(100);
-                    this.memberQueue.setMaxBufferLength(100);
+                    this.insertQueue.setMaxBufferLength(1);
+                    this.memberQueue.setMaxBufferLength(1);
 
                     // or use file queues
                     /*

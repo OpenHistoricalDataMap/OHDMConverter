@@ -20,7 +20,9 @@ public class SQLStatementQueue {
     private List<Connection> connections = new ArrayList<>();
     private List<Boolean> freeConnection = new ArrayList<>();
     
-    protected static final long MAX_BUFFER_LENGTH = 512; // bytes
+//    protected static final long MAX_BUFFER_LENGTH = 1; // 1 Byte Debugging
+    protected static final long MAX_BUFFER_LENGTH = 60 * 1024; // 60 kByte
+//    private static final long MAX_BUFFER_LENGTH = 200; // 500 kByte
     
     private final ArrayList<SQLExecute> execThreads = new ArrayList<>();
     private static final int DEFAULT_MAX_EXEC_THREADS = 1;
@@ -34,8 +36,7 @@ public class SQLStatementQueue {
     private PrintStream outStream = null;
     private PrintStream logStream = null;
     private PrintStream errStream = null;
-    private long maxBufferLength = SQLStatementQueue.MAX_BUFFER_LENGTH;
-
+    
     public SQLStatementQueue(Connection connection) {
         this.connections.add(connection);
         this.freeConnection.add(Boolean.TRUE);
@@ -308,13 +309,9 @@ public class SQLStatementQueue {
             this.forceExecute();
         }
         
-        if(this.sqlQueue.length() > this.maxBufferLength) {
+        if(this.sqlQueue.length() > SQLStatementQueue.MAX_BUFFER_LENGTH) {
             this.forceExecute(true);
         }
-    }
-
-    public void setMaxBufferLength(int maxLength) {
-        this.maxBufferLength = maxLength;
     }
     
     private boolean alwaysForce = false;

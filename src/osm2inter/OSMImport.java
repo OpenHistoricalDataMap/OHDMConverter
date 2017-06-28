@@ -18,7 +18,6 @@ public class OSMImport {
 
     public static void main(String[] args) {
         Parameter dbConnectionSettings = null;
-        SQL_OSMImporter sqlOsmImporter = null;
         try {
             SAXParserFactory spf = SAXParserFactory.newInstance();
             SAXParser newSAXParser = spf.newSAXParser();
@@ -39,8 +38,7 @@ public class OSMImport {
         OSMClassification osmClassification = OSMClassification.getOSMClassification();
 
         // 2BTested
-        sqlOsmImporter = new SQL_OSMImporter(dbConnectionSettings, osmClassification);
-        newSAXParser.parse(osmFile, sqlOsmImporter);
+        newSAXParser.parse(osmFile, new SQL_OSMImporter(dbConnectionSettings, osmClassification));
 //        newSAXParser.parse(osmFile, new SQL_OSMImporter(dbConnectionSettings, osmClassification));
 //        newSAXParser.parse(osmFile, new Dump_OSMImporter(dbConnectionSettings, osmClassification));
 
@@ -53,8 +51,7 @@ public class OSMImport {
             catch(Throwable tt) {
                 // ignore that..
             }
-
-            err.print(sqlOsmImporter.getStatus());
+            
             Util.printExceptionMessage(err, t, null, "in main OSM2Inter", false);
         }
     }

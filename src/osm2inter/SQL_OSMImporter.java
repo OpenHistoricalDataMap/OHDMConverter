@@ -2,6 +2,7 @@ package osm2inter;
 
 import util.InterDB;
 import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import org.xml.sax.Attributes;
@@ -12,6 +13,8 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import util.DB;
 import util.ManagedFileSQLStatementQueue;
 import util.Parameter;
@@ -80,10 +83,6 @@ public class SQL_OSMImporter extends DefaultHandler {
         this.outStream = parameter.getOutStream();
         
         this.recordFile = new File(this.parameter.getRecordFileName());
-        
-        this.maxThreads = this.parameter.getMaxThreads() / 2; // there are two parallel queues
-
-/*        
         try {
             String v = this.parameter.getMaxThread();
             this.maxThreads = Integer.parseInt(v.trim()) / 4; // there are four parallel queues
@@ -93,7 +92,7 @@ public class SQL_OSMImporter extends DefaultHandler {
             this.errStream.println("no integer value (run single threaded instead): " + this.parameter.getMaxThread());
             this.maxThreads = 1;
         }
-*/      
+      
         /*
         this.insertQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
         this.memberQueue = new SQLStatementQueue(this.targetConnection, this.recordFile, this.maxThreads);
@@ -386,6 +385,7 @@ public class SQL_OSMImporter extends DefaultHandler {
         }
         
         // end member statement
+        // end member statement
         this.memberQueue.append(" VALUES ( ");
         this.memberQueue.append(this.currentElementID);
         this.memberQueue.append(", '");
@@ -393,8 +393,9 @@ public class SQL_OSMImporter extends DefaultHandler {
         this.memberQueue.append("', ");
         this.memberQueue.append(attributes.getValue("ref"));
         this.memberQueue.append("); ");
-        
+
         this.memberQueue.couldExecute();
+
     }
 
     private AbstractElement dummyElement = new AbstractElement();
@@ -587,89 +588,55 @@ public class SQL_OSMImporter extends DefaultHandler {
             Util.printExceptionMessage(ex, this.managementQueue, "error while creating managementQueue");
         }
     }
-
-    boolean startedProcessing = false;
-
+    
     @Override
     public void startElement(String uri, String localName, String qName, 
             Attributes attributes) {
 
-        if(!this.startedProcessing) {
-            if(this.parameter.getStartImportWith().equalsIgnoreCase(qName)) {
-                this.startedProcessing = true;
-            } else {
-                return;
-            }
-        }
-
         try {
             switch (qName) {
-            case "node": {
-                if (status != STATUS_OUTSIDE) {
-                    this.errStream.println("node found but not outside");
+                case "node": {
+                    if (status != STATUS_OUTSIDE) {
+                        this.errStream.println("node found but not outside");
+                    }
+                    this.status = STATUS_NODE;
+                    this.newElement(attributes);
                 }
-                this.status = STATUS_NODE;
-                this.newElement(attributes);
-            }
-            break; // single original node
-            
-            case "way": {
-                if (status != STATUS_OUTSIDE) {
-                    this.errStream.println("way found but not outside");
+                break; // single original node
+                case "way": {
+                    if (status != STATUS_OUTSIDE) {
+                        this.errStream.println("way found but not outside");
+                    }
+                    this.status = STATUS_WAY;
+                    this.newElement(attributes);
                 }
-                this.status = STATUS_WAY;
-                this.newElement(attributes);
-            }
-            break; // original way
-            
-            case "relation": {
-                if (status != STATUS_OUTSIDE) {
-                    this.errStream.println("relation found but not outside");
+                break; // original way
+                case "relation": {
+                    if (status != STATUS_OUTSIDE) {
+                        this.errStream.println("relation found but not outside");
+                    }
+                    this.status = STATUS_RELATION;
+                    this.newElement(attributes);
                 }
-
-                if(this.status != STATUS_RELATION) {
-                    // enter new status
-
-                    /* set maximum buffer length to minimum to force jdbc to fire each statement immediately to data base
-                    there are very long statement when importing planet file.
-                     */
-                    this.insertQueue.setMaxBufferLength(1);
-                    this.memberQueue.setMaxBufferLength(1);
-
-                    // or use file queues
-                    /*
-                    System.out.println("intermediate insert-osm-element queue uses psql and sql files.");
-                    this.insertQueue = new ManagedFileSQLStatementQueue("sql_O2I_insertOSM2Inter", parameter);
-                    System.out.println("intermediate insert-member queue uses psql and sql files.");
-                    this.memberQueue = new ManagedFileSQLStatementQueue("sql_O2I_memberOSM2Inter", parameter);
-                     */
+                break; // original relation
+                case "tag": {
+                    this.addAttributesFromTag(attributes);
                 }
-                this.status = STATUS_RELATION;
-
-                this.newElement(attributes);
+                break; // inside way
+                case "nd": {
+                    this.addND(attributes);
+                }
+                break; // inside relation
+                case "member": {
+                    this.addMember(attributes);
+                }
+                break; // inside a relation
+                default:
             }
-            break; // original relation
-            
-            case "tag": {
-                this.addAttributesFromTag(attributes);
-            }
-            break; // inside way
-            
-            case "nd": {
-                this.addND(attributes);
-            }
-            break; // inside relation
-            
-            case "member": {
-                this.addMember(attributes);
-            }
-            break; // inside a relation
-            default:
-            }
-        } catch(SQLException e) {
-            System.err.println("SQLException caught: " + e);
-            System.err.println("insertQueue: " + this.insertQueue.toString());
-            System.err.println("memberQueue: " + this.memberQueue.toString());
+        }
+        catch(Throwable t) {
+            System.err.println("throwable caught in startElement: " + t);
+            System.exit(0);
         }
     }
 
@@ -690,11 +657,6 @@ public class SQL_OSMImporter extends DefaultHandler {
     @Override
     public void endElement(String uri, String localName, String qName) {
         // maybe adjust something, like boundary / admin-level
-
-        if(!this.startedProcessing) {
-            return; // we are still about skipping parts of input file
-        }
-
         try {
             switch (qName) {
                 case "node":
@@ -769,10 +731,6 @@ public class SQL_OSMImporter extends DefaultHandler {
             this.errStream.println("while saving element: " + eE.getClass().getName() + "\n" + eE.getMessage());
             eE.printStackTrace(this.errStream);
         }
-    }
-
-    public String getStatus() {
-        return "last osm element id: " + this.currentElementID;
     }
     
     private void printStatus() {

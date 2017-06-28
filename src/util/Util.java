@@ -149,7 +149,7 @@ public class Util {
     public static void printExceptionMessage(Throwable e, SQLStatementQueue sql, String additionalMessage) {
         Util.printExceptionMessage(System.err, e, sql, additionalMessage, true);
     }
-    
+
     public static String escapeSpecialChar(String t) {
         boolean wasQuoted = false;
         if(t.startsWith("'")) {

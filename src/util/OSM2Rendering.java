@@ -5,8 +5,11 @@ import inter2ohdm.OHDMImporter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.SQLException;
+
+import inter2ohdm.OHDMUpdateInter;
 import ohdm2rendering.OHDM2Rendering;
 import osm2inter.OSMImport;
+import osm2inter.OSMUpdateInter;
 
 /**
  *
@@ -53,12 +56,12 @@ public class OSM2Rendering {
         }
         
         // check consistency
-        
+
         // decide wether import or exit
-        if(importInterDBConfig != null && updateInterDBConfig != null) {
-            OSM2Rendering.printUsageAndExit("cannot import and update simultaneously");
+        if(updateInterDBConfig != null && (importInterDBConfig == null || osmFile == null)) {
+            OSM2Rendering.printUsageAndExit("update requires osm file and intermediate database");
         }
-        
+
         // unclear what to do: import / update into intermediate db or import / update ohdm from intermediate db
         if( (importInterDBConfig != null || updateInterDBConfig != null) && osmFile == null && ohdmDBConfig == null)  {
             OSM2Rendering.printUsageAndExit("unclear what to do: import / update into intermediate db or import / update ohdm from intermediate db");
@@ -66,7 +69,7 @@ public class OSM2Rendering {
         
         // osm file but neither import nor update declared
         if( importInterDBConfig == null && updateInterDBConfig == null && osmFile != null)  {
-            OSM2Rendering.printUsageAndExit("osm file declared but no import or update configuration");
+            OSM2Rendering.printUsageAndExit("osm file declared but no import configuration");
         }
         
         // unclear what to do: import into ohdm or create rendering database out of ohdm
@@ -87,19 +90,19 @@ public class OSM2Rendering {
         System.err.println("renderingDBConfig: " + renderingDBConfig);
         
         OSM2Rendering.printMessage("start processes:");
-        if(importInterDBConfig != null && osmFile != null) {
+        if(importInterDBConfig != null && osmFile != null && updateInterDBConfig == null) {
             OSM2Rendering.printMessage("import from osm file into intermediate db");
         }
         
-        if(updateInterDBConfig != null && osmFile != null) {
+        if(updateInterDBConfig != null && importInterDBConfig != null && osmFile != null) {
             OSM2Rendering.printMessage("update intermediate db from osm file");
         }
-        
-        if(importInterDBConfig != null && ohdmDBConfig != null) {
+
+        if(importInterDBConfig != null && ohdmDBConfig != null && updateInterDBConfig == null) {
             OSM2Rendering.printMessage("import from intermediate db into ohdm db");
         }
         
-        if(updateInterDBConfig != null && ohdmDBConfig != null) {
+        if(updateInterDBConfig != null && (importInterDBConfig != null && ohdmDBConfig != null)) {
             OSM2Rendering.printMessage("update ohdm db from intermediate db");
         }
         
@@ -107,19 +110,30 @@ public class OSM2Rendering {
             OSM2Rendering.printMessage("produce rendering db");
         }
         
-        if(osmFile != null && importInterDBConfig != null) {
+        if(osmFile != null && importInterDBConfig != null && updateInterDBConfig == null) {
             OSMImport.main(new String[]{osmFile, importInterDBConfig});
         }
 
-        if(importInterDBConfig != null &&  ohdmDBConfig != null) {
+        if(importInterDBConfig != null && ohdmDBConfig != null && updateInterDBConfig == null) {
             OHDMImporter.main(new String[]{importInterDBConfig, ohdmDBConfig});
         }
-        
-        if(updateInterDBConfig != null &&  ohdmDBConfig != null) {
-            // TODO
-//            SQL_OSM2Inter_Updater.main(new String[]{updateInterDBConfig, ohdmDBConfig});
+
+        if(updateInterDBConfig != null && importInterDBConfig != null && osmFile != null) {
+            // make an import to temporary intermediate data base
+            OSM2Rendering.printMessage("import new osm data into temporary intermediate db");
+            OHDMImporter.main(new String[]{updateInterDBConfig, ohdmDBConfig, "update"});
+
+            // merge temporary and permanent intermediate data base
+            OSM2Rendering.printMessage("merge temporary intermediate db into intermediate db");
+            OSMUpdateInter.main(new String[]{importInterDBConfig, updateInterDBConfig});
         }
-        
+
+        if(updateInterDBConfig != null && importInterDBConfig != null && ohdmDBConfig != null) {
+            // merge changes into ohdm database
+            OSM2Rendering.printMessage("update ohdm with new osm data");
+            OHDMUpdateInter.main(new String[]{importInterDBConfig, ohdmDBConfig});
+        }
+
         if(ohdmDBConfig != null &&  renderingDBConfig != null) {
             OHDM2Rendering.main(new String[]{ohdmDBConfig, renderingDBConfig});
         }

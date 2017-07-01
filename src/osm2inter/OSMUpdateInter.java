@@ -8,6 +8,8 @@ public class OSMUpdateInter {
     
     public static void main(String[] args) {
         // import new osm file into a 'temporary intermediate (TIDB)' db
+        // !! waynodes table is not necessary. !!
+        // !! relationmember is. !!
 
         // mark all entities which are in IDB but not TIDB as deleted
         /*
@@ -27,7 +29,7 @@ public class OSMUpdateInter {
         2) geometry changed if
             long/lat changed
 
-        both changed: new
+        set for all in which both changed: new
 
         additionally (ways, relations) if:
         2.2) geometry changed if
@@ -42,6 +44,7 @@ public class OSMUpdateInter {
         // -> now: TIDB contains only new entities
         /*
         copy all new entities into IDB and mark as new
+        update all in tidb as new
         insert into ?? (select from ??)
          */
         
@@ -52,7 +55,7 @@ public class OSMUpdateInter {
         /*
         update ohdm can do:
 
-        a) increase valid_since for all entries which are not tagged as new or changed
+        a) increase valid_since now for all entries which are not tagged as new or changed
 
         maybe make a more finegrained decision what tags are to be changed to define a
         new object (author?)

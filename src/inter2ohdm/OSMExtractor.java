@@ -52,7 +52,9 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
     private int steplen;
     private String upperIDString;
     private String lowerIDString;
-    
+
+    BigDecimal upperID = null;
+
     OSMExtractor(Connection sourceConnection, String schema, Importer importer, int steplen) {
         super(sourceConnection, schema);
         
@@ -371,7 +373,7 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
         
         // first: figure out min and max osm_id in nodes table
         BigDecimal lowerID = this.initialLowerID;
-        BigDecimal upperID = this.initialUpperID;
+        this.upperID = this.initialUpperID;
         BigDecimal maxID = this.initialMaxID;
             
         this.upperIDString = Util.setDotsInStringValue(upperID.toPlainString());
@@ -596,7 +598,7 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
             if(speed > 0 && !this.nodesTableEntries.equalsIgnoreCase("?")) {
                 String currentEntriesMaxString;
                 long readEntities = 0;
-                
+
                 if(this.waysTableEntries.equalsIgnoreCase("?")) {
                     currentEntriesMaxString = this.nodesTableEntries;
                     readEntities = this.numberCheckedNodes;
@@ -609,9 +611,13 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
                 }
 
                 long maxID = Long.parseLong(currentEntriesMaxString);
-                
-                long remains = maxID - readEntities;
-                
+
+//                long remains = maxID - readEntities;
+                /* calculate with upper boundary and not read items
+                a reasonable number of items are dropped
+                 */
+                long remains = maxID - this.upperID.longValue();
+
                 long eta = (remains / speed);
                 
                 sb.append(" | eta: ");

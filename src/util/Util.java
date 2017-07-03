@@ -142,7 +142,7 @@ public class Util {
         err.println("........................................................................................");
         if(e != null ) err.println(e.getMessage());
         if(sql != null ) err.println(sql.toString());
-        if(e != null ) e.printStackTrace(System.err);
+        if(e != null ) e.printStackTrace(err);
         err.println("........................................................................................");
     }
     

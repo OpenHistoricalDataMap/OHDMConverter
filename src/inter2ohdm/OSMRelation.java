@@ -171,7 +171,7 @@ public class OSMRelation extends OSMElement {
                             */
                             if(lastLoop) {
                                 // unfinished polygon
-                                this.failed(wktBuilder, "2");
+                                this.failed(wktBuilder, "unclosed outer polygone in last loop - cannot fix that");
                             }
                             
                             wktBuilder = new StringBuilder();
@@ -221,7 +221,7 @@ public class OSMRelation extends OSMElement {
                         } else {
                             // no polygon by itself
                             if(lastLoop) { // cannot open a new polygon
-                                this.failed(wktBuilder, "3");
+                                this.failed(wktBuilder, "last: loop and new (and unclosed polygon opened - that failure is not fixed here");
                             }
                             // start polygon inside
                             firstNode = way.getNodeIter().next();

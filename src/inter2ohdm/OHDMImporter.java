@@ -1260,7 +1260,7 @@ public class OHDMImporter extends Importer {
         this.forgetPreviousWaysImport();
     }
 
-    private void postProcessGGTable() throws SQLException {
+    void postProcessGGTable() throws SQLException {
         /*
         In some rare cases, relation are reference by their OSM id an not
         OHDM ID in geoobject_geometry table. That problem can be fixed after

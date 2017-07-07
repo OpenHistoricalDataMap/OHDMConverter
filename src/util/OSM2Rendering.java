@@ -5,8 +5,11 @@ import inter2ohdm.OHDMImporter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.SQLException;
+import java.util.HashMap;
 
 import inter2ohdm.OHDMUpdateInter;
+import inter2ohdm.OSMChunkExtractor;
+import inter2ohdm.OSMChunkExtractorProcessFactory;
 import ohdm2rendering.OHDM2Rendering;
 import osm2inter.OSMImport;
 import osm2inter.OSMUpdateInter;
@@ -16,9 +19,12 @@ import osm2inter.OSMUpdateInter;
  * @author thsc
  */
 public class OSM2Rendering {
+    public static final String CHUNK_FACTORY = "-chunkimport";
+    public static final String CHUNK_PROCESS = "-chunkprocess";
 
     public static void main(String[] args) throws IOException, SQLException {
 
+        System.out.println("try to figure out what to import...");
         if(args.length < 4) {
             /* at least two parameter are required which are 
             defined with at least four arguments
@@ -31,30 +37,57 @@ public class OSM2Rendering {
         String updateInterDBConfig = null;
         String ohdmDBConfig = null;
         String renderingDBConfig = null;
-        
-        int i = 0;
-        while(i < args.length-1) {
-            switch(args[i]) { 
-                case "-o": // osm file
-                    osmFile = args[i+1];
-                    break;
-                case "-i": // import - intermediate db
-                    importInterDBConfig = args[i+1];
-                    break;
-                case "-u": // update - intermediate db
-                    updateInterDBConfig = args[i+1];
-                    break;
-                case "-d": // ohdm database
-                    ohdmDBConfig = args[i+1];
-                    break;
-                case "-r": // rendering data base
-                    renderingDBConfig = args[i+1];
-                    break;
+
+        boolean chunkFactory = false;
+        boolean chunkProcess = false;
+
+        // now get real parameters
+        HashMap<String, String> argumentMap = Util.parametersToMap(args,
+                false, "at least two parameters are required");
+
+        if(argumentMap != null) {
+            // got some - overwrite defaults
+            String value = argumentMap.get("-o");
+            if (value != null) {
+                osmFile = value;
             }
-            
-            i += 2;
+
+            value = argumentMap.get("-i");
+            if (value != null) {
+                importInterDBConfig = value;
+            }
+
+            value = argumentMap.get("-u");
+            if (value != null) {
+                updateInterDBConfig = value;
+            }
+
+            value = argumentMap.get("-d");
+            if (value != null) {
+                ohdmDBConfig = value;
+            }
+
+            value = argumentMap.get("-r");
+            if (value != null) {
+                renderingDBConfig = value;
+            }
+
+            chunkFactory = argumentMap.containsKey(CHUNK_FACTORY);
+            chunkProcess = argumentMap.containsKey(CHUNK_PROCESS);
         }
-        
+
+        // launch chunk factory
+        if(chunkFactory) {
+            OSMChunkExtractorProcessFactory.main(args);
+            System.exit(1);
+        }
+
+        // launch chunk process
+        if(chunkProcess) {
+            OSMChunkExtractor.main(args);
+            System.exit(1);
+        }
+
         // check consistency
 
         // decide wether import or exit

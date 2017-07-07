@@ -109,8 +109,8 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
 */            
             this.initialMaxID = result.getBigDecimal(2);
 
-            this.initialLowerID = minID.subtract(new BigDecimal(1));
-            this.initialUpperID = minID.add(this.steps);
+            this.initialLowerID = minID;
+            this.initialUpperID = minID.add(this.steps); // excluding upper boundary
             
             resultString = initialMaxID.toPlainString();
         }
@@ -327,19 +327,31 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
             System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         }
     }
-    
+
     void processNodes(SQLStatementQueue sql, boolean namedEntitiesOnly) {
         this.processElements(sql, NODE, namedEntitiesOnly);
     }
-    
+
     void processWays(SQLStatementQueue sql, boolean namedEntitiesOnly) {
         this.processElements(sql, WAY, namedEntitiesOnly);
     }
-    
+
     void processRelations(SQLStatementQueue sql, boolean namedEntitiesOnly) {
         this.processElements(sql, RELATION, namedEntitiesOnly);
     }
-    
+
+    void processNodes(SQLStatementQueue sql, boolean namedEntitiesOnly, long fromOSMID, long toOSMID) {
+        this.processElements(sql, NODE, namedEntitiesOnly, fromOSMID, toOSMID);
+    }
+
+    void processWays(SQLStatementQueue sql, boolean namedEntitiesOnly, long fromOSMID, long toOSMID) {
+        this.processElements(sql, WAY, namedEntitiesOnly, fromOSMID, toOSMID);
+    }
+
+    void processRelations(SQLStatementQueue sql, boolean namedEntitiesOnly, long fromOSMID, long toOSMID) {
+        this.processElements(sql, RELATION, namedEntitiesOnly, fromOSMID, toOSMID);
+    }
+
     void processElements(SQLStatementQueue sql, int elementType, boolean namedEntitiesOnly) {
         String elementTableName = null;
         switch(elementType) {
@@ -353,35 +365,86 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
                 elementTableName = InterDB.RELATIONTABLE;
                 break;
         }
-        
+
         String maxIDString = this.calculateInitialIDs(sql, elementTableName);
         if(this.initialMaxID == null) {
             return;
         }
-        
+
+        /*
+            three values are set now
+            this.initialMaxID = result.getBigDecimal(2);
+            this.initialLowerID = minID.subtract(new BigDecimal(1));
+            this.initialUpperID = minID.add(this.steps);
+         */
+
+        BigDecimal fromID = this.initialLowerID.plus();
+        BigDecimal toID = this.initialMaxID;
+
+        this.processElements(sql, elementType, namedEntitiesOnly, fromID, toID);
+    }
+
+    void processElements(SQLStatementQueue sql, int elementType, boolean namedEntitiesOnly,
+                         long fromID, long toID) {
+
+        this.processElements(sql, elementType, namedEntitiesOnly,
+                new BigDecimal((fromID)), new BigDecimal(toID));
+    }
+
+    void processElements(SQLStatementQueue sql, int elementType, boolean namedEntitiesOnly,
+        BigDecimal fromID, BigDecimal toID) {
+
+        if( (fromID.compareTo(new BigDecimal(0)) == -1)
+                || (toID.compareTo(new BigDecimal(0))  == -1 )) {
+
+            System.err.println("no processing: upper and/or lower id is under 0");
+            return;
+        }
+
+        String elementTableName = null;
         switch(elementType) {
             case NODE:
-                this.nodesTableEntries = maxIDString;
+                elementTableName = InterDB.NODETABLE;
                 break;
             case WAY:
-                this.waysTableEntries = maxIDString;
+                elementTableName = InterDB.WAYTABLE;
                 break;
             case RELATION:
-                this.relationsTableEntries = maxIDString;
+                elementTableName = InterDB.RELATIONTABLE;
                 break;
         }
-        
-        // first: figure out min and max osm_id in nodes table
+
+        /* setup first run
+        first lower id remains unchanged
+        first upper is lower+steps
+         */
+        this.initialMaxID = toID; // unchanged final end is to id
+
+        // lower is not selected, so decrement first id that is to be handled.
+        this.initialLowerID = fromID;
+
+        // just add steps to lower id
+        this.initialUpperID = this.initialLowerID.add(this.steps);
+
+        // if upper is already beyond max - draw it back to max
+        if(this.initialUpperID.compareTo(this.initialMaxID) == 1) {
+            this.initialUpperID = this.initialMaxID;
+        }
+
+        // set up algorithrm
         BigDecimal lowerID = this.initialLowerID;
         this.upperID = this.initialUpperID;
-        BigDecimal maxID = this.initialMaxID;
-            
-        this.upperIDString = Util.setDotsInStringValue(upperID.toPlainString());
+
+        // for statistics output
+        this.upperIDString = Util.setDotsInStringValue(this.upperID.toPlainString());
         this.lowerIDString = Util.setDotsInStringValue(lowerID.toPlainString());
-        
-        System.out.println("Start processing entites");
+
+        System.out.println("Start importing entites from " + elementTableName);
+        System.out.println("with ID within [" + fromID + ", " + toID + "]");
         System.out.println(this.getStatistics());
-        
+        boolean lastRound = false;
+        boolean again = true;
+
         try {
             this.printStarted(elementTableName);
             this.era = 0; // start new element type - reset for statistics
@@ -389,10 +452,10 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
                 long before = System.currentTimeMillis();
                 sql.append("SELECT * FROM ");
                 sql.append(DB.getFullTableName(this.schema, elementTableName));
-                sql.append(" where id <= "); // including upper
-                sql.append(upperID.toString());
-                sql.append(" AND id > "); // excluding lower 
+                sql.append(" where id >= "); // including lower
                 sql.append(lowerID.toString());
+                sql.append(" AND id < "); // excluding lower
+                sql.append(this.upperID.toString());
                 sql.append(" AND classcode != -1 "); // excluding untyped entities 
                 if(namedEntitiesOnly) {
                     sql.append(" AND serializedtags like '%004name%'"); // entities with a name
@@ -410,19 +473,32 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
                     after = System.currentTimeMillis();
                     this.noteTime(after-before, TIME_PROCESS_ELEMENTS);
                 }
-                
+
+                if(lastRound) {
+                    // we already have had our last round
+                    again = false;
+                    break;
+                }
+
                 // next bulk of data
-                lowerID = upperID;
-                upperID = upperID.add(steps);
-                
-                if(upperID.compareTo(initialMaxID) == 1 && lowerID.compareTo(initialMaxID) == -1) {
-                    upperID = initialMaxID; // last round
+                lowerID = this.upperID;
+                this.upperID = lowerID.add(steps);
+
+                if(this.upperID.compareTo(initialMaxID) == 1 /* greater than*/) {
+                    // we are beyond max id
+
+                    /* in that last round we must include (!) the max id.
+                     we must set upperID one step behind max id because select does exclude
+                     the high boundary
+                      */
+                    this.upperID = initialMaxID.add(new BigDecimal(1)); // last round
+                    lastRound = true;
                 }
                 
-                this.upperIDString = Util.setDotsInStringValue(upperID.toPlainString());
+                this.upperIDString = Util.setDotsInStringValue(this.upperID.toPlainString());
                 this.lowerIDString = Util.setDotsInStringValue(lowerID.toPlainString());
-                
-            } while(!(upperID.compareTo(initialMaxID) == 1));
+
+            } while(again);
         } 
         catch (SQLException ex) {
             // fatal exception.. do not continue
@@ -532,7 +608,7 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
         sb.append("\n");
         
         sb.append(this.lowerIDString);
-        sb.append(" < current range <= ");
+        sb.append(" =< current range < ");
         sb.append(this.upperIDString);
         sb.append(") | read steps: " + Util.getValueWithDots(this.steplen));
         sb.append("\n");

@@ -114,27 +114,9 @@ public class OSMChunkExtractor {
             System.out.println("intermediate update queue uses jdbc");
             SQLStatementQueue updateQueue = new SQLStatementQueue(sourceParameter);
 
+            // Importer to OHDM database
             ohdmImporter = new OHDMImporter(intermediateDB, sourceConnection,
                     targetConnection, sourceSchema, targetSchema, updateQueue);
-
-            try {
-                if (reset) {
-                    System.out.println("remove ohdm entries in intermediate database");
-
-                    ohdmImporter.forgetPreviousNodesImport();
-                    ohdmImporter.forgetPreviousWaysImport();
-                    ohdmImporter.forgetPreviousRelationsImport();
-
-                    // reset ohdm
-                    OHDM_DB.dropOHDMTables(targetConnection, targetSchema);
-
-                    // setup
-                    OHDM_DB.createOHDMTables(targetConnection, targetSchema);
-                }
-            } catch (Exception e) {
-                System.err.println("problems during setting old data (non-fatal): " + e.getLocalizedMessage());
-                System.exit(0);
-            }
 
             int stepLen = 10000; // default
             String stepLenString = sourceParameter.getReadStepLen();
@@ -146,7 +128,32 @@ public class OSMChunkExtractor {
                 // ignore and work with default
             }
 
+            // extractor from intermediate to importer
             extractor = new OSMExtractor(sourceConnection, sourceSchema, ohdmImporter, stepLen);
+            
+            try {
+                if (reset) {
+                    System.out.println("remove ohdm entries in intermediate database");
+
+                    // reset can take a while: log each 40 minutes
+                    trigger = new Trigger(extractor, 1000 * 60 * 30);
+                    ohdmImporter.forgetPreviousNodesImport();
+                    ohdmImporter.forgetPreviousWaysImport();
+                    ohdmImporter.forgetPreviousRelationsImport();
+
+                    // reset ohdm
+                    OHDM_DB.dropOHDMTables(targetConnection, targetSchema);
+
+                    // setup
+                    OHDM_DB.createOHDMTables(targetConnection, targetSchema);
+                    
+                    // stop trigger
+                    trigger.end();
+                }
+            } catch (Exception e) {
+                System.err.println("problems during setting old data (non-fatal): " + e.getLocalizedMessage());
+                System.exit(0);
+            }
 
             System.out.println("intermediate select queue uses jdbc");
             sourceQueue = DB.createSQLStatementQueue(sourceConnection, sourceParameter);

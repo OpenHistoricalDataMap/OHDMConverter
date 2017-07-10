@@ -5,6 +5,9 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import util.InterDB;
@@ -591,12 +594,16 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
     
     public String getStatistics() {
         try {
-            Thread.sleep(2000);
+            Thread.sleep(2000); // ??
         } catch (InterruptedException ex) {
             Logger.getLogger(OSMExtractor.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         StringBuilder sb = new StringBuilder();
+        
+        LocalDate date = LocalDate.now();
+        sb.append(date.format(ISO_LOCAL_DATE_TIME));
+        sb.append("\n");
         
         sb.append("max ids: ");
         sb.append("n:");

@@ -277,9 +277,10 @@ public class Util {
         while(i < args.length) {
             // key is followed by value. Key starts with -
             if(!args[i].startsWith("-")) {
-                System.err.println("malformed parameter list: parameter name must start with '-'. ");
-                System.err.println(helpMessage);
-                return null;
+                /* found parameter that does not start with '-' 
+                maybe shell parameters. Leave it alone. We are done here
+                */
+                return argumentMap;
             }
 
             // value can be empty

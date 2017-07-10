@@ -5,11 +5,8 @@ import util.*;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.net.URISyntaxException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -17,20 +14,18 @@ import java.util.*;
 /**
  * Created by thsc on 06.07.2017.
  */
-public class OSMChunkExtractorProcessFactory {
+public class OSMChunkExtractorCommandBuilder {
 
     private long minID, maxID;
 
     public static void main(String args[]) {
-        System.out.println("start chunk import");
+        String jarFileNames = null;
 
-        String jarFileName = null;
-
-        String path = OSMChunkExtractorProcessFactory.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        String path = OSMChunkExtractorCommandBuilder.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         File f;
         try {
-            File jarFile = new File(OSMChunkExtractorProcessFactory.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
-            jarFileName = jarFile.getCanonicalPath();
+            File jarFile = new File(OSMChunkExtractorCommandBuilder.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+            jarFileNames = jarFile.getCanonicalPath();
         } catch (Exception e) {
             System.err.println("cannot figure out jar name - abort: " + e.getLocalizedMessage());
             System.exit(0);
@@ -48,6 +43,9 @@ public class OSMChunkExtractorProcessFactory {
         usage.append("-size [value] (size of each chunk default: 1.000.000)");
         usage.append("\n");
         long size = 1000000;
+        
+        usage.append("-jar [additional jar files - optional]");
+        usage.append("\n");
 
         // now get real parameters
         HashMap<String, String> argumentMap = Util.parametersToMap(args, false, usage.toString());
@@ -67,16 +65,21 @@ public class OSMChunkExtractorProcessFactory {
             if (value != null) {
                 size = Integer.parseInt(value);
             }
+            
+            value = argumentMap.get("-jar");
+            if (value != null) {
+                jarFileNames = jarFileNames + ":" + value;
+            }
         }
 
-        if(jarFileName == null) {
+        if(jarFileNames == null) {
             System.err.println("jar filename missing:");
             System.err.println(usage);
             System.exit(0);
         }
 
 
-        OSMChunkExtractorProcessFactory cef = new OSMChunkExtractorProcessFactory();
+        OSMChunkExtractorCommandBuilder cef = new OSMChunkExtractorCommandBuilder();
 
         try {
             Parameter sourceParameter = new Parameter(sourceParameterFileName);
@@ -118,8 +121,8 @@ public class OSMChunkExtractorProcessFactory {
 
                 if(from <= to) {
                     do {
-                        cef.launchChunkProcess(
-                                jarFileName,
+                        cef.writeCommand(
+                                jarFileNames,
                                 sourceParameterFileName,
                                 targetParameterFileName,
                                 first,
@@ -163,12 +166,12 @@ public class OSMChunkExtractorProcessFactory {
                 this.jvmPath = System.getProperties().getProperty("java.home") + File.separator + "bin" + File.separator + "java";
             }
 
-            System.out.println("use " + this.jvmPath + " as JVM");
+//            System.out.println("use " + this.jvmPath + " as JVM");
         }
     }
 
 
-    Process launchChunkProcess(String jarFile, String dbInter, String dbOHDM,
+    private void writeCommand(String jarFiles, String dbInter, String dbOHDM,
            boolean reset, long from, long to, String entityName, String logFile,
            String errorLogFile, boolean parallel) throws IOException {
 
@@ -176,8 +179,11 @@ public class OSMChunkExtractorProcessFactory {
         StringBuilder sb = new StringBuilder();
         this.setJVMPath(); // figure out JVM path on that machine
         sb.append(this.jvmPath);
-        sb.append(" -jar ");
-        sb.append(jarFile);
+        sb.append(" -classpath ");
+        sb.append(jarFiles);
+        
+        sb.append(" ");
+        sb.append("util.OSM2Rendering");
 
         sb.append(" ");
         sb.append(OSM2Rendering.CHUNK_PROCESS);
@@ -205,48 +211,13 @@ public class OSMChunkExtractorProcessFactory {
         sb.append(" 2>> ");
         sb.append(errorLogFile);
 
-        Runtime runtime = Runtime.getRuntime();
+        if(parallel) {
+            sb.append(" &");
+        }
 
         String cmd = sb.toString();
-        System.out.println("execute: " + cmd);
-        try {
-//            Process process = runtime.exec(cmd);
-
-            System.out.println("start process builder");
-            ProcessBuilder pb = new ProcessBuilder(cmd);
-/*
-            Map<String, String> environment = pb.environment();
-            HashSet<String> keys = new HashSet<>();
-
-            for(String key : environment.keySet()) {
-                keys.add(key);
-            }
-            // now clear environment
-            for(String key : keys) {
-                environment.remove(key);
-            }
-*/
-            System.out.println(pb.environment().toString());
-            Process process = pb.start();
-
-            if(!parallel) {
-                try {
-                    int retCode = process.waitFor();
-                    int i = 42;
-                } catch (InterruptedException ex) {
-                    // won't happen.. no plans to send interrupt
-    //                System.out.println("..process produced exception: " + ex.getMessage());
-                }
-            }
-
-            return process;
-        }
-        catch(Throwable re) {
-            System.err.println("cannot spawn process: " + re.getLocalizedMessage());
-            System.err.println(re.getClass().getName());
-        }
-
-        return null;
+        
+        System.out.println(cmd);
     }
 
     private void getMaxID(SQLStatementQueue sql, String fulltableName) {

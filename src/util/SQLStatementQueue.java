@@ -100,7 +100,7 @@ public class SQLStatementQueue {
                 // no exception thrown... set up connections
                 this.freeConnection.add(Boolean.TRUE);
 
-                this.logStream.println(this.hashCode() + ": create " + maxThreads + " connections");
+//                this.logStream.println(this.hashCode() + ": create " + maxThreads + " connections");
                 // create connections more connection
                 for(int i=1; i < maxThreads; i++) {
                     this.connections.add(DB.createConnection(parameter));

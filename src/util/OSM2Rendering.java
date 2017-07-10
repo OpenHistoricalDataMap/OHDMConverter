@@ -9,7 +9,7 @@ import java.util.HashMap;
 
 import inter2ohdm.OHDMUpdateInter;
 import inter2ohdm.OSMChunkExtractor;
-import inter2ohdm.OSMChunkExtractorProcessFactory;
+import inter2ohdm.OSMChunkExtractorCommandBuilder;
 import ohdm2rendering.OHDM2Rendering;
 import osm2inter.OSMImport;
 import osm2inter.OSMUpdateInter;
@@ -19,12 +19,11 @@ import osm2inter.OSMUpdateInter;
  * @author thsc
  */
 public class OSM2Rendering {
-    public static final String CHUNK_FACTORY = "-chunkimport";
+    public static final String CHUNK_FACTORY = "-buildimportcmd";
     public static final String CHUNK_PROCESS = "-chunkprocess";
 
     public static void main(String[] args) throws IOException, SQLException {
 
-        System.out.println("try to figure out what to import...");
         if(args.length < 4) {
             /* at least two parameter are required which are 
             defined with at least four arguments
@@ -38,12 +37,12 @@ public class OSM2Rendering {
         String ohdmDBConfig = null;
         String renderingDBConfig = null;
 
-        boolean chunkFactory = false;
+        boolean chunkCmdBuilder = false;
         boolean chunkProcess = false;
 
         // now get real parameters
         HashMap<String, String> argumentMap = Util.parametersToMap(args,
-                false, "at least two parameters are required");
+                false, "[usage description should be added here :/]");
 
         if(argumentMap != null) {
             // got some - overwrite defaults
@@ -72,13 +71,13 @@ public class OSM2Rendering {
                 renderingDBConfig = value;
             }
 
-            chunkFactory = argumentMap.containsKey(CHUNK_FACTORY);
+            chunkCmdBuilder = argumentMap.containsKey(CHUNK_FACTORY);
             chunkProcess = argumentMap.containsKey(CHUNK_PROCESS);
         }
 
         // launch chunk factory
-        if(chunkFactory) {
-            OSMChunkExtractorProcessFactory.main(args);
+        if(chunkCmdBuilder) {
+            OSMChunkExtractorCommandBuilder.main(args);
             System.exit(1);
         }
 

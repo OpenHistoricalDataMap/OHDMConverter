@@ -2,11 +2,8 @@ package inter2ohdm;
 
 import util.*;
 
-import java.io.File;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 
@@ -191,8 +188,6 @@ public class OSMChunkExtractor {
                 targetQueue.join();
             }
             if (ohdmImporter != null) ohdmImporter.close();
-            System.out.println("done importing a chunk from intermediate DB to ohdm DB");
-            System.out.println(extractor.getStatistics());
         }
     }
 }

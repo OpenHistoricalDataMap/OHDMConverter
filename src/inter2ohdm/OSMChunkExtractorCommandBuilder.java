@@ -126,6 +126,7 @@ public class OSMChunkExtractorCommandBuilder {
                         break;
                     case "relations":
                         fullTableName = DB.getFullTableName(sourceParameter.getSchema(), InterDB.RELATIONTABLE);
+                        parallelProcs = 0; // relations must be imported sequentially
                         break;
                 }
 

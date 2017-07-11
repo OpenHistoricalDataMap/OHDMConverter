@@ -43,9 +43,17 @@ public class OSMChunkExtractorCommandBuilder {
         usage.append("-size [value] (size of each chunk default: 1.000.000)");
         usage.append("\n");
         long size = 1000000;
-        
+
         usage.append("-jar [additional jar files - optional]");
         usage.append("\n");
+
+        usage.append("-parallel [number of parallel processes - default: 0 (no parallel process at all]");
+        usage.append("\n");
+        int parallelProcs = 0;
+
+        usage.append("-nice [if set - process are started with lower schedule priority (default: false)]");
+        usage.append("\n");
+        boolean nice = false;
 
         // now get real parameters
         HashMap<String, String> argumentMap = Util.parametersToMap(args, false, usage.toString());
@@ -65,10 +73,20 @@ public class OSMChunkExtractorCommandBuilder {
             if (value != null) {
                 size = Integer.parseInt(value);
             }
-            
+
             value = argumentMap.get("-jar");
             if (value != null) {
                 jarFileNames = jarFileNames + ":" + value;
+            }
+
+            value = argumentMap.get("-parallel");
+            if (value != null) {
+                parallelProcs = Integer.parseInt(value);
+                if(parallelProcs < 0) parallelProcs = 0;
+            }
+
+            if(argumentMap.containsKey("-nice")) {
+                nice = true;
             }
         }
 
@@ -119,8 +137,34 @@ public class OSMChunkExtractorCommandBuilder {
                 long to = from + size;
                 if(to > cef.maxID) to = cef.maxID;
 
+                int parallelCounter = parallelProcs;
+
                 if(from <= to) {
                     do {
+                        boolean parallel = false;
+
+                        if(to + size*5 < cef.maxID && from > cef.minID) {
+                        /* last couple of processes are not parallel to end import of one
+                        entity before starting another one
+                          */
+                            if (parallelCounter < 0){
+                                // rewind
+                                parallelCounter = parallelProcs;
+                            }
+
+                            if(parallelCounter == 0) {
+                                if(parallelProcs > 0) {
+                                    // ready for rewind next round
+                                    parallelCounter = -1;
+                                }
+                            }
+
+                            if(parallelCounter > 0) {
+                                parallelCounter--;
+                                parallel = true;
+                            }
+                        }
+
                         cef.writeCommand(
                                 jarFileNames,
                                 sourceParameterFileName,
@@ -130,7 +174,9 @@ public class OSMChunkExtractorCommandBuilder {
                                 entityType,
                                 logFile,
                                 errorLogFile,
-                                false);
+                                parallel,
+                                nice
+                        );
 
                         first = false;
 
@@ -173,11 +219,15 @@ public class OSMChunkExtractorCommandBuilder {
 
     private void writeCommand(String jarFiles, String dbInter, String dbOHDM,
            boolean reset, long from, long to, String entityName, String logFile,
-           String errorLogFile, boolean parallel) throws IOException {
+           String errorLogFile, boolean parallel, boolean nice) throws IOException {
 
         // create command line
         StringBuilder sb = new StringBuilder();
         this.setJVMPath(); // figure out JVM path on that machine
+
+        if(nice) {
+            sb.append(" nice ");
+        }
         sb.append(this.jvmPath);
         sb.append(" -classpath ");
         sb.append(jarFiles);

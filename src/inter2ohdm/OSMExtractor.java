@@ -601,10 +601,6 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
         
         StringBuilder sb = new StringBuilder();
         
-        LocalDate date = LocalDate.now();
-        sb.append(date.format(ISO_LOCAL_DATE_TIME));
-        sb.append("\n");
-        
         sb.append("max ids: ");
         sb.append("n:");
         sb.append(Util.setDotsInStringValue(this.nodesTableEntries));

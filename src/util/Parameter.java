@@ -47,6 +47,18 @@ public class Parameter {
     private int maxPSQLProcesses = 1;
     private String renderoutput = OHDM2Rendering.GENERIC;
     private int logMessageInterval = 5;
+
+    public String getConnectionType() {
+        return connectionType;
+    }
+
+    public String getDelimiter() {
+        return delimiter;
+    }
+
+    // added parameters for 'COPY' support
+    private String connectionType = "insert"; // use 'copy' to init connectors as Copy Connectors
+    private String delimiter = "|";
     
     public Parameter(String filename) throws FileNotFoundException, IOException {
         long now = System.currentTimeMillis();
@@ -117,6 +129,8 @@ public class Parameter {
                             case "maxPSQLProcesses": this.maxPSQLProcesses = Integer.parseInt(value); break;
                             case "renderoutput": this.renderoutput = value; break;
                             case "logMessageInterval": this.logMessageInterval = Integer.parseInt(value); break;
+                            case "connectionType": this.connectionType = value; break;
+                            case "delimiter": this.connectionType = value; break;
                         }
                     }
                 }
@@ -140,6 +154,7 @@ public class Parameter {
     public String getMaxThread() { return this.maxThreads ;}
     public String getRecordFileName() { return this.recordFileName; }
     public String getReadStepLen() { return this.readStepLen; }
+
     
     public String getPath() { return this.getdbName() ;}
     public boolean usePSQL() { return this.usePSQL ;}

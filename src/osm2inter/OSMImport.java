@@ -2,6 +2,7 @@ package osm2inter;
 
 import java.io.File;
 import java.io.PrintStream;
+import java.sql.SQLException;
 import java.util.HashMap;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -19,7 +20,8 @@ public class OSMImport {
     private static final String DEFAULT_OSM_FILENAME = "sample.osm";
     private static final String INTER_DB_SETTINGS_FILENAME = "db_inter.txt";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
+        HashMap<String, DBCopyConnector> connectors = null;
         Parameter dbConnectionSettings = null;
         try {
             SAXParserFactory spf = SAXParserFactory.newInstance();
@@ -38,9 +40,9 @@ public class OSMImport {
             }
 
             dbConnectionSettings = new Parameter(parameterFile);
-            OSMClassification osmClassification = OSMClassification.getOSMClassification();
+//            OSMClassification osmClassification = OSMClassification.getOSMClassification();
 
-            HashMap<String, DBCopyConnector> connectors = new HashMap<>();
+            connectors = new HashMap<>();
             String[] tablenames = COPY_OSMImporter.connsNames;
             for (String tablename : tablenames){
                 connectors.put(tablename, new DBCopyConnector(dbConnectionSettings, tablename));
@@ -67,6 +69,10 @@ public class OSMImport {
             }
 
             Util.printExceptionMessage(err, t, null, "in main OSM2Inter", false);
+            for (DBCopyConnector connector : connectors.values()){
+                System.out.println("wrote "+connector.endCopy()+" lines to "+connector.getTablename());
+                connector.close();
+            }
         }
     }
 }

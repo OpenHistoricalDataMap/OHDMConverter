@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-
+/**
+ * @author FlorianSauer
+ */
 public class DBCopyConnector {
     private String tablename;
     private String delimiter;
@@ -45,9 +47,18 @@ public class DBCopyConnector {
 
     public void write(String csv) throws SQLException {
         //write csv string to stdin/stream of psql COPY
+        System.out.println("writing >"+csv+"< to "+this.tablename);
         csv += "\n";
         byte[] bytes = csv.getBytes();
-        this.copyIn.writeToCopy(bytes, 0, bytes.length);
+        try {
+            this.copyIn.writeToCopy(bytes, 0, bytes.length);
+            this.copyIn.flushCopy();
+        } catch (Exception e){
+            // TODO: 07.12.2017 remove try catch, only for debugging
+            System.out.println("could not write >"+csv.replaceAll("(\\r|\\n)", "")+"< to "+this.tablename);
+            e.printStackTrace();
+            throw e;
+        }
         this.writtenLines += 1;
 
     }

@@ -130,7 +130,7 @@ public class Parameter {
                             case "renderoutput": this.renderoutput = value; break;
                             case "logMessageInterval": this.logMessageInterval = Integer.parseInt(value); break;
                             case "connectionType": this.connectionType = value; break;
-                            case "delimiter": this.connectionType = value; break;
+                            case "delimiter": this.delimiter = value; break;
                         }
                     }
                 }

@@ -41,7 +41,11 @@ public class OSMImport {
 
             dbConnectionSettings = new Parameter(parameterFile);
 //            OSMClassification osmClassification = OSMClassification.getOSMClassification();
+            System.out.println("schema: "+dbConnectionSettings.getSchema());
+            System.out.println("connection type: "+dbConnectionSettings.getConnectionType());
+            System.out.println("delimiter: "+dbConnectionSettings.getDelimiter());
 
+            System.out.println("creating connections");
             connectors = new HashMap<>();
             String[] tablenames = COPY_OSMImporter.connsNames;
             for (String tablename : tablenames){
@@ -50,10 +54,14 @@ public class OSMImport {
 
             // 2BTested
 //            newSAXParser.parse(osmFile, new XML_SAXHandler(connectors));
-
+            System.out.println("starting parser");
             // replacing SQL importer with COPY importer
             newSAXParser.parse(osmFile, new COPY_OSMImporter(connectors));
 
+            for (DBCopyConnector connector : connectors.values()){
+                System.out.println("wrote "+connector.endCopy()+" lines to "+connector.getTablename());
+                connector.close();
+            }
 //            newSAXParser.parse(osmFile, new SQL_OSMImporter(dbConnectionSettings, osmClassification));
 //        newSAXParser.parse(osmFile, new SQL_OSMImporter(dbConnectionSettings, osmClassification));
 //        newSAXParser.parse(osmFile, new Dump_OSMImporter(dbConnectionSettings, osmClassification));
@@ -69,10 +77,6 @@ public class OSMImport {
             }
 
             Util.printExceptionMessage(err, t, null, "in main OSM2Inter", false);
-            for (DBCopyConnector connector : connectors.values()){
-                System.out.println("wrote "+connector.endCopy()+" lines to "+connector.getTablename());
-                connector.close();
-            }
         }
     }
 }

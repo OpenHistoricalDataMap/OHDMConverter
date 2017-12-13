@@ -226,8 +226,8 @@ public class COPY_OSMImporter extends DefaultHandler {
 				nodes++;
 				try {
 					// psql_table_id|osm_id|tstamp|classcode|otherclasscodes|serializedTags|lon|lat|LEER|LEER|LEER|LEER|LEER|has_name|valid
-					conns.get(connsNames[0]).write("" + delNode +
-//				conns.get(connsNames[0]).write("null" + delNode +
+//				conns.get(connsNames[0]).write("" + delNode +
+					conns.get(connsNames[0]).write("null" + delNode +
 							curMainElemID + delNode +
 							timeStamp + delNode +
 							classCode + delNode +
@@ -254,8 +254,8 @@ public class COPY_OSMImporter extends DefaultHandler {
 				ways++;
 				try {
 					// psql_table_id|osm_id|tstamp|classcode|otherclasscodes|serializedTags|LEER|LEER|memberIDS(Nodes)|LEER|LEER|LEER|has_name|valid
-					conns.get(connsNames[4]).write("" + delWay +
-//				conns.get(connsNames[4]).write("null" + delWay +
+//				conns.get(connsNames[4]).write("" + delWay +
+					conns.get(connsNames[4]).write("null" + delWay +
 							curMainElemID + delWay +
 							timeStamp + delWay +
 							classCode + delWay +
@@ -281,8 +281,8 @@ public class COPY_OSMImporter extends DefaultHandler {
 				rels++;
 				try {
 					// psql_table_id|osm_id|tstamp|classcode|otherclasscodes|serializedTags|LEER|LEER|memberIDS(all)|LEER|LEER|LEER|has_name|valid
-					conns.get(connsNames[2]).write("" + delRel +
-//				conns.get(connsNames[2]).write("null" + delRel +
+//				conns.get(connsNames[2]).write("" + delRel +
+					conns.get(connsNames[2]).write("null" + delRel +
 							curMainElemID + delRel +
 							timeStamp + delRel +
 							classCode + delRel +
@@ -371,8 +371,8 @@ public class COPY_OSMImporter extends DefaultHandler {
 						// write to SQL-DB
 						try {
 							// psql_table_id|way_id|node_id
-							conns.get(connsNames[3]).write("" + delWayMem +
-//						conns.get(connsNames[3]).write("null" + delWayMem +
+//						conns.get(connsNames[3]).write("" + delWayMem +
+							conns.get(connsNames[3]).write("null" + delWayMem +
 									curMainElemID + delWayMem +
 									attr.getValue("ref"));
 						} catch (SQLException e) {
@@ -426,8 +426,8 @@ public class COPY_OSMImporter extends DefaultHandler {
 								// write to SQL-DB
 								try {
 									// psql_table_id|actual_relation_id|member_node_id|member_way_id|member_rel_id|role
-									conns.get(connsNames[1]).write("" + delRelMem +
-//								conns.get(connsNames[1]).write("null" + delRelMem +
+//								conns.get(connsNames[1]).write("" + delRelMem +
+									conns.get(connsNames[1]).write("null" + delRelMem +
 											curMainElemID + delRelMem +
 											relIDs +
 											UtilCopyImport.escapeSpecialChar(attr.getValue("role")));

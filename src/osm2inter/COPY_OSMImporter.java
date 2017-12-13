@@ -7,10 +7,9 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.sql.SQLException;
-
-import osm.OSMClassificationCopyImport;
 import util.DBCopyConnector;
 import util.UtilCopyImport;
+import osm.OSMClassificationCopyImport;
 
 /**
  * Klasse COPY_OSMImporter<br>
@@ -20,19 +19,19 @@ import util.UtilCopyImport;
  * Handler benutzt momentan folgende SQL-Tabellenstruktur<br>
  * <br>
  * NODE<br>
- * osm_id|tstamp|classcode|otherclasscodes|serializedTags|lon|lat|LEER|LEER|LEER|LEER|LEER|has_name|valid<br>
+ * psql_table_id|osm_id|tstamp|classcode|otherclasscodes|serializedTags|lon|lat|LEER|LEER|LEER|LEER|LEER|has_name|valid<br>
  * <br>
  * WAY<br>
- * osm_id|tstamp|classcode|otherclasscodes|serializedTags|LEER|LEER|memberIDS(Nodes)|LEER|LEER|LEER|has_name|valid<br>
+ * psql_table_id|osm_id|tstamp|classcode|otherclasscodes|serializedTags|LEER|LEER|memberIDS(Nodes)|LEER|LEER|LEER|has_name|valid<br>
  * <br>
  * RELATION<br>
- * osm_id|tstamp|classcode|otherclasscodes|serializedTags|LEER|LEER|memberIDS(all)|LEER|LEER|LEER|has_name|valid<br>
+ * psql_table_id|osm_id|tstamp|classcode|otherclasscodes|serializedTags|LEER|LEER|memberIDS(all)|LEER|LEER|LEER|has_name|valid<br>
  * <br>
  * WAYMEMBER<br>
- * way_id|node_id<br>
+ * psql_table_id|way_id|node_id<br>
  * <br>
  * RELATIONMEMBER<br>
- * actual_relation_id|member_node_id|member_way_id|member_rel_id|role<br>
+ * psql_table_id|actual_relation_id|member_node_id|member_way_id|member_rel_id|role<br>
  */
 public class COPY_OSMImporter extends DefaultHandler {
 	private Locator xmlFileLocator;
@@ -86,7 +85,7 @@ public class COPY_OSMImporter extends DefaultHandler {
 		serTags = new StringBuilder();
 		hasName = false;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.xml.sax.helpers.DefaultHandler#startDocument()
 	 */
@@ -111,25 +110,25 @@ public class COPY_OSMImporter extends DefaultHandler {
 	@Override
 	public void startElement(String uri, String localName, String qName, Attributes attributes) {
 		switch (qName) {
-		case "node":
-		case "way":
-		case "relation": {
-			if (status == STATUS_OUTSIDE) {
-				startMainElement(attributes, qName);
-			} else {
-				System.out.println("XML-Error: Opening MainElement at Line " + xmlFileLocator.getLineNumber() + " is inside another MainElement.");
+			case "node":
+			case "way":
+			case "relation": {
+				if (status == STATUS_OUTSIDE) {
+					startMainElement(attributes, qName);
+				} else {
+					System.out.println("XML-Error: Opening MainElement at Line " + xmlFileLocator.getLineNumber() + " is inside another MainElement.");
+				}
+				break;
 			}
-			break;
-		}
-		case "tag":
-		case "nd":
-		case "member": {
-			if (status != STATUS_OUTSIDE) {
-				startInnerElement(attributes, qName);
-			} else {
-				System.out.println("XML-Error: Opening InnerElement at Line " + xmlFileLocator.getLineNumber() + " is outside of a MainElement.");
+			case "tag":
+			case "nd":
+			case "member": {
+				if (status != STATUS_OUTSIDE) {
+					startInnerElement(attributes, qName);
+				} else {
+					System.out.println("XML-Error: Opening InnerElement at Line " + xmlFileLocator.getLineNumber() + " is outside of a MainElement.");
+				}
 			}
-		}
 		}
 	}
 
@@ -139,23 +138,23 @@ public class COPY_OSMImporter extends DefaultHandler {
 	@Override
 	public void endElement(String uri, String localName, String qName) {
 		switch (qName) {
-		case "node":
-		case "way":
-		case "relation": {
-			if (status != STATUS_OUTSIDE) {
-				endMainElement(qName);
-			} else {
-				System.out.println("XML-Error: Single closing MainElement at Line " + xmlFileLocator.getLineNumber());
+			case "node":
+			case "way":
+			case "relation": {
+				if (status != STATUS_OUTSIDE) {
+					endMainElement(qName);
+				} else {
+					System.out.println("XML-Error: Single closing MainElement at Line " + xmlFileLocator.getLineNumber());
+				}
+				break;
 			}
-			break;
-		}
-		case "tag":
-		case "nd":
-		case "member": {
-			if (status == STATUS_OUTSIDE) {
-				System.out.println("XML-Error: Closing InnerElement at Line " + xmlFileLocator.getLineNumber() + " is outside of a MainElement.");
+			case "tag":
+			case "nd":
+			case "member": {
+				if (status == STATUS_OUTSIDE) {
+					System.out.println("XML-Error: Closing InnerElement at Line " + xmlFileLocator.getLineNumber() + " is outside of a MainElement.");
+				}
 			}
-		}
 		}
 	}
 
@@ -172,28 +171,28 @@ public class COPY_OSMImporter extends DefaultHandler {
 		otherClassCodes = new ArrayList<>();
 		serTags = new StringBuilder();
 		hasName = false;
-		
+
 		if (attr.getValue("id") != null) {
 			curMainElemID = attr.getValue("id");
 			switch (name) {
-			case "node": {
-				status = STATUS_NODE;
-				if (attr.getValue("lon") != null && attr.getValue("lat") != null) {
-					lon = attr.getValue("lon");
-					lat = attr.getValue("lat");
-				} else {
-					System.out.println("XML-Error: MainElement at Line " + xmlFileLocator.getLineNumber() + " has no lon and/or lat value.");
+				case "node": {
+					status = STATUS_NODE;
+					if (attr.getValue("lon") != null && attr.getValue("lat") != null) {
+						lon = attr.getValue("lon");
+						lat = attr.getValue("lat");
+					} else {
+						System.out.println("XML-Error: MainElement at Line " + xmlFileLocator.getLineNumber() + " has no lon and/or lat value.");
+					}
+					break;
 				}
-				break;
-			}
-			case "way": {
-				status = STATUS_WAY;
-				break;
-			}
-			case "relation": {
-				status = STATUS_RELATION;
-				break;
-			}
+				case "way": {
+					status = STATUS_WAY;
+					break;
+				}
+				case "relation": {
+					status = STATUS_RELATION;
+					break;
+				}
 			}
 			if (attr.getValue("timestamp") != null) {
 				timeStamp = attr.getValue("timestamp");
@@ -222,80 +221,89 @@ public class COPY_OSMImporter extends DefaultHandler {
 			}
 		}
 		switch (name) {
-		// update stats and write to SQL-DB
-		case "node": {
-			nodes++;
-			try {
-				// osm_id|tstamp|classcode|otherclasscodes|serializedTags|lon|lat|LEER|LEER|LEER|LEER|LEER|has_name|valid
-				conns.get(connsNames[0]).write(curMainElemID + delNode +
-						timeStamp + delNode +
-						classCode + delNode +
-						UtilCopyImport.getString(otherClassCodes) + delNode +
-						serTags.toString() + delNode +
-						lon + delNode +
-						lat + delNode +
-						"" + delNode +
-						"" + delNode +
-						"" + delNode +
-						"" + delNode +
-						"" + delNode +
-						Boolean.toString(hasName) + delNode +
-						"true");
-			} catch (SQLException e) {
-				System.out.println("SQL-Error: Couldn't write final String from XML-File at Line " + xmlFileLocator.getLineNumber() + " to Node-Table.");
-				e.printStackTrace();
-				System.exit(1); // probeweise
+			// update stats and write to SQL-DB
+			case "node": {
+				nodes++;
+				try {
+					// psql_table_id|osm_id|tstamp|classcode|otherclasscodes|serializedTags|lon|lat|LEER|LEER|LEER|LEER|LEER|has_name|valid
+					conns.get(connsNames[0]).write("" + delNode +
+//				conns.get(connsNames[0]).write("null" + delNode +
+							curMainElemID + delNode +
+							timeStamp + delNode +
+							classCode + delNode +
+							UtilCopyImport.getString(otherClassCodes) + delNode +
+							serTags.toString() + delNode +
+							lon + delNode +
+							lat + delNode +
+							"" + delNode +
+							"" + delNode +
+							"" + delNode +
+							"" + delNode +
+							"" + delNode +
+							Boolean.toString(hasName) + delNode +
+							"true");
+				} catch (SQLException e) {
+					System.out.println("SQL-Error: Couldn't write final String to Node-Table.");
+					System.out.println("MainElements: " + (nodes + ways + rels));
+					e.printStackTrace();
+					System.exit(1); // probeweise
+				}
+				break;
 			}
-			break;
-		}
-		case "way": {
-			ways++;
-			try {
-				// osm_id|tstamp|classcode|otherclasscodes|serializedTags|LEER|LEER|memberIDS(Nodes)|LEER|LEER|LEER|has_name|valid
-				conns.get(connsNames[4]).write(curMainElemID + delWay +
-						timeStamp + delWay +
-						classCode + delWay +
-						UtilCopyImport.getString(otherClassCodes) + delWay +
-						serTags.toString() + delWay +
-						"" + delWay +
-						"" + delWay +
-						memberIDs + delWay +
-						"" + delWay +
-						"" + delWay +
-						"" + delWay +
-						Boolean.toString(hasName) + delWay +
-						"true");
-			} catch (SQLException e) {
-				System.out.println("SQL-Error: Couldn't write final String from XML-File at Line " + xmlFileLocator.getLineNumber() + " to Way-Table.");
-				e.printStackTrace();
-				System.exit(1); // probeweise
+			case "way": {
+				ways++;
+				try {
+					// psql_table_id|osm_id|tstamp|classcode|otherclasscodes|serializedTags|LEER|LEER|memberIDS(Nodes)|LEER|LEER|LEER|has_name|valid
+					conns.get(connsNames[4]).write("" + delWay +
+//				conns.get(connsNames[4]).write("null" + delWay +
+							curMainElemID + delWay +
+							timeStamp + delWay +
+							classCode + delWay +
+							UtilCopyImport.getString(otherClassCodes) + delWay +
+							serTags.toString() + delWay +
+							"" + delWay +
+							"" + delWay +
+							memberIDs + delWay +
+							"" + delWay +
+							"" + delWay +
+							"" + delWay +
+							Boolean.toString(hasName) + delWay +
+							"true");
+				} catch (SQLException e) {
+					System.out.println("SQL-Error: Couldn't write final String to Way-Table.");
+					System.out.println("MainElements: " + (nodes + ways + rels));
+					e.printStackTrace();
+					System.exit(1); // probeweise
+				}
+				break;
 			}
-			break;
-		}
-		case "relation": {
-			rels++;
-			try {
-				// osm_id|tstamp|classcode|otherclasscodes|serializedTags|LEER|LEER|memberIDS(all)|LEER|LEER|LEER|has_name|valid
-				conns.get(connsNames[2]).write(curMainElemID + delRel +
-						timeStamp + delRel +
-						classCode + delRel +
-						UtilCopyImport.getString(otherClassCodes) + delRel +
-						serTags.toString() + delRel +
-						"" + delRel +
-						"" + delRel +
-						memberIDs + delRel +
-						"" + delRel +
-						"" + delRel +
-						"" + delRel +
-						Boolean.toString(hasName) + delRel +
-						"true");
-			} catch (SQLException e) {
-				System.out.println("SQL-Error: Couldn't write final String from XML-File at Line " + xmlFileLocator.getLineNumber() + " to Rel-Table.");
-				e.printStackTrace();
-				System.exit(1); // probeweise
+			case "relation": {
+				rels++;
+				try {
+					// psql_table_id|osm_id|tstamp|classcode|otherclasscodes|serializedTags|LEER|LEER|memberIDS(all)|LEER|LEER|LEER|has_name|valid
+					conns.get(connsNames[2]).write("" + delRel +
+//				conns.get(connsNames[2]).write("null" + delRel +
+							curMainElemID + delRel +
+							timeStamp + delRel +
+							classCode + delRel +
+							UtilCopyImport.getString(otherClassCodes) + delRel +
+							serTags.toString() + delRel +
+							"" + delRel +
+							"" + delRel +
+							memberIDs + delRel +
+							"" + delRel +
+							"" + delRel +
+							"" + delRel +
+							Boolean.toString(hasName) + delRel +
+							"true");
+				} catch (SQLException e) {
+					System.out.println("SQL-Error: Couldn't write final String to Rel-Table.");
+					System.out.println("MainElements: " + (nodes + ways + rels));
+					e.printStackTrace();
+					System.exit(1); // probeweise
+				}
+				break;
 			}
-			break;
-		}
 		}
 		status = STATUS_OUTSIDE;
 		// set placeholders, vars and organisation-container to null
@@ -313,127 +321,136 @@ public class COPY_OSMImporter extends DefaultHandler {
 	 */
 	private void startInnerElement(Attributes attr, String name) {
 		switch (name) {
-		case "tag": {
-			// key and value --> size 2
-			if (attr.getLength() == 2) {
-				if (attr.getValue(0) != null && attr.getValue(1) != null) {
-					if (attr.getValue(1).equalsIgnoreCase("yes") || attr.getValue(1).equalsIgnoreCase("no")) {
-						// this values describe if sth is present / given or not
-						// at first in "if" before selecting the osm_classes
-						// because of pairs like "building-yes" would trigger
-						// the osm-main-class "building" with the default value
-						// "undefined" for a subclass
-						UtilCopyImport.serializeTags(serTags, attr.getValue(0), attr.getValue(1));
-					} else if (OSMClassificationCopyImport.containsValue(attr.getValue(0))) {
-						if (classCode == 0) {
-							classCode = OSMClassificationCopyImport.getOHDMClassCode(attr.getValue(0), attr.getValue(1));
-						} else {
-							otherClassCodes.add(OSMClassificationCopyImport.getOHDMClassCode(attr.getValue(0), attr.getValue(1)));
-						}
-					} else if (attr.getValue(0).equalsIgnoreCase("admin_level")) {
-						try {
-							adminLevel = Integer.parseInt(attr.getValue(1));
-						} catch (NumberFormatException e) {
-							System.out.println("XML-Error: InnerElement 'tag' at Line " + xmlFileLocator.getLineNumber() + " does contain a not parsable Integer value.");
-							adminLevel = 0;
-							e.printStackTrace();
-						}
-					} else {
-						UtilCopyImport.serializeTags(serTags, attr.getValue(0), attr.getValue(1));
-						if (attr.getValue(0).equalsIgnoreCase("name")) {
-							hasName = true;
-						}
-					}
-				} else {
-					System.out.println("XML-Error: InnerElement 'tag' at Line " + xmlFileLocator.getLineNumber() + " has one or two null-values.");
-				}
-			} else {
-				System.out.println("XML-Error: InnerElement 'tag' at Line " + xmlFileLocator.getLineNumber() + " has more/less than 2 attributes.");
-			}
-			break;
-		}
-		case "nd": {
-			if (status == STATUS_WAY) {
-				if (attr.getValue("ref") != null) {
-					if (memberIDs.isEmpty()) {
-						memberIDs = attr.getValue("ref");
-					} else {
-						memberIDs = memberIDs + "," + attr.getValue("ref");
-					}
-					// write to SQL-DB
-					try {
-						// way_id|node_id
-						conns.get(connsNames[3]).write(curMainElemID + delWayMem + attr.getValue("ref"));
-					} catch (SQLException e) {
-						System.out.println("SQL-Error: Couldn't write final String from XML-File at Line " + xmlFileLocator.getLineNumber() + " to WayMem-Table.");
-						e.printStackTrace();
-						System.exit(1); // probeweise
-					}
-				} else {
-					System.out.println("XML-Error: InnerElement 'nd' at Line " + xmlFileLocator.getLineNumber() + " has a null-value at 'ref'.");
-				}
-			} else {
-				System.out.println("XML-Error: InnerElement 'nd' at Line " + xmlFileLocator.getLineNumber() + "is not inside a way.");
-			}
-			break;
-		}
-		case "member": {
-			if (status == STATUS_RELATION) {
-				if (attr.getValue("ref") != null) {
-					if (memberIDs.isEmpty()) {
-						memberIDs = attr.getValue("ref");
-					} else {
-						memberIDs = memberIDs + "," + attr.getValue("ref");
-					}
-					if (attr.getValue("type") != null) {
-						// empty skeleton
-						String relIDs = "" + delRelMem +
-								"" + delRelMem +
-								"" + delRelMem;
-						switch (attr.getValue("type").toLowerCase()) {
-						case "node": // 1st place
-							relIDs = attr.getValue("ref") + delRelMem +
-							"" + delRelMem +
-							"" + delRelMem;
-							break;
-						case "way": // 2nd place
-							relIDs = "" + delRelMem +
-							attr.getValue("ref") + delRelMem +
-							"" + delRelMem;
-							break;
-						case "relation": // 3rd place
-							relIDs = "" + delRelMem +
-							"" + delRelMem +
-							attr.getValue("ref") + delRelMem;
-							break;
-						default:
-							System.out.println("XML-Error: InnerElement 'member' at Line " + xmlFileLocator.getLineNumber() + " has no correct value at 'type'.");
-							break;
-						}
-						if (attr.getValue("role") != null) {
-							// write to SQL-DB
+			case "tag": {
+				// key and value --> size 2
+				if (attr.getLength() == 2) {
+					if (attr.getValue(0) != null && attr.getValue(1) != null) {
+						if (attr.getValue(1).equalsIgnoreCase("yes") || attr.getValue(1).equalsIgnoreCase("no")) {
+							// this values describe if sth is present / given or not
+							// at first in "if" before selecting the osm_classes
+							// because of pairs like "building-yes" would trigger
+							// the osm-main-class "building" with the default value
+							// "undefined" for a subclass
+							UtilCopyImport.serializeTags(serTags, attr.getValue(0), attr.getValue(1));
+						} else if (OSMClassificationCopyImport.containsValue(attr.getValue(0))) {
+							if (classCode == 0) {
+								classCode = OSMClassificationCopyImport.getOHDMClassCode(attr.getValue(0), attr.getValue(1));
+							} else {
+								otherClassCodes.add(OSMClassificationCopyImport.getOHDMClassCode(attr.getValue(0), attr.getValue(1)));
+							}
+						} else if (attr.getValue(0).equalsIgnoreCase("admin_level")) {
 							try {
-								// actual_relation_id|member_node_id|member_way_id|member_rel_id|role
-								conns.get(connsNames[1]).write(curMainElemID + delRelMem + relIDs + UtilCopyImport.escapeSpecialChar(attr.getValue("role")));
-							} catch (SQLException e) {
-								System.out.println("SQL-Error: Couldn't write final String from XML-File at Line " + xmlFileLocator.getLineNumber() + " to RelMem-Table.");
+								adminLevel = Integer.parseInt(attr.getValue(1));
+							} catch (NumberFormatException e) {
+								System.out.println("XML-Error: InnerElement 'tag' at Line " + xmlFileLocator.getLineNumber() + " does contain a not parsable Integer value.");
+								adminLevel = 0;
 								e.printStackTrace();
-								System.exit(1); // probeweise
 							}
 						} else {
-							System.out.println("XML-Error: InnerElement 'member' at Line " + xmlFileLocator.getLineNumber() + " has a null-value at 'role'.");
+							UtilCopyImport.serializeTags(serTags, attr.getValue(0), attr.getValue(1));
+							if (attr.getValue(0).equalsIgnoreCase("name")) {
+								hasName = true;
+							}
 						}
 					} else {
-						System.out.println("XML-Error: InnerElement 'member' at Line " + xmlFileLocator.getLineNumber() + " has a null-value at 'type'.");
+						System.out.println("XML-Error: InnerElement 'tag' at Line " + xmlFileLocator.getLineNumber() + " has one or two null-values.");
 					}
 				} else {
-					System.out.println("XML-Error: InnerElement 'member' at Line " + xmlFileLocator.getLineNumber() + " has a null-value at 'ref'.");
+					System.out.println("XML-Error: InnerElement 'tag' at Line " + xmlFileLocator.getLineNumber() + " has more/less than 2 attributes.");
 				}
-			} else {
-				System.out.println("XML-Error: InnerElement 'member' at Line " + xmlFileLocator.getLineNumber() + "is not inside a relation.");
+				break;
 			}
-			break;
-		}
+			case "nd": {
+				if (status == STATUS_WAY) {
+					if (attr.getValue("ref") != null) {
+						if (memberIDs.isEmpty()) {
+							memberIDs = attr.getValue("ref");
+						} else {
+							memberIDs = memberIDs + "," + attr.getValue("ref");
+						}
+						// write to SQL-DB
+						try {
+							// psql_table_id|way_id|node_id
+							conns.get(connsNames[3]).write("" + delWayMem +
+//						conns.get(connsNames[3]).write("null" + delWayMem +
+									curMainElemID + delWayMem +
+									attr.getValue("ref"));
+						} catch (SQLException e) {
+							System.out.println("SQL-Error: Couldn't write final String to WayMem-Table.");
+							System.out.println("MainElements: " + (nodes + ways + rels));
+							e.printStackTrace();
+							System.exit(1); // probeweise
+						}
+					} else {
+						System.out.println("XML-Error: InnerElement 'nd' at Line " + xmlFileLocator.getLineNumber() + " has a null-value at 'ref'.");
+					}
+				} else {
+					System.out.println("XML-Error: InnerElement 'nd' at Line " + xmlFileLocator.getLineNumber() + "is not inside a way.");
+				}
+				break;
+			}
+			case "member": {
+				if (status == STATUS_RELATION) {
+					if (attr.getValue("ref") != null) {
+						if (memberIDs.isEmpty()) {
+							memberIDs = attr.getValue("ref");
+						} else {
+							memberIDs = memberIDs + "," + attr.getValue("ref");
+						}
+						if (attr.getValue("type") != null) {
+							// empty skeleton
+							String relIDs = "" + delRelMem +
+									"" + delRelMem +
+									"" + delRelMem;
+							switch (attr.getValue("type").toLowerCase()) {
+								case "node": // 1st place
+									relIDs = attr.getValue("ref") + delRelMem +
+											"" + delRelMem +
+											"" + delRelMem;
+									break;
+								case "way": // 2nd place
+									relIDs = "" + delRelMem +
+											attr.getValue("ref") + delRelMem +
+											"" + delRelMem;
+									break;
+								case "relation": // 3rd place
+									relIDs = "" + delRelMem +
+											"" + delRelMem +
+											attr.getValue("ref") + delRelMem;
+									break;
+								default:
+									System.out.println("XML-Error: InnerElement 'member' at Line " + xmlFileLocator.getLineNumber() + " has no correct value at 'type'.");
+									break;
+							}
+							if (attr.getValue("role") != null) {
+								// write to SQL-DB
+								try {
+									// psql_table_id|actual_relation_id|member_node_id|member_way_id|member_rel_id|role
+									conns.get(connsNames[1]).write("" + delRelMem +
+//								conns.get(connsNames[1]).write("null" + delRelMem +
+											curMainElemID + delRelMem +
+											relIDs +
+											UtilCopyImport.escapeSpecialChar(attr.getValue("role")));
+								} catch (SQLException e) {
+									System.out.println("SQL-Error: Couldn't write final String to RelMem-Table.");
+									System.out.println("MainElements: " + (nodes + ways + rels));
+									e.printStackTrace();
+									System.exit(1); // probeweise
+								}
+							} else {
+								System.out.println("XML-Error: InnerElement 'member' at Line " + xmlFileLocator.getLineNumber() + " has a null-value at 'role'.");
+							}
+						} else {
+							System.out.println("XML-Error: InnerElement 'member' at Line " + xmlFileLocator.getLineNumber() + " has a null-value at 'type'.");
+						}
+					} else {
+						System.out.println("XML-Error: InnerElement 'member' at Line " + xmlFileLocator.getLineNumber() + " has a null-value at 'ref'.");
+					}
+				} else {
+					System.out.println("XML-Error: InnerElement 'member' at Line " + xmlFileLocator.getLineNumber() + "is not inside a relation.");
+				}
+				break;
+			}
 		}
 	}
 }

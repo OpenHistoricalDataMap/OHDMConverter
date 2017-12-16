@@ -35,7 +35,9 @@ public class DBCopyConnector {
         try {
             this.connection = DB.createConnection(parameter);
             this.copyManager = new CopyManager((BaseConnection) connection);
-            this.copyIn = this.copyManager.copyIn("COPY "+tablename+" FROM STDIN WITH DELIMITER '"+delimiter+"'");
+            String sql = "COPY "+tablename+" FROM STDIN DELIMITER '"+delimiter+"' NULL 'NULL'";
+            System.out.println(sql);
+            this.copyIn = this.copyManager.copyIn(sql);
         } catch (SQLException ex) {
             System.err.println("cannot connect to database - fatal - exit\n" + ex.getMessage());
             ex.printStackTrace(System.err);

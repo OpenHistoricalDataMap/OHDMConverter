@@ -29,7 +29,7 @@ public class UtilCopyImport {
 			}
 		}
 	}
-
+	
 	/**
 	 * Methode append()<br>
 	 * fügt serialisierten String s dem target hinzu<br>

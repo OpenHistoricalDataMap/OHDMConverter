@@ -1,16 +1,9 @@
 package util;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.util.StringTokenizer;
 import ohdm2rendering.OHDM2Rendering;
+
+import java.io.*;
+import java.util.StringTokenizer;
 
 /**
  * @author thsc
@@ -26,18 +19,18 @@ public class Parameter {
     private String recordFileName = "recordFile.txt";
     private String readStepLen;
     private boolean usePSQL = false;
-    
+
     private static final String STDOUT = "stdout";
     private static final String STDERR = "stderr";
-    
+
     private String outFile = STDOUT;
     private String logFile = STDOUT;
     private String errFile = STDERR;
-    
+
     private PrintStream outStream;
     private PrintStream logStream;
     private PrintStream errStream;
-    
+
     private boolean forgetPreviousImport = true;
     private boolean importNodes = true;
     private boolean importWays = true;
@@ -59,30 +52,57 @@ public class Parameter {
     // added parameters for 'COPY' support
     private String connectionType = "insert"; // use 'copy' to init connectors as Copy Connectors
     private String delimiter = "|";
-    
+    private String[] nodesColumnNames;
+    private String[] relationmemberColumnNames;
+    private String[] relationsColumnNames;
+
+    public String[] getNodesColumnNames() {
+        return nodesColumnNames;
+    }
+
+    public String[] getRelationmemberColumnNames() {
+        return relationmemberColumnNames;
+    }
+
+    public String[] getRelationsColumnNames() {
+        return relationsColumnNames;
+    }
+
+    public String[] getWaynodesColumnNames() {
+        return waynodesColumnNames;
+    }
+
+    public String[] getWaysColumnNames() {
+        return waysColumnNames;
+    }
+
+    private String[] waynodesColumnNames;
+    private String[] waysColumnNames;
+
+
     public Parameter(String filename) throws FileNotFoundException, IOException {
         long now = System.currentTimeMillis();
-        
+
         FileInputStream fInput = new FileInputStream(filename);
         File file = new File(filename);
         FileReader fr = new FileReader(file);
-        
+
         BufferedReader br = new BufferedReader(fr);
-        
+
         String inLine = br.readLine();
-        
+
         boolean first = true;
         boolean inComment = false;
         boolean skip = false;
-        
+
         while(inLine != null) {
             skip = false;
-            
-            // ignore comments like // 
+
+            // ignore comments like //
             if(inLine.startsWith("//")) {
                 skip = true;
             }
-            
+
             if(!inComment) {
                 if(inLine.startsWith("/*")) {
                     inComment = true;
@@ -95,7 +115,7 @@ public class Parameter {
                 // in any case:
                 skip = true;
             }
-        
+
             if(!skip) {
                 StringTokenizer st = new StringTokenizer(inLine, ":");
                 if(st.hasMoreTokens()) {
@@ -131,6 +151,11 @@ public class Parameter {
                             case "logMessageInterval": this.logMessageInterval = Integer.parseInt(value); break;
                             case "connectionType": this.connectionType = value; break;
                             case "delimiter": this.delimiter = value; break;
+                            case "nodesColumnNames": this.nodesColumnNames = value.split("\\|"); break;
+                            case "relationmemberColumnNames": this.relationmemberColumnNames = value.split("\\|"); break;
+                            case "relationsColumnNames": this.relationsColumnNames = value.split("\\|"); break;
+                            case "waynodesColumnNames": this.waynodesColumnNames = value.split("\\|"); break;
+                            case "waysColumnNames": this.waysColumnNames = value.split("\\|"); break;
                         }
                     }
                 }
@@ -139,12 +164,12 @@ public class Parameter {
             inLine = br.readLine();
         }
     }
-    
+
     private boolean getTrueOrFalse(String value) {
         return (value.equalsIgnoreCase("yes")
                 || value.equalsIgnoreCase("true"));
     }
-    
+
     public String getServerName() { return this.servername ;}
     public String getPortNumber() { return this.portnumber ;}
     public String getUserName() { return this.username ;}
@@ -155,11 +180,11 @@ public class Parameter {
     public String getRecordFileName() { return this.recordFileName; }
     public String getReadStepLen() { return this.readStepLen; }
 
-    
+
     public String getPath() { return this.getdbName() ;}
     public boolean usePSQL() { return this.usePSQL ;}
     public boolean forgetPreviousImport() { return this.forgetPreviousImport; }
-    
+
     public int getLogMessageInterval() {return this.logMessageInterval; }
     
     /*
@@ -167,77 +192,77 @@ public class Parameter {
     public boolean importWays() { return this.importWays; }
     public boolean importRelations() { return this.importRelations; }
     */
-    
-    public boolean importNodes() { 
+
+    public boolean importNodes() {
         System.out.println("TODO (remove that option): parameter.importNodes always returns true");
-        return true; 
+        return true;
     }
-    public boolean importWays() { 
+    public boolean importWays() {
         System.out.println("TODO (remove that option): parameter.importWays always returns true");
-        return true; 
+        return true;
     }
-    public boolean importRelations() { 
+    public boolean importRelations() {
         System.out.println("TODO (remove that option): parameter.importRelations always returns true");
-        return true; 
+        return true;
     }
-    
+
     public int getMaxSQLFileSize() { return this.maxSQLFileSize; }
     public int getMaxPSQLProcesses() { return this.maxPSQLProcesses; }
 
     public String getFullPSQLPath() { return this.fullPSQLPath;  }
-    
+
     public String getRenderoutput() { return this.renderoutput;  }
 
-    
-    
-    public PrintStream getOutStream() throws FileNotFoundException { 
+
+
+    public PrintStream getOutStream() throws FileNotFoundException {
         if(this.outStream == null) {
             this.outStream = this.getOutStream(this.outFile);
         }
-        
+
         return this.outStream;
     }
-    
+
     public PrintStream getOutStream(String name) throws FileNotFoundException {
         return this.getStream(this.outFile, name);
     }
-    
-    public PrintStream getLogStream() throws FileNotFoundException { 
+
+    public PrintStream getLogStream() throws FileNotFoundException {
         if(this.logStream == null) {
             this.logStream = this.getOutStream(this.logFile);
         }
-        
+
         return this.logStream;
     }
-    
+
     public PrintStream getLogStream(String name) throws FileNotFoundException {
         return this.getStream(this.logFile, name);
     }
-    
-    public PrintStream getErrStream() throws FileNotFoundException { 
+
+    public PrintStream getErrStream() throws FileNotFoundException {
         if(this.errStream == null) {
             this.errStream = this.getOutStream(this.errFile);
         }
-        
+
         return this.errStream;
     }
-    
+
     public PrintStream getErrStream(String name) throws FileNotFoundException {
         return this.getStream(this.errFile, name);
     }
-    
+
     private PrintStream getStream(String outFile, String name) throws FileNotFoundException {
-        
+
         if(outFile == null || outFile.length() == 0) {
             throw new FileNotFoundException("empty filename");
         }
-        
+
         PrintStream stream = null;
-        
+
         // yes we are
         if(outFile.equalsIgnoreCase(STDOUT)) {
             stream = System.out;
-        } 
+        }
         else if(outFile.equalsIgnoreCase(STDERR)) {
             stream = System.err;
         }
@@ -254,7 +279,7 @@ public class Parameter {
                 throw new FileNotFoundException("weired: that system cannot handle UTF-8.. fatal");
             }
         }
-        
+
         return stream;
     }
 }

@@ -7,6 +7,7 @@ import org.postgresql.core.BaseConnection;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
 
 /**
  * @author FlorianSauer
@@ -28,23 +29,50 @@ public class DBCopyConnector {
     private Connection connection;
     private long writtenLines = 0;
 
+
     public DBCopyConnector(Parameter parameter, String tablename) throws IOException {
+        String[] selectedColumns = null;
         this.tablename = tablename;
         this.delimiter = parameter.getDelimiter();
-
+        switch (tablename) {
+            case "nodes": {
+                System.out.println("nodes");
+                selectedColumns = parameter.getNodesColumnNames();
+                break;
+            }
+            case "relationmember": {
+                System.out.println("relationmember");
+                selectedColumns = parameter.getRelationmemberColumnNames();
+                break;
+            }
+            case "relations": {
+                System.out.println("relations");
+                selectedColumns = parameter.getRelationsColumnNames();
+                break;
+            }
+            case "waynodes": {
+                System.out.println("waynodes");
+                selectedColumns = parameter.getWaynodesColumnNames();
+                break;
+            }
+            case "ways": {
+                System.out.println("ways");
+                selectedColumns = parameter.getWaysColumnNames();
+                break;
+            }
+        }
+        System.out.println("selectedColumns "+Arrays.toString(selectedColumns));
         try {
             this.connection = DB.createConnection(parameter);
             this.copyManager = new CopyManager((BaseConnection) connection);
-            String sql = "COPY "+tablename+" FROM STDIN DELIMITER '"+delimiter+"' NULL 'NULL'";
-            System.out.println(sql);
+            String sql = "COPY "+tablename+"("+String.join(", ", selectedColumns)+") FROM STDIN DELIMITER '"+delimiter+"' NULL 'NULL'";
+            System.out.println("SQL: "+sql);
             this.copyIn = this.copyManager.copyIn(sql);
         } catch (SQLException ex) {
             System.err.println("cannot connect to database - fatal - exit\n" + ex.getMessage());
             ex.printStackTrace(System.err);
             System.exit(1);
         }
-
-
     }
 
     public void write(String csv) throws SQLException {

@@ -1,21 +1,20 @@
 package osm2inter;
 
+import util.*;
+
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import java.io.File;
 import java.io.PrintStream;
 import java.sql.SQLException;
 import java.util.HashMap;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import osm.OSMClassification;
-import util.DBCopyConnector;
-import util.Parameter;
-import util.Util;
 
 /**
  *
  * @author thsc
  * @author FlorianSauer
  */
+@SuppressWarnings("Duplicates")
 public class OSMImport {
     private static final String DEFAULT_OSM_FILENAME = "sample.osm";
     private static final String INTER_DB_SETTINGS_FILENAME = "db_inter.txt";

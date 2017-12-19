@@ -243,7 +243,7 @@ public class COPY_OSMImporter extends DefaultHandler {
 									this.timeStamp + this.delimiterNode +
 									this.classCode + this.delimiterNode +
 									UtilCopyImport.getString(this.otherClassCodes) + this.delimiterNode +
-									this.serTags.toString() + this.delimiterNode +
+									this.serTags.toString().replace(this.delimiterNode, "\\"+this.delimiterNode) + this.delimiterNode +
 									this.lon + this.delimiterNode +
 									this.lat + this.delimiterNode +
 									Boolean.toString(this.hasName) + this.delimiterNode +
@@ -265,7 +265,7 @@ public class COPY_OSMImporter extends DefaultHandler {
 									this.timeStamp + this.delimiterWay +
 									this.classCode + this.delimiterWay +
 									UtilCopyImport.getString(this.otherClassCodes) + this.delimiterWay +
-									this.serTags.toString() + this.delimiterWay +
+									this.serTags.toString().replace(this.delimiterWay, "\\"+this.delimiterWay) + this.delimiterWay +
 									this.memberIDs + this.delimiterWay +
 									Boolean.toString(this.hasName) + this.delimiterWay +
 									"true");
@@ -286,7 +286,7 @@ public class COPY_OSMImporter extends DefaultHandler {
 									this.timeStamp + this.delimiterRel +
 									this.classCode + this.delimiterRel +
 									UtilCopyImport.getString(this.otherClassCodes) + this.delimiterRel +
-									this.serTags.toString() + this.delimiterRel +
+									this.serTags.toString().replace(this.delimiterRel, "\\"+this.delimiterRel) + this.delimiterRel +
 									this.memberIDs + this.delimiterRel +
 									Boolean.toString(this.hasName) + this.delimiterRel +
 									"true");

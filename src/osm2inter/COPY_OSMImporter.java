@@ -4,7 +4,7 @@ import org.xml.sax.Attributes;
 import org.xml.sax.Locator;
 import org.xml.sax.helpers.DefaultHandler;
 import osm.OSMClassificationCopyImport;
-import util.DBCopyConnector;
+import util.CopyConnector;
 import util.UtilCopyImport;
 
 import java.sql.SQLException;
@@ -48,7 +48,7 @@ public class COPY_OSMImporter extends DefaultHandler {
 	}
 
 	// Organisation
-	private HashMap<String, DBCopyConnector> conns;
+	private HashMap<String, CopyConnector> conns;
 	public static final String[] connsNames = { "nodes", "relationmember", "relations", "waynodes", "ways" };
 	private String delimiterNode, delimiterWay, delimiterRel, delimiterWayMem, delimiterRelMem;
 
@@ -73,9 +73,9 @@ public class COPY_OSMImporter extends DefaultHandler {
 
 	/**
 	 * Konstruktor der Klasse<br>
-	 * @param connectors ist die Hashmap mit Objekten von DBCopyConnector
+	 * @param connectors ist die Hashmap mit Objekten von CopyConnector
 	 */
-	public COPY_OSMImporter(HashMap<String, DBCopyConnector> connectors) {
+	public COPY_OSMImporter(HashMap<String, CopyConnector> connectors) {
 		this.conns = connectors;
 		this.delimiterNode = this.conns.get(connsNames[0]).getDelimiter();
 		this.delimiterWay = this.conns.get(connsNames[4]).getDelimiter();

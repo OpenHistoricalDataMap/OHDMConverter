@@ -12,7 +12,7 @@ import java.util.Arrays;
 /**
  * @author FlorianSauer
  */
-public class DBCopyConnector {
+public class CopyConnector {
     private String tablename;
     private String delimiter;
     private CopyManager copyManager;
@@ -30,7 +30,7 @@ public class DBCopyConnector {
     private long writtenLines = 0;
 
 
-    public DBCopyConnector(Parameter parameter, String tablename) throws IOException {
+    public CopyConnector(Parameter parameter, String tablename) throws IOException {
         String[] selectedColumns = null;
         this.tablename = tablename;
         this.delimiter = parameter.getDelimiter();

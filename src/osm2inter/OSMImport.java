@@ -20,7 +20,7 @@ public class OSMImport {
     private static final String INTER_DB_SETTINGS_FILENAME = "db_inter.txt";
 
     public static void main(String[] args) throws SQLException {
-        HashMap<String, DBCopyConnector> connectors = null;
+        HashMap<String, CopyConnector> connectors = null;
         Parameter dbConnectionSettings = null;
         try {
             SAXParserFactory spf = SAXParserFactory.newInstance();
@@ -48,7 +48,7 @@ public class OSMImport {
             connectors = new HashMap<>();
             String[] tablenames = COPY_OSMImporter.connsNames;
             for (String tablename : tablenames){
-                connectors.put(tablename, new DBCopyConnector(dbConnectionSettings, tablename));
+                connectors.put(tablename, new CopyConnector(dbConnectionSettings, tablename));
             }
 
             // 2BTested
@@ -57,7 +57,7 @@ public class OSMImport {
             // replacing SQL importer with COPY importer
             newSAXParser.parse(osmFile, new COPY_OSMImporter(connectors));
 
-            for (DBCopyConnector connector : connectors.values()){
+            for (CopyConnector connector : connectors.values()){
                 System.out.println("wrote "+connector.endCopy()+" lines to "+connector.getTablename());
                 connector.close();
             }

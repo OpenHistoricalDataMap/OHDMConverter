@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author FlorianSauer
@@ -91,6 +92,34 @@ public class CopyConnector {
         }
         this.writtenLines += 1;
 
+    }
+
+    public void write(List<String> csv) throws SQLException {
+        this.write(this.escapeStrings((String[]) csv.toArray()));
+    }
+    public void write(String[] csv) throws SQLException {
+        this.write(this.escapeStrings(csv));
+    }
+
+    private String escapeStrings(String[] list){
+        String finalString = "";
+        String tmp;
+        for (String s : list){
+            tmp = s;
+            tmp = tmp.replace(this.delimiter, "\\"+this.delimiter);
+            tmp = tmp.replace("\"", "\\\"");
+            tmp = tmp.replace("\r", "\\\r");
+            tmp = tmp.replace("\n", "\\\n");
+//            if (tmp.contains(" ")){
+//                tmp = "\""+tmp+"\"";
+//            }
+
+
+
+
+            finalString = finalString+tmp+this.delimiter;
+        }
+        return finalString.substring(0, finalString.length() - 1);
     }
 
     public String getDelimiter() {

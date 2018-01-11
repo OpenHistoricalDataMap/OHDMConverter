@@ -8,6 +8,7 @@ import java.util.StringTokenizer;
 /**
  * @author thsc
  */
+//todo add parameter description
 public class Parameter {
     private String servername;
     private String portnumber;

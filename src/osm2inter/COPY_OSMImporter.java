@@ -40,9 +40,14 @@ public class COPY_OSMImporter extends DefaultHandler {
 	private long parsedElements;
 	private long gcIndex;
 
-	/* (non-Javadoc)
-	 * @see org.xml.sax.helpers.DefaultHandler#setDocumentLocator(org.xml.sax.Locator)
+	/**
+	this method is used for escaping special chars, so the given string matches the csv format
 	 */
+	public String serializedTagsToCsv(String serializedTags){
+		return "\""+serializedTags.replace("\r", "\\r").replace("\n", "\\n")+"\"";
+//		"\""+.replace(this.delimiterNode, "\\"+this.delimiterNode)+"\"" + this.delimiterNode +
+
+	}
 	public void setDocumentLocator(Locator locator) {
 		this.xmlFileLocator = locator;
 	}
@@ -238,16 +243,17 @@ public class COPY_OSMImporter extends DefaultHandler {
 				this.nodes++;
 				try {
 					// NULL|osm_id|tstamp|classcode|otherclasscodes|serTags|lon|lat|NULL|NULL|NULL|NULL|NULL|has_name|valid
-					this.conns.get(this.connsNames[0]).write(
-							this.curMainElemID + this.delimiterNode +
-									this.timeStamp + this.delimiterNode +
-									this.classCode + this.delimiterNode +
-									UtilCopyImport.getString(this.otherClassCodes) + this.delimiterNode +
-									this.serTags.toString().replace(this.delimiterNode, "\\"+this.delimiterNode) + this.delimiterNode +
-									this.lon + this.delimiterNode +
-									this.lat + this.delimiterNode +
-									Boolean.toString(this.hasName) + this.delimiterNode +
-									"true");
+					this.conns.get(this.connsNames[0]).write(new String[] {
+							this.curMainElemID, 
+                            this.timeStamp, 
+                            ""+this.classCode, 
+                            UtilCopyImport.getString(this.otherClassCodes), 
+                            this.serTags.toString(),
+                            this.lon, 
+                            this.lat, 
+                            Boolean.toString(this.hasName),
+                            "true"
+					});
 				} catch (SQLException e) {
 					System.out.println("SQL-Error: Couldn't write final String to Node-Table.");
 					System.out.println("MainElements: " + (this.nodes + this.ways + this.rels));
@@ -260,15 +266,15 @@ public class COPY_OSMImporter extends DefaultHandler {
 				this.ways++;
 				try {
 					// NULL|osm_id|tstamp|classcode|otherclasscodes|serTags|NULL|NULL|memberIDs|NULL|NULL|NULL|has_name|valid
-					this.conns.get(this.connsNames[4]).write(
-							this.curMainElemID + this.delimiterWay +
-									this.timeStamp + this.delimiterWay +
-									this.classCode + this.delimiterWay +
-									UtilCopyImport.getString(this.otherClassCodes) + this.delimiterWay +
-									this.serTags.toString().replace(this.delimiterWay, "\\"+this.delimiterWay) + this.delimiterWay +
-									this.memberIDs + this.delimiterWay +
-									Boolean.toString(this.hasName) + this.delimiterWay +
-									"true");
+					this.conns.get(this.connsNames[4]).write(new String[] {
+							this.curMainElemID ,
+									this.timeStamp ,
+									""+this.classCode ,
+									UtilCopyImport.getString(this.otherClassCodes) ,
+									this.serTags.toString() ,
+									this.memberIDs ,
+									Boolean.toString(this.hasName) ,
+									"true"});
 				} catch (SQLException e) {
 					System.out.println("SQL-Error: Couldn't write final String to Way-Table.");
 					System.out.println("MainElements: " + (this.nodes + this.ways + this.rels));
@@ -281,15 +287,15 @@ public class COPY_OSMImporter extends DefaultHandler {
 				this.rels++;
 				try {
 					// NULL|osm_id|tstamp|classcode|otherclasscodes|serTags|NULL|NULL|memberIDs|NULL|NULL|NULL|has_name|valid
-					this.conns.get(this.connsNames[2]).write(
-							this.curMainElemID + this.delimiterRel +
-									this.timeStamp + this.delimiterRel +
-									this.classCode + this.delimiterRel +
-									UtilCopyImport.getString(this.otherClassCodes) + this.delimiterRel +
-									this.serTags.toString().replace(this.delimiterRel, "\\"+this.delimiterRel) + this.delimiterRel +
-									this.memberIDs + this.delimiterRel +
-									Boolean.toString(this.hasName) + this.delimiterRel +
-									"true");
+					this.conns.get(this.connsNames[2]).write(new String[] {
+							this.curMainElemID ,
+									this.timeStamp ,
+									""+this.classCode ,
+									UtilCopyImport.getString(this.otherClassCodes) ,
+									this.serTags.toString() ,
+									this.memberIDs ,
+									Boolean.toString(this.hasName) ,
+									"true"});
 				} catch (SQLException e) {
 					System.out.println("SQL-Error: Couldn't write final String to Rel-Table.");
 					System.out.println("MainElements: " + (this.nodes + this.ways + this.rels));
@@ -373,8 +379,8 @@ public class COPY_OSMImporter extends DefaultHandler {
 						try {
 							// NULL|way_id|node_id
 							this.conns.get(this.connsNames[3]).write(
-									this.curMainElemID + this.delimiterWayMem +
-											attr.getValue("ref"));
+							        new String[] {
+									this.curMainElemID, attr.getValue("ref")});
 						} catch (SQLException e) {
 							System.out.println("SQL-Error: Couldn't write final String to WayMem-Table.");
 							System.out.println("MainElements: " + (this.nodes + this.ways + this.rels));
@@ -399,36 +405,29 @@ public class COPY_OSMImporter extends DefaultHandler {
 						}
 						if (attr.getValue("type") != null) {
 							// empty skeleton
-							String relIDs = "NULL" + this.delimiterRelMem +
-									"NULL" + this.delimiterRelMem +
-									"NULL" + this.delimiterRelMem;
+							String[] relIDs;
 							switch (attr.getValue("type").toLowerCase()) {
 								case "node": // 1st place
-									relIDs = attr.getValue("ref") + this.delimiterRelMem +
-											"NULL" + this.delimiterRelMem +
-											"NULL" + this.delimiterRelMem;
+									relIDs = new String[] {attr.getValue("ref"), "NULL", "NULL"};
 									break;
 								case "way": // 2nd place
-									relIDs = "NULL" + this.delimiterRelMem +
-											attr.getValue("ref") + this.delimiterRelMem +
-											"NULL" + this.delimiterRelMem;
+									relIDs = new String[] { "NULL", attr.getValue("ref"), "NULL"};
 									break;
 								case "relation": // 3rd place
-									relIDs = "NULL" + this.delimiterRelMem +
-											"NULL" + this.delimiterRelMem +
-											attr.getValue("ref") + this.delimiterRelMem;
+									relIDs = new String[] { "NULL", "NULL", attr.getValue("ref")};
 									break;
 								default:
+                                    relIDs = new String[] {"NULL", "NULL", "NULL"};
 									System.out.println("XML-Error: InnerElement 'member' at Line " + this.xmlFileLocator.getLineNumber() + " has no correct value at 'type'.");
 									break;
 							}
 							if (attr.getValue("role") != null) {
 								try {
 									// NULL|rel_id|member_node_id|member_way_id|member_rel_id|role
-									this.conns.get(this.connsNames[1]).write(
-											this.curMainElemID + this.delimiterRelMem +
-													relIDs +
-													UtilCopyImport.escapeSpecialChar(attr.getValue("role")));
+                                    // -> relation_id|node_id|way_id|member_rel_id|role
+									this.conns.get(this.connsNames[1]).write(new String[] {
+											this.curMainElemID, relIDs[0], relIDs[1], relIDs[2], UtilCopyImport.escapeSpecialChar(attr.getValue("role"))}
+									);
 								} catch (SQLException e) {
 									System.out.println("SQL-Error: Couldn't write final String to RelMem-Table.");
 									System.out.println("MainElements: " + (this.nodes + this.ways + this.rels));

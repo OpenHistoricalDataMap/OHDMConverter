@@ -16,7 +16,7 @@ import java.util.HashMap;
  */
 @SuppressWarnings("Duplicates")
 public class OSMImport {
-    private static final String DEFAULT_OSM_FILENAME = "sample.osm";
+    private static final String DEFAULT_OSM_FILENAME = "sample3.osm";
     private static final String INTER_DB_SETTINGS_FILENAME = "db_inter.txt";
 
     public static void main(String[] args) throws SQLException {

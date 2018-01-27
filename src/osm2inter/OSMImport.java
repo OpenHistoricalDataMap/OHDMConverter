@@ -7,6 +7,7 @@ import javax.xml.parsers.SAXParserFactory;
 import java.io.File;
 import java.io.PrintStream;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -16,26 +17,33 @@ import java.util.HashMap;
  */
 @SuppressWarnings("Duplicates")
 public class OSMImport {
-    private static final String DEFAULT_OSM_FILENAME = "sample3.osm";
+    private static final String DEFAULT_OSM_FILENAME = "test.osm";
     private static final String INTER_DB_SETTINGS_FILENAME = "db_inter.txt";
 
     public static void main(String[] args) throws SQLException {
+        System.out.println("Started with arguments: "+Arrays.toString(args));
         HashMap<String, CopyConnector> connectors = null;
         Parameter dbConnectionSettings = null;
+        long past = System.currentTimeMillis();
         try {
             SAXParserFactory spf = SAXParserFactory.newInstance();
             SAXParser newSAXParser = spf.newSAXParser();
-
             String osmFileName = DEFAULT_OSM_FILENAME;
-            if(args.length > 1) {
+            if(args.length > 0) {
                 osmFileName = args[0];
+                System.out.println("you selected the custom osmFileName "+osmFileName);
+            } else {
+                System.out.println("using osmFileName "+osmFileName);
             }
 
             File osmFile = new File(osmFileName);
 
             String parameterFile = INTER_DB_SETTINGS_FILENAME;
-            if(args.length > 0) {
+            if(args.length > 1) {
                 parameterFile = args[1];
+                System.out.println("you selected the custom parameterFile "+parameterFile);
+            } else {
+                System.out.println("using parameterFile "+parameterFile);
             }
 
             dbConnectionSettings = new Parameter(parameterFile);
@@ -77,5 +85,7 @@ public class OSMImport {
 
             Util.printExceptionMessage(err, t, null, "in main OSM2Inter", false);
         }
+        long present = System.currentTimeMillis();
+        System.out.println("That took "+(present-past)+" ms");
     }
 }

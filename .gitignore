@@ -32,15 +32,16 @@ conf/config.xml
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
-/.gitignore
 .idea/
 .idea/*
 .idea/vcs.xml
 db_inter.txt
 db_inter_private.txt
-/sample.osm
-/sample3.osm
-/sample2.osm
+sample.osm
+sample2.osm
+sample3.osm
+sample4.osm
+test.osm
 /src/osm2inter/TestMain.java
 /.idea/
 /.idea/libraries/
@@ -59,6 +60,6 @@ out/production/OSMImportUpdate/osm/
 out/production/OSMImportUpdate/osm2inter/
 out/production/OSMImportUpdate/util/
 /out/
-
-
 /jdbc/
+
+

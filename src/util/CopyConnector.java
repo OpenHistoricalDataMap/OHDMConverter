@@ -37,27 +37,27 @@ public class CopyConnector {
         this.delimiter = parameter.getDelimiter();
         switch (tablename) {
             case "nodes": {
-                System.out.println("nodes");
+//                System.out.println("nodes");
                 selectedColumns = parameter.getNodesColumnNames();
                 break;
             }
             case "relationmember": {
-                System.out.println("relationmember");
+//                System.out.println("relationmember");
                 selectedColumns = parameter.getRelationmemberColumnNames();
                 break;
             }
             case "relations": {
-                System.out.println("relations");
+//                System.out.println("relations");
                 selectedColumns = parameter.getRelationsColumnNames();
                 break;
             }
             case "waynodes": {
-                System.out.println("waynodes");
+//                System.out.println("waynodes");
                 selectedColumns = parameter.getWaynodesColumnNames();
                 break;
             }
             case "ways": {
-                System.out.println("ways");
+//                System.out.println("ways");
                 selectedColumns = parameter.getWaysColumnNames();
                 break;
             }
@@ -67,7 +67,7 @@ public class CopyConnector {
             this.connection = DB.createConnection(parameter);
             this.copyManager = new CopyManager((BaseConnection) connection);
             String sql = "COPY "+tablename+"("+String.join(", ", selectedColumns)+") FROM STDIN DELIMITER '"+delimiter+"' NULL 'NULL'";
-            System.out.println("SQL: "+sql);
+//            System.out.println("SQL: "+sql);
             this.copyIn = this.copyManager.copyIn(sql);
         } catch (SQLException ex) {
             System.err.println("cannot connect to database - fatal - exit\n" + ex.getMessage());
@@ -78,7 +78,7 @@ public class CopyConnector {
 
     public void write(String csv) throws SQLException {
         //write csv string to stdin/stream of psql COPY
-        System.out.println("writing >"+csv+"< to "+this.tablename);
+//        System.out.println("writing >"+csv+"< to "+this.tablename);
         csv += "\n";
         byte[] bytes = csv.getBytes();
         try {
@@ -106,10 +106,12 @@ public class CopyConnector {
         String tmp;
         for (String s : list){
             tmp = s;
+            tmp = tmp.replace("\\", "\\\\");
             tmp = tmp.replace(this.delimiter, "\\"+this.delimiter);
             tmp = tmp.replace("\"", "\\\"");
             tmp = tmp.replace("\r", "\\\r");
             tmp = tmp.replace("\n", "\\\n");
+
 //            if (tmp.contains(" ")){
 //                tmp = "\""+tmp+"\"";
 //            }

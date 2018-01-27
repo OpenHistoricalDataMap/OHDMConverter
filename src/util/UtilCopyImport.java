@@ -1,11 +1,17 @@
 package util;
 
+import util.ManagedStringBuilder.ManagedStringBuilder;
+
 import java.util.List;
 
 /**
  * Klasse UtilCopyImport<br>
  * beinhaltet diverse Hilfsmethoden für die Klasse COPY_OSMImporter<br>
+ *
+ * @author thsc
+ * @author FlorianSauer
  */
+@SuppressWarnings("Duplicates")
 public class UtilCopyImport {
 	/**
 	 * Methode serializeTags()<br>
@@ -15,21 +21,56 @@ public class UtilCopyImport {
 	 * @param value Wert2 von tag-Elementen
 	 */
 	public static void serializeTags(StringBuilder target, String key, String value) {
-		if (target != null) {
-			if (key != null && key.length() != 0) { // key okay
-				if (value != null && value.length() != 0) { // key and value okay - best case
-					append(target, key);
-					append(target, value);
-				} else { // value is null / empty - but key isnt - perhaps null value have to be stored - continue
-					append(target, key);
-					target.append("0000");
-				}
-			} else { // key is null / empty - value doesnt matter - will never be found again
-				target.append("00000000");
-			}
-		}
+		try {
+
+            if (target != null) {
+                if (key != null && key.length() != 0) { // key okay
+                    if (value != null && value.length() != 0) { // key and value okay - best case
+                        append(target, key);
+                        append(target, value);
+                    } else { // value is null / empty - but key isnt - perhaps null value have to be stored - continue
+                        append(target, key);
+                        target.append("0000");
+                    }
+                } else { // key is null / empty - value doesnt matter - will never be found again
+                    target.append("00000000");
+                }
+            }
+		} catch (OutOfMemoryError E){
+            System.out.println("Out of memory, failed building the serialized tag and exiting");
+            System.out.println("StringBuilder capacity was "+target.capacity());
+            System.out.println("StringBuilder length was "+target.length());
+            System.out.println("StringBuilder key was "+key);
+            System.out.println("StringBuilder value was "+value);
+            System.exit(1);
+        }
 	}
-	
+	public static void serializeTags(ManagedStringBuilder target, String key, String value) {
+		try {
+
+            if (target != null) {
+                if (key != null && key.length() != 0) { // key okay
+                    if (value != null && value.length() != 0) { // key and value okay - best case
+                        append(target, key);
+                        append(target, value);
+                    } else { // value is null / empty - but key isnt - perhaps null value have to be stored - continue
+                        append(target, key);
+                        target.append("0000");
+                    }
+                } else { // key is null / empty - value doesnt matter - will never be found again
+                    target.append("00000000");
+                }
+            }
+		} catch (OutOfMemoryError E){
+            System.out.println("Out of memory, failed building the serialized tag and exiting");
+            System.out.println("StringBuilder capacity was "+target.capacity());
+            System.out.println("StringBuilder length was "+target.length());
+            System.out.println("StringBuilder key was "+key);
+            System.out.println("StringBuilder value was "+value);
+            System.exit(1);
+        }
+	}
+
 	/**
 	 * Methode append()<br>
 	 * fügt serialisierten String s dem target hinzu<br>
@@ -37,6 +78,22 @@ public class UtilCopyImport {
 	 * @param s soll serialisiert / hinzugefügt werden
 	 */
 	private static void append(StringBuilder target, String s) {
+		s = removeStrips(s);
+		// if we see it realistic the length of key and value cannot be over 999
+		// so we take size of 3
+		if (s.length() < 1000) {
+			for (int i = 100; i >= 1; i = i / 10) {
+				if (s.length() < i) {
+					target.append("0");
+				}
+			}
+			target.append(s.length());
+			target.append(s);
+		} else {
+			target.append("0000");
+		}
+	}
+	private static void append(ManagedStringBuilder target, String s) {
 		s = removeStrips(s);
 		// if we see it realistic the length of key and value cannot be over 999
 		// so we take size of 3

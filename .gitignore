@@ -6,9 +6,6 @@ build/
 core
 nbproject/*
 
-#config file
-conf/config.xml
-
 #java specific
 *.class
 
@@ -25,7 +22,6 @@ conf/config.xml
 .mtj.tmp/
 
 # Package Files #
-*.jar
 *.war
 *.ear
 
@@ -59,7 +55,5 @@ out/production/OSMImportUpdate/ohdm2rendering/
 out/production/OSMImportUpdate/osm/
 out/production/OSMImportUpdate/osm2inter/
 out/production/OSMImportUpdate/util/
-/out/
-/jdbc/
 
 

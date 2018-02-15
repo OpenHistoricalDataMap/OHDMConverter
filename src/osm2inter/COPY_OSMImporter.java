@@ -111,8 +111,8 @@ public class COPY_OSMImporter extends DefaultHandler {
         this.lat = "";
         this.memberIDs = "";
         this.otherClassCodes = new ArrayList<>();
-        this.serTagsSize = 2000000000;
-//        this.serTagsSize = 2000;
+//        this.serTagsSize = 2000000000;
+        this.serTagsSize = 200000;
         this.serTags = new ManagedStringBuilder(new char[this.serTagsSize]);
         this.hasName = false;
     }

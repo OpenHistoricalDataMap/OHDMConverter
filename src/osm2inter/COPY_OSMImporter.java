@@ -94,7 +94,9 @@ public class COPY_OSMImporter extends DefaultHandler {
      *
      * @param connectors ist die Hashmap mit Objekten von CopyConnector
      */
-    public COPY_OSMImporter(HashMap<String, CopyConnector> connectors) {
+    public COPY_OSMImporter(HashMap<String, CopyConnector> connectors, 
+            int serTagsSize) {
+        
         this.conns = connectors;
         this.delimiterNode = this.conns.get(connsNames[0]).getDelimiter();
         this.delimiterWay = this.conns.get(connsNames[4]).getDelimiter();
@@ -111,8 +113,11 @@ public class COPY_OSMImporter extends DefaultHandler {
         this.lat = "";
         this.memberIDs = "";
         this.otherClassCodes = new ArrayList<>();
+        
 //        this.serTagsSize = 2000000000;
         this.serTagsSize = 200000;
+        this.serTagsSize = serTagsSize;
+        
         this.serTags = new ManagedStringBuilder(new char[this.serTagsSize]);
         this.hasName = false;
     }

@@ -41,6 +41,7 @@ public class Parameter {
     private int maxPSQLProcesses = 1;
     private String renderoutput = OHDM2Rendering.GENERIC;
     private int logMessageInterval = 5;
+    private int SerTagsSize = 200000;
 
     public String getConnectionType() {
         return connectionType;
@@ -157,6 +158,7 @@ public class Parameter {
                             case "relationsColumnNames": this.relationsColumnNames = value.split("\\|"); break;
                             case "waynodesColumnNames": this.waynodesColumnNames = value.split("\\|"); break;
                             case "waysColumnNames": this.waysColumnNames = value.split("\\|"); break;
+                            case "serTagsSize": this.SerTagsSize = Integer.parseInt(value); break;
                         }
                     }
                 }
@@ -213,8 +215,9 @@ public class Parameter {
     public String getFullPSQLPath() { return this.fullPSQLPath;  }
 
     public String getRenderoutput() { return this.renderoutput;  }
-
-
+    
+    
+    public int getSerTagsSize() { return this.SerTagsSize;  }
 
     public PrintStream getOutStream() throws FileNotFoundException {
         if(this.outStream == null) {

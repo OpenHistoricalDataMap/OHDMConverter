@@ -63,7 +63,7 @@ public class OSMImport {
 //            newSAXParser.parse(osmFile, new XML_SAXHandler(connectors));
             System.out.println("starting parser");
             // replacing SQL importer with COPY importer
-            newSAXParser.parse(osmFile, new COPY_OSMImporter(connectors));
+            newSAXParser.parse(osmFile, new COPY_OSMImporter(connectors, dbConnectionSettings.getSerTagsSize()));
 
             for (CopyConnector connector : connectors.values()){
                 System.out.println("wrote "+connector.endCopy()+" lines to "+connector.getTablename());

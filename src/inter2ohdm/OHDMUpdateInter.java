@@ -57,17 +57,63 @@ delete from sample_osw_new.nodes where sample_osw_new.nodes.osm_id IN (select n.
         /*
         Step 2: 
         enhance time in OHDM for those elements
+        
         */
         
         /*
         Step 3: 
         find entities which are in old but not new - those are deleted.
         Mark as deleted - and delete.
+        
+update sample_osw.nodes set deleted = true where osm_id NOT IN (select osm_id from sample_osw_new.nodes);        
+        
+       remove entries in waynodes and relationmember!!
+        
+        // remove
+        delete from sample_osw.nodes where osm_id NOT IN (select osm_id from sample_osw_new.nodes);
+
         */
         
         /*
         Step 4: 
         find changes in geometrie and/or objects - see document
+        
+        NODES
+        +++++
+        // find changes in geometry - marked with new tag
+update sample_osw_new.nodes set new = true 
+        where 
+        osm_id IN (select o.osm_id from sample_osw.nodes as o, 
+            sample_osw_new.nodes as n 
+            where o.osm_id = n.osm_id AND (o.longitude != n.longitude OR o.latitude != n.latitude));
+        
+        mark geometry changes to related ways!
+        
+        // find changes in object - marked with changed tag
+update sample_osw_new.nodes set changed = true where osm_id IN (select o.osm_id from sample_osw.nodes as o, sample_osw_new.nodes as n 
+where o.osm_id = n.osm_id AND o.serializedtags != n.serializedtags);
+        
+        WAYS
+        ++++
+        // find changes in geometry - marked with new tag
+TODO        
+        
+        mark relationed relations as changed (new)
+        
+        // find changes in object - marked with changed tag
+update sample_osw_new.ways set changed = true where osm_id IN (select o.osm_id from sample_osw.ways as o, sample_osw_new.ways as n 
+where o.osm_id = n.osm_id AND o.serializedtags != n.serializedtags);
+        
+        RELATIONS
+        +++++++++
+        // find changes in geometry - marked with new tag
+TODO        
+        
+        // find changes in object - marked with changed tag
+update sample_osw_new.relations set changed = true where osm_id IN (select o.osm_id from sample_osw.relations as o, sample_osw_new.relations as n 
+where o.osm_id = n.osm_id AND o.serializedtags != n.serializedtags);
+        
+        
         */
         
         /*

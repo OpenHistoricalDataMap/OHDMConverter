@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import inter2ohdm.AbstractElement;
 import util.SQLStatementQueue;
 import util.DB;
 
@@ -16,6 +15,7 @@ import util.DB;
  * @author thsc
  */
 public class OSMClassification {
+    // key: class (like highway, value: list of subclasses (like primary, secondary)
     public HashMap<String, List<String>> osmFeatureClasses = new HashMap();
     
     public static final String UNDEFINED = "undefined";
@@ -30,7 +30,6 @@ public class OSMClassification {
     }
     
     private OSMClassification() {
-        // that's not really good style.. anyway create that map here in code
         List<String> subClasses = new ArrayList<>();
         
         // Aerialway
@@ -1339,5 +1338,9 @@ public class OSMClassification {
         String classname = OSMClassification.createFullClassName("admin_level", "12");
         int id = c.getOHDMClassID("admin_level", "12");
         System.out.println(classname + " / id: " + id);
+    }
+
+    public boolean classExists(String value) {
+        return (this.osmFeatureClasses.keySet().contains(value));
     }
 }

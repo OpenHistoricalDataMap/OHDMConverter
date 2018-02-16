@@ -45,12 +45,28 @@ public class OSMImport {
             } else {
                 System.out.println("using parameterFile "+parameterFile);
             }
+            
 
             dbConnectionSettings = new Parameter(parameterFile);
+            
 //            OSMClassification osmClassification = OSMClassification.getOSMClassification();
             System.out.println("schema: "+dbConnectionSettings.getSchema());
             System.out.println("connection type: "+dbConnectionSettings.getConnectionType());
             System.out.println("delimiter: "+dbConnectionSettings.getDelimiter());
+            
+            SQLStatementQueue sq = new SQLStatementQueue(dbConnectionSettings);
+            // drop database
+            System.out.println("drop old tables in intermediate db - if any");
+            try {
+                InterDB.dropTables(sq, dbConnectionSettings.getSchema());
+            }
+            catch(Throwable se) {
+                System.out.println("couldn't drop tables .. ok, maybe there are no previous tables");
+            }
+            
+            // setup fresh tables
+            System.out.println("setup empty tables in intermediate db");
+            InterDB.createTables(sq, dbConnectionSettings.getSchema());
 
             System.out.println("creating connections");
             connectors = new HashMap<>();

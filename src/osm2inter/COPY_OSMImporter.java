@@ -3,7 +3,6 @@ package osm2inter;
 import org.xml.sax.Attributes;
 import org.xml.sax.Locator;
 import org.xml.sax.helpers.DefaultHandler;
-import osm.OSMClassificationCopyImport;
 import util.CopyConnector;
 import util.ManagedStringBuilder.ManagedStringBuilder;
 import util.UtilCopyImport;
@@ -12,6 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import osm.OSMClassification;
 
 /**
  * Klasse COPY_OSMImporter<br>
@@ -326,9 +326,9 @@ public class COPY_OSMImporter extends DefaultHandler {
      */
     private void endMainElement(String name) {
         if (this.classCode > 0) {
-            if (this.classCode == OSMClassificationCopyImport.getOHDMClassCode("boundary", "administrative")) {
+            if (this.classCode == OSMClassification.getOSMClassification().getOHDMClassID("boundary", "administrative")) {
                 if (this.adminLevel > 0) {
-                    this.classCode = OSMClassificationCopyImport.getOHDMClassCode("ohdm_boundary", "adminlevel_" + this.adminLevel);
+                    this.classCode = OSMClassification.getOSMClassification().getOHDMClassID("ohdm_boundary", "adminlevel_" + this.adminLevel);
                 }
             }
         }
@@ -438,11 +438,11 @@ public class COPY_OSMImporter extends DefaultHandler {
                             // the osm-main-class "building" with the default value
                             // "undefined" for a subclass
                             UtilCopyImport.serializeTags(this.serTags, attr.getValue(0), attr.getValue(1));
-                        } else if (OSMClassificationCopyImport.containsValue(attr.getValue(0))) {
+                        } else if (OSMClassification.getOSMClassification().classExists(attr.getValue(0))) {
                             if (this.classCode == 0) {
-                                this.classCode = OSMClassificationCopyImport.getOHDMClassCode(attr.getValue(0), attr.getValue(1));
+                                this.classCode = OSMClassification.getOSMClassification().getOHDMClassID(attr.getValue(0), attr.getValue(1));
                             } else {
-                                this.otherClassCodes.add(OSMClassificationCopyImport.getOHDMClassCode(attr.getValue(0), attr.getValue(1)));
+                                this.otherClassCodes.add(OSMClassification.getOSMClassification().getOHDMClassID(attr.getValue(0), attr.getValue(1)));
                             }
                         } else if (attr.getValue(0).equalsIgnoreCase("admin_level")) {
                             try {

@@ -1,6 +1,5 @@
 package util;
 
-import inter2ohdm.IntermediateDB;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +17,7 @@ public class InterDB {
     public static final String WAYTABLE = "ways";
     public static final String STRING_DELIMITER = ",";
     
-    static void dropTables(SQLStatementQueue sql, String targetSchema) throws SQLException {
+    public static void dropTables(SQLStatementQueue sql, String targetSchema) throws SQLException {
         // drop
         DB.drop(sql, targetSchema, NODETABLE);
         DB.drop(sql, targetSchema, RELATIONMEMBER);

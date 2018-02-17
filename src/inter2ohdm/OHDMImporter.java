@@ -684,7 +684,9 @@ public class OHDMImporter extends Importer {
     
     /**
      * 
-     * @param osmElement
+     * @param osmElement element to be imported
+     * @param namedEntitiesOnly only import osm entities without a name (identity)?
+     * @param importWithoutGeometry import entities even without a geometry (relevant for relations)
      * @return ohdm_id as string
      */
     public String importOSMElement(OSMElement osmElement, boolean namedEntitiesOnly, boolean importWithoutGeometry) {
@@ -749,7 +751,7 @@ public class OHDMImporter extends Importer {
             
             return ohdmObjectIDString;
         }
-        catch(Exception e) {
+        catch(SQLException e) {
             System.err.println("failure during import of intermediate object: " + e.getMessage());
             System.err.println(osmElement);
         }

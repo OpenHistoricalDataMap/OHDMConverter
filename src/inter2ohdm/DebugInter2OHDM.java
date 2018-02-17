@@ -88,7 +88,7 @@ public class DebugInter2OHDM extends OHDMImporter {
                     // ignore and work with default
             }
 
-            OSMExtractor exporter = 
+            OSMExtractor extractor = 
                     new OSMExtractor(sourceConnection, sourceSchema, ohdmImporter, stepLen);
             
             sourceQueue = DB.createSQLStatementQueue(sourceConnection, sourceParameter);
@@ -102,7 +102,7 @@ public class DebugInter2OHDM extends OHDMImporter {
             qResult = sourceQueue.executeWithResult();
             
             while(qResult.next()) {
-                exporter.processElement(qResult, sourceQueue, OSMExtractor.WAY, true);
+                extractor.processElement(qResult, sourceQueue, OSMExtractor.WAY, true);
 //                exporter.processElement(qResult, sourceQueue, OSMExtractor.RELATION, true);
 
                 updateQueue.forceExecute();

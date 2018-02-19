@@ -56,7 +56,9 @@ delete from sample_osw_new.nodes where sample_osw_new.nodes.osm_id IN (select n.
         
         /*
         Step 2: 
-        enhance time in OHDM for those elements
+        extend time in OHDM for those elements
+        
+        
         
         */
         

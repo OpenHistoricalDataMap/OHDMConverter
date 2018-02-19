@@ -56,16 +56,7 @@ public class OSMImport {
             
             SQLStatementQueue sq = new SQLStatementQueue(dbConnectionSettings);
             // drop database
-            System.out.println("drop old tables in intermediate db - if any");
-            try {
-                InterDB.dropTables(sq, dbConnectionSettings.getSchema());
-            }
-            catch(Throwable se) {
-                System.out.println("couldn't drop tables .. ok, maybe there are no previous tables");
-            }
-            
-            // setup fresh tables
-            System.out.println("setup empty tables in intermediate db");
+            System.out.println("drop and recreate intermediate tables");
             InterDB.createTables(sq, dbConnectionSettings.getSchema());
 
             System.out.println("creating connections");

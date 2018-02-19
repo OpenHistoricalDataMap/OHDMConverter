@@ -29,7 +29,7 @@ public class ImportExtractUpdateTest {
         
         // fill intermediate with 'old' data
         String dbFileName = "db_local_sample_intermediate.txt";
-        String osmFileName = "sample_intermediate.osm";
+        String osmFileName = "test.osm";
         
         OSMImport.main(new String[] {osmFileName, dbFileName});
     

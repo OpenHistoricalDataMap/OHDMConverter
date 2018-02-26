@@ -32,6 +32,10 @@ public class TempInsertUpdateTester {
         String dbOHDMConfigFile = "db_updateImport.txt";
 
         String[] updateArgs = new String[] {dbInitialImportConfigFile, dbUpdateIntermediateConfigFile, dbOHDMConfigFile};
+
+//        switch - for testing purposes
+//        String[] updateArgs = new String[] {dbUpdateIntermediateConfigFile, dbInitialImportConfigFile, dbOHDMConfigFile};
+
         OHDMUpdateInter.main(updateArgs);
 
 

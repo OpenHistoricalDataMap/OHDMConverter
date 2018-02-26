@@ -64,7 +64,7 @@ public class OHDMUpdateInter {
             and set all valid of all entities to false
              */
 
-            System.out.println("set intermediate.nodes.valid to false (assume anything has changed");
+            System.out.print("set intermediate.nodes.valid to false (assume anything has changed)");
             // NODES
             // update sample_osw.nodes set valid = false;
             sqlInterUpdate.append("update ");
@@ -72,9 +72,28 @@ public class OHDMUpdateInter {
             sqlInterUpdate.append(".nodes set valid = false");
 
             sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
 
             // WAYS
+            System.out.print("set intermediate.ways.valid to false (assume anything has changed)");
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".ways set valid = false");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
             // RELATIONS
+            System.out.print("set intermediate.relations.valid to false (assume anything has changed)");
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relations set valid = false");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            System.out.println("now start marking the valid entities");
 
             /*
             mark all unchanged entities as valid in intermediate
@@ -83,6 +102,7 @@ public class OHDMUpdateInter {
     update sample_osw.nodes set valid = true where sample_osw.nodes.osm_id IN
     (select nOld.osm_id from sample_osw.nodes as nOld, sample_osw_new.nodes as nNew where nOld.tstamp = nNew.tstamp AND nOld.osm_id = nNew.osm_id);
     */
+            System.out.print("set valid flag for unchanged nodes");
             sqlInterUpdate.append("update ");
             sqlInterUpdate.append(interSchema);
             sqlInterUpdate.append(".nodes set valid = true where ");
@@ -95,27 +115,94 @@ public class OHDMUpdateInter {
             sqlInterUpdate.append(".nodes as new where old.tstamp = new.tstamp AND old.osm_id = new.osm_id)");
 
             sqlInterUpdate.forceExecute();
-    /*
-            no remove all entries from old new db
+            System.out.println("...ok");
 
+            // WAYS
+            System.out.print("set valid flag for unchanged ways");
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".ways set valid = true where ");
+            sqlInterUpdate.append("osm_id IN (");
+            sqlInterUpdate.append("select ");
+            sqlInterUpdate.append("old.osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".ways as old, ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".ways as new where old.tstamp = new.tstamp AND old.osm_id = new.osm_id)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // RELATIONS
+            System.out.print("set valid flag for unchanged relations");
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relations set valid = true where ");
+            sqlInterUpdate.append("osm_id IN (");
+            sqlInterUpdate.append("select ");
+            sqlInterUpdate.append("old.osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relations as old, ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".relations as new where old.tstamp = new.tstamp AND old.osm_id = new.osm_id)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+
+    /* remove all valid (unchanged entities from update db) not required any longer in update db
     delete from sample_osw_new.nodes where sample_osw_new.nodes.osm_id IN (select n.osm_id from sample_osw.nodes as n where n.valid);
-            */
+    */
+            System.out.print("remove unchanged nodes from update nodes table");
+            sqlInterUpdate.append("delete from ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".nodes where ");
+            sqlInterUpdate.append("osm_id IN (");
+            sqlInterUpdate.append("select ");
+            sqlInterUpdate.append("osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".nodes");
+            sqlInterUpdate.append(" where valid = true)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // WAYS TODO
+            // RELATIONS TODO
 
             /*
             Step 2:
             extend time in OHDM for those elements
-
-
-
+            TODO
             */
 
             /*
             Step 3:
-            find entities which are in old but not new - those are deleted.
-            Mark as deleted - and delete.
+            find entities which are in intermediate tables but not in update table they were deleted.
+            a) Mark as deleted
+            b) remove related entities - mark them as deleted as well
+            c) delete.
+            */
 
-    update sample_osw.nodes set deleted = true where osm_id NOT IN (select osm_id from sample_osw_new.nodes);
+            // NODES
+    //update sample_osw.nodes set deleted = true where osm_id NOT IN (select osm_id from sample_osw_new.nodes);
+            System.out.print("mark deleted nodes as deleted in intermediate");
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".nodes set deleted = true where ");
+            sqlInterUpdate.append("osm_id NOT IN (");
+            sqlInterUpdate.append("select ");
+            sqlInterUpdate.append("osm_id from ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".nodes)");
 
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+            // WAYS TODO
+            // RELATIONS TODO
+
+
+            /*
            remove entries in waynodes and relationmember!!
 
             // remove

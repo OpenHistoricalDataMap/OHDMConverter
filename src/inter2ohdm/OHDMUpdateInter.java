@@ -58,42 +58,60 @@ public class OHDMUpdateInter {
         try {
             // Start update process in intermediate
 
-    /* Step 1: mark all entities in intermediate as valid which are unchanged.
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                   setup.. reset all flags                                                  //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        /* First: assume the opposite: whole world has changed
-        and set all valid of all entities to false
-         */
-
-            System.out.print("set intermediate.nodes.valid to false (assume anything has changed)");
+            System.out.print("reset flags in intermediate.nodes");
             // NODES
             // update sample_osw.nodes set valid = false;
             sqlInterUpdate.append("update ");
             sqlInterUpdate.append(interSchema);
             sqlInterUpdate.append(".nodes set valid = false");
+            sqlInterUpdate.append(", deleted = false, ");
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(" = false, ");
+            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            sqlInterUpdate.append(" = false");
 
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
 
 
             // WAYS
-            System.out.print("set intermediate.ways.valid to false (assume anything has changed)");
+            System.out.print("reset flags in intermediate.ways");
             sqlInterUpdate.append("update ");
             sqlInterUpdate.append(interSchema);
             sqlInterUpdate.append(".ways set valid = false");
+            sqlInterUpdate.append(", deleted = false, ");
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(" = false, ");
+            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            sqlInterUpdate.append(" = false");
+
 
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
 
             // RELATIONS
-            System.out.print("set intermediate.relations.valid to false (assume anything has changed)");
+            System.out.print("reset flags in intermediate.relations");
             sqlInterUpdate.append("update ");
             sqlInterUpdate.append(interSchema);
             sqlInterUpdate.append(".relations set valid = false");
+            sqlInterUpdate.append(", deleted = false, ");
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(" = false, ");
+            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            sqlInterUpdate.append(" = false");
 
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
 
             System.out.println("now start marking the valid entities");
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                       mark tags as still valid in intermediate / remove from update db                     //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         /*
         mark all unchanged entities as valid in intermediate
@@ -153,7 +171,7 @@ public class OHDMUpdateInter {
     /* remove all valid (unchanged entities from update db) not required any longer in update db
         delete from sample_osw_new.nodes where sample_osw_new.nodes.osm_id IN (select n.osm_id from sample_osw.nodes as n where n.valid);
     */
-            System.out.print("remove unchanged nodes from update nodes table");
+            System.out.print("remove unchanged nodes from update db");
             sqlInterUpdate.append("delete from ");
             sqlInterUpdate.append(updateSchema);
             sqlInterUpdate.append(".nodes where ");
@@ -167,15 +185,39 @@ public class OHDMUpdateInter {
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
 
-            // WAYS TODO
-            // RELATIONS TODO
+            // WAYS
+            System.out.print("remove unchanged ways from update db");
+            sqlInterUpdate.append("delete from ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".ways where ");
+            sqlInterUpdate.append("osm_id IN (");
+            sqlInterUpdate.append("select ");
+            sqlInterUpdate.append("osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".ways");
+            sqlInterUpdate.append(" where valid = true)");
 
-            /*
-            Step 2:
-            extend time in OHDM for those elements
-            TODO
-            */
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
 
+            // RELATIONS
+            System.out.print("remove unchanged relations from update db");
+            sqlInterUpdate.append("delete from ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".relations where ");
+            sqlInterUpdate.append("osm_id IN (");
+            sqlInterUpdate.append("select ");
+            sqlInterUpdate.append("osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relations");
+            sqlInterUpdate.append(" where valid = true)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                       mark nodes as deleted in intermediate an delete                                      //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             /*
             Step 3:
             find entities which are in intermediate tables but not in update table they were deleted.
@@ -199,22 +241,117 @@ public class OHDMUpdateInter {
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
 
-            // WAYS TODO
-            // RELATIONS TODO
+            // remove nodes from waynodes
+            System.out.print("delete lines from waynodes table with removed nodes");
+            sqlInterUpdate.append("delete from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".waynodes where node_id IN (");
+            sqlInterUpdate.append("select ");
+            sqlInterUpdate.append("osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".nodes where deleted = true)");
 
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
 
-            /*
-           remove entries in waynodes and relationmember!!
+            // remove nodes from relationsmember
+            System.out.print("delete lines from relationmember table with removed nodes");
+            sqlInterUpdate.append("delete from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relationmember where node_id IN (");
+            sqlInterUpdate.append("select ");
+            sqlInterUpdate.append("osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".nodes where deleted = true)");
 
-            // remove
-            delete from sample_osw.nodes where osm_id NOT IN (select osm_id from sample_osw_new.nodes);
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
 
-            */
+            // now remove deleted nodes from nodes
+            System.out.print("delete nodes from nodes table");
+            sqlInterUpdate.append("delete from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".nodes where deleted = true");
 
-    /*
-    Step 4:
-    find changes in geometrie and/or objects - see document
-    */
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // WAYS
+            System.out.print("mark deleted ways as deleted in intermediate");
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".ways set deleted = true where ");
+            sqlInterUpdate.append("osm_id NOT IN (");
+            sqlInterUpdate.append("select ");
+            sqlInterUpdate.append("osm_id from ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".ways)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // remove nodes from relationsmember
+            System.out.print("delete lines from relationmember table with removed ways");
+            sqlInterUpdate.append("delete from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relationmember where way_id IN (");
+            sqlInterUpdate.append("select ");
+            sqlInterUpdate.append("osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".ways where deleted = true)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // now remove deleted ways
+            System.out.print("delete ways from ways table");
+            sqlInterUpdate.append("delete from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".ways where deleted = true");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // RELATIONS
+            System.out.print("mark deleted relations as deleted in intermediate");
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relations set deleted = true where ");
+            sqlInterUpdate.append("osm_id NOT IN (");
+            sqlInterUpdate.append("select ");
+            sqlInterUpdate.append("osm_id from ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".relations)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // remove nodes from relationsmember
+            System.out.print("delete lines from relationmember table with removed relations");
+            sqlInterUpdate.append("delete from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relationmember where way_id IN (");
+            sqlInterUpdate.append("select ");
+            sqlInterUpdate.append("osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relations where deleted = true)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // now remove deleted relations
+            System.out.print("delete relations from relations table");
+            sqlInterUpdate.append("delete from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relations where deleted = true");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                       mark changes in geometries and/or objects in entities                                //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
             // NODES - geometry change
             /*
             update sample_osw_new.nodes set new = true where
@@ -238,8 +375,37 @@ public class OHDMUpdateInter {
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
 
-            // WAYS TODO
-            // RELATIONS TODO
+            // WAYS
+            System.out.print("mark ways in intermediate which geometries has changed by setting flag " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".ways set ");
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(" = true where osm_id IN (");
+            sqlInterUpdate.append("select old.osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".ways as old, ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".ways as new where old.osm_id = new.osm_id AND old.node_ids != new.node_ids)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // RELATIONS
+            System.out.print("mark relations in intermediate which geometries has changed by setting flag " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relations set ");
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(" = true where osm_id IN (");
+            sqlInterUpdate.append("select old.osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relations as old, ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".relations as new where old.osm_id = new.osm_id AND old.member_ids != new.member_ids)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
 
             // NODES - object changes
             /*
@@ -296,10 +462,20 @@ public class OHDMUpdateInter {
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                       extend validity of unchanged entities in ohdm                                        //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
             /*
-            Step 5:
-            handle changed entities - see document
+            Step 2:
+            extend time in OHDM for those elements
+            TODO
             */
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                         import changes into OHDM                                           //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         }
         catch(SQLException se) {
             System.err.println("failure while executing sql statement: " + se.getMessage());

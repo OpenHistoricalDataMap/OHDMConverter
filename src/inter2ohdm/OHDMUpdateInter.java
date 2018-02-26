@@ -21,18 +21,38 @@ import util.SQLStatementQueue;
 public class OHDMUpdateInter {
 
     public static void main(String args[]) throws IOException, SQLException {
-        if(args.length < 2) {
-            System.err.println("two parameters required: [parameter file old intermediate db] [from new db]");
+        if(args.length < 3) {
+            System.err.println("three parameter file required: intermediate, update_intermediate, ohdm");
             System.exit(0);
         }
-        
+
         String interDBParameterFile = args[0];
-        String ohdmParameterFile = args[1];
-        
+        String updateDBParameterFile = args[1];
+        String ohdmParameterFile = args[2];
+
         Parameter interDBParameters = new Parameter(interDBParameterFile);
-        SQLStatementQueue sqlInter = new SQLStatementQueue(interDBParameters);
-        
+        Parameter updateDBParameters = new Parameter(updateDBParameterFile);
         Parameter ohdmParameter = new Parameter(ohdmParameterFile);
+
+        // note: all must be in same database - most probably in different schemas
+        String interDBName = interDBParameters.getdbName();
+
+        if(!( interDBName.equalsIgnoreCase(updateDBParameters.getdbName()) &&
+                interDBName.equalsIgnoreCase(ohdmParameter.getdbName())
+            )) {
+            System.err.println("intermediate, update and ohdm must be in same" +
+                    "database (not necessarily same schema)");
+            System.exit(0);
+
+        }
+
+        SQLStatementQueue sqlInterUpdate = new SQLStatementQueue(interDBParameters);
+
+        String interSchema = interDBParameters.getSchema();
+        String updateSchema = updateDBParameters.getSchema();
+
+        // mark entries
+
         SQLStatementQueue sqlOHDM = new SQLStatementQueue(ohdmParameter);
         
         /*

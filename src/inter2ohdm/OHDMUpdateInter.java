@@ -216,7 +216,7 @@ public class OHDMUpdateInter {
             System.out.println("...ok");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                       mark nodes as deleted in intermediate an delete                                      //
+//                       mark nodes as deleted in intermediate                                                //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             /*
             Step 3:
@@ -241,41 +241,6 @@ public class OHDMUpdateInter {
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
 
-            // remove nodes from waynodes
-            System.out.print("delete lines from waynodes table with removed nodes");
-            sqlInterUpdate.append("delete from ");
-            sqlInterUpdate.append(interSchema);
-            sqlInterUpdate.append(".waynodes where node_id IN (");
-            sqlInterUpdate.append("select ");
-            sqlInterUpdate.append("osm_id from ");
-            sqlInterUpdate.append(interSchema);
-            sqlInterUpdate.append(".nodes where deleted = true)");
-
-            sqlInterUpdate.forceExecute();
-            System.out.println("...ok");
-
-            // remove nodes from relationsmember
-            System.out.print("delete lines from relationmember table with removed nodes");
-            sqlInterUpdate.append("delete from ");
-            sqlInterUpdate.append(interSchema);
-            sqlInterUpdate.append(".relationmember where node_id IN (");
-            sqlInterUpdate.append("select ");
-            sqlInterUpdate.append("osm_id from ");
-            sqlInterUpdate.append(interSchema);
-            sqlInterUpdate.append(".nodes where deleted = true)");
-
-            sqlInterUpdate.forceExecute();
-            System.out.println("...ok");
-
-            // now remove deleted nodes from nodes
-            System.out.print("delete nodes from nodes table");
-            sqlInterUpdate.append("delete from ");
-            sqlInterUpdate.append(interSchema);
-            sqlInterUpdate.append(".nodes where deleted = true");
-
-            sqlInterUpdate.forceExecute();
-            System.out.println("...ok");
-
             // WAYS
             System.out.print("mark deleted ways as deleted in intermediate");
             sqlInterUpdate.append("update ");
@@ -290,28 +255,6 @@ public class OHDMUpdateInter {
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
 
-            // remove nodes from relationsmember
-            System.out.print("delete lines from relationmember table with removed ways");
-            sqlInterUpdate.append("delete from ");
-            sqlInterUpdate.append(interSchema);
-            sqlInterUpdate.append(".relationmember where way_id IN (");
-            sqlInterUpdate.append("select ");
-            sqlInterUpdate.append("osm_id from ");
-            sqlInterUpdate.append(interSchema);
-            sqlInterUpdate.append(".ways where deleted = true)");
-
-            sqlInterUpdate.forceExecute();
-            System.out.println("...ok");
-
-            // now remove deleted ways
-            System.out.print("delete ways from ways table");
-            sqlInterUpdate.append("delete from ");
-            sqlInterUpdate.append(interSchema);
-            sqlInterUpdate.append(".ways where deleted = true");
-
-            sqlInterUpdate.forceExecute();
-            System.out.println("...ok");
-
             // RELATIONS
             System.out.print("mark deleted relations as deleted in intermediate");
             sqlInterUpdate.append("update ");
@@ -322,28 +265,6 @@ public class OHDMUpdateInter {
             sqlInterUpdate.append("osm_id from ");
             sqlInterUpdate.append(updateSchema);
             sqlInterUpdate.append(".relations)");
-
-            sqlInterUpdate.forceExecute();
-            System.out.println("...ok");
-
-            // remove nodes from relationsmember
-            System.out.print("delete lines from relationmember table with removed relations");
-            sqlInterUpdate.append("delete from ");
-            sqlInterUpdate.append(interSchema);
-            sqlInterUpdate.append(".relationmember where way_id IN (");
-            sqlInterUpdate.append("select ");
-            sqlInterUpdate.append("osm_id from ");
-            sqlInterUpdate.append(interSchema);
-            sqlInterUpdate.append(".relations where deleted = true)");
-
-            sqlInterUpdate.forceExecute();
-            System.out.println("...ok");
-
-            // now remove deleted relations
-            System.out.print("delete relations from relations table");
-            sqlInterUpdate.append("delete from ");
-            sqlInterUpdate.append(interSchema);
-            sqlInterUpdate.append(".relations where deleted = true");
 
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
@@ -375,6 +296,53 @@ public class OHDMUpdateInter {
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
 
+            // IS IT REALLY NECESSARY???
+            // mark way geometrie changed if related node has changed geometry or was deleted
+
+            /*
+update intermediate.ways set new = true where osm_id IN
+(
+select wn.way_id from
+(select osm_id, deleted, new from intermediate.nodes) as n,
+(select  way_id, node_id from intermediate.waynodes) as wn
+where (n.deleted OR n.new) AND n.osm_id = wn.node_id)
+*/
+            System.out.print("mark geometry change in ways because of geometry change or deletion of nodes by setting flag " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".ways set ");
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(" = true where osm_id IN (");
+            sqlInterUpdate.append("select wn.way_id from ");
+            sqlInterUpdate.append("(select osm_id, deleted, " );
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(" from intermediate.nodes) as n,");
+            sqlInterUpdate.append("(select  way_id, node_id from intermediate.waynodes) as wn");
+            sqlInterUpdate.append(" where (n.deleted OR n.");
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(") AND n.osm_id = wn.node_id)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            System.out.print("mark geometry change in relations because of geometry change or deletion of nodes by setting flag " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relations set ");
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(" = true where osm_id IN (");
+            sqlInterUpdate.append("select rm.relation_id from ");
+            sqlInterUpdate.append("(select osm_id, deleted, " );
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(" from intermediate.nodes) as n,");
+            sqlInterUpdate.append("(select  relation_id, node_id from intermediate.relationmember) as rm");
+            sqlInterUpdate.append(" where (n.deleted OR n.");
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(") AND n.osm_id = rm.node_id)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
             // WAYS
             System.out.print("mark ways in intermediate which geometries has changed by setting flag " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
             sqlInterUpdate.append("update ");
@@ -387,6 +355,25 @@ public class OHDMUpdateInter {
             sqlInterUpdate.append(".ways as old, ");
             sqlInterUpdate.append(updateSchema);
             sqlInterUpdate.append(".ways as new where old.osm_id = new.osm_id AND old.node_ids != new.node_ids)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // mark indirectly changed relations
+            System.out.print("mark geometry change in relations because of geometry change or deletion of ways by setting flag " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relations set ");
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(" = true where osm_id IN (");
+            sqlInterUpdate.append("select rm.relation_id from ");
+            sqlInterUpdate.append("(select osm_id, deleted, " );
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(" from intermediate.ways) as w,");
+            sqlInterUpdate.append("(select  relation_id, way_id from intermediate.relationmember) as rm");
+            sqlInterUpdate.append(" where (w.deleted OR w.");
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(") AND w.osm_id = rm.way_id)");
 
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
@@ -406,6 +393,14 @@ public class OHDMUpdateInter {
 
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
+
+            // TODO: mark indirectly changed relations
+            System.out.print("mark geometry change in relations because of related relations geometry changed by setting flag " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...not yet implemented (TODO)");
+            //System.out.println("...ok");
+
 
             // NODES - object changes
             /*
@@ -463,6 +458,95 @@ public class OHDMUpdateInter {
             System.out.println("...ok");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                       remove entities which are marked as deleted                                          //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            ////////////// remove deleted nodes now
+
+            // remove nodes from waynodes
+            System.out.print("delete lines from waynodes table with removed nodes");
+            sqlInterUpdate.append("delete from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".waynodes where node_id IN (");
+            sqlInterUpdate.append("select ");
+            sqlInterUpdate.append("osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".nodes where deleted = true)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // remove nodes from relationsmember
+            System.out.print("delete lines from relationmember table with removed nodes");
+            sqlInterUpdate.append("delete from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relationmember where node_id IN (");
+            sqlInterUpdate.append("select ");
+            sqlInterUpdate.append("osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".nodes where deleted = true)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // now remove deleted nodes from nodes
+            System.out.print("delete nodes from nodes table");
+            sqlInterUpdate.append("delete from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".nodes where deleted = true");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            //////////////////// remove deleted ways now
+
+            // remove ways from relationsmember
+            System.out.print("delete lines from relationmember table with removed ways");
+            sqlInterUpdate.append("delete from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relationmember where way_id IN (");
+            sqlInterUpdate.append("select ");
+            sqlInterUpdate.append("osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".ways where deleted = true)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // now remove deleted ways
+            System.out.print("delete ways from ways table");
+            sqlInterUpdate.append("delete from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".ways where deleted = true");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            //////////////// remove deleted relations now
+
+            // remove nodes from relationsmember
+            System.out.print("delete lines from relationmember table with removed relations");
+            sqlInterUpdate.append("delete from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relationmember where way_id IN (");
+            sqlInterUpdate.append("select ");
+            sqlInterUpdate.append("osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relations where deleted = true)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // now remove deleted relations
+            System.out.print("delete relations from relations table");
+            sqlInterUpdate.append("delete from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relations where deleted = true");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                       extend validity of unchanged entities in ohdm                                        //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -470,6 +554,7 @@ public class OHDMUpdateInter {
             Step 2:
             extend time in OHDM for those elements
             TODO
+            unchanged means: valid AND same geometry AND same object
             */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////

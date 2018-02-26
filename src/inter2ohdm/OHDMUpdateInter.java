@@ -19,7 +19,8 @@ import util.SQLStatementQueue;
  * 
  */
 public class OHDMUpdateInter {
-    private static final String TAG = "TODO";
+    private static final String GEOMETRY_CHANGED_TAG = "new";
+    private static final String OBJECT_CHANGED_TAG = "changed";
 
     public static void main(String args[]) throws IOException, SQLException {
         if(args.length < 3) {
@@ -57,12 +58,11 @@ public class OHDMUpdateInter {
         try {
             // Start update process in intermediate
 
-            /* Step 1: mark all entities in intermediate as valid
-            which are unchanged.
+    /* Step 1: mark all entities in intermediate as valid which are unchanged.
 
-            /* First: assume the opposite: whole world has changed
-            and set all valid of all entities to false
-             */
+        /* First: assume the opposite: whole world has changed
+        and set all valid of all entities to false
+         */
 
             System.out.print("set intermediate.nodes.valid to false (assume anything has changed)");
             // NODES
@@ -95,13 +95,13 @@ public class OHDMUpdateInter {
 
             System.out.println("now start marking the valid entities");
 
-            /*
-            mark all unchanged entities as valid in intermediate
+        /*
+        mark all unchanged entities as valid in intermediate
             unchanged: time stamps are identical in intermediate an update intermediate db
 
-    update sample_osw.nodes set valid = true where sample_osw.nodes.osm_id IN
-    (select nOld.osm_id from sample_osw.nodes as nOld, sample_osw_new.nodes as nNew where nOld.tstamp = nNew.tstamp AND nOld.osm_id = nNew.osm_id);
-    */
+            update sample_osw.nodes set valid = true where sample_osw.nodes.osm_id IN
+            (select nOld.osm_id from sample_osw.nodes as nOld, sample_osw_new.nodes as nNew where nOld.tstamp = nNew.tstamp AND nOld.osm_id = nNew.osm_id);
+        */
             System.out.print("set valid flag for unchanged nodes");
             sqlInterUpdate.append("update ");
             sqlInterUpdate.append(interSchema);
@@ -151,7 +151,7 @@ public class OHDMUpdateInter {
 
 
     /* remove all valid (unchanged entities from update db) not required any longer in update db
-    delete from sample_osw_new.nodes where sample_osw_new.nodes.osm_id IN (select n.osm_id from sample_osw.nodes as n where n.valid);
+        delete from sample_osw_new.nodes where sample_osw_new.nodes.osm_id IN (select n.osm_id from sample_osw.nodes as n where n.valid);
     */
             System.out.print("remove unchanged nodes from update nodes table");
             sqlInterUpdate.append("delete from ");
@@ -198,6 +198,7 @@ public class OHDMUpdateInter {
 
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
+
             // WAYS TODO
             // RELATIONS TODO
 
@@ -210,47 +211,90 @@ public class OHDMUpdateInter {
 
             */
 
+    /*
+    Step 4:
+    find changes in geometrie and/or objects - see document
+    */
+            // NODES - geometry change
             /*
-            Step 4:
-            find changes in geometrie and/or objects - see document
-
-            NODES
-            +++++
-            // find changes in geometry - marked with new tag
-    update sample_osw_new.nodes set new = true
-            where
+            update sample_osw_new.nodes set new = true where
             osm_id IN (select o.osm_id from sample_osw.nodes as o,
                 sample_osw_new.nodes as n
                 where o.osm_id = n.osm_id AND (o.longitude != n.longitude OR o.latitude != n.latitude));
 
-            mark geometry changes to related ways!
+             */
+            System.out.print("mark nodes in intermediate which geometries has changed by setting flag " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".nodes set ");
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(" = true where osm_id IN (");
+            sqlInterUpdate.append("select old.osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".nodes as old, ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".nodes as new where old.osm_id = new.osm_id AND (old.longitude != new.longitude OR old.latitude != new.latitude))");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // WAYS TODO
+            // RELATIONS TODO
+
+            // NODES - object changes
+            /*
 
             // find changes in object - marked with changed tag
-    update sample_osw_new.nodes set changed = true where osm_id IN (select o.osm_id from sample_osw.nodes as o, sample_osw_new.nodes as n
-    where o.osm_id = n.osm_id AND o.serializedtags != n.serializedtags);
+            update sample_osw_new.nodes set changed = true where osm_id IN (select o.osm_id from sample_osw.nodes as o,
+            sample_osw_new.nodes as n
+            where o.osm_id = n.osm_id AND o.serializedtags != n.serializedtags);
+             */
+            System.out.print("mark nodes in intermediate which objects has changed by setting flag " + OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".nodes set ");
+            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            sqlInterUpdate.append(" = true where osm_id IN (");
+            sqlInterUpdate.append("select old.osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".nodes as old, ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".nodes as new where old.osm_id = new.osm_id AND old.serializedtags != new.serializedtags)");
 
-            WAYS
-            ++++
-            // find changes in geometry - marked with new tag
-    TODO
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
 
-            mark relationed relations as changed (new)
+            // WAYS
+            System.out.print("mark ways in intermediate which objects has changed by setting flag " + OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".ways set ");
+            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            sqlInterUpdate.append(" = true where osm_id IN (");
+            sqlInterUpdate.append("select old.osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".ways as old, ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".ways as new where old.osm_id = new.osm_id AND old.serializedtags != new.serializedtags)");
 
-            // find changes in object - marked with changed tag
-    update sample_osw_new.ways set changed = true where osm_id IN (select o.osm_id from sample_osw.ways as o, sample_osw_new.ways as n
-    where o.osm_id = n.osm_id AND o.serializedtags != n.serializedtags);
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
 
-            RELATIONS
-            +++++++++
-            // find changes in geometry - marked with new tag
-    TODO
+            // RELATIONS
+            System.out.print("mark relations in intermediate which objects has changed by setting flag " + OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relations set ");
+            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            sqlInterUpdate.append(" = true where osm_id IN (");
+            sqlInterUpdate.append("select old.osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relations as old, ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".relations as new where old.osm_id = new.osm_id AND old.serializedtags != new.serializedtags)");
 
-            // find changes in object - marked with changed tag
-    update sample_osw_new.relations set changed = true where osm_id IN (select o.osm_id from sample_osw.relations as o, sample_osw_new.relations as n
-    where o.osm_id = n.osm_id AND o.serializedtags != n.serializedtags);
-
-
-            */
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
 
             /*
             Step 5:

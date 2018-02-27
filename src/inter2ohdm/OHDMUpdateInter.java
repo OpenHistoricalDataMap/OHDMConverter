@@ -21,6 +21,7 @@ import util.SQLStatementQueue;
 public class OHDMUpdateInter {
     private static final String GEOMETRY_CHANGED_TAG = "new";
     private static final String OBJECT_CHANGED_TAG = "changed";
+    private static final String OBJECT_NEW_TAG = "has_name";
 
     public static void main(String args[]) throws IOException, SQLException {
         if(args.length < 3) {
@@ -77,7 +78,6 @@ public class OHDMUpdateInter {
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
 
-
             // WAYS
             System.out.print("reset flags in intermediate.ways");
             sqlInterUpdate.append("update ");
@@ -88,7 +88,6 @@ public class OHDMUpdateInter {
             sqlInterUpdate.append(" = false, ");
             sqlInterUpdate.append(OHDMUpdateInter.OBJECT_CHANGED_TAG);
             sqlInterUpdate.append(" = false");
-
 
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
@@ -107,7 +106,7 @@ public class OHDMUpdateInter {
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
 
-            System.out.println("now start marking the valid entities");
+            // Status: intermediate flags reset, update unchanged
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                       mark tags as still valid in intermediate / remove from update db                     //
@@ -120,7 +119,7 @@ public class OHDMUpdateInter {
             update sample_osw.nodes set valid = true where sample_osw.nodes.osm_id IN
             (select nOld.osm_id from sample_osw.nodes as nOld, sample_osw_new.nodes as nNew where nOld.tstamp = nNew.tstamp AND nOld.osm_id = nNew.osm_id);
         */
-            System.out.print("set valid flag for unchanged nodes");
+            System.out.print("set valid flag in intermediate for unchanged nodes");
             sqlInterUpdate.append("update ");
             sqlInterUpdate.append(interSchema);
             sqlInterUpdate.append(".nodes set valid = true where ");
@@ -136,7 +135,7 @@ public class OHDMUpdateInter {
             System.out.println("...ok");
 
             // WAYS
-            System.out.print("set valid flag for unchanged ways");
+            System.out.print("set valid flag intermediate for unchanged ways");
             sqlInterUpdate.append("update ");
             sqlInterUpdate.append(interSchema);
             sqlInterUpdate.append(".ways set valid = true where ");
@@ -152,7 +151,7 @@ public class OHDMUpdateInter {
             System.out.println("...ok");
 
             // RELATIONS
-            System.out.print("set valid flag for unchanged relations");
+            System.out.print("set valid flag intermediate for unchanged relations");
             sqlInterUpdate.append("update ");
             sqlInterUpdate.append(interSchema);
             sqlInterUpdate.append(".relations set valid = true where ");
@@ -215,6 +214,8 @@ public class OHDMUpdateInter {
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
 
+            // status: intermediate: valid tags set for unchanged entries, update: unchanged entries removed
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                       mark nodes as deleted in intermediate                                                //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -269,6 +270,8 @@ public class OHDMUpdateInter {
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
 
+            // intermediate: entities marked as deleted, update: no change
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                       mark changes in geometries and/or objects in entities                                //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -281,7 +284,7 @@ public class OHDMUpdateInter {
                 where o.osm_id = n.osm_id AND (o.longitude != n.longitude OR o.latitude != n.latitude));
 
              */
-            System.out.print("mark nodes in intermediate which geometries has changed by setting flag " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            System.out.print("mark nodes in intermediate with changed geometry. Flag: " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
             sqlInterUpdate.append("update ");
             sqlInterUpdate.append(interSchema);
             sqlInterUpdate.append(".nodes set ");
@@ -307,7 +310,7 @@ select wn.way_id from
 (select  way_id, node_id from intermediate.waynodes) as wn
 where (n.deleted OR n.new) AND n.osm_id = wn.node_id)
 */
-            System.out.print("mark geometry change in ways because of geometry change or deletion of nodes by setting flag " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            System.out.print("mark geometry change in intermediate ways as result of geometry change (or deletion) of related node. Flag: " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
             sqlInterUpdate.append("update ");
             sqlInterUpdate.append(interSchema);
             sqlInterUpdate.append(".ways set ");
@@ -316,8 +319,12 @@ where (n.deleted OR n.new) AND n.osm_id = wn.node_id)
             sqlInterUpdate.append("select wn.way_id from ");
             sqlInterUpdate.append("(select osm_id, deleted, " );
             sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
-            sqlInterUpdate.append(" from intermediate.nodes) as n,");
-            sqlInterUpdate.append("(select  way_id, node_id from intermediate.waynodes) as wn");
+            sqlInterUpdate.append(" from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".nodes) as n,");
+            sqlInterUpdate.append("(select  way_id, node_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".waynodes) as wn");
             sqlInterUpdate.append(" where (n.deleted OR n.");
             sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
             sqlInterUpdate.append(") AND n.osm_id = wn.node_id)");
@@ -325,7 +332,7 @@ where (n.deleted OR n.new) AND n.osm_id = wn.node_id)
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
 
-            System.out.print("mark geometry change in relations because of geometry change or deletion of nodes by setting flag " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            System.out.print("mark geometry change in intermediate relations as result of geometry change (or deletion) of related node. Flag: " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
             sqlInterUpdate.append("update ");
             sqlInterUpdate.append(interSchema);
             sqlInterUpdate.append(".relations set ");
@@ -334,8 +341,12 @@ where (n.deleted OR n.new) AND n.osm_id = wn.node_id)
             sqlInterUpdate.append("select rm.relation_id from ");
             sqlInterUpdate.append("(select osm_id, deleted, " );
             sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
-            sqlInterUpdate.append(" from intermediate.nodes) as n,");
-            sqlInterUpdate.append("(select  relation_id, node_id from intermediate.relationmember) as rm");
+            sqlInterUpdate.append(" from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".nodes) as n,");
+            sqlInterUpdate.append("(select  relation_id, node_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relationmember) as rm");
             sqlInterUpdate.append(" where (n.deleted OR n.");
             sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
             sqlInterUpdate.append(") AND n.osm_id = rm.node_id)");
@@ -344,7 +355,7 @@ where (n.deleted OR n.new) AND n.osm_id = wn.node_id)
             System.out.println("...ok");
 
             // WAYS
-            System.out.print("mark ways in intermediate which geometries has changed by setting flag " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            System.out.print("mark ways in intermediate with changed geometry. Flag: " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
             sqlInterUpdate.append("update ");
             sqlInterUpdate.append(interSchema);
             sqlInterUpdate.append(".ways set ");
@@ -360,7 +371,7 @@ where (n.deleted OR n.new) AND n.osm_id = wn.node_id)
             System.out.println("...ok");
 
             // mark indirectly changed relations
-            System.out.print("mark geometry change in relations because of geometry change or deletion of ways by setting flag " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            System.out.print("mark geometry change in relations as result of geometry change (or deletion) of related way. Flag: " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
             sqlInterUpdate.append("update ");
             sqlInterUpdate.append(interSchema);
             sqlInterUpdate.append(".relations set ");
@@ -369,8 +380,12 @@ where (n.deleted OR n.new) AND n.osm_id = wn.node_id)
             sqlInterUpdate.append("select rm.relation_id from ");
             sqlInterUpdate.append("(select osm_id, deleted, " );
             sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
-            sqlInterUpdate.append(" from intermediate.ways) as w,");
-            sqlInterUpdate.append("(select  relation_id, way_id from intermediate.relationmember) as rm");
+            sqlInterUpdate.append(" from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".ways) as w,");
+            sqlInterUpdate.append("(select  relation_id, way_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relationmember) as rm");
             sqlInterUpdate.append(" where (w.deleted OR w.");
             sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
             sqlInterUpdate.append(") AND w.osm_id = rm.way_id)");
@@ -379,7 +394,7 @@ where (n.deleted OR n.new) AND n.osm_id = wn.node_id)
             System.out.println("...ok");
 
             // RELATIONS
-            System.out.print("mark relations in intermediate which geometries has changed by setting flag " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            System.out.print("mark relations in intermediate with changed geometry. Flag: " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
             sqlInterUpdate.append("update ");
             sqlInterUpdate.append(interSchema);
             sqlInterUpdate.append(".relations set ");
@@ -394,68 +409,31 @@ where (n.deleted OR n.new) AND n.osm_id = wn.node_id)
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
 
-            // TODO: mark indirectly changed relations
-            System.out.print("mark geometry change in relations because of related relations geometry changed by setting flag " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
-
-            sqlInterUpdate.forceExecute();
-            System.out.println("...not yet implemented (TODO)");
-            //System.out.println("...ok");
-
-
-            // NODES - object changes
-            /*
-
-            // find changes in object - marked with changed tag
-            update sample_osw_new.nodes set changed = true where osm_id IN (select o.osm_id from sample_osw.nodes as o,
-            sample_osw_new.nodes as n
-            where o.osm_id = n.osm_id AND o.serializedtags != n.serializedtags);
-             */
-            System.out.print("mark nodes in intermediate which objects has changed by setting flag " + OHDMUpdateInter.OBJECT_CHANGED_TAG);
-            sqlInterUpdate.append("update ");
-            sqlInterUpdate.append(interSchema);
-            sqlInterUpdate.append(".nodes set ");
-            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_CHANGED_TAG);
-            sqlInterUpdate.append(" = true where osm_id IN (");
-            sqlInterUpdate.append("select old.osm_id from ");
-            sqlInterUpdate.append(interSchema);
-            sqlInterUpdate.append(".nodes as old, ");
-            sqlInterUpdate.append(updateSchema);
-            sqlInterUpdate.append(".nodes as new where old.osm_id = new.osm_id AND old.serializedtags != new.serializedtags)");
-
-            sqlInterUpdate.forceExecute();
-            System.out.println("...ok");
-
-            // WAYS
-            System.out.print("mark ways in intermediate which objects has changed by setting flag " + OHDMUpdateInter.OBJECT_CHANGED_TAG);
-            sqlInterUpdate.append("update ");
-            sqlInterUpdate.append(interSchema);
-            sqlInterUpdate.append(".ways set ");
-            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_CHANGED_TAG);
-            sqlInterUpdate.append(" = true where osm_id IN (");
-            sqlInterUpdate.append("select old.osm_id from ");
-            sqlInterUpdate.append(interSchema);
-            sqlInterUpdate.append(".ways as old, ");
-            sqlInterUpdate.append(updateSchema);
-            sqlInterUpdate.append(".ways as new where old.osm_id = new.osm_id AND old.serializedtags != new.serializedtags)");
-
-            sqlInterUpdate.forceExecute();
-            System.out.println("...ok");
-
-            // RELATIONS
-            System.out.print("mark relations in intermediate which objects has changed by setting flag " + OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            // mark indirectly changed relations
+            System.out.print("mark geometry change in relations as result of geometry change (or deletion) of related relation. Flag: " + OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
             sqlInterUpdate.append("update ");
             sqlInterUpdate.append(interSchema);
             sqlInterUpdate.append(".relations set ");
-            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
             sqlInterUpdate.append(" = true where osm_id IN (");
-            sqlInterUpdate.append("select old.osm_id from ");
+            sqlInterUpdate.append("select rm.relation_id from ");
+            sqlInterUpdate.append("(select osm_id, deleted, " );
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(" from ");
             sqlInterUpdate.append(interSchema);
-            sqlInterUpdate.append(".relations as old, ");
-            sqlInterUpdate.append(updateSchema);
-            sqlInterUpdate.append(".relations as new where old.osm_id = new.osm_id AND old.serializedtags != new.serializedtags)");
+            sqlInterUpdate.append(".relations) as r,");
+            sqlInterUpdate.append("(select  relation_id, member_rel_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relationmember) as rm");
+            sqlInterUpdate.append(" where (r.deleted OR r.");
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(") AND r.osm_id = rm.member_rel_id)");
 
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
+
+            // status: intermediate: changed geometries marked, update: no change
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                       remove entities which are marked as deleted                                          //
@@ -546,9 +524,134 @@ where (n.deleted OR n.new) AND n.osm_id = wn.node_id)
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
 
+            // status: intermediate: entries marked as deleted are deleted, update: unchanged
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                              mark entities with changed object                                             //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            // NODES - object changes
+            /*
+
+            // find changes in object - marked with changed tag
+            update sample_osw_new.nodes set changed = true where osm_id IN (select o.osm_id from sample_osw.nodes as o,
+            sample_osw_new.nodes as n
+            where o.osm_id = n.osm_id AND o.serializedtags != n.serializedtags);
+             */
+            System.out.print("mark nodes in intermediate which objects has changed by setting flag " + OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".nodes set ");
+            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            sqlInterUpdate.append(" = true where osm_id IN (");
+            sqlInterUpdate.append("select old.osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".nodes as old, ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".nodes as new where old.osm_id = new.osm_id AND old.serializedtags != new.serializedtags)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // WAYS
+            System.out.print("mark ways in intermediate which objects has changed by setting flag " + OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".ways set ");
+            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            sqlInterUpdate.append(" = true where osm_id IN (");
+            sqlInterUpdate.append("select old.osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".ways as old, ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".ways as new where old.osm_id = new.osm_id AND old.serializedtags != new.serializedtags)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // RELATIONS
+            System.out.print("mark relations in intermediate which objects has changed by setting flag " + OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relations set ");
+            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            sqlInterUpdate.append(" = true where osm_id IN (");
+            sqlInterUpdate.append("select old.osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relations as old, ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".relations as new where old.osm_id = new.osm_id AND old.serializedtags != new.serializedtags)");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // status: intermediate: changed objects marked, update: unchanged
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                       extend validity of unchanged entities in ohdm                                        //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            // set new tag in update to true:
+
+            // NODES
+            System.out.print("reset new flag in update.nodes");
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".nodes set ");
+            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_NEW_TAG);
+            sqlInterUpdate.append(" = true");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // WAYS
+            System.out.print("reset new flag in update.ways");
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".ways set ");
+            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_NEW_TAG);
+            sqlInterUpdate.append(" = true");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // RELATIONS
+            System.out.print("reset new flag in update.relations");
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".relations set ");
+            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_NEW_TAG);
+            sqlInterUpdate.append(" = true");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // TODO: set new = false for all changed but not new entities
+
+            /* update updateintermediate.nodes set has_name = false
+            where osm_id NOT IN
+            (select osm_id from intermediate.nodes where valid OR has_name)
+             */
+
+
+            /*
+             * Situation: Intermediate DB is tagged.
+             * valid: entity hasn't changed (regarding timestamp)
+             * geometry changed - geometry was directly or indirectly changed (and so id list in ways and relations)
+             * object changed and so serializedAttributes
+             *
+             * update db
+             * contains entries which are
+             * changed since last update or
+             * new
+             */
+
+            // copy new id list to intermediate for entities with changed geometry
+
+            // copy new serialized tags to intermediate for entities with changed objects
+
+            // insert into intermediate.nodes (select * from updateintermediate.nodes limit 100);
+
 
             /*
             Step 2:

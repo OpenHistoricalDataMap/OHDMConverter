@@ -626,13 +626,64 @@ where (n.deleted OR n.new) AND n.osm_id = wn.node_id)
             sqlInterUpdate.forceExecute();
             System.out.println("...ok");
 
-            // TODO: set new = false for all changed but not new entities
-
+            // set new = false for all changed but not new entities
             /* update updateintermediate.nodes set has_name = false
             where osm_id NOT IN
             (select osm_id from intermediate.nodes where valid OR has_name)
              */
 
+            // Nodes
+            System.out.print("set new flag to false for valid or changed but not new nodes");
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".nodes set ");
+            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_NEW_TAG);
+            sqlInterUpdate.append(" = false where osm_id IN (select osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".nodes where valid OR ");
+            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            sqlInterUpdate.append(" OR ");
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(")");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // Ways
+            System.out.print("set new flag to false for valid or changed but not new ways");
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".ways set ");
+            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_NEW_TAG);
+            sqlInterUpdate.append(" = false where osm_id NOT IN (select osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".ways where valid OR ");
+            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            sqlInterUpdate.append(" OR ");
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(")");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // Relations
+            System.out.print("set new flag to false for valid or changed but not new relations");
+            sqlInterUpdate.append("update ");
+            sqlInterUpdate.append(updateSchema);
+            sqlInterUpdate.append(".relations set ");
+            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_NEW_TAG);
+            sqlInterUpdate.append(" = false where osm_id NOT IN (select osm_id from ");
+            sqlInterUpdate.append(interSchema);
+            sqlInterUpdate.append(".relations where valid OR ");
+            sqlInterUpdate.append(OHDMUpdateInter.OBJECT_CHANGED_TAG);
+            sqlInterUpdate.append(" OR ");
+            sqlInterUpdate.append(OHDMUpdateInter.GEOMETRY_CHANGED_TAG);
+            sqlInterUpdate.append(")");
+
+            sqlInterUpdate.forceExecute();
+            System.out.println("...ok");
+
+            // now: new tags are tagged as new in update db
 
             /*
              * Situation: Intermediate DB is tagged.

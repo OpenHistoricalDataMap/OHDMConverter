@@ -396,7 +396,7 @@ public class OHDMImporter extends Importer {
         
     }
     
-    String getOHDMObject(OSMElement osmElement, boolean namedEntitiesOnly) throws SQLException {
+    String getOHDMObjectID(OSMElement osmElement, boolean namedEntitiesOnly) throws SQLException {
         // already in OHDM DB?
         String ohdmIDString = osmElement.getOHDMObjectID();
         if(ohdmIDString != null) return ohdmIDString;
@@ -710,7 +710,7 @@ public class OHDMImporter extends Importer {
             identity and importing of unnamed entities is not yet wished in that call
             null indicates a failure
             */
-            String ohdmObjectIDString = this.getOHDMObject(osmElement, namedEntitiesOnly);
+            String ohdmObjectIDString = this.getOHDMObjectID(osmElement, namedEntitiesOnly);
 
             if(ohdmObjectIDString == null) {
                 /*
@@ -1319,5 +1319,92 @@ public class OHDMImporter extends Importer {
         
         // force updating
         this.targetInsertQueue.forceExecute();
+    }
+    
+    
+    /////////////////////////////////////////////////////////////////////////
+    //                            update methods                           //
+    /////////////////////////////////////////////////////////////////////////
+    
+    /**
+     * update existing OHDM object based on a existing node
+     * which object has changed
+     * @param node
+     * @param importUnnamedEntities
+     * @return 
+     */
+    public boolean updateNodeGeometry(OSMNode node, boolean importUnnamedEntities) {
+        if(!this.elementHasIdentity(node) && !importUnnamedEntities) {
+            // nodes without an identity are not imported.
+            return false;
+        }
+
+        return this.updateOSMElementGeometry(node, importUnnamedEntities);
+    }
+    
+    public boolean updateOSMElementGeometry(OSMElement osmElement, boolean namedEntitiesOnly) {
+        String osmID = osmElement.getOSMIDString();
+        if(osmID.equalsIgnoreCase("188276804") || osmID.equalsIgnoreCase("301835391")) {
+            // debug break
+            int i = 42;
+        }
+        
+        try {
+            // get external user id from ohdm
+            int id_ExternalUser = this.getOHDM_ID_ExternalUser(osmElement);
+
+            /*
+              get ohdm object. That call returns null only if that object has no
+            identity and importing of unnamed entities is not yet wished in that call
+            null indicates a failure
+            */
+            String ohdmObjectIDString = this.getOHDMObjectID(osmElement, namedEntitiesOnly);
+
+            // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+            if(ohdmObjectIDString == null) {
+                /*
+                System.err.println("cannot create or find ohdm object id (not even dummy osm) and importing of unnamed entites allowed");
+                System.err.println(osmElement);
+                */
+
+                // try to add a geometry
+                String ohdmGeomIDString = this.addGeometry(osmElement, id_ExternalUser);
+                
+                if(ohdmGeomIDString != null) {
+                    // remeber geometry in inter db
+                    this.intermediateDB.setOHDM_IDs(this.sourceUpdateQueue, osmElement, null, ohdmGeomIDString);
+                }
+
+                // geometry added but no object.. we are done here
+                return false;
+            }
+
+            // we have an object.. try to add geometry
+            
+            // try to add a geometry
+            String ohdmGeomIDString = this.addGeometry(osmElement, id_ExternalUser);
+            
+            // combine object and geometry if there is a geometry
+            if(ohdmGeomIDString != null) {
+                // create entry in object_geometry table
+                this.addValidity(osmElement, ohdmObjectIDString, ohdmGeomIDString, 
+                        id_ExternalUser);
+                
+                /* now make both object and geom id persistent to intermediate db
+                */
+                this.intermediateDB.setOHDM_IDs(this.sourceUpdateQueue, osmElement, ohdmObjectIDString, ohdmGeomIDString);
+            }
+
+            // keep some special tags (url etc, see wiki) for the object
+            this.addContentAndURL(osmElement, ohdmObjectIDString);
+            
+            return true;
+        }
+        catch(SQLException e) {
+            System.err.println("failure during import of intermediate object: " + e.getMessage());
+            System.err.println(osmElement);
+        }
+        
+        return false;
     }
 }

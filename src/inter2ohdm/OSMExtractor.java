@@ -124,7 +124,7 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
     void processNode(ResultSet qResult, SQLStatementQueue sql, boolean importUnnamedEntities) {
         OSMNode node = null;
         try {
-            node = this.createOHDMNode(qResult);
+            node = this.createOSMNode(qResult);
             this.currentElement = node;
             
             if(node.getOSMIDString().equalsIgnoreCase("20246240")) {
@@ -162,7 +162,7 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
     void processWay(ResultSet qResult, SQLStatementQueue sql, boolean importUnnamedEntities) {
         OSMWay way = null;
         try {
-            way = this.createOHDMWay(qResult);
+            way = this.createOSMWay(qResult);
             this.currentElement = way;
             
             if(way.getOSMIDString().equalsIgnoreCase("4557344")) {
@@ -200,7 +200,7 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
         OSMRelation relation = null;
         
         try {
-            relation = this.createOHDMRelation(qResult);
+            relation = this.createOSMRelation(qResult);
             
             String r_id = relation.getOSMIDString();
             if(r_id.equalsIgnoreCase("6780946")) {
@@ -263,10 +263,10 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
                     OSMElement memberElement = null;
                     switch(type) {
                         case OHDM_DB.POINT: 
-                            memberElement = this.createOHDMNode(memberResult);
+                            memberElement = this.createOSMNode(memberResult);
                             break;
                         case OHDM_DB.LINESTRING:
-                            memberElement = this.createOHDMWay(memberResult);
+                            memberElement = this.createOSMWay(memberResult);
                             if(memberElement.noOHDMElement() && memberElement.isEmpty()) {
                                 /* that way isn't yet stored in OHDM
                                 fill it with all necessary data.
@@ -276,7 +276,7 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
                             }
                             break;
                         case OHDM_DB.RELATION:
-                            memberElement = this.createOHDMRelation(memberResult);
+                            memberElement = this.createOSMRelation(memberResult);
                             break;
                     }
                     
@@ -553,7 +553,7 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
 
         while(qResultNode.next()) {
             long beforeNode = System.currentTimeMillis();
-            OSMNode node = this.createOHDMNode(qResultNode);
+            OSMNode node = this.createOSMNode(qResultNode);
             long afterNode = System.currentTimeMillis();
             this.noteTime(afterNode-beforeNode, TIME_CREATE_NODE);
             way.addNode(node);
@@ -893,5 +893,30 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
         }
         
         return avg;
+    }
+
+    /////////////////////////////////////////////////////////////////////////
+    //                            update methods                           //
+    /////////////////////////////////////////////////////////////////////////
+    
+    /**
+     * update existing OHDM object based on a existing node
+     * which object has changed
+     * @param qResult 
+     */
+    void updateNodeGeometries(ResultSet qResult) {
+        OHDMImporter ohdmImporter = (OHDMImporter)this.importer;
+        
+        try {
+            // create an object from data
+            OSMNode osmNode = this.createOSMNode(qResult);
+            
+            // 
+            if(osmNode.isConsistent(System.err)) {
+               ohdmImporter.updateNodeGeometry(osmNode, false);
+            }
+        } catch (SQLException ex) {
+            // TODO
+        }
     }
 }

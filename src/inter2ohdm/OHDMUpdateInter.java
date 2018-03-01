@@ -1,6 +1,7 @@
 package inter2ohdm;
 
 import java.io.IOException;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import util.Parameter;
 import util.SQLStatementQueue;
@@ -714,6 +715,16 @@ where (n.deleted OR n.new) AND n.osm_id = wn.node_id)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                         import changes into OHDM                                           //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        /* Situation: Intermediate is filled even with new data. Changed lines
+           are tagged in nodes, ways and relations
+
+           for new = true OR (geometry changed AND object changed)
+           ->new import
+            
+           object-changed->import object (change OHDM object and obj_geom entry)
+           geometry changed->import_geometry (change geom id and obj_geom entry)
+        */
 
         }
         catch(SQLException se) {

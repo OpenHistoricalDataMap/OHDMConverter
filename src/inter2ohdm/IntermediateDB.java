@@ -144,7 +144,7 @@ public class IntermediateDB {
         ResultSet qResultNode = sql.executeWithResult();
 
         while(qResultNode.next()) {
-            OSMNode node = this.createOHDMNode(qResultNode);
+            OSMNode node = this.createOSMNode(qResultNode);
             way.addNode(node);
         }
         
@@ -204,7 +204,7 @@ public class IntermediateDB {
         return null;
     }
     
-    protected OSMRelation createOHDMRelation(ResultSet qResult) throws SQLException {
+    protected OSMRelation createOSMRelation(ResultSet qResult) throws SQLException {
         // get all data to create an ohdm way object
         this.readCommonColumns(qResult);
         memberIDs = qResult.getString("member_ids");
@@ -218,7 +218,7 @@ public class IntermediateDB {
         return relation;
     }
     
-    protected OSMWay createOHDMWay(ResultSet qResult) throws SQLException {
+    protected OSMWay createOSMWay(ResultSet qResult) throws SQLException {
         this.readCommonColumns(qResult);
         String nodeIDs = qResult.getString("node_ids");
 
@@ -231,7 +231,7 @@ public class IntermediateDB {
         return way;
     }
     
-    protected OSMNode createOHDMNode(ResultSet qResult) throws SQLException {
+    protected OSMNode createOSMNode(ResultSet qResult) throws SQLException {
         this.readCommonColumns(qResult);
         String longitude = qResult.getString("longitude");
         String latitude = qResult.getString("latitude");

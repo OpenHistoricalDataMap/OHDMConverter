@@ -716,6 +716,12 @@ where (n.deleted OR n.new) AND n.osm_id = wn.node_id)
 //                                         import changes into OHDM                                           //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        /*
+            Note: An initial import set the until coloumn to a default.
+            With that update the until becomes clearer: It is today. We should
+            set the default until to today! TODO
+        */
+
         /* Situation: Intermediate is filled even with new data. Changed lines
            are tagged in nodes, ways and relations
 

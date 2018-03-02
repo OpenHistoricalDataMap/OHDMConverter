@@ -1026,10 +1026,6 @@ public class OHDMImporter extends Importer {
             int debugStop = 42;
         }
         
-        if(relation.getOHDMObjectID().equalsIgnoreCase("1216")) {
-            int debugStop = 42;
-        }
-        
         // get all ohdm ids and store it
         StringBuilder sq = new StringBuilder();
 
@@ -1339,10 +1335,71 @@ public class OHDMImporter extends Importer {
             return false;
         }
 
-        return this.updateOSMElementGeometry(node, importUnnamedEntities);
+        return this.updateOSMElementGeometry(node);
     }
     
-    public boolean updateOSMElementGeometry(OSMElement osmElement, boolean namedEntitiesOnly) {
+    /**
+     * Object exists - geometry is new. Assumes onyl one geometry which
+     * holds for nodes and ways and relations representing a polygon.
+     * Does not hold for relations representing non-polygons (real relations
+     * so to say)
+     * @param osmElement
+     * @return 
+     */
+    public boolean updateOSMElementGeometry(OSMElement osmElement) {
+        String osmID = osmElement.getOSMIDString();
+        if(osmID.equalsIgnoreCase("188276804") || osmID.equalsIgnoreCase("301835391")) {
+            // debug break
+            int i = 42;
+        }
+        
+        if(!osmElement.hasGeometry()) {
+            System.err.println("try to update geometry of an osm object "
+                    + "without a geometry (didn't update anything): " + osmID);
+            
+            return false;
+        }
+        
+        // there must be an object id - even the dummy id.
+        String ohdmObjectIDString = osmElement.getOHDMObjectID();
+        
+        if(ohdmObjectIDString == null) {
+            System.err.println("try to update geometry of an osm object "
+                    + "with no ohdm object id (didn't update anything): " + osmID);
+            
+            return false;
+        }
+
+        try {
+            // get external user id from ohdm
+            int id_ExternalUser = this.getOHDM_ID_ExternalUser(osmElement);
+
+            // try to add a geometry
+            String ohdmGeomIDString = this.addGeometry(osmElement, id_ExternalUser);
+            
+            if(ohdmGeomIDString == null) {
+                System.err.println("tried to update geometry but couldn't "
+                        + "create new geometry: " + osmID);
+
+                return false;
+            }
+
+            this.updateValidity(osmElement, null, ohdmGeomIDString);
+
+            // update ohdmObjects in intermediate
+            this.intermediateDB.setOHDM_IDs(this.sourceUpdateQueue, osmElement, ohdmObjectIDString, ohdmGeomIDString);
+
+            return true;
+        }
+        catch(SQLException e) {
+            System.err.println("failure during updating geometry of existing object: " + e.getMessage());
+            System.err.println(osmElement);
+        }
+        
+        return false;
+    }
+    
+    public boolean updateOSMElementObject(OSMElement osmElement) {
         String osmID = osmElement.getOSMIDString();
         if(osmID.equalsIgnoreCase("188276804") || osmID.equalsIgnoreCase("301835391")) {
             // debug break
@@ -1358,53 +1415,40 @@ public class OHDMImporter extends Importer {
             identity and importing of unnamed entities is not yet wished in that call
             null indicates a failure
             */
-            String ohdmObjectIDString = this.getOHDMObjectID(osmElement, namedEntitiesOnly);
+            String ohdmObjectIDString = this.getOHDMObjectID(osmElement, true);
 
-            // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
             if(ohdmObjectIDString == null) {
-                /*
-                System.err.println("cannot create or find ohdm object id (not even dummy osm) and importing of unnamed entites allowed");
-                System.err.println(osmElement);
-                */
+                System.err.println("try to update object but couldn't "
+                        + "create new object (didn't update anything): " + osmID);
 
-                // try to add a geometry
-                String ohdmGeomIDString = this.addGeometry(osmElement, id_ExternalUser);
-                
-                if(ohdmGeomIDString != null) {
-                    // remeber geometry in inter db
-                    this.intermediateDB.setOHDM_IDs(this.sourceUpdateQueue, osmElement, null, ohdmGeomIDString);
-                }
-
-                // geometry added but no object.. we are done here
                 return false;
             }
+            
+            this.updateValidity(osmElement, ohdmObjectIDString, null);
 
-            // we have an object.. try to add geometry
-            
-            // try to add a geometry
-            String ohdmGeomIDString = this.addGeometry(osmElement, id_ExternalUser);
-            
-            // combine object and geometry if there is a geometry
-            if(ohdmGeomIDString != null) {
-                // create entry in object_geometry table
-                this.addValidity(osmElement, ohdmObjectIDString, ohdmGeomIDString, 
-                        id_ExternalUser);
-                
-                /* now make both object and geom id persistent to intermediate db
-                */
-                this.intermediateDB.setOHDM_IDs(this.sourceUpdateQueue, osmElement, ohdmObjectIDString, ohdmGeomIDString);
-            }
+            // update ohdmObjects in intermediate
+            this.intermediateDB.setOHDM_IDs(this.sourceUpdateQueue, osmElement, 
+                    ohdmObjectIDString, osmElement.getOHDMGeomID());
 
-            // keep some special tags (url etc, see wiki) for the object
-            this.addContentAndURL(osmElement, ohdmObjectIDString);
-            
             return true;
         }
+        
         catch(SQLException e) {
             System.err.println("failure during import of intermediate object: " + e.getMessage());
             System.err.println(osmElement);
         }
         
         return false;
+    }
+
+    private void updateValidity(OSMElement osmElement, String newOHDMObjectID, 
+            String newOHDMGeometryID /*, boolean multipleLinesExpected */) {
+        
+        String timeChangedString = osmElement.getTimeStampString();
+
+        // update old validity entr(ies) set until to timeChangedString
+        
+        // insert validity line(s) with either newobject or new geometry id
+
     }
 }

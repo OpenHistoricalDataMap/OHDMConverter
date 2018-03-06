@@ -22,7 +22,9 @@ public class OHDM_DB {
     public static final String TABLE_SUBSEQUENT_GEOM_USER = "subsequent_geom_user";
     public static final String TABLE_EXTERNAL_SYSTEMS = "external_systems";
     public static final String TABLE_GEOOBJECT_CONTENT = "geoobject_content";
-    
+
+    public static final String TABLE_IMPORTS_UPDATES = "import_updates";
+
     public static final int UNKNOWN_USER_ID = -1;
     public static final String URL = "url";
     
@@ -63,6 +65,7 @@ public class OHDM_DB {
         DB.drop(targetConnection, targetSchema, TABLE_POLYGONS);
         DB.drop(targetConnection, targetSchema, URL);
         DB.drop(targetConnection, targetSchema, TABLE_SUBSEQUENT_GEOM_USER);
+        DB.drop(targetConnection, targetSchema, TABLE_IMPORTS_UPDATES);
     }
 
 
@@ -227,7 +230,7 @@ public class OHDM_DB {
         sq.append("url character varying,");
         sq.append("source_user_id bigint");
         sq.append(");");
-        
+
         // SUBSEQUENT_GEOM_USER
         DB.createSequence(targetConnection, schema, TABLE_SUBSEQUENT_GEOM_USER);
         // table
@@ -238,6 +241,18 @@ public class OHDM_DB {
         sq.append("point_id bigint, ");
         sq.append("line_id bigint,");
         sq.append("polygon_id bigint");
+        sq.append(");");
+        sq.forceExecute();
+
+        // IMPORT UPDATE
+        DB.createSequence(targetConnection, schema, OHDM_DB.TABLE_IMPORTS_UPDATES);
+        // table
+        sq.append(DB.getCreateTableBegin(schema, TABLE_IMPORTS_UPDATES));
+        // add table specifics
+        sq.append(",");
+        sq.append("externalsystemID bigint, ");
+        sq.append("initial date,");
+        sq.append("lastupdate date");
         sq.append(");");
         sq.forceExecute();
     }

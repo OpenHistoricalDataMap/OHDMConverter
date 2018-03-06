@@ -1,5 +1,6 @@
 package util;
 
+import inter2ohdm.OHDMImporter;
 import inter2ohdm.OHDMUpdateInter;
 import osm2inter.OSMImport;
 
@@ -17,9 +18,14 @@ public class TempInsertUpdateTester {
         // initial import
         String dbInitialImportConfigFile = "db_initialImport.txt";
         String osmInitialImportFileName = "initialImport.osm";
+        String dbOHDMConfigFile = "db_ohdm.txt";
 
         String[] importArgs = new String[] {osmInitialImportFileName, dbInitialImportConfigFile};
+        // import to intermediate
         OSMImport.main(importArgs);
+
+        // initial ohdm import
+        OHDMImporter.main(new String[]{dbInitialImportConfigFile, dbOHDMConfigFile});
 
         // import update intermediate
         String dbUpdateIntermediateConfigFile = "db_updateImport.txt";
@@ -29,7 +35,6 @@ public class TempInsertUpdateTester {
         OSMImport.main(importUpdateArgs);
 
         // make that tagging in intermediate and drop update db in that process
-        String dbOHDMConfigFile = "db_updateImport.txt";
 
         String[] updateArgs = new String[] {dbInitialImportConfigFile, dbUpdateIntermediateConfigFile, dbOHDMConfigFile};
 

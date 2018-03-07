@@ -36,15 +36,9 @@ public class TempInsertUpdateTester {
 
         // make that tagging in intermediate and drop update db in that process
 
-        String[] updateArgs = new String[] {dbInitialImportConfigFile, dbUpdateIntermediateConfigFile, dbOHDMConfigFile};
-
-//        switch - for testing purposes
-//        String[] updateArgs = new String[] {dbUpdateIntermediateConfigFile, dbInitialImportConfigFile, dbOHDMConfigFile};
+        String[] updateArgs = new String[] {dbInitialImportConfigFile, dbUpdateIntermediateConfigFile,
+                dbOHDMConfigFile, "2018-03-01"};
 
         OHDMUpdateInter.main(updateArgs);
-
-
-
     }
-
 }

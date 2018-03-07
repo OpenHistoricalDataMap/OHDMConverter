@@ -53,6 +53,7 @@ public class InterDB {
             sql.append("longitude character varying,");
             sql.append("latitude character varying,");
             sql.append("ohdm_geom_id bigint,");
+            sql.append("ohdm_geom_type int,");
             sql.append("ohdm_object_id bigint,");
 //            sql.append("is_part boolean DEFAULT false,");
             sql.append("new boolean DEFAULT false,");
@@ -75,6 +76,7 @@ public class InterDB {
             sql.append("otherclasscodes character varying,");
             sql.append("serializedTags character varying,");
             sql.append("ohdm_geom_id bigint,");
+            sql.append("ohdm_geom_type int,");
             sql.append("ohdm_object_id bigint,");
             sql.append("node_ids character varying,");
 //            sql.append("is_part boolean DEFAULT false,");
@@ -98,6 +100,7 @@ public class InterDB {
             sql.append("otherclasscodes character varying,");
             sql.append("serializedTags character varying,");
             sql.append("ohdm_geom_id bigint,");
+            sql.append("ohdm_geom_type int,");
             sql.append("ohdm_object_id bigint,");
             sql.append("member_ids character varying,");
             sql.append("new boolean DEFAULT false,");

@@ -40,7 +40,7 @@ public class OHDMImporter extends Importer {
     private String defaultSince = "1970-01-01";
     private String defaultUntil = "2017-01-01";
     
-    public OHDMImporter(IntermediateDB intermediateDB, 
+    public OHDMImporter(IntermediateDB intermediateDB, String validUntilString,
             Connection sourceConnection, Connection targetConnection, 
             String sourceSchema, String targetSchema, SQLStatementQueue updateQueue) {
         
@@ -57,7 +57,7 @@ public class OHDMImporter extends Importer {
         this.targetInsertQueue = new SQLStatementQueue(targetConnection);
         
         this.defaultSince = "2016-01-01";
-        this.defaultUntil = this.getTodayString();
+        this.defaultUntil = validUntilString;
     }
     
     void close() throws SQLException {
@@ -844,7 +844,7 @@ public class OHDMImporter extends Importer {
                 updateQueue = new SQLStatementQueue(sourceParameter);
             }
             
-            ohdmImporter = new OHDMImporter(iDB, sourceConnection, 
+            ohdmImporter = new OHDMImporter(iDB, targetParameter.getOsmfilecreationdate(), sourceConnection,
                     targetConnection, sourceSchema, targetSchema, updateQueue);
 
             /* TODO: remove those separation between nodes, way and relations.
@@ -914,6 +914,9 @@ public class OHDMImporter extends Importer {
             int logMessageInterval = targetParameter.getLogMessageInterval();
             trigger = new Trigger(extractor, 1000 * 60 * logMessageInterval);
             trigger.start();
+
+            // set initial max validity
+            OHDM_DB.writeInitialImportDate(targetConnection, targetSchema, targetParameter.getOsmfilecreationdate());
             
             if(targetParameter.importNodes()) {
                 extractor.processNodes(sourceQueue, true);
@@ -969,7 +972,8 @@ public class OHDMImporter extends Importer {
                 extractor.processRelations(sourceQueue, false);
                 ohdmImporter.forceExecute();
                 
-                // do some post processing:
+                // do some post processing: stop trigger (DEBUGGING)
+                trigger.end();
 
                 /*
                 In some rare cases, relation are reference by their OSM id an not
@@ -1260,7 +1264,7 @@ public class OHDMImporter extends Importer {
 
     void postProcessGGTable() throws SQLException {
         /*
-        In some rare cases, relation are reference by their OSM id an not
+        In some rare cases, relations are referenced by their OSM id an not
         OHDM ID in geoobject_geometry table. That problem can be fixed after
         importing all relations. Do it here.
         */
@@ -1297,12 +1301,14 @@ public class OHDMImporter extends Importer {
             ResultSet sResult = sourceSelectQueue.executeWithResult();
             if (sResult.next()) {
                 BigDecimal ohdmID = sResult.getBigDecimal(1);
-                
-                this.targetInsertQueue.append(targetUpdateStart);
-                this.targetInsertQueue.append(ohdmID.toString());
-                this.targetInsertQueue.append(";");
-                this.targetInsertQueue.couldExecute();
-                
+
+                if (ohdmID != null) {
+                    this.targetInsertQueue.append(targetUpdateStart);
+                    this.targetInsertQueue.append(ohdmID.toString());
+                    this.targetInsertQueue.append(";");
+                    this.targetInsertQueue.couldExecute();
+                }
+
             } else {
                 // failure
                 System.err.println("-----------------------------------------------------");

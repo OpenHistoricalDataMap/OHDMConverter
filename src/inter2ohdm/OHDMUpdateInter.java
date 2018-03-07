@@ -25,14 +25,19 @@ public class OHDMUpdateInter {
     private static final String OBJECT_NEW_TAG = "has_name";
 
     public static void main(String args[]) throws IOException, SQLException {
-        if(args.length < 3) {
-            System.err.println("three parameter file required: intermediate, update_intermediate, ohdm");
+        if(args.length < 4) {
+            System.err.println("parameter required: " +
+                    "intermediate, " +
+                    "update_intermediate, " +
+                    "ohdm" +
+                    "update-date-string (yyyy-mm-dd)");
             System.exit(0);
         }
 
         String interDBParameterFile = args[0];
         String updateDBParameterFile = args[1];
         String ohdmParameterFile = args[2];
+        String updateDateString = args[3];
 
         Parameter interDBParameters = new Parameter(interDBParameterFile);
         Parameter updateDBParameters = new Parameter(updateDBParameterFile);
@@ -592,7 +597,51 @@ where (n.deleted OR n.new) AND n.osm_id = wn.node_id)
 //                       extend validity of unchanged entities in ohdm                                        //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+            /**
+             * Hints:
+             * ohdm object id start with 0 (dummy object for unnamned entities)
+             * ohdm geometry ids start with 1
+             * ohdm_geom_type: 0 marks relation, 1 point, 2 ways, 3 polygon
+             *
+             *
+             * Idea:
+             nodes, ways and relations are source for objects and geometries in OHDM.
+             object_geom table in OHDM links both together.
+             Those links are still valid if both side are valid regardless their source.
+             Thus, we need two independent data streams: on for valid object ids
+             another for valid geometry id / type pair.
 
+             All matching pairs are to be updated with an extended validity date.
+
+             update ohdmupdatetest.geoobject_geometry set valid_until = '2020-02-02'
+             where id IN
+             (select gg.id from
+             (SELECT ohdm_object_id FROM intermediate.nodes where valid OR NOT changed
+             UNION
+             SELECT ohdm_object_id FROM intermediate.ways where valid OR NOT changed
+             UNION
+             SELECT ohdm_object_id FROM intermediate.relations where valid OR NOT changed
+             ) as o,
+
+             (SELECT ohdm_geom_id, ohdm_geom_type FROM intermediate.nodes
+             where (valid OR NOT new) AND ohdm_geom_id >= 1 AND ohdm_geom_type >= 1
+             UNION
+             SELECT ohdm_geom_id, ohdm_geom_type FROM intermediate.ways
+             where (valid OR NOT new) AND ohdm_geom_id >= 1 AND ohdm_geom_type >= 1
+             UNION
+             SELECT ohdm_geom_id, ohdm_geom_type FROM intermediate.relations
+             where (valid OR NOT new) AND ohdm_geom_id >= 1 AND ohdm_geom_type >= 1) as g,
+
+             (SELECT id, id_target, id_geoobject_source, type_target from
+             ohdmupdatetest.geoobject_geometry) as gg
+
+             where gg.id_geoobject_source = o.ohdm_object_id
+             AND gg.id_target = g.ohdm_geom_id AND gg.type_target = ohdm_geom_type)
+
+             *
+             *
+             *
+             */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                       distinguish new and changed entities in update db                                    //

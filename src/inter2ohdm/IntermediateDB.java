@@ -72,8 +72,13 @@ public class IntermediateDB {
             }
             sql.append("ohdm_geom_id = ");
             sql.append(ohdmGeomIDString);
+
+            // add geom type
+            sql.append(", ");
+            sql.append("ohdm_geom_type = ");
+            sql.append(element.getGeometryType());
         }
-        
+
         sql.append(" WHERE osm_id = ");
         sql.append(element.getOSMIDString());
         sql.append(";");

@@ -3,6 +3,7 @@ package util;
 import ohdm2rendering.OHDM2Rendering;
 
 import java.io.*;
+import java.util.Calendar;
 import java.util.StringTokenizer;
 
 /**
@@ -42,6 +43,7 @@ public class Parameter {
     private String renderoutput = OHDM2Rendering.GENERIC;
     private int logMessageInterval = 5;
     private int SerTagsSize = 200000;
+    private String osmfilecreationdate;
 
     public String getConnectionType() {
         return connectionType;
@@ -159,6 +161,7 @@ public class Parameter {
                             case "waynodesColumnNames": this.waynodesColumnNames = value.split("\\|"); break;
                             case "waysColumnNames": this.waysColumnNames = value.split("\\|"); break;
                             case "serTagsSize": this.SerTagsSize = Integer.parseInt(value); break;
+                            case "osmfilecreationdate": this.osmfilecreationdate = value; break;
                         }
                     }
                 }
@@ -182,7 +185,19 @@ public class Parameter {
     public String getMaxThread() { return this.maxThreads ;}
     public String getRecordFileName() { return this.recordFileName; }
     public String getReadStepLen() { return this.readStepLen; }
+    public String getOsmfilecreationdate() {
+        if(this.osmfilecreationdate == null) {
+            Calendar today = Calendar.getInstance();
+            today.setTimeInMillis(System.currentTimeMillis());
+            this.osmfilecreationdate = Integer.toString(today.get(Calendar.YEAR));
+            this.osmfilecreationdate += "-";
+            this.osmfilecreationdate = Integer.toString(today.get(Calendar.MONTH));
+            this.osmfilecreationdate += "-";
+            this.osmfilecreationdate = Integer.toString(today.get(Calendar.DAY_OF_MONTH));
 
+        }
+        return this.osmfilecreationdate;
+    }
 
     public String getPath() { return this.getdbName() ;}
     public boolean usePSQL() { return this.usePSQL ;}

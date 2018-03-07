@@ -16,8 +16,10 @@ import util.Util;
 public class DebugInter2OHDM extends OHDMImporter {
 
     // TODO TODO... set updateStream!!
-    public DebugInter2OHDM(IntermediateDB intermediateDB, Connection sourceConnection, Connection targetConnection, String sourceSchema, String targetSchema) {
-        super(intermediateDB, sourceConnection, targetConnection, sourceSchema, targetSchema, null);
+    public DebugInter2OHDM(IntermediateDB intermediateDB, Connection sourceConnection,
+                           Connection targetConnection, String sourceSchema, String targetSchema) {
+
+        super(intermediateDB, "2017-01-01", sourceConnection, targetConnection, sourceSchema, targetSchema, null);
     }
     
     public static void main(String args[]) throws IOException {
@@ -58,7 +60,8 @@ public class DebugInter2OHDM extends OHDMImporter {
             SQLStatementQueue updateQueue = new SQLStatementQueue(sourceParameter);
             
             // TODO TODO remove that null
-            OHDMImporter ohdmImporter = new OHDMImporter(iDB, sourceConnection, 
+            OHDMImporter ohdmImporter = new OHDMImporter(iDB, targetParameter.getOsmfilecreationdate(),
+                    sourceConnection,
                     targetConnection, sourceSchema, targetSchema, updateQueue);
             
             try {

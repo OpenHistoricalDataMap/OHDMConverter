@@ -166,7 +166,7 @@ public class OHDM_DB {
         sq.append(DB.getCreateTableBegin(schema, TABLE_GEOOBJECT_GEOMETRY));
         sq.append(",");
         sq.append("id_target bigint,");
-        sq.append("type_target bigint,");
+        sq.append("type_target int,");
         sq.append("id_geoobject_source bigint NOT NULL,");
         sq.append("role character varying,");
         sq.append("classification_id bigint NOT NULL,");
@@ -255,5 +255,37 @@ public class OHDM_DB {
         sq.append("lastupdate date");
         sq.append(");");
         sq.forceExecute();
+
+        // insert OSM system id
+        sq.append("INSERT INTO ");
+        sq.append(DB.getFullTableName(schema, TABLE_IMPORTS_UPDATES));
+        sq.append("(externalsystemID) VALUES (0);");
+
+        sq.forceExecute();
     }
+
+    public static void writeInitialImportDate(Connection targetConnection, String targetSchema,
+                                              String osmfilecreationdate) throws SQLException {
+
+        SQLStatementQueue sq = new SQLStatementQueue(targetConnection);
+        sq.append("UPDATE ");
+        sq.append(DB.getFullTableName(targetSchema, TABLE_IMPORTS_UPDATES));
+        sq.append(" SET initial = '");
+        sq.append(osmfilecreationdate);
+        sq.append("' WHERE externalsystemID = 0;");
+        sq.forceExecute();
+    }
+
+    public static void writeUpdateDate(Connection targetConnection, String targetSchema,
+                                              String osmfilecreationdate) throws SQLException {
+
+        SQLStatementQueue sq = new SQLStatementQueue(targetConnection);
+        sq.append("UPDATE ");
+        sq.append(DB.getFullTableName(targetSchema, TABLE_IMPORTS_UPDATES));
+        sq.append(" SET lastupdate = '");
+        sq.append(osmfilecreationdate);
+        sq.append("' WHERE externalsystemID = 0;");
+        sq.forceExecute();
+    }
+
 }

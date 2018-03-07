@@ -31,7 +31,9 @@ public class Trigger extends Thread {
         while(!this.stopped) {
             try {
                 Thread.sleep(this.milliseconds);
-                this.rec.trigger();
+                if(!stopped) {
+                    this.rec.trigger();
+                }
             } catch (InterruptedException ex) {
                 //
             }

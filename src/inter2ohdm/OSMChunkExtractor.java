@@ -115,7 +115,8 @@ public class OSMChunkExtractor {
             SQLStatementQueue updateQueue = new SQLStatementQueue(sourceParameter);
 
             // Importer to OHDM database
-            ohdmImporter = new OHDMImporter(intermediateDB, sourceConnection,
+            ohdmImporter = new OHDMImporter(intermediateDB, targetParameter.getOsmfilecreationdate(),
+                    sourceConnection,
                     targetConnection, sourceSchema, targetSchema, updateQueue);
 
             int stepLen = 10000; // default

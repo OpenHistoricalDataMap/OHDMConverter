@@ -613,6 +613,8 @@ where (n.deleted OR n.new) AND n.osm_id = wn.node_id)
 
              All matching pairs are to be updated with an extended validity date.
 
+             Here it is: TODO: activate that code.
+
              update ohdmupdatetest.geoobject_geometry set valid_until = '2020-02-02'
              where id IN
              (select gg.id from
@@ -753,12 +755,61 @@ where (n.deleted OR n.new) AND n.osm_id = wn.node_id)
              * new
              */
 
+            // update intermediate entries with changed objects
+
+            /*
+             * simple: update serialized tags, classcodes and tstamp
+            UPDATE
+                intermediate.ways
+            SET
+                serializedtags = uw.serializedtags,
+                classcode = uw.classcode,
+                otherclasscodes = uw.otherclasscodes,
+                tstamp = uw.tstamp
+            FROM
+                intermediate.ways AS iw
+                INNER JOIN updateintermediate.ways AS uw
+                    ON iw.osm_id = uw.osm_id
+            WHERE
+                intermediate.ways.changed
+
+            TODO: nodes + relations (same)
+             */
+
             // copy new id list to intermediate for entities with changed geometry
+/*
+            ways:
 
-            // copy new serialized tags to intermediate for entities with changed objects
+            UPDATE
+            intermediate.ways
+                    SET
+            node_ids = uw.node_ids,
+                    tstamp = uw.tstamp
+            FROM
+            intermediate.ways AS iw
+            INNER JOIN updateintermediate.ways AS uw
+            ON iw.osm_id = uw.osm_id
+            WHERE
+            intermediate.ways.new
 
-            // insert into intermediate.nodes (select * from updateintermediate.nodes limit 100);
+            nodes:
+            UPDATE
+                intermediate.nodes
+            SET
+                longitude = unodes.longitude,
+                latitude = unodes.latitude,
+                tstamp = unodes.tstamp
+            FROM
+                intermediate.nodes AS inodes
+                INNER JOIN updateintermediate.nodes AS unodes
+                    ON inodes.osm_id = unodes.osm_id
+            WHERE
+                inodes.new
 
+                TODO relations
+*/
+        // TODO: copy all related waynodes and relationmember
+            // duplicate supression
 
             /*
             Step 2:

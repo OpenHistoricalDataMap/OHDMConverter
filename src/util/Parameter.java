@@ -3,8 +3,13 @@ package util;
 import ohdm2rendering.OHDM2Rendering;
 
 import java.io.*;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.StringTokenizer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author thsc
@@ -43,7 +48,7 @@ public class Parameter {
     private String renderoutput = OHDM2Rendering.GENERIC;
     private int logMessageInterval = 5;
     private int SerTagsSize = 200000;
-    private String osmfilecreationdate;
+    private String osmfilecreationdatestring;
 
     public String getConnectionType() {
         return connectionType;
@@ -161,7 +166,7 @@ public class Parameter {
                             case "waynodesColumnNames": this.waynodesColumnNames = value.split("\\|"); break;
                             case "waysColumnNames": this.waysColumnNames = value.split("\\|"); break;
                             case "serTagsSize": this.SerTagsSize = Integer.parseInt(value); break;
-                            case "osmfilecreationdate": this.osmfilecreationdate = value; break;
+                            case "osmfilecreationdate": this.checkDateFormat(value); break;
                         }
                     }
                 }
@@ -186,17 +191,17 @@ public class Parameter {
     public String getRecordFileName() { return this.recordFileName; }
     public String getReadStepLen() { return this.readStepLen; }
     public String getOsmfilecreationdate() {
-        if(this.osmfilecreationdate == null) {
+        if(this.osmfilecreationdatestring == null) {
             Calendar today = Calendar.getInstance();
             today.setTimeInMillis(System.currentTimeMillis());
-            this.osmfilecreationdate = Integer.toString(today.get(Calendar.YEAR));
-            this.osmfilecreationdate += "-";
-            this.osmfilecreationdate = Integer.toString(today.get(Calendar.MONTH));
-            this.osmfilecreationdate += "-";
-            this.osmfilecreationdate = Integer.toString(today.get(Calendar.DAY_OF_MONTH));
+            this.osmfilecreationdatestring = Integer.toString(today.get(Calendar.YEAR));
+            this.osmfilecreationdatestring += "-";
+            this.osmfilecreationdatestring += Integer.toString(today.get(Calendar.MONTH));
+            this.osmfilecreationdatestring += "-";
+            this.osmfilecreationdatestring += Integer.toString(today.get(Calendar.DAY_OF_MONTH));
 
         }
-        return this.osmfilecreationdate;
+        return this.osmfilecreationdatestring;
     }
 
     public String getPath() { return this.getdbName() ;}
@@ -204,12 +209,27 @@ public class Parameter {
     public boolean forgetPreviousImport() { return this.forgetPreviousImport; }
 
     public int getLogMessageInterval() {return this.logMessageInterval; }
-    
-    /*
-    public boolean importNodes() { return this.importNodes; }
-    public boolean importWays() { return this.importWays; }
-    public boolean importRelations() { return this.importRelations; }
-    */
+
+    /**
+     * check if that format is a valid sql date format - if so add.
+     * @param format
+     * @return 
+     */
+    private boolean checkDateFormat(String dateString) {
+        DateFormat df = new SimpleDateFormat("YYYY-MM-DD");
+        try {
+            df.parse(dateString);
+            // valid string
+            this.osmfilecreationdatestring = dateString;
+        } catch (ParseException ex) {
+            // forget it
+            System.err.println("dateString has no valid date format (YYYY-MM-DD), ignore and take today instead: " + dateString);
+            return false;
+        }
+        
+        return true;
+    }
+
 
     public boolean importNodes() {
         System.out.println("TODO (remove that option): parameter.importNodes always returns true");

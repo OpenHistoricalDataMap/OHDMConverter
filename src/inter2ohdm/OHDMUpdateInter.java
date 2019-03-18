@@ -279,7 +279,7 @@ public class OHDMUpdateInter {
             // intermediate: entities marked as deleted, update: no change
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                       mark changes in geometries and/or objects in entities                                //
+//                       mark changes in geometries and in entities                                           //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             // NODES - geometry change

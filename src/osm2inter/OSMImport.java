@@ -1,5 +1,7 @@
 package osm2inter;
 
+import org.xml.sax.helpers.DefaultHandler;
+import osm.OSMClassification;
 import util.*;
 
 import javax.xml.parsers.SAXParser;
@@ -49,45 +51,52 @@ public class OSMImport {
 
             dbConnectionSettings = new Parameter(parameterFile);
             
-//            OSMClassification osmClassification = OSMClassification.getOSMClassification();
-            System.out.println("schema: "+dbConnectionSettings.getSchema());
-            System.out.println("connection type: "+dbConnectionSettings.getConnectionType());
-            System.out.println("delimiter: "+dbConnectionSettings.getDelimiter());
-            
             SQLStatementQueue sq = new SQLStatementQueue(dbConnectionSettings);
             // drop database
             System.out.println("drop and recreate intermediate tables");
             InterDB.createTables(sq, dbConnectionSettings.getSchema());
 
-            System.out.println("creating connections");
-            connectors = new HashMap<>();
-            String[] tablenames = COPY_OSMImporter.connsNames;
-            for (String tablename : tablenames){
-                connectors.put(tablename, new CopyConnector(dbConnectionSettings, tablename));
+            // set up xml handler - class that actually does the importing
+            DefaultHandler osmImporter = null;
+
+            String connectionType = dbConnectionSettings.getConnectionType();
+            if(!connectionType.equalsIgnoreCase("insert")) {
+                System.out.println("use copy insert - fast version");
+
+                System.out.println("creating connections");
+                connectors = new HashMap<>();
+                String[] tablenames = COPY_OSMImporter.connsNames;
+                for (String tablename : tablenames){
+                    connectors.put(tablename, new CopyConnector(dbConnectionSettings, tablename));
+                }
+
+                osmImporter = new COPY_OSMImporter(connectors, dbConnectionSettings.getSerTagsSize());
+            } else {
+                // do inserts
+                System.out.println("use sql-insert - copy is much faster!");
+
+                osmImporter = new SQL_OSMImporter(
+                        dbConnectionSettings,
+                        OSMClassification.getOSMClassification());
             }
 
-            // 2BTested
-//            newSAXParser.parse(osmFile, new XML_SAXHandler(connectors));
             System.out.println("starting parser");
-            // replacing SQL importer with COPY importer
-            newSAXParser.parse(osmFile, new COPY_OSMImporter(connectors, dbConnectionSettings.getSerTagsSize()));
+            newSAXParser.parse(osmFile, osmImporter);
 
-            for (CopyConnector connector : connectors.values()){
-                System.out.println("wrote "+connector.endCopy()+" lines to "+connector.getTablename());
-                connector.close();
+            if(!connectionType.equalsIgnoreCase("insert")) {
+                for (CopyConnector connector : connectors.values()) {
+                    System.out.println("wrote " + connector.endCopy() + " lines to " + connector.getTablename());
+                    connector.close();
+                }
             }
-//            newSAXParser.parse(osmFile, new SQL_OSMImporter(dbConnectionSettings, osmClassification));
-//        newSAXParser.parse(osmFile, new SQL_OSMImporter(dbConnectionSettings, osmClassification));
-//        newSAXParser.parse(osmFile, new Dump_OSMImporter(dbConnectionSettings, osmClassification));
 
-        } catch (Throwable t) {
+        } catch (Exception t) {
             PrintStream err = System.err;
             // maybe another stream was defined and could be opened
             try {
                 err = dbConnectionSettings.getErrStream();
             }
-            catch(Throwable tt) {
-                // ignore that..
+            catch(Exception tt) {
             }
 
             Util.printExceptionMessage(err, t, null, "in main OSM2Inter", false);

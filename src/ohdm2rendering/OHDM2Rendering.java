@@ -229,13 +229,13 @@ where gg.type_target = 3 AND p.id = gg.id_target AND o.id = gg.id_geoobject_sour
 
             sql.append(geometryName);
 
-            sql.append(", object_id, geom_id, subclassname, name, valid_since, valid_until, valid_since_offset, valid_until_offset) ");
+            sql.append(", object_id, geom_id, classid, subclassname, name, valid_since, valid_until, valid_since_offset, valid_until_offset) ");
         }
 
         sql.append("select g.");
         sql.append(geometryName);
 
-        sql.append(", o.id as object_id, g.id as geom_id, c.subclassname, o.name, gg.valid_since, ");
+        sql.append(", o.id as object_id, g.id as geom_id, c.id as classid, c.subclassname, o.name, gg.valid_since, ");
         sql.append("gg.valid_until, gg.valid_since_offset, ");
         sql.append("gg.valid_until_offset ");
 
@@ -272,7 +272,7 @@ where gg.type_target = 3 AND p.id = gg.id_target AND o.id = gg.id_geoobject_sour
         sql.append(") as g,");
 
         // classification c
-        sql.append("(SELECT subclassname FROM ");
+        sql.append("(SELECT id, subclassname FROM ");
         sql.append(sourceSchema);
         sql.append(".classification where id = ");
         sql.append(classID);

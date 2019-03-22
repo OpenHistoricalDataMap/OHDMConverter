@@ -16,16 +16,30 @@ import static java.lang.System.out;
 public class Rendering2stRDF {
     private final Parameter sourceParameter;
     private final SQLStatementQueue sqlQueue;
-    private int lfd;
-    private final BufferedWriter out;
+    private int lfd = 0;
+    private BufferedWriter out;
+
+    public static void main(String[] args) throws IOException, SQLException {
+        String sourceParameterFileName = "db_rendering.txt";
+        String filename = "stRDF.out.txt";
+
+        if(args.length > 0) {
+            sourceParameterFileName = args[0];
+        }
+
+        if(args.length > 1) {
+            filename = args[1];
+        }
+
+        Rendering2stRDF rendering2stRDF = new Rendering2stRDF(new Parameter(sourceParameterFileName),
+                filename);
+
+        rendering2stRDF.produceTurtle(filename);
 
 
-    public Rendering2stRDF(Parameter sourceParameter, String filename)
-            throws IOException, SQLException {
-        this.sourceParameter = sourceParameter;
+    }
 
-        this.sqlQueue = new SQLStatementQueue(this.sourceParameter);
-
+    void produceTurtle(String filename) throws IOException, SQLException {
         this.out = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream(filename), "UTF-8"));
 
@@ -34,7 +48,17 @@ public class Rendering2stRDF {
         this.out.write("@prefix xsd: <http://www.w3.org/2001/XMLSchema#> . \n");
         this.out.write("@prefix strdf: <http://strdf.di.uoa.gr/ontology#> . \n");
 
-        this.lfd = 0;
+        this.produceTurtle("landuse_gardeningandfarm", OHDM_DB.OHDM_POLYGON_GEOMTYPE);
+        // close file
+        this.out.close();
+    }
+
+    public Rendering2stRDF(Parameter sourceParameter, String filename)
+            throws IOException, SQLException {
+        this.sourceParameter = sourceParameter;
+
+        this.sqlQueue = new SQLStatementQueue(this.sourceParameter);
+
     }
 
     void produceTurtle(String tableName, int geomType) throws SQLException, IOException {
@@ -67,6 +91,8 @@ from landuse_gardeningandfarm;
                     qResult.getDate(6),
                     qResult.getString(7));
         }
+
+
     }
 
     private void writeTurtleEntry(BigDecimal objectID, BigDecimal geomID, BigDecimal classificationID,
@@ -85,33 +111,33 @@ from landuse_gardeningandfarm;
             ohdm:name "AName" .
          */
 
-        b.append("ID");
+        b.append("_:ID");
         b.append(Integer.toString(this.lfd++));
 
         // objectid
         b.append(" ohdm:objectid \"");
         b.append(objectID.toString());
-        b.append(" \"^^xsd:integer ;");
+        b.append("\"^^xsd:integer ;\n");
 
         // geomid
         b.append(" ohdm:geometryid \"");
         b.append(geomID.toString());
-        b.append(" \"^^xsd:integer ;");
+        b.append("\"^^xsd:integer ;\n");
 
         // classid
         b.append(" ohdm:classificationID \"");
         b.append(geomID.toString());
-        b.append(" \"^^xsd:integer ;");
+        b.append("\"^^xsd:integer ;\n");
 
         // validsince
         b.append(" ohdm:validsince \"");
         b.append(since.toString()); // sql.Date.toString produces "yyyy-mm-tt" not util.Date!!!
-        b.append(" \"^^xsd:date ;");
+        b.append("\"^^xsd:date ;\n");
 
         // validsince
         b.append(" ohdm:validuntil \"");
         b.append(until.toString()); // sql.Date.toString produces "yyyy-mm-tt" not util.Date!!!
-        b.append(" \"^^xsd:date ;");
+        b.append("\"^^xsd:date ;\n");
 
         // wkt string
         b.append(" strdf:hasGeometry \"");
@@ -120,12 +146,12 @@ from landuse_gardeningandfarm;
 
         if(name != null) {
             // name
-            b.append(" ; ohdm:name \"");
+            b.append(" ;\n ohdm:name \"");
             b.append(name);
             b.append("\"");
         }
 
-        b.append(" .");
+        b.append(" .\n");
 
         this.out.write(b.toString());
     }

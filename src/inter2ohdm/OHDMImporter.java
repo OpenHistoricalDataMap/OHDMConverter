@@ -1305,6 +1305,10 @@ public class OHDMImporter extends Importer {
                 if (ohdmID != null) {
                     this.targetInsertQueue.append(targetUpdateStart);
                     this.targetInsertQueue.append(ohdmID.toString());
+                    this.targetInsertQueue.append(" WHERE type_target = ");
+                    this.targetInsertQueue.append(OHDM_DB.OHDM_GEOOBJECT_GEOMTYPE_OSM_ID);
+                    this.targetInsertQueue.append(" AND id_target = ");
+                    this.targetInsertQueue.append(relationOSMID.toString());
                     this.targetInsertQueue.append(";");
                     this.targetInsertQueue.couldExecute();
                 }

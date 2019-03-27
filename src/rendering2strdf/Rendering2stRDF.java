@@ -126,7 +126,7 @@ from landuse_gardeningandfarm;
 
         // classid
         b.append(" ohdm:classificationID \"");
-        b.append(geomID.toString());
+        b.append(classificationID.toString());
         b.append("\"^^xsd:integer ;\n");
 
         // validsince

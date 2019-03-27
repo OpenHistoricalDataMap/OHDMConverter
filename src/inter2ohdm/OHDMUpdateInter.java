@@ -3,6 +3,11 @@ package inter2ohdm;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import util.Parameter;
 import util.SQLStatementQueue;
 
@@ -23,13 +28,15 @@ public class OHDMUpdateInter {
     private static final String GEOMETRY_CHANGED_TAG = "new";
     private static final String OBJECT_CHANGED_TAG = "changed";
     private static final String OBJECT_NEW_TAG = "has_name";
+    private static DateFormat dateFormat;
 
     public static void main(String args[]) throws IOException, SQLException {
-        if(args.length < 4) {
+
+        if(args.length < 3 || args.length > 4) {
             System.err.println("parameter required: " +
                     "intermediate, " +
                     "update_intermediate, " +
-                    "ohdm" +
+                    "ohdm, " +
                     "update-date-string (yyyy-mm-dd)");
             System.exit(0);
         }
@@ -37,7 +44,30 @@ public class OHDMUpdateInter {
         String interDBParameterFile = args[0];
         String updateDBParameterFile = args[1];
         String ohdmParameterFile = args[2];
-        String updateDateString = args[3];
+
+        String updateDateString = null;
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("YYY-MM-dd");
+
+        if(args.length == 3) {
+            // use now as date
+            updateDateString = simpleDateFormat.format(new Date());
+        } else { // got a date string - test it
+            try {
+                // test
+                simpleDateFormat.parse(args[3]);
+            } catch (ParseException e) {
+                System.err.println("wrong date format: " + args[3]);
+                System.err.println("parameter required: " +
+                        "intermediate, " +
+                        "update_intermediate, " +
+                        "ohdm" +
+                        "update-date-string (yyyy-mm-dd)");
+                System.exit(0);
+            }
+
+            // passed test - string is ok
+            updateDateString = args[3];
+        }
 
         Parameter interDBParameters = new Parameter(interDBParameterFile);
         Parameter updateDBParameters = new Parameter(updateDBParameterFile);

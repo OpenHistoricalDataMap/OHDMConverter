@@ -12,7 +12,7 @@ import inter2ohdm.OSMChunkExtractor;
 import inter2ohdm.OSMChunkExtractorCommandBuilder;
 import ohdm2rendering.OHDM2Rendering;
 import osm2inter.OSMImport;
-import osm2inter.OSMUpdateInter;
+import inter2ohdm.OHDMUpdateInter;
 
 /**
  *
@@ -150,14 +150,14 @@ public class OSM2Rendering {
             OHDMImporter.main(new String[]{importInterDBConfig, ohdmDBConfig});
         }
 
-        if(updateInterDBConfig != null && importInterDBConfig != null && osmFile != null) {
+        if(updateInterDBConfig != null && importInterDBConfig != null && ohdmDBConfig != null && osmFile != null) {
             // make an import to temporary intermediate data base
-            OSM2Rendering.printMessage("import new osm data into temporary intermediate db");
-            OHDMImporter.main(new String[]{updateInterDBConfig, ohdmDBConfig, "update"});
+            OSM2Rendering.printMessage("import new osm data into update db");
+            OSMImport.main(new String[]{osmFile, updateInterDBConfig});
 
             // merge temporary and permanent intermediate data base
             OSM2Rendering.printMessage("merge temporary intermediate db into intermediate db");
-            OSMUpdateInter.main(new String[]{importInterDBConfig, updateInterDBConfig});
+            OHDMUpdateInter.main(new String[]{importInterDBConfig, updateInterDBConfig, ohdmDBConfig});
         }
 
         if(updateInterDBConfig != null && importInterDBConfig != null && ohdmDBConfig != null) {

@@ -68,14 +68,14 @@ classid, name, valid_since, valid_until
 from landuse_gardeningandfarm;
          */
 
-        this.sqlQueue.append("SELECT object_id, geom_id, classid, name, valid_since, valid_until, st_astext(");
+        this.sqlQueue.append("SELECT object_id, geom_id, classid, name, valid_since, valid_until, st_astext(st_transform(");
         switch(geomType) {
             case OHDM_DB.OHDM_POINT_GEOMTYPE: this.sqlQueue.append("point"); break;
             case OHDM_DB.OHDM_LINESTRING_GEOMTYPE: this.sqlQueue.append("line"); break;
             case OHDM_DB.OHDM_POLYGON_GEOMTYPE: this.sqlQueue.append("polygon"); break;
         }
 
-        this.sqlQueue.append(") FROM ");
+        this.sqlQueue.append(", 4326)) FROM ");
         this.sqlQueue.append(DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
         this.sqlQueue.append(";");
 

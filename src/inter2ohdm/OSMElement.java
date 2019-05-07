@@ -34,6 +34,8 @@ public abstract class OSMElement extends AbstractElement {
     private final boolean changed;
     private final boolean deleted;
     private final boolean has_name;
+    private final boolean object_new;
+
     private String tstamp;
     private final Date tstampDate;
     
@@ -56,11 +58,13 @@ public abstract class OSMElement extends AbstractElement {
         return this.tstamp;
     }
 
-    OSMElement(IntermediateDB intermediateDB, String osmIDString, 
-            String classCodeString, String otherClassCodes, String sTags,  
-            String ohdmObjectIDString, String ohdmGeomIDString,  
-            boolean valid, boolean isNew, boolean changed, boolean deleted,
-            boolean has_name, Date tstampDate) {
+    OSMElement(IntermediateDB intermediateDB, String osmIDString,
+               String classCodeString, String otherClassCodes, String sTags,
+               String ohdmObjectIDString, String ohdmGeomIDString,
+               boolean valid,
+               boolean geom_changed, boolean object_changed,
+               boolean deleted,
+               boolean has_name, Date tstampDate, boolean object_new) {
         
         super(sTags);
 
@@ -77,14 +81,16 @@ public abstract class OSMElement extends AbstractElement {
         this.ohdmGeomIDString = ohdmGeomIDString;
         this.valid = valid;
         
-        this.isNew = isNew;
-        this.changed = changed;
+        this.isNew = geom_changed;
+        this.changed = object_changed;
         this.deleted = deleted;
         this.has_name = has_name;
         this.tstampDate = tstampDate;
         
         this.tstamp = tstampDate.toString();
-        
+
+        this.object_new = object_new;
+
         this.otherClassCodeList = InterDB.getIDList(otherClassCodes);
     }
     

@@ -25,9 +25,9 @@ import util.SQLStatementQueue;
  * 
  */
 public class OHDMUpdateInter {
-    private static final String GEOMETRY_CHANGED_TAG = "new";
-    private static final String OBJECT_CHANGED_TAG = "changed";
-    private static final String OBJECT_NEW_TAG = "has_name";
+    private static final String GEOMETRY_CHANGED_TAG = "geom_changed";
+    private static final String OBJECT_CHANGED_TAG = "object_changed";
+    private static final String OBJECT_NEW_TAG = "object_new";
     private static DateFormat dateFormat;
 
     public static void main(String args[]) throws IOException, SQLException {

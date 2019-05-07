@@ -230,20 +230,6 @@ public class Parameter {
         return true;
     }
 
-
-    public boolean importNodes() {
-        System.out.println("TODO (remove that option): parameter.importNodes always returns true");
-        return true;
-    }
-    public boolean importWays() {
-        System.out.println("TODO (remove that option): parameter.importWays always returns true");
-        return true;
-    }
-    public boolean importRelations() {
-        System.out.println("TODO (remove that option): parameter.importRelations always returns true");
-        return true;
-    }
-
     public int getMaxSQLFileSize() { return this.maxSQLFileSize; }
     public int getMaxPSQLProcesses() { return this.maxPSQLProcesses; }
 

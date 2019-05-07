@@ -847,41 +847,15 @@ public class OHDMImporter extends Importer {
             ohdmImporter = new OHDMImporter(iDB, targetParameter.getOsmfilecreationdate(), sourceConnection,
                     targetConnection, sourceSchema, targetSchema, updateQueue);
 
-            /* TODO: remove those separation between nodes, way and relations.
-            does not work in practice
-            */
             try {
                 if(targetParameter.forgetPreviousImport()) {
                     System.out.println("remove ohdm entries in intermediate database");            
-                    
-                    if(targetParameter.importNodes()) {
                         ohdmImporter.forgetPreviousNodesImport();
-                    }
-                    if(targetParameter.importWays()) {
                         ohdmImporter.forgetPreviousWaysImport();
-                    }
-                    if(targetParameter.importRelations()) {
                         ohdmImporter.forgetPreviousRelationsImport();
-                    }
                 }
                 
-                if(targetParameter.importNodes() && 
-                        targetParameter.importWays() &&
-                        targetParameter.importRelations()) {
-                    // remove all
-                    OHDM_DB.dropOHDMTables(targetConnection, targetSchema);
-                } else {
-                    // drop only parts
-                    if(targetParameter.importNodes()) {
-                        OHDM_DB.dropNodeTables(targetConnection, targetSchema);
-                    }
-                    if(targetParameter.importWays()) {
-                        OHDM_DB.dropWayTables(targetConnection, targetSchema);
-                    }
-                    if(targetParameter.importRelations()) {
-                        OHDM_DB.dropRelationTables(targetConnection, targetSchema);
-                    }
-                }
+                OHDM_DB.dropOHDMTables(targetConnection, targetSchema);
             }
             catch(Exception e) {
                 System.err.println("problems during setting old data (non-fatal): " + e.getLocalizedMessage());
@@ -918,7 +892,7 @@ public class OHDMImporter extends Importer {
             // set initial max validity
             OHDM_DB.writeInitialImportDate(targetConnection, targetSchema, targetParameter.getOsmfilecreationdate());
             
-            if(targetParameter.importNodes()) {
+//            if(targetParameter.importNodes()) {
                 extractor.processNodes(sourceQueue, true);
                 ohdmImporter.forceExecute();
                 
@@ -939,11 +913,11 @@ public class OHDMImporter extends Importer {
                     // remember new update filename
                     currentUpdateFileName = nextFileName;
                 }
-            } else {
-                System.out.println("skip nodes import.. see importNodes in ohdm parameter file");
-            }
+//            } else {
+//                System.out.println("skip nodes import.. see importNodes in ohdm parameter file");
+//            }
             
-            if(targetParameter.importWays()) {
+//            if(targetParameter.importWays()) {
                 extractor.processWays(sourceQueue, false);
                 ohdmImporter.forceExecute();
                 
@@ -964,11 +938,12 @@ public class OHDMImporter extends Importer {
                     // remember new update filename
                     currentUpdateFileName = nextFileName;
                 }
+                /*
             } else {
                 System.out.println("skip ways import.. see importWays in ohdm parameter file");
-            }
+            }*/
 
-            if(targetParameter.importRelations()) {
+//            if(targetParameter.importRelations()) {
                 extractor.processRelations(sourceQueue, false);
                 ohdmImporter.forceExecute();
                 
@@ -994,9 +969,9 @@ public class OHDMImporter extends Importer {
                     trigger.setMilliseconds(1000 * 60 * 5); // 5 minutes
                     trigger.interrupt();
                 }
-            } else {
+/*            } else {
                 System.out.println("skip relations import.. see importRelations in ohdm parameter file");
-            }
+            } */
 
         } catch (IOException | SQLException e) {
             Util.printExceptionMessage(e, sourceQueue, "main method in Inter2OHDM", false);

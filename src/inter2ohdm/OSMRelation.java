@@ -23,12 +23,13 @@ public class OSMRelation extends OSMElement {
             String classCodeString, String otherClassCodes, String sTags, String memberIDs, 
             String ohdmObjectIDString, String ohdmGeomIDString, 
             boolean valid,
-            boolean isNew, boolean changed, boolean deleted,
-            boolean has_name, Date tstampDate) {
+            boolean geom_changed, boolean object_changed,
+            boolean deleted,
+            boolean has_name, Date tstampDate, boolean object_new) {
         
         super(intermediateDB, osmIDString, classCodeString, otherClassCodes, sTags, 
                 ohdmObjectIDString, ohdmGeomIDString, valid,
-                isNew, changed, deleted, has_name, tstampDate);
+                geom_changed, object_changed, deleted, has_name, tstampDate, object_new);
         this.memberIDs = memberIDs;
     }
     

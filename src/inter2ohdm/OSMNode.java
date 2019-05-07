@@ -15,25 +15,28 @@ public class OSMNode extends OSMElement {
             String classCodeString, String otherClassCodes, String sTags, 
             String ohdmObjectIDString, String ohdmGeomIDString, 
             boolean valid,
-            boolean isNew, boolean changed, boolean deleted,
-            boolean has_name, Date tstampDate) {
+            boolean geom_changed, boolean object_changed,
+            boolean deleted,
+            boolean has_name, Date tstampDate, boolean object_new) {
         
         super(intermediateDB, osmIDString, classCodeString, otherClassCodes, sTags, 
                 ohdmObjectIDString, ohdmGeomIDString, valid,
-                isNew, changed, deleted, has_name, tstampDate);
+                geom_changed, object_changed, deleted, has_name, tstampDate, object_new);
     }
 
     OSMNode(IntermediateDB intermediateDB, String osmIDString, 
             String classCodeString, String otherClassCodes, String sTags, String longitude, 
             String latitude, String ohdmObjectIDString, 
             String ohdmGeomIDString, boolean valid,
-            boolean isNew, boolean changed, boolean deleted,
-            boolean has_name, Date tstampDate) {
+            boolean geom_changed, boolean object_changed,
+            boolean deleted,
+            boolean has_name, Date tstampDate, boolean object_new
+    ) {
         
         
         this(intermediateDB, osmIDString, classCodeString, otherClassCodes, sTags, 
                 ohdmObjectIDString, ohdmGeomIDString, valid,
-                isNew, changed, deleted, has_name, tstampDate);
+                geom_changed, object_changed, deleted, has_name, tstampDate, object_new);
         
         this.longitude = longitude;
         this.latitude = latitude;

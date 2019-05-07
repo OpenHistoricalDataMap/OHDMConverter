@@ -22,12 +22,13 @@ public class IntermediateDB {
     private final boolean debug = false;
     protected final Connection sourceConnection;
     private final String schema;
-    private boolean isNew;
-    private boolean changed;
+    private boolean geom_changed;
+    private boolean object_changed;
     private boolean deleted;
     private boolean has_name;
+    private boolean object_new;
     private Date tstamp;
-    
+
     IntermediateDB(Connection sourceConnection, String schema) {
         this.sourceConnection = sourceConnection;
         this.schema = schema;
@@ -187,11 +188,12 @@ public class IntermediateDB {
         ohdmGeomIDString = this.extractBigDecimalAsString(qResult, "ohdm_geom_id");
         valid = qResult.getBoolean("valid");
         
-        this.isNew = qResult.getBoolean("new");
-        this.changed = qResult.getBoolean("changed");
+        this.geom_changed = qResult.getBoolean("geom_changed");
+        this.object_changed = qResult.getBoolean("object_changed");
         this.deleted = qResult.getBoolean("deleted");
+        this.object_new = qResult.getBoolean("object_new");
         this.has_name = qResult.getBoolean("has_name");
-        
+
         this.tstamp = qResult.getDate("tstamp");
         try {
             otherClassCodes = qResult.getString("otherClassCodes");
@@ -216,8 +218,8 @@ public class IntermediateDB {
 
         OSMRelation relation = new OSMRelation(this, osmIDString, 
                 classCodeString, otherClassCodes, sTags, memberIDs, ohdmObjectIDString, 
-                ohdmGeomIDString, valid, this.isNew, this.changed, this.deleted, 
-                this.has_name, this.tstamp
+                ohdmGeomIDString, valid, this.geom_changed, this.object_changed, this.deleted,
+                this.has_name, this.tstamp, this.object_new
         );
         
         return relation;
@@ -229,8 +231,8 @@ public class IntermediateDB {
 
         OSMWay way = new OSMWay(this, osmIDString, classCodeString, otherClassCodes, sTags, 
                 nodeIDs, ohdmObjectIDString, ohdmGeomIDString, valid, 
-                this.isNew, this.changed, this.deleted, 
-                this.has_name, this.tstamp
+                this.geom_changed, this.object_changed, this.deleted,
+                this.has_name, this.tstamp, this.object_new
         );
 
         return way;
@@ -243,8 +245,8 @@ public class IntermediateDB {
         
         OSMNode node = new OSMNode(this, osmIDString, classCodeString, otherClassCodes, sTags, 
                 longitude, latitude, ohdmObjectIDString, ohdmGeomIDString, 
-                valid, this.isNew, this.changed, this.deleted, 
-                this.has_name, this.tstamp);
+                valid, this.geom_changed, this.object_changed, this.deleted,
+                this.has_name, this.tstamp, this.object_new);
 
         return node;
     } 

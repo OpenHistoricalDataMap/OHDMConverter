@@ -134,14 +134,18 @@ public class OSMChunkExtractor {
             
             try {
                 if (reset) {
+/*
                     System.out.println("remove ohdm entries in intermediate database");
 
                     // reset can take a while: log each 40 minutes
                     trigger = new Trigger(extractor, 1000 * 60 * 30);
+                    trigger.start();
                     ohdmImporter.forgetPreviousNodesImport();
                     ohdmImporter.forgetPreviousWaysImport();
                     ohdmImporter.forgetPreviousRelationsImport();
+ */
 
+                    System.out.println("drop and re-create ohdm database");
                     // reset ohdm
                     OHDM_DB.dropOHDMTables(targetConnection, targetSchema);
 
@@ -149,7 +153,7 @@ public class OSMChunkExtractor {
                     OHDM_DB.createOHDMTables(targetConnection, targetSchema);
                     
                     // stop trigger
-                    trigger.end();
+//                    trigger.end();
                 }
             } catch (Exception e) {
                 System.err.println("problems during setting old data (non-fatal): " + e.getLocalizedMessage());

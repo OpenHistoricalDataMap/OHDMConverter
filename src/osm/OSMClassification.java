@@ -1174,23 +1174,49 @@ public class OSMClassification {
             }
         }
     }
-    
+
+    public static final String CLASS_SUBCLASS_SEPERATORS_SIGN = "_";
+
+
+
     public static String createFullClassName(String className, String subclassname) {
-        return className + "_" + subclassname;
+        return className + CLASS_SUBCLASS_SEPERATORS_SIGN + subclassname;
     }
-    
+
+    public String getClassNameByFullName(String fullClassName) {
+        int index = fullClassName.indexOf(CLASS_SUBCLASS_SEPERATORS_SIGN);
+        if(index == -1) {
+            return fullClassName;
+        }
+
+        return fullClassName.substring(0, index);
+    }
+
+    public String getSubClassNameByFullName(String fullClassName) {
+        int index = fullClassName.indexOf(CLASS_SUBCLASS_SEPERATORS_SIGN);
+        if(index == -1) {
+            return "undefined";
+        }
+
+        return fullClassName.substring(index+1);
+    }
+
+
     public String getFullClassName(String classCodeString) {
-        int classCode = Integer.parseInt(classCodeString);
+        return this.getFullClassName(Integer.parseInt(classCodeString));
+    }
+
+    public String getFullClassName(int classCode) {
         String nothing = "undefined";
-        
+
         if(classCode > -1 && this.fullClassNames.size() > classCode) {
             // classIds start with 1 but index with 0
             return this.fullClassNames.get(classCode-1);
         }
-        
+
         return nothing;
     }
-    
+
     /**
      * @param className
      * @param subClassName

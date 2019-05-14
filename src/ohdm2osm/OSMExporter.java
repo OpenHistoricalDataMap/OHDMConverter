@@ -1,11 +1,16 @@
 package ohdm2osm;
 
 import java.io.*;
+import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
+import osm.OSMClassification;
 import util.DB;
 import util.Parameter;
 import util.SQLStatementQueue;
@@ -15,21 +20,31 @@ import util.SQLStatementQueue;
  * @author thsc
  */
 public class OSMExporter {
-    
+
+    private static final String DEFAULT_USERNAME = "username";
+    private static final String PADDING = "  ";
     private final Connection sourceConnection;
     private final PrintStream nodeStream;
     private final PrintStream wayStream;
-    private final int ldfID;
+    private final SimpleDateFormat dateFormat;
+    private int ldfID;
     private final List<String> pointTableNames;
     private final List<String> linesTableNames;
     private final List<String> polygonTableNames;
     private final Parameter sourceParameter;
     private final String bboxWKT;
+    private final String dateString;
+    private String minLatString;
+    private String minLongString;
+    private String maxLatString;
+    private String maxLongString;
 
     public OSMExporter(Parameter sourceParameter, OutputStream nodeOSStream,
                        OutputStream wayOSStream,
                        List<String> pointTableNames, List<String> linesTableNames,
-                       List<String> polygonTableNames, String bboxWKT) throws SQLException {
+                       List<String> polygonTableNames,
+                       String minLatString, String minLongString, String maxLatString,
+                       String maxLongString, String dateString) throws SQLException {
         
         this.sourceParameter = sourceParameter;
         this.sourceConnection = DB.createConnection(sourceParameter);
@@ -38,66 +53,118 @@ public class OSMExporter {
         this.pointTableNames = pointTableNames;
         this.linesTableNames = linesTableNames;
         this.polygonTableNames = polygonTableNames;
-        this.bboxWKT = bboxWKT;
+        this.minLatString = minLatString;
+        this.minLongString = minLongString;
+        this.maxLatString = maxLatString;
+        this.maxLongString = maxLongString;
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("POLYGON((");
+        sb.append(this.minLongString); // down left
+        sb.append(" ");
+        sb.append(this.minLatString);
+        sb.append(", ");
+        sb.append(this.minLongString); // upper left
+        sb.append(" ");
+        sb.append(this.maxLatString);
+        sb.append(", ");
+        sb.append(this.maxLongString); // upper right
+        sb.append(" ");
+        sb.append(this.maxLatString);
+        sb.append(", ");
+        sb.append(this.maxLongString); // down right
+        sb.append(" ");
+        sb.append(this.minLatString);
+        sb.append(", ");
+        sb.append(this.minLongString); // back to down left
+        sb.append(" ");
+        sb.append(this.minLatString);
+        sb.append("))");
+
+        this.bboxWKT = sb.toString();
+        this.dateString = dateString;
+
+        this.dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
         this.ldfID = 1;
     }
 
-    private void exportNodes() {
+    private void exportPoints() throws SQLException {
+        SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
+        // points
+        /*
+        SELECT ST_X(ST_TRANSFORM(point, 4326)), ST_Y(ST_TRANSFORM(point, 4326)), classid, name, valid_since
+        FROM public.shop_iconbakery
+        WHERE
+        valid_since <= '2018_01-01' AND valid_until >= '2018_01-01'
+        AND
+        ST_WITHIN(point, ST_TRANSFORM(ST_GeomFromEWKT('SRID=4326;POLYGON((2 45, 2 55, 14 55, 14 45, 2 45))'), 3857))
+         */
+        if(this.pointTableNames != null) {
+            for(String tableName : this.pointTableNames) {
+                sql.append("SELECT ST_X(ST_TRANSFORM(point, 4326)), ST_Y(ST_TRANSFORM(point, 4326)), ");
+                sql.append("classid, name, valid_since FROM ");
+                sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
+                sql.append(" WHERE valid_since <= '");
+                sql.append(this.dateString);
+                sql.append("' AND valid_until >= '");
+                sql.append(this.dateString);
+                sql.append("' AND ST_WITHIN(point, ST_TRANSFORM(ST_GeomFromEWKT('SRID=4326;");
+                sql.append(this.bboxWKT);
+                sql.append("'), 3857))");
 
-
+                ResultSet resultSet = sql.executeWithResult();
+                while(resultSet.next()) {
+                    this.printNode(
+                            resultSet.getDate("valid_since"),
+                            resultSet.getDouble("st_y"),
+                            resultSet.getDouble("st_x"),
+                            resultSet.getBigDecimal("classid"),
+                            resultSet.getString("name")
+                    );
+                }
+            }
+        }
     }
 
-    private void exportLines() {
+    private void exportLines() throws SQLException {
+        SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
+        /*
+        WAY
+SELECT st_astext(st_transform(line, 4326)), name, classid, valid_since
+	FROM public.highway_primary_lines
+	WHERE
+        valid_since <= '2018_01-01' AND valid_until >= '2018_01-01'
+        AND
+        ST_WITHIN(line, ST_TRANSFORM(ST_GeomFromEWKT('SRID=4326;POLYGON((2 45, 2 55, 14 55, 14 45, 2 45))'), 3857))
+         */
 
+        if(this.linesTableNames != null) {
+            for(String tableName : this.linesTableNames) {
+                sql.append("SELECT ST_AsText(st_transform(line, 4326)), name, classid, valid_since FROM ");
+                sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
+                sql.append(" WHERE valid_since <= '");
+                sql.append(this.dateString);
+                sql.append("' AND valid_until >= '");
+                sql.append(this.dateString);
+                sql.append("' AND ST_WITHIN(line, ST_TRANSFORM(ST_GeomFromEWKT('SRID=4326;");
+                sql.append(this.bboxWKT);
+                sql.append("'), 3857))");
+
+                ResultSet resultSet = sql.executeWithResult();
+                while(resultSet.next()) {
+                    this.printWay(
+                            resultSet.getDate("valid_since"),
+                            resultSet.getString(1),
+                            resultSet.getBigDecimal("classid"),
+                            resultSet.getString("name")
+                    );
+                }
+            }
+        }
     }
 
     private void exportPolygons() {
-
-    }
-
-    void export() {
-        SQLStatementQueue sql = new SQLStatementQueue();
-        // points
-        if(pointTableNames != null) {
-            for(String tableName : pointTableNames) {
-                sql.append("SELECT ST_X(ST_TRANSFORM(point, 4326)), ST_Y(ST_TRANSFORM(point, 4326)), subclassname, ");
-                sql.append("name, valid_since FROM ");
-                sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
-                sql.append(" WHERE...");
-
-                // HIER WEITERMACHEN: ST_WITHIN(bbox);
-            }
-        }
-
-        /*
-        IF POINT:
-SELECT ST_X(ST_TRANSFORM(point, 4326)), ST_Y(ST_TRANSFORM(point, 4326)), subclassname, name, valid_since
-FROM public.highway_points;
-
-  -->
-
-<node id='lfdNummer' timestamp='valid_since' uid='1' user='fake' visible='true' lat='point.' lon='13.5951339'>
-<tag k='highway' v='subclassname' /></node>
-         */
-
-        /*
-        WAY
-SELECT st_astext(st_transform(line, 4326)), name, subclassname, valid_since
-  FROM public.highway_lines;
-
- -> parse linestring, create for each point - remember pointsid p1, p2 etc;
-
-<node id='lfdNummer' timestamp='valid_since' uid='1' user='fake' visible='true' lat='xxx.' lon='xxx'></node>
-
-for way
-  <way id='lfdNummer' timestamp='since' uid='1' user='fake' visible='true' version='1'>
-    <nd ref='p1' />
-    <nd ref='p2' />
-    <tag k='highway' v='subclassname' />
-  </way>
-         */
-
         /*
 POLYGON
 SELECT geom_id, st_astext(st_transform((ST_ExteriorRing(polygon)),4326)), ST_NumInteriorRings(polygon), subclassname, name, valid_since
@@ -111,13 +178,198 @@ st_astext(ST_InteriorRingN(polygon, 1)), subclassname, name, valid_since
 
   where geom_id IN (siehe oben)
          */
-    }
-    
-    public static void main(String[] args) throws IOException, SQLException {
 
-        String DEFAULT_RENDERING_PARAMETER_FILE = "db_rendering.txt";
-        String OUTPUTFILENAME = "ohdm.osm";
-        String bbox = "POLYGON((10 50, 10 54, 14 54, 15 50, 10 50))";
+
+    }
+
+    private void printNode(java.sql.Date valid_since, double latitude, double longitude,
+                           BigDecimal classid, String name) {
+        // cut length latitude
+        String latString = Double.toString(latitude);
+        if(latString.length() > 10) {
+            latString = latString.substring(0, 11);
+        }
+
+        // cut length longitude
+        String longString = Double.toString(longitude);
+        if(longString.length() > 10) {
+            longString = longString.substring(0, 11);
+        }
+
+        this.printNode(valid_since, latString, longString, classid, name);
+    }
+
+    private void printNode(java.sql.Date valid_since, String latString, String longString,
+                           BigDecimal classid, String name) {
+        this.nodeStream.print(PADDING);
+        this.nodeStream.print("<node id='");
+        this.nodeStream.print(this.ldfID++);
+
+        this.nodeStream.print("' timestamp='");
+        this.nodeStream.print(this.dateFormat.format(valid_since));
+
+        this.nodeStream.print("' uid='1' user='");
+        this.nodeStream.print(DEFAULT_USERNAME);
+        this.nodeStream.print("'");
+
+        this.nodeStream.print(" visible='true' version='1' changeset='1' ");
+
+        this.nodeStream.print("lat='");
+        this.nodeStream.print(latString);
+
+        this.nodeStream.print("' lon='");
+        this.nodeStream.print(longString);
+        this.nodeStream.print("'");
+
+
+        if(classid == null && name == null) {
+            // anonymous node
+            this.nodeStream.println(" />");
+        } else {
+            this.nodeStream.println(" >");
+
+            this.printClassificationTag(classid, this.nodeStream);
+
+            if(name != null) {
+                this.printTag("name", name, this.nodeStream);
+            }
+
+
+            this.nodeStream.print(PADDING);
+            this.nodeStream.println("</node>");
+        }
+    }
+
+    private void printClassificationTag(BigDecimal classid, PrintStream ps) {
+        if(classid != null) {
+            this.printClassificationTag(classid.intValue(), ps);
+        }
+    }
+
+    private void printClassificationTag(int classid, PrintStream ps) {
+        OSMClassification osmC = OSMClassification.getOSMClassification();
+        String fullClassName =
+                osmC.getFullClassName(classid);
+
+        this.printTag(
+                osmC.getClassNameByFullName(fullClassName),
+                osmC.getSubClassNameByFullName(fullClassName),
+                ps);
+    }
+
+    private void printTag(String key, String value, PrintStream ps) {
+        ps.print(PADDING);
+        ps.print("  <tag k='");
+        ps.print(key);
+        ps.print("' v='");
+        ps.print(value);
+        ps.println("' />");
+    }
+
+    List<String> getLatLongFromLineString(String linestring) {
+        List<String> latLongList = new ArrayList<>();
+        if(linestring == null) {
+            return latLongList;
+        }
+
+        // extract linestring
+        int open = linestring.indexOf("(");
+        int close = linestring.indexOf(")");
+
+        String coordStrings = linestring.substring(open+1, close);
+        StringTokenizer st = new StringTokenizer(coordStrings, ",");
+
+        // walk through coordinates
+        while(st.hasMoreTokens()) {
+            String coordString = st.nextToken();
+            // split
+            int i = coordString.indexOf(" ");
+            latLongList.add(coordString.substring(i+1)); // latitude
+            latLongList.add(coordString.substring(0, i)); // longitude
+        }
+
+        return latLongList;
+    }
+
+    private void printWay(java.sql.Date valid_since, String linestring, BigDecimal classid, String name) {
+        int firstNodeID = this.ldfID;
+        // extract nodes from linestring
+        List<String> latLongList = this.getLatLongFromLineString(linestring);
+        Iterator<String> iterator = latLongList.iterator();
+        while(iterator.hasNext()) {
+            this.printNode(valid_since, iterator.next(), iterator.next(), null, null);
+        }
+        int lastNodeID = this.ldfID-1;
+
+        /*
+        for each way:
+
+        for way
+          <way id='lfdNummer' timestamp='since' uid='1' user='fake' visible='true' version='1'>
+            <nd ref='p1' />
+            <nd ref='p2' />
+            <tag k='highway' v='subclassname' />
+          </way>
+
+         */
+
+        this.wayStream.print(PADDING);
+        this.wayStream.print("<way id='");
+        this.wayStream.print(this.ldfID++);
+
+        this.wayStream.print("' timestamp='");
+        this.wayStream.print(this.dateFormat.format(valid_since));
+
+        this.wayStream.print("' uid='1' user='");
+        this.wayStream.print(DEFAULT_USERNAME);
+        this.wayStream.print("'");
+
+        this.wayStream.println(" visible='true' version='1' changeset='1' >");
+        for(int nodeID = firstNodeID; nodeID <= lastNodeID; nodeID++) {
+            this.wayStream.print(PADDING);
+            this.wayStream.print(PADDING);
+            this.wayStream.print("<nd ref='");
+            this.wayStream.print(nodeID);
+            this.wayStream.println("' />");
+        }
+
+        this.printClassificationTag(classid, this.wayStream);
+
+        this.wayStream.print(PADDING);
+        this.wayStream.println("</way>");
+    }
+
+    void export() throws SQLException {
+        // write XML preamble
+        this.nodeStream.println("<?xml version='1.0' encoding='UTF-8'?>");
+        this.nodeStream.println("<osm version='0.6' generator='OHDM_Extractor'>");
+        this.nodeStream.print("<bounds minlat='");
+        this.nodeStream.print(this.minLatString);
+        this.nodeStream.print("' minlon='");
+        this.nodeStream.print(this.minLongString);
+        this.nodeStream.print("' maxlat='");
+        this.nodeStream.print(this.maxLatString);
+        this.nodeStream.print("' maxlon='");
+        this.nodeStream.print(this.maxLongString);
+        this.nodeStream.println("' origin='OHDM 1.0 (ohdm.net)' />");
+
+        this.exportPoints();
+        this.exportLines();
+        this.exportPolygons();
+
+    }
+
+    public static void main(String[] args) throws IOException, SQLException, ParseException {
+        String DEFAULT_RENDERING_PARAMETER_FILE = "db_rendering_local.txt";
+        String OUTPUTFILENAME = "ohdm_extracted.osm";
+        String minLatString = "45";
+        String minLongString = "10";
+        String maxLatString = "55";
+        String maxLongString = "15";
+
+        String dateString = "2018-01-01";
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+        Date date = df.parse(dateString);
 
         System.out.println("this becomes the export tool of OHDM to OSM data");
 
@@ -130,14 +382,16 @@ st_astext(ST_InteriorRingN(polygon, 1)), subclassname, name, valid_since
         Parameter renderingParameter = new Parameter(DEFAULT_RENDERING_PARAMETER_FILE);
 
         List<String> nodeTables = new ArrayList<>();
-        nodeTables.add("highway_point");
+        nodeTables.add("shop_iconbakery");
         List<String> linesTables = new ArrayList<>();
-        nodeTables.add("highway_lines");
+        linesTables.add("highway_primary_lines");
         List<String> polygonTables = new ArrayList<>();
-        nodeTables.add("highway_polygons");
+        polygonTables.add("highway_polygons");
 
         OSMExporter exporter = new OSMExporter(renderingParameter, nodeStream, wayStream,
-                nodeTables, linesTables, polygonTables, bbox);
+                nodeTables, linesTables, polygonTables,
+                minLatString, minLongString, maxLatString, maxLongString,
+                dateString);
 
         exporter.export();
 
@@ -145,16 +399,21 @@ st_astext(ST_InteriorRingN(polygon, 1)), subclassname, name, valid_since
         wayStream.close();
 
         // re-open
-        InputStream ways = new FileInputStream(wayFile);
+        InputStream wayIS = new FileInputStream(wayFile);
 
-        // add ways to nodes
-        int value = ways.read();
+        // add wayIS to nodes
+        int value = wayIS.read();
         while(value != -1) {
             nodeStream.write(value);
-            value = ways.read();
+            value = wayIS.read();
         }
+        wayIS.close();
+        wayFile.deleteOnExit();
 
+        // end osm document
+        new PrintStream(nodeStream).println("</osm>");
+
+        // close file
         nodeStream.close();
-        ways.close();
     }
 }

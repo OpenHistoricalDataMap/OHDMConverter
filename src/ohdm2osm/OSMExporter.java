@@ -27,6 +27,7 @@ public class OSMExporter {
     private final PrintStream nodeStream;
     private final PrintStream wayStream;
     private final SimpleDateFormat dateFormat;
+    private final PrintStream relationStream;
     private int ldfID;
     private final List<String> pointTableNames;
     private final List<String> linesTableNames;
@@ -41,6 +42,7 @@ public class OSMExporter {
 
     public OSMExporter(Parameter sourceParameter, OutputStream nodeOSStream,
                        OutputStream wayOSStream,
+                       OutputStream relationOSStream,
                        List<String> pointTableNames, List<String> linesTableNames,
                        List<String> polygonTableNames,
                        String minLatString, String minLongString, String maxLatString,
@@ -50,6 +52,7 @@ public class OSMExporter {
         this.sourceConnection = DB.createConnection(sourceParameter);
         this.nodeStream = new PrintStream(nodeOSStream);
         this.wayStream = new PrintStream(wayOSStream);
+        this.relationStream = new PrintStream(relationOSStream);
         this.pointTableNames = pointTableNames;
         this.linesTableNames = linesTableNames;
         this.polygonTableNames = polygonTableNames;
@@ -157,17 +160,20 @@ SELECT st_astext(st_transform(line, 4326)), name, classid, valid_since
                             resultSet.getDate("valid_since"),
                             resultSet.getString(1),
                             resultSet.getBigDecimal("classid"),
-                            resultSet.getString("name")
+                            resultSet.getString("name"),
+                            false
                     );
                 }
             }
         }
     }
 
-    private void exportPolygons() {
+    private void exportPolygons() throws SQLException {
+        SQLStatementQueue sql = new SQLStatementQueue(this.sourceConnection);
+
         /*
 POLYGON
-SELECT geom_id, st_astext(st_transform((ST_ExteriorRing(polygon)),4326)), ST_NumInteriorRings(polygon), subclassname, name, valid_since
+SELECT st_astext(st_transform((ST_ExteriorRing(polygon)),4326)), ST_NumInteriorRings(polygon), classid, name, valid_since
   FROM public.building_apartments limit 10;
 
   if num interior rings > 1 query interior rings...
@@ -179,7 +185,103 @@ st_astext(ST_InteriorRingN(polygon, 1)), subclassname, name, valid_since
   where geom_id IN (siehe oben)
          */
 
+        if(this.polygonTableNames != null) {
+            for(String tableName : this.polygonTableNames) {
+                sql.append("SELECT st_astext(st_transform((ST_ExteriorRing(polygon)),4326)), " +
+                        "ST_NumInteriorRings(polygon), classid, name, valid_since, geom_id FROM ");
+                sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
+                sql.append(" WHERE valid_since <= '");
+                sql.append(this.dateString);
+                sql.append("' AND valid_until >= '");
+                sql.append(this.dateString);
+                sql.append("' AND ST_WITHIN(polygon, ST_TRANSFORM(ST_GeomFromEWKT('SRID=4326;");
+                sql.append(this.bboxWKT);
+                sql.append("'), 3857))");
 
+                ResultSet resultSet = sql.executeWithResult();
+                while(resultSet.next()) {
+                    java.sql.Date valid_since = resultSet.getDate("valid_since");
+
+                    this.printWay(
+                            valid_since,
+                            resultSet.getString(1),
+                            resultSet.getBigDecimal("classid"),
+                            resultSet.getString("name"),
+                            true
+                    );
+                    int numberInteriorRings = resultSet.getInt(2);
+                    if(numberInteriorRings > 0) {
+                        // remember Id out ring
+                        int idOuter = this.ldfID-1;
+
+                        List<Integer> innerIDs = new ArrayList<>();
+
+                        // remember geom_id
+                        BigDecimal geom_id_polygon = resultSet.getBigDecimal("geom_id");
+
+                        for(int indexInterior = 1; indexInterior < numberInteriorRings; indexInterior++) {
+                        /*
+SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
+ FROM public.building_apartments where geom_id = ;
+                         */
+                            sql.append("SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, ");
+                            sql.append(indexInterior);
+                            sql.append("), 4326)) FROM ");
+                            sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
+                            sql.append(" WHERE geom_id = ");
+                            sql.append(geom_id_polygon.toString());
+
+                            resultSet = sql.executeWithResult();
+                            if(resultSet.next()) {
+                                this.printWay(valid_since, resultSet.getString(1),
+                                        null, null, true);
+
+                                innerIDs.add(this.ldfID-1);
+                            }
+                        }
+
+                        // wrote inner ways - create relation
+                        /*
+                        <relation id="1">
+                          <tag k="type" v="multipolygon" />
+                          <member type="way" id="1" role="outer" />
+                          <member type="way" id="2" role="inner" />
+                        </relation>
+                         */
+
+                        this.relationStream.print(PADDING);
+                        this.relationStream.print("<relation id='");
+                        this.relationStream.print(this.ldfID++);
+                        this.relationStream.print("' timestamp='");
+                        this.relationStream.print(this.dateFormat.format(valid_since));
+
+                        this.relationStream.print("' uid='1' user='");
+                        this.relationStream.print(DEFAULT_USERNAME);
+                        this.relationStream.print("'");
+
+                        this.relationStream.println(" visible='true' version='1' changeset='1'>");
+                        this.printTag("type", "multipolygon", this.relationStream);
+                        this.relationStream.print(PADDING);
+                        this.relationStream.print(PADDING);
+                        this.relationStream.print("<member type='way' ref='");
+                        this.relationStream.print(idOuter);
+                        this.relationStream.println("' role='outer' />");
+
+                        System.out.println("Generation of holes isn't yet finished");
+                        for(int innerID : innerIDs) {
+                            this.relationStream.print(PADDING);
+                            this.relationStream.print(PADDING);
+                            this.relationStream.print("<member type='way' id='");
+                            this.relationStream.print(innerID);
+                            this.relationStream.println("' role='inner' />");
+                        }
+
+                        this.relationStream.print(PADDING);
+                        this.relationStream.println("</relation>");
+                    }
+                }
+            }
+        }
     }
 
     private void printNode(java.sql.Date valid_since, double latitude, double longitude,
@@ -291,14 +393,28 @@ st_astext(ST_InteriorRingN(polygon, 1)), subclassname, name, valid_since
         return latLongList;
     }
 
-    private void printWay(java.sql.Date valid_since, String linestring, BigDecimal classid, String name) {
+    private void printWay(java.sql.Date valid_since, String linestring, BigDecimal classid, String name,
+                          boolean isPolygon) {
         int firstNodeID = this.ldfID;
         // extract nodes from linestring
         List<String> latLongList = this.getLatLongFromLineString(linestring);
         Iterator<String> iterator = latLongList.iterator();
-        while(iterator.hasNext()) {
-            this.printNode(valid_since, iterator.next(), iterator.next(), null, null);
+
+        // look ahead
+        String latString = iterator.next();
+        String longString = iterator.next();
+
+        do {
+            this.printNode(valid_since, latString, longString, null, null);
+            latString = iterator.next();
+            longString = iterator.next();
+        } while(iterator.hasNext());
+
+        if(!isPolygon) {
+            // it is a way - save final node - in a polygon: it is the same point
+            this.printNode(valid_since, latString, longString, null, null);
         }
+
         int lastNodeID = this.ldfID-1;
 
         /*
@@ -333,6 +449,15 @@ st_astext(ST_InteriorRingN(polygon, 1)), subclassname, name, valid_since
             this.wayStream.println("' />");
         }
 
+        if(isPolygon) {
+            // first node must be repeated at the end
+            this.wayStream.print(PADDING);
+            this.wayStream.print(PADDING);
+            this.wayStream.print("<nd ref='");
+            this.wayStream.print(firstNodeID);
+            this.wayStream.println("' />");
+        }
+
         this.printClassificationTag(classid, this.wayStream);
 
         this.wayStream.print(PADDING);
@@ -356,7 +481,6 @@ st_astext(ST_InteriorRingN(polygon, 1)), subclassname, name, valid_since
         this.exportPoints();
         this.exportLines();
         this.exportPolygons();
-
     }
 
     public static void main(String[] args) throws IOException, SQLException, ParseException {
@@ -375,9 +499,11 @@ st_astext(ST_InteriorRingN(polygon, 1)), subclassname, name, valid_since
 
         File nodeFile = new File(OUTPUTFILENAME);
         File wayFile = File.createTempFile("way", "_osm");
+        File relationFile = File.createTempFile("relation", "_osm");
 
         OutputStream nodeStream = new FileOutputStream(nodeFile);
         OutputStream wayStream = new FileOutputStream(wayFile);
+        OutputStream relationStream = new FileOutputStream(relationFile);
 
         Parameter renderingParameter = new Parameter(DEFAULT_RENDERING_PARAMETER_FILE);
 
@@ -386,9 +512,10 @@ st_astext(ST_InteriorRingN(polygon, 1)), subclassname, name, valid_since
         List<String> linesTables = new ArrayList<>();
         linesTables.add("highway_primary_lines");
         List<String> polygonTables = new ArrayList<>();
-        polygonTables.add("highway_polygons");
+        polygonTables.add("building_apartments");
 
-        OSMExporter exporter = new OSMExporter(renderingParameter, nodeStream, wayStream,
+        OSMExporter exporter = new OSMExporter(renderingParameter,
+                nodeStream, wayStream, relationStream,
                 nodeTables, linesTables, polygonTables,
                 minLatString, minLongString, maxLatString, maxLongString,
                 dateString);
@@ -409,6 +536,18 @@ st_astext(ST_InteriorRingN(polygon, 1)), subclassname, name, valid_since
         }
         wayIS.close();
         wayFile.deleteOnExit();
+
+        // re-open
+        InputStream relationIS = new FileInputStream(relationFile);
+
+        // add wayIS to nodes
+        value = relationIS.read();
+        while(value != -1) {
+            nodeStream.write(value);
+            value = relationIS.read();
+        }
+        relationIS.close();
+        relationFile.deleteOnExit();
 
         // end osm document
         new PrintStream(nodeStream).println("</osm>");

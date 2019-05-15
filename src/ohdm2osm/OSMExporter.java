@@ -219,7 +219,7 @@ st_astext(ST_InteriorRingN(polygon, 1)), subclassname, name, valid_since
                         // remember geom_id
                         BigDecimal geom_id_polygon = resultSet.getBigDecimal("geom_id");
 
-                        for(int indexInterior = 1; indexInterior < numberInteriorRings; indexInterior++) {
+                        for(int indexInterior = 1; indexInterior <= numberInteriorRings; indexInterior++) {
                         /*
 SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
  FROM public.building_apartments where geom_id = ;
@@ -267,11 +267,10 @@ SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
                         this.relationStream.print(idOuter);
                         this.relationStream.println("' role='outer' />");
 
-                        System.out.println("Generation of holes isn't yet finished");
                         for(int innerID : innerIDs) {
                             this.relationStream.print(PADDING);
                             this.relationStream.print(PADDING);
-                            this.relationStream.print("<member type='way' id='");
+                            this.relationStream.print("<member type='way' ref='");
                             this.relationStream.print(innerID);
                             this.relationStream.println("' role='inner' />");
                         }
@@ -359,12 +358,25 @@ SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
                 ps);
     }
 
+    private String doEscape(String text) {
+        // escape & -> &amp;
+        int i = text.indexOf("&");
+
+        if(i == -1) return text;
+        StringBuilder sb = new StringBuilder(text.substring(0, i+1));
+        sb.append("amp;");
+        sb.append(text.substring(i+1));
+
+        return sb.toString();
+
+    }
+
     private void printTag(String key, String value, PrintStream ps) {
         ps.print(PADDING);
         ps.print("  <tag k='");
-        ps.print(key);
+        ps.print(this.doEscape(key));
         ps.print("' v='");
-        ps.print(value);
+        ps.print(this.doEscape(value));
         ps.println("' />");
     }
 
@@ -491,7 +503,7 @@ SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
         String maxLatString = "55";
         String maxLongString = "15";
 
-        String dateString = "2018-01-01";
+        String dateString = "2016-12-31";
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
         Date date = df.parse(dateString);
 
@@ -513,6 +525,7 @@ SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
         linesTables.add("highway_primary_lines");
         List<String> polygonTables = new ArrayList<>();
         polygonTables.add("building_apartments");
+        polygonTables.add("building_polygons");
 
         OSMExporter exporter = new OSMExporter(renderingParameter,
                 nodeStream, wayStream, relationStream,

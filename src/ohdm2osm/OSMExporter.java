@@ -213,9 +213,8 @@ st_astext(ST_InteriorRingN(polygon, 1)), subclassname, name, valid_since
                         // becomes a multipolygon
                         this.printWay(valid_since, resultSet.getString(1),
                                 null, null, true);
-                    }
+                        // TODO: classid and name null or to be set?!
 
-                    if(numberInteriorRings > 0) {
                         // remember Id out ring
                         int idOuter = this.ldfID-1;
 

@@ -156,7 +156,7 @@ public class Parameter {
                             case "fullPSQLPath": this.fullPSQLPath = value; break;
                             case "maxSQLFileSize": this.maxSQLFileSize = Integer.parseInt(value); break;
                             case "maxPSQLProcesses": this.maxPSQLProcesses = Integer.parseInt(value); break;
-                            case "renderoutput": this.renderoutput = value; break;
+                            case "renderoutput": this.renderoutput = value.toLowerCase(); break;
                             case "logMessageInterval": this.logMessageInterval = Integer.parseInt(value); break;
                             case "connectionType": this.connectionType = value; break;
                             case "delimiter": this.delimiter = value; break;
@@ -210,11 +210,6 @@ public class Parameter {
 
     public int getLogMessageInterval() {return this.logMessageInterval; }
 
-    /**
-     * check if that format is a valid sql date format - if so add.
-     * @param format
-     * @return 
-     */
     private boolean checkDateFormat(String dateString) {
         DateFormat df = new SimpleDateFormat("YYYY-MM-DD");
         try {

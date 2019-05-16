@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+
+import util.OHDM_DB;
 import util.SQLStatementQueue;
 import util.DB;
 
@@ -1356,7 +1358,27 @@ public class OSMClassification {
         
         sq.forceExecute();
     }
-    
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                ohdm specific helper stuff                                 //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    public List<String> getGenericTableNames(int ohdm_db_geomType) {
+        List<String> tableNames = new ArrayList<>();
+        for(String className : this.osmFeatureClasses.keySet()) {
+
+            /* there will be a table for each class and type:
+             * produce tableName [classname]_[geometryType]
+             */
+            String geometryName = OHDM_DB.getGeometryName(ohdm_db_geomType);
+
+            // tables are named after their geometry but plural..
+            tableNames.add(className + "_" + geometryName + "s");
+        }
+
+        return tableNames;
+    }
+
     // for some naive tests
     public static void main(String args[]) {
         OSMClassification c = OSMClassification.getOSMClassification();

@@ -60,24 +60,30 @@ public class OSMTablesCoverter {
                 ResultSet resultSet = sql.executeWithResult();
 
                 while(resultSet.next()) {
-                    String className = osmC.getClassNameByFullName(resultSet.getString("classid"));
+                    String className = osmC.getClassNameByFullName(
+                            osmC.getFullClassName(resultSet.getInt("classid")));
+                    String subClassName = resultSet.getString("subclassname");
+
+                    className = osmC.ohdm2osmClassName(className);
+                    subClassName = osmC.ohdm2osmSubClassName(className, subClassName);
 
                     insertSQL.append("INSERT into ");
-                    sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), POINT_TABLE_NAME));
-                    insertSQL.append("VALUE way, osm_id, name, valid_since, valid_until, ");
+                    insertSQL.append(util.DB.getFullTableName(this.targetParameter.getSchema(), POINT_TABLE_NAME));
+                    insertSQL.append("(way, osm_id, name, valid_since, valid_until, ");
                     insertSQL.append(className);
-                    insertSQL.append(" (st_geomfromwkt(");
+                    insertSQL.append(") VALUES (ST_TRANSFORM(ST_GeomFromEwkt('SRID=3857;");
                     insertSQL.append(resultSet.getString(1));
-                    insertSQL.append("), ");
+                    insertSQL.append("'), 900913), ");
                     insertSQL.append(resultSet.getString(2));
-                    insertSQL.append(", ");
+                    insertSQL.append(", '");
                     insertSQL.append(resultSet.getString(3));
-                    insertSQL.append(", ");
+                    insertSQL.append("', '");
                     insertSQL.append(resultSet.getString(4));
-                    insertSQL.append(", ");
+                    insertSQL.append("', '");
                     insertSQL.append(resultSet.getString(5));
-                    insertSQL.append(", ");
-                    insertSQL.append(" )");
+                    insertSQL.append("', '");
+                    insertSQL.append(subClassName);
+                    insertSQL.append(" ')");
                 }
             }
         }

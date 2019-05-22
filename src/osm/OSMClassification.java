@@ -1391,4 +1391,21 @@ public class OSMClassification {
     public boolean classExists(String value) {
         return (this.osmFeatureClasses.keySet().contains(value));
     }
+
+    public String ohdm2osmClassName(String className) {
+        if(className.equalsIgnoreCase("ohdm_boundary")) {
+            return "admin_level";
+        } else {
+            return className;
+        }
+    }
+
+    public String ohdm2osmSubClassName(String className, String subClassName) {
+        if(className.equalsIgnoreCase("ohdm_boundary")) {
+            int index = subClassName.indexOf("_");
+            return subClassName.substring(index+1);
+        } else {
+            return subClassName;
+        }
+    }
 }

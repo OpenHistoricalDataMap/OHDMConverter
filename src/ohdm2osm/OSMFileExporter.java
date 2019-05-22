@@ -20,7 +20,7 @@ import util.SQLStatementQueue;
  *
  * @author thsc
  */
-public class OSMExporter {
+public class OSMFileExporter {
 
     private static final String DEFAULT_USERNAME = "username";
     private static final String PADDING = "  ";
@@ -42,13 +42,13 @@ public class OSMExporter {
     private String maxLatString;
     private String maxLongString;
 
-    public OSMExporter(Parameter sourceParameter, OutputStream nodeOSStream,
-                       OutputStream wayOSStream,
-                       OutputStream relationOSStream,
-                       List<String> pointTableNames, List<String> linesTableNames,
-                       List<String> polygonTableNames,
-                       String minLatString, String minLongString, String maxLatString,
-                       String maxLongString, String dateString) throws SQLException {
+    public OSMFileExporter(Parameter sourceParameter, OutputStream nodeOSStream,
+                           OutputStream wayOSStream,
+                           OutputStream relationOSStream,
+                           List<String> pointTableNames, List<String> linesTableNames,
+                           List<String> polygonTableNames,
+                           String minLatString, String minLongString, String maxLatString,
+                           String maxLongString, String dateString) throws SQLException {
         
         this.sourceParameter = sourceParameter;
         this.sourceConnection = DB.createConnection(sourceParameter);
@@ -549,11 +549,11 @@ SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
         List<String> linesTables = osmC.getGenericTableNames(OHDM_DB.OHDM_LINESTRING_GEOMTYPE);
         List<String> polygonTables = osmC.getGenericTableNames(OHDM_DB.OHDM_POLYGON_GEOMTYPE);
 
-                OSMExporter exporter = new OSMExporter(renderingParameter,
-                nodeStream, wayStream, relationStream,
-                nodeTables, linesTables, polygonTables,
-                minLatString, minLongString, maxLatString, maxLongString,
-                dateString);
+        OSMFileExporter exporter = new OSMFileExporter(renderingParameter,
+        nodeStream, wayStream, relationStream,
+        nodeTables, linesTables, polygonTables,
+        minLatString, minLongString, maxLatString, maxLongString,
+        dateString);
 
         exporter.export();
 

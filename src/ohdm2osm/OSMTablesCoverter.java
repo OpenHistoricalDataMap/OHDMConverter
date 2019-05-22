@@ -54,41 +54,55 @@ public class OSMTablesCoverter {
 
         if(pointTableNames != null) {
             for(String tableName : pointTableNames) {
+                System.out.println("converting " + tableName);
                 sql.append("SELECT st_astext(point), geom_id, name, valid_since, valid_until, subclassname, classid  FROM ");
                 sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
 
-                ResultSet resultSet = sql.executeWithResult();
+                try {
+                    ResultSet resultSet = sql.executeWithResult();
 
-                while(resultSet.next()) {
-                    String className = osmC.getClassNameByFullName(
-                            osmC.getFullClassName(resultSet.getInt("classid")));
-                    String subClassName = resultSet.getString("subclassname");
+                    while(resultSet.next()) {
+                        String className = osmC.getClassNameByFullName(
+                                osmC.getFullClassName(resultSet.getInt("classid")));
+                        String subClassName = resultSet.getString("subclassname");
 
-                    className = osmC.ohdm2osmClassName(className);
-                    subClassName = osmC.ohdm2osmSubClassName(className, subClassName);
+                        className = osmC.ohdm2osmClassName(className);
+                        subClassName = osmC.ohdm2osmSubClassName(className, subClassName);
 
-                    insertSQL.append("INSERT into ");
-                    insertSQL.append(util.DB.getFullTableName(this.targetParameter.getSchema(), POINT_TABLE_NAME));
-                    insertSQL.append("(way, osm_id, name, valid_since, valid_until, ");
-                    insertSQL.append(className);
-                    insertSQL.append(") VALUES (ST_TRANSFORM(ST_GeomFromEwkt('SRID=3857;");
-                    insertSQL.append(resultSet.getString(1));
-                    insertSQL.append("'), 900913), ");
-                    insertSQL.append(resultSet.getString(2));
-                    insertSQL.append(", '");
-                    insertSQL.append(resultSet.getString(3));
-                    insertSQL.append("', '");
-                    insertSQL.append(resultSet.getString(4));
-                    insertSQL.append("', '");
-                    insertSQL.append(resultSet.getString(5));
-                    insertSQL.append("', '");
-                    insertSQL.append(subClassName);
-                    insertSQL.append(" ')");
+                        insertSQL.append("INSERT into ");
+                        insertSQL.append(util.DB.getFullTableName(this.targetParameter.getSchema(), POINT_TABLE_NAME));
+                        insertSQL.append("(way, osm_id, name, valid_since, valid_until, ");
+                        insertSQL.append(className);
+                        insertSQL.append(") VALUES (ST_TRANSFORM(ST_GeomFromEwkt('SRID=3857;");
+                        insertSQL.append(resultSet.getString(1));
+                        insertSQL.append("'), 900913), ");
+                        insertSQL.append(resultSet.getString(2));
+                        insertSQL.append(", '");
+                        insertSQL.append(resultSet.getString(3));
+                        insertSQL.append("', '");
+                        insertSQL.append(resultSet.getString(4));
+                        insertSQL.append("', '");
+                        insertSQL.append(resultSet.getString(5));
+                        insertSQL.append("', '");
+                        insertSQL.append(subClassName);
+                        insertSQL.append(" ')");
+                    }
+                }
+                catch(SQLException sqle) {
+                    System.err.println("error while select: " + sqle.toString());
+                    System.err.println(sql.toString());
+                }
+
+                // force execute after each table
+                try {
+                    insertSQL.forceExecute();
+                }
+                catch(Exception e) {
+                    System.err.println("error while converting points");
+                    System.err.println(insertSQL.toString().substring(0, 50));
                 }
             }
         }
-
-        insertSQL.forceExecute();
     }
 
     public static final String POINT_TABLE_NAME = "planet_osm_point";

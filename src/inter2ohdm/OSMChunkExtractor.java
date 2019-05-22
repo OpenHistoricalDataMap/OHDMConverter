@@ -188,7 +188,7 @@ public class OSMChunkExtractor {
             }
 
         } catch (IOException | SQLException e) {
-            Util.printExceptionMessage(e, sourceQueue, "main method in Inter2OHDM", false);
+            Util.printExceptionMessage(e, sourceQueue, "main method in OSMChunkExtractor", false);
         } finally {
             if (trigger != null) {
                 trigger.end();

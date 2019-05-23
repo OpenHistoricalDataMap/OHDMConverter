@@ -66,8 +66,8 @@ public class OSMTablesCoverter {
                                 osmC.getFullClassName(resultSet.getInt("classid")));
                         String subClassName = resultSet.getString("subclassname");
 
-                        className = osmC.ohdm2osmClassName(className);
-                        subClassName = osmC.ohdm2osmSubClassName(className, subClassName);
+                        className = this.ohdmClass2mapnikColumn(className);
+                        subClassName = this.ohdmSubClassName2mapnikColumnValue(className, subClassName);
 
                         insertSQL.append("INSERT into ");
                         insertSQL.append(util.DB.getFullTableName(this.targetParameter.getSchema(), POINT_TABLE_NAME));
@@ -85,7 +85,8 @@ public class OSMTablesCoverter {
                         insertSQL.append(resultSet.getString(5));
                         insertSQL.append("', '");
                         insertSQL.append(subClassName);
-                        insertSQL.append(" ')");
+                        insertSQL.append(" ');");
+                        insertSQL.forceExecute(); // DEBUG TODO
                     }
                 }
                 catch(SQLException sqle) {
@@ -94,6 +95,7 @@ public class OSMTablesCoverter {
                 }
 
                 // force execute after each table
+                /* // DEBUG TODO
                 try {
                     insertSQL.forceExecute();
                 }
@@ -101,6 +103,7 @@ public class OSMTablesCoverter {
                     System.err.println("error while converting points");
                     System.err.println(insertSQL.toString().substring(0, 50));
                 }
+                 */
             }
         }
     }
@@ -197,14 +200,54 @@ public class OSMTablesCoverter {
         sql.forceExecute();
     }
 
+    String ohdmClass2mapnikColumn(String className) {
+        className = className.trim();
+        if(className.equalsIgnoreCase("ohdm_boundary")) {
+            return "admin_level";
+        } else if(className.equalsIgnoreCase("man")) {
+            return "man_made";
+        } else if(className.equalsIgnoreCase("natural")) {
+            return "\"natural\"";
+        }
+
+        // default - nothing to convert
+        else {
+            return className;
+        }
+    }
+
+    String ohdmSubClassName2mapnikColumnValue(String className, String subClassName) {
+        className = className.trim();
+        subClassName = subClassName.trim();
+        if(className.equalsIgnoreCase("ohdm_boundary")) {
+            int index = subClassName.indexOf("_");
+            return subClassName.substring(index+1);
+        } else {
+            return subClassName;
+        }
+    }
+
     public static void main(String[] args) throws IOException, SQLException {
         String DEFAULT_OHDM_PARAMETER_FILE = "db_convert_source.txt";
         String DEFAULT_OSM_PARAMETER_FILE = "db_convert_target.txt";
 
-        Parameter source = new Parameter(DEFAULT_OHDM_PARAMETER_FILE);
-        Parameter target = new Parameter(DEFAULT_OSM_PARAMETER_FILE);
+        String ohdmParamterFileName = DEFAULT_OHDM_PARAMETER_FILE;
+        String mapnikParamterFileName = DEFAULT_OSM_PARAMETER_FILE;
+
+        if(args.length > 0) {
+            ohdmParamterFileName = args[0];
+        }
+
+        if(args.length > 1) {
+            mapnikParamterFileName = args[1];
+        }
+
+        Parameter source = new Parameter(ohdmParamterFileName);
+        Parameter target = new Parameter(mapnikParamterFileName);
 
         System.out.println("converting OHDM rendering tables to OSM rendering tables");
+        System.out.println("use ohdm parameters from: " + ohdmParamterFileName);
+        System.out.println("use osm parameters from: " + mapnikParamterFileName);
 
         OSMClassification osmC = OSMClassification.getOSMClassification();
         List<String> nodeTables = osmC.getGenericTableNames(OHDM_DB.OHDM_POINT_GEOMTYPE);

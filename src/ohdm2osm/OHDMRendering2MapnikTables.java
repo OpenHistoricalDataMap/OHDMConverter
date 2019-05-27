@@ -110,6 +110,7 @@ public class OHDMRendering2MapnikTables {
         }
     }
 
+    // FYI: https://www.postgresql.org/docs/9.1/hstore.html
     private void convertLines(List<String> lineTableNames) throws SQLException {
         SQLStatementQueue insertSQL = new SQLStatementQueue(DB.createConnection(this.targetParameter));
         OSMClassification osmC = OSMClassification.getOSMClassification();
@@ -198,10 +199,8 @@ public class OHDMRendering2MapnikTables {
         sql.append("aerialway text COLLATE pg_catalog.\"default\",");
         sql.append("aeroway text COLLATE pg_catalog.\"default\",");
         sql.append("amenity text COLLATE pg_catalog.\"default\",");
-        sql.append("area text COLLATE pg_catalog.\"default\",");
         sql.append("barrier text COLLATE pg_catalog.\"default\",");
         sql.append("bicycle text COLLATE pg_catalog.\"default\",");
-        sql.append("brand text COLLATE pg_catalog.\"default\",");
         sql.append("bridge text COLLATE pg_catalog.\"default\",");
         sql.append("boundary text COLLATE pg_catalog.\"default\",");
         sql.append("building text COLLATE pg_catalog.\"default\",");

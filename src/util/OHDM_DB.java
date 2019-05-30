@@ -170,6 +170,7 @@ public class OHDM_DB {
         sq.append("id_geoobject_source bigint NOT NULL,");
         sq.append("role character varying,");
         sq.append("classification_id bigint NOT NULL,");
+        sq.append("tags hstore,");
         sq.append("valid_since date NOT NULL,");
         sq.append("valid_until date NOT NULL,");
         sq.append("valid_since_offset bigint DEFAULT 0,");

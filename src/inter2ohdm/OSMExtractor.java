@@ -458,7 +458,7 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
                 sql.append(this.upperID.toString());
                 sql.append(" AND classcode != -1 "); // excluding untyped entities 
                 if(namedEntitiesOnly) {
-                    sql.append(" AND serializedtags like '%004name%'"); // entities with a name
+                    sql.append(" AND (serializedtags like '%004name%' OR classcode != -1)"); // entities with a name OR classcode
                 }
                 sql.append(";");
                 ResultSet qResult = sql.executeWithResult();

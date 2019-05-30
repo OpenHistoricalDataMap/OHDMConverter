@@ -36,7 +36,8 @@ public class OHDMImporter extends Importer {
     private final SQLStatementQueue sourceUpdateQueue;
     private final SQLStatementQueue targetSelectQueue;
     private final SQLStatementQueue targetInsertQueue;
-    
+
+
     private String defaultSince = "1970-01-01";
     private String defaultUntil = "2017-01-01";
     
@@ -404,7 +405,7 @@ public class OHDMImporter extends Importer {
         // add entry in object table
         try {
             // osm elements don't have necessarily a name. Does this one?
-            if(!this.elementHasIdentity(osmElement)) {
+            if(!this.elementHasName(osmElement)) {
                 // no name - to be imported anyway?
                 if(!namedEntitiesOnly) {
                     // yes - fetch osm dummy object
@@ -417,7 +418,7 @@ public class OHDMImporter extends Importer {
                     return null;
                 }
             } else {
-                // object has an identity
+                // object has a name
                 
                 // create user entry or find user primary key
                 String externalUserID = osmElement.getUserID();
@@ -661,27 +662,46 @@ public class OHDMImporter extends Importer {
          */
 //        SQLStatementQueue sq = new SQLStatementQueue(this.targetConnection);
     }
-    
+
+    /**
+     *
+     * @param ohdmElement
+     * @return true of element has a name OR a classid (or both)
+     */
     private boolean elementHasIdentity(OSMElement ohdmElement) {
+        // per definition: anything with a classcode has an identity - even without a name
+        if(ohdmElement.getClassCodeString() != null) {
+            return true;
+        }
+
+        // has no class code
+        return this.elementHasName(ohdmElement);
+    }
+
+    /**
+     *
+     * @param ohdmElement
+     * @return true if element has a name longer than 0 which is not just a number
+     */
+    private boolean elementHasName(OSMElement ohdmElement) {
         String name = ohdmElement.getName();
-        
-        // must have a name
+
         if(name == null || name.length() < 1) return false;
-        
-        // name must not be a single number
+
+        // name must not a single number
         try {
             Integer.parseInt(name);
-            
+
             // it's a number and only a number
             return false;
         }
         catch(NumberFormatException e) {
             // that's ok - no number.. go ahead
         }
-        
+
         return true;
     }
-    
+
     /**
      * 
      * @param osmElement element to be imported
@@ -691,12 +711,12 @@ public class OHDMImporter extends Importer {
      */
     public String importOSMElement(OSMElement osmElement, boolean namedEntitiesOnly, boolean importWithoutGeometry) {
         String osmID = osmElement.getOSMIDString();
-        if(osmID.equalsIgnoreCase("188276804") || osmID.equalsIgnoreCase("301835391")) {
+        if(osmID.equalsIgnoreCase("188276804") || osmID.equalsIgnoreCase("4242")) {
             // debug break
             int i = 42;
         }
         
-        // except relations, entities without a geometry are not to be imported
+        // beside relations, entities without a geometry are not to be imported
         if(!osmElement.hasGeometry() && !importWithoutGeometry) {
             return null;
         }
@@ -706,11 +726,20 @@ public class OHDMImporter extends Importer {
             int id_ExternalUser = this.getOHDM_ID_ExternalUser(osmElement);
 
             /*
-              get ohdm object. That call returns null only if that object has no
-            identity and importing of unnamed entities is not yet wished in that call
-            null indicates a failure
+            we need to get an ohdm object for this osm object.
+            a) We can create a real object if the osm element has a name.
+            b) We can get a dummy object if this element has no name but shall be excepted
+            without a name (namedEntitiesOnly == false)
+            c) We want that osm object in the DB even without a name if it has a classid.
+             In that case namedEntitiesOnly can be true but is overruled by this.elementHasIdentity which
+             returns true for elements with a classid
             */
-            String ohdmObjectIDString = this.getOHDMObjectID(osmElement, namedEntitiesOnly);
+            String ohdmObjectIDString = null;
+            if(this.elementHasIdentity(osmElement)) {
+                ohdmObjectIDString = this.getOHDMObjectID(osmElement,false);
+            } else {
+                ohdmObjectIDString = this.getOHDMObjectID(osmElement, namedEntitiesOnly);
+            }
 
             if(ohdmObjectIDString == null) {
                 /*

@@ -20,7 +20,7 @@ public class AbstractElement {
         return this.attributes;
     }
 
-    public static String[] relevantAttributeKeys = new String[] {"uid", "user", "name"};
+    public static String[] relevantAttributeKeys = new String[] {"uid", "user", "name", "type"};
 
     public boolean hasFreeAttributes() {
         // are there attributes beside those we already use.

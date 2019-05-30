@@ -610,8 +610,13 @@ public class OHDMImporter extends Importer {
             again = false;
             sq.append("INSERT INTO ");
             sq.append(DB.getFullTableName(this.targetSchema, OHDM_DB.TABLE_GEOOBJECT_GEOMETRY));
-            sq.append(" (type_target, classification_id, id_geoobject_source, id_target, valid_since, valid_until, source_user_id) VALUES (");
-
+            sq.append(" (type_target, classification_id, id_geoobject_source, id_target, valid_since, valid_until, ");
+            sq.append(" source_user_id");
+            if(osmElement.hasAttributes()) {
+                sq.append(", tags) VALUES (");
+            } else {
+                sq.append(") VALUES (");
+            }
             sq.append(targetType);
             sq.append(", ");
             sq.append(classCodeString);
@@ -625,6 +630,12 @@ public class OHDMImporter extends Importer {
             sq.append(untilString);
             sq.append("', "); // until
             sq.append(externalUserID);
+            if(osmElement.hasAttributes()) {
+                sq.append(", '"); //
+                sq.append(this.tags2HStoreValueString(osmElement));
+                sq.append("'"); //
+            }
+
             sq.append(");");
             sq.couldExecute();
             
@@ -633,6 +644,23 @@ public class OHDMImporter extends Importer {
                 again = true;
             }
         } while(again);
+    }
+
+    private String tags2HStoreValueString(OSMElement osmElement) {
+        if(!osmElement.hasAttributes()) return null;
+
+        StringBuilder sb = new StringBuilder();
+
+        for(String key : osmElement.getAttributes().keySet()) {
+            // TODO could remove all handled attributes like name, map feature etc.
+            String value = osmElement.getAttributes().get(key);
+            sb.append("\"");
+            sb.append(key);
+            sb.append("\"=>\"");
+            sb.append(value);
+            sb.append("\",");
+        }
+        return sb.toString();
     }
     
     void addContentAndURL(OSMElement osmElement, String ohdmIDString) {
@@ -657,6 +685,7 @@ public class OHDMImporter extends Importer {
         /*
          * URLs
         image
+        *
         url
         website
          */

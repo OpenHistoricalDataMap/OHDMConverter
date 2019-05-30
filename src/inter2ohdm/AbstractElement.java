@@ -17,11 +17,12 @@ public class AbstractElement {
     public HashMap<String, String> getAttributes() {
         return this.attributes;
     }
-    /**
-     * use that constructor only when scanning osm import file - it removes a number of attributes
-     * @param attributes
-     * @param tags 
-     */
+
+    public boolean hasAttributes() {
+        return false; // TODO
+        // return (this.attributes != null && !this.attributes.isEmpty());
+    }
+
 //    public AbstractElement(HashMap<String, String> attributes, ArrayList<TagElement> tags) {
 //        this.attributes = attributes;
 //        

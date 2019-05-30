@@ -110,7 +110,7 @@ public abstract class OSMElement extends AbstractElement {
         
         return this.wktString != null;
     }
-    
+
     // generate wkt string a store it into wktString! Set wktStringProduced to true!
     abstract protected void produceWKTGeometry();
     

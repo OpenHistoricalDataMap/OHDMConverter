@@ -612,7 +612,7 @@ public class OHDMImporter extends Importer {
             sq.append(DB.getFullTableName(this.targetSchema, OHDM_DB.TABLE_GEOOBJECT_GEOMETRY));
             sq.append(" (type_target, classification_id, id_geoobject_source, id_target, valid_since, valid_until, ");
             sq.append(" source_user_id");
-            if(osmElement.hasAttributes()) {
+            if(osmElement.hasFreeAttributes()) {
                 sq.append(", tags) VALUES (");
             } else {
                 sq.append(") VALUES (");
@@ -630,9 +630,9 @@ public class OHDMImporter extends Importer {
             sq.append(untilString);
             sq.append("', "); // until
             sq.append(externalUserID);
-            if(osmElement.hasAttributes()) {
+            if(osmElement.hasFreeAttributes()) {
                 sq.append(", '"); //
-                sq.append(this.tags2HStoreValueString(osmElement));
+                sq.append(osmElement.getFreeAttributesASHStoreValue());
                 sq.append("'"); //
             }
 
@@ -646,23 +646,6 @@ public class OHDMImporter extends Importer {
         } while(again);
     }
 
-    private String tags2HStoreValueString(OSMElement osmElement) {
-        if(!osmElement.hasAttributes()) return null;
-
-        StringBuilder sb = new StringBuilder();
-
-        for(String key : osmElement.getAttributes().keySet()) {
-            // TODO could remove all handled attributes like name, map feature etc.
-            String value = osmElement.getAttributes().get(key);
-            sb.append("\"");
-            sb.append(key);
-            sb.append("\"=>\"");
-            sb.append(value);
-            sb.append("\",");
-        }
-        return sb.toString();
-    }
-    
     void addContentAndURL(OSMElement osmElement, String ohdmIDString) {
         SQLStatementQueue sql = this.targetInsertQueue;
         

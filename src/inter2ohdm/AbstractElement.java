@@ -1,5 +1,7 @@
 package inter2ohdm;
 
+import util.Util;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -18,9 +20,41 @@ public class AbstractElement {
         return this.attributes;
     }
 
-    public boolean hasAttributes() {
-        return false; // TODO
-        // return (this.attributes != null && !this.attributes.isEmpty());
+    public static String[] relevantAttributeKeys = new String[] {"uid", "user", "name"};
+
+    public boolean hasFreeAttributes() {
+        // are there attributes beside those we already use.
+        return this.attributes.keySet().size() > AbstractElement.relevantAttributeKeys.length;
+    }
+
+    public String getFreeAttributesASHStoreValue() {
+        StringBuilder sb = new StringBuilder();
+
+        for(String key : this.getAttributes().keySet()) {
+            // key already used in this class?
+
+            boolean found = false;
+            for(String relevantKey : AbstractElement.relevantAttributeKeys) {
+                if(relevantKey.equalsIgnoreCase(key)) {
+                    // ignore
+                    found = true;
+                    break;
+                }
+            }
+            if(found) continue;
+
+            // unknown / additional key
+            String value = this.getAttributes().get(key);
+
+            // produce hstore value string
+            sb.append("\"");
+            sb.append(key);
+            sb.append("\"=>\"");
+            sb.append(Util.escapeSpecialChar(value));
+            sb.append("\",");
+        }
+
+        return sb.toString();
     }
 
 //    public AbstractElement(HashMap<String, String> attributes, ArrayList<TagElement> tags) {
@@ -145,12 +179,6 @@ public class AbstractElement {
         return a;
     }
 
-    protected String getSerializeAttributes() {
-        return this.serializeAttributes(this.attributes);
-    }
-    
-    public static String[] relevantAttributeKeys = new String[] {"uid", "user"};
-    
     private HashMap<String, String> getRelevantAttributes(HashMap<String, String> attributes) {
         HashMap<String, String> relevantAttributes = new HashMap<>();
         

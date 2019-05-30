@@ -158,7 +158,8 @@ public class Util {
             wasQuoted = true;
         }
         t = t.replace("'", "''");
-        
+        t = t.replace("\"", "\\\"");
+
         if(wasQuoted) {
             t = "'" + t + "'";
         }

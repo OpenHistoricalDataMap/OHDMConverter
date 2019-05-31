@@ -3,10 +3,9 @@ package util;
 import ohdm2rendering.OHDM2Rendering;
 
 import java.io.*;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.text.*;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -192,16 +191,24 @@ public class Parameter {
     public String getReadStepLen() { return this.readStepLen; }
     public String getOsmfilecreationdate() {
         if(this.osmfilecreationdatestring == null) {
-            Calendar today = Calendar.getInstance();
-            today.setTimeInMillis(System.currentTimeMillis());
-            this.osmfilecreationdatestring = Integer.toString(today.get(Calendar.YEAR));
-            this.osmfilecreationdatestring += "-";
-            this.osmfilecreationdatestring += Integer.toString(today.get(Calendar.MONTH));
-            this.osmfilecreationdatestring += "-";
-            this.osmfilecreationdatestring += Integer.toString(today.get(Calendar.DAY_OF_MONTH));
-
+            Date now = new Date();
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            this.osmfilecreationdatestring = df.format(new Date());
         }
         return this.osmfilecreationdatestring;
+    }
+
+    private String paddWithLeadingZeros(String value, int requiredLength) {
+        if(value.length() >= requiredLength) return value;
+
+        StringBuilder sb = new StringBuilder();
+
+        for(int i = value.length(); i < requiredLength; i++) {
+            sb.append("0");
+        }
+
+        sb.append(value);
+        return sb.toString();
     }
 
     public String getPath() { return this.getdbName() ;}

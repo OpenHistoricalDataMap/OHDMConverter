@@ -527,7 +527,8 @@ public class OHDMImporter extends Importer {
     
     
 
-    void addValidity(OSMElement osmElement, String ohdmIDString, String ohdmGeomIDString, int externalUserID) throws SQLException {
+    void addValidity(OSMElement osmElement, String ohdmIDString, String ohdmGeomIDString, int externalUserID)
+            throws SQLException {
         // what table is reference by id_geometry
         int targetType = 0;
         switch(osmElement.getGeometryType()) {
@@ -637,7 +638,11 @@ public class OHDMImporter extends Importer {
             }
 
             sq.append(");");
-            sq.couldExecute();
+            if(osmElement.hasFreeAttributes()) {
+                sq.forceExecute(); // TODO that's for debugging purposes only
+            } else {
+                sq.couldExecute();
+            }
             
             if(classIDIter.hasNext()) {
                 classCodeString = classIDIter.next();

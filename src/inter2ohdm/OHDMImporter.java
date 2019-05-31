@@ -639,7 +639,7 @@ public class OHDMImporter extends Importer {
 
             sq.append(");");
             if(osmElement.hasFreeAttributes()) {
-                sq.forceExecute(); // TODO that's for debugging purposes only
+                sq.forceExecute(); // that's for debugging purposes only: TODO
             } else {
                 sq.couldExecute();
             }

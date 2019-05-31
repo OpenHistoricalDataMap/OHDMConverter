@@ -174,6 +174,7 @@ public class Util {
         }
         t = t.replace("'", "''");
         t = t.replace("\"", "\\\"");
+        t = t.replace("\\\\\"", "\\\"");
 
         if(wasQuoted) {
             t = "'" + t + "'";

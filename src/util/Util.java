@@ -3,6 +3,9 @@ package util;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 
 /**
@@ -119,20 +122,31 @@ public class Util {
     }
     
     public static void printExceptionMessage(PrintStream err, Throwable e, SQLStatementQueue sql, String additionalMessage, boolean goahead) {
-        err.println("****************************************************************************************");
+        StringBuilder sb = new StringBuilder();
 
-        if(additionalMessage != null ) System.err.println(additionalMessage);
+        sb.append("****************************************************************************************\n");
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'||'HH:mm:ss.SSS");
+        sb.append("time: ");
+        sb.append(df.format(new Date()));
+        sb.append("\n");
+
+        if(additionalMessage != null ) {
+            sb.append(additionalMessage);
+            sb.append("\n");
+        }
         
         Util.printExceptionMessage(err, e, sql);
         
         if(!goahead) {
-            err.println("FATAL.. stop executing");
+            sb.append("FATAL.. stop executing\n");
+            err.print(sb.toString());
             System.exit(1);
         } else {
-            err.println("non-fatal.. go ahead");
+            sb.append("non-fatal.. go ahead\n");
         }
-        
-        err.println("****************************************************************************************");
+
+        sb.append("****************************************************************************************\n");
+        err.print(sb.toString());
     }
     
     public static void printExceptionMessage(PrintStream err, Throwable e, SQLStatementQueue sql) {
@@ -152,6 +166,7 @@ public class Util {
     }
 
     public static String escapeSpecialChar(String t) {
+        if(t == null) return "";
         boolean wasQuoted = false;
         if(t.startsWith("'")) {
             t = t.substring(1, t.length()-1);

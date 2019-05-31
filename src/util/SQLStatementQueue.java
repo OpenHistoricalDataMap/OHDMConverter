@@ -9,7 +9,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -398,7 +401,10 @@ public class SQLStatementQueue {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         if(this.sqlQueue != null) {
-            sb.append("currentStatement (not null): ");
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd'||'HH:mm:ss.SSSXXX");
+            sb.append("time: ");
+            sb.append(df.format(new Date()));
+            sb.append("\ncurrentStatement (not null): ");
             sb.append(this.sqlQueue);
         }
         sb.append("\nlastStatement was:\n");

@@ -47,8 +47,7 @@ public class OSMFileExporter {
                            OutputStream relationOSStream,
                            List<String> pointTableNames, List<String> linesTableNames,
                            List<String> polygonTableNames,
-                           String minLatString, String minLongString, String maxLatString,
-                           String maxLongString, String dateString) throws SQLException {
+                           String polygonString, String dateString) throws SQLException {
         
         this.sourceParameter = sourceParameter;
         this.sourceConnection = DB.createConnection(sourceParameter);
@@ -59,35 +58,7 @@ public class OSMFileExporter {
         this.pointTableNames = pointTableNames;
         this.linesTableNames = linesTableNames;
         this.polygonTableNames = polygonTableNames;
-        this.minLatString = minLatString;
-        this.minLongString = minLongString;
-        this.maxLatString = maxLatString;
-        this.maxLongString = maxLongString;
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("POLYGON((");
-        sb.append(this.minLongString); // down left
-        sb.append(" ");
-        sb.append(this.minLatString);
-        sb.append(", ");
-        sb.append(this.minLongString); // upper left
-        sb.append(" ");
-        sb.append(this.maxLatString);
-        sb.append(", ");
-        sb.append(this.maxLongString); // upper right
-        sb.append(" ");
-        sb.append(this.maxLatString);
-        sb.append(", ");
-        sb.append(this.maxLongString); // down right
-        sb.append(" ");
-        sb.append(this.minLatString);
-        sb.append(", ");
-        sb.append(this.minLongString); // back to down left
-        sb.append(" ");
-        sb.append(this.minLatString);
-        sb.append("))");
-
-        this.bboxWKT = sb.toString();
+        this.bboxWKT = polygonString;
         this.dateString = dateString;
 
         this.dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -511,21 +482,45 @@ SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
         }
     }
 
-    public static void main(String[] args) throws IOException, SQLException, ParseException {
-        String DEFAULT_RENDERING_PARAMETER_FILE = "db_rendering_local.txt";
-        String OUTPUTFILENAME = "ohdm_extracted.osm";
-        String minLatString = "45";
-        String minLongString = "10";
-        String maxLatString = "55";
-        String maxLongString = "15";
+    public static final String DEFAULT_RENDERING_PARAMETER_FILE = "db_rendering.txt";
+    public static final String DEFAULT_FILENAME = "ohdm_extracted.osm";
+    public static final String DEFAULT_POLYGON = "POLYGON((10 45, 10 55, 15 55, 15 45, 10 45))";
+    public static final String DEFAULT_DATE = "2016-12-31";
 
-        String dateString = "2016-12-31";
+    public static void main(String[] args) throws IOException, SQLException {
+        String renderingParameterFile = DEFAULT_RENDERING_PARAMETER_FILE;
+        String dateString = DEFAULT_DATE;
+        String polygonString = DEFAULT_POLYGON;
+        String outputFileName = DEFAULT_FILENAME;
+
+        if(args.length > 0) {
+            renderingParameterFile = args[0];
+        }
+
+        if(args.length > 1) {
+            dateString = args[1];
+        }
+
+        if(args.length > 2) {
+            polygonString = args[2];
+        }
+
+        if(args.length > 3) {
+            outputFileName = args[3];
+        }
+
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-        Date date = df.parse(dateString);
+        try {
+            Date date = df.parse(dateString);
+        } catch (ParseException e) {
+            System.err.println("wrong date format: " + dateString);
+            System.err.println("should be like: 2117-12-11" + dateString);
+            throw new IOException("wrong date format: " + dateString);
+        }
 
         System.out.println("extracting OSM data file from OHDM rendering tables");
 
-        File nodeFile = new File(OUTPUTFILENAME);
+        File nodeFile = new File(outputFileName);
         File wayFile = File.createTempFile("way", "_osm");
         File relationFile = File.createTempFile("relation", "_osm");
 
@@ -533,7 +528,7 @@ SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
         OutputStream wayStream = new FileOutputStream(wayFile);
         OutputStream relationStream = new FileOutputStream(relationFile);
 
-        Parameter renderingParameter = new Parameter(DEFAULT_RENDERING_PARAMETER_FILE);
+        Parameter renderingParameter = new Parameter(renderingParameterFile);
 /*
         List<String> nodeTables = new ArrayList<>();
         nodeTables.add("shop_iconbakery");
@@ -550,10 +545,9 @@ SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
         List<String> polygonTables = osmC.getGenericTableNames(OHDM_DB.OHDM_POLYGON_GEOMTYPE);
 
         OSMFileExporter exporter = new OSMFileExporter(renderingParameter,
-        nodeStream, wayStream, relationStream,
-        nodeTables, linesTables, polygonTables,
-        minLatString, minLongString, maxLatString, maxLongString,
-        dateString);
+                nodeStream, wayStream, relationStream,
+                nodeTables, linesTables, polygonTables,
+                polygonString, dateString);
 
         exporter.export();
 
@@ -589,5 +583,7 @@ SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
 
         // close file
         nodeStream.close();
+
+        System.out.println("done extracting OSM data file from OHDM rendering tables");
     }
 }

@@ -5,11 +5,14 @@ import inter2ohdm.OHDMImporter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.HashMap;
 
 import inter2ohdm.OHDMUpdateInter;
 import inter2ohdm.OSMChunkExtractor;
 import inter2ohdm.OSMChunkExtractorCommandBuilder;
+import ohdm2osm.OHDMRendering2MapnikTables;
+import ohdm2osm.OSMFileExporter;
 import ohdm2rendering.OHDM2Rendering;
 import osm2inter.OSMImport;
 import inter2ohdm.OHDMUpdateInter;
@@ -36,6 +39,9 @@ public class OSM2Rendering {
         String updateInterDBConfig = null;
         String ohdmDBConfig = null;
         String renderingDBConfig = null;
+        String mapnikDBConfig = null;
+        String polygonString = null;
+        String dateString = null;
 
         boolean chunkCmdBuilder = false;
         boolean chunkProcess = false;
@@ -47,29 +53,28 @@ public class OSM2Rendering {
         if(argumentMap != null) {
             // got some - overwrite defaults
             String value = argumentMap.get("-o");
-            if (value != null) {
-                osmFile = value;
-            }
+            if (value != null) {  osmFile = value; }
 
             value = argumentMap.get("-i");
-            if (value != null) {
-                importInterDBConfig = value;
-            }
+            if (value != null) { importInterDBConfig = value; }
 
             value = argumentMap.get("-u");
-            if (value != null) {
-                updateInterDBConfig = value;
-            }
+            if (value != null) { updateInterDBConfig = value; }
 
             value = argumentMap.get("-d");
-            if (value != null) {
-                ohdmDBConfig = value;
-            }
+            if (value != null) { ohdmDBConfig = value; }
 
             value = argumentMap.get("-r");
-            if (value != null) {
-                renderingDBConfig = value;
-            }
+            if (value != null) { renderingDBConfig = value; }
+
+            value = argumentMap.get("-m");
+            if (value != null) { mapnikDBConfig = value; }
+
+            value = argumentMap.get("-p");
+            if (value != null) { polygonString = value; }
+
+            value = argumentMap.get("-t");
+            if (value != null) { dateString = value; }
 
             chunkCmdBuilder = argumentMap.containsKey(CHUNK_FACTORY);
             chunkProcess = argumentMap.containsKey(CHUNK_PROCESS);
@@ -89,7 +94,7 @@ public class OSM2Rendering {
 
         // check consistency
 
-        // decide wether import or exit
+        // decide to import or to exit
         if(updateInterDBConfig != null && (importInterDBConfig == null || osmFile == null)) {
             OSM2Rendering.printUsageAndExit("update requires osm file and intermediate database");
         }
@@ -99,19 +104,9 @@ public class OSM2Rendering {
             OSM2Rendering.printUsageAndExit("unclear what to do: import / update into intermediate db or import / update ohdm from intermediate db");
         }
         
-        // osm file but neither import nor update declared
-        if( importInterDBConfig == null && updateInterDBConfig == null && osmFile != null)  {
-            OSM2Rendering.printUsageAndExit("osm file declared but no import configuration");
-        }
-        
         // unclear what to do: import into ohdm or create rendering database out of ohdm
         if( ohdmDBConfig != null && importInterDBConfig == null && updateInterDBConfig == null && renderingDBConfig == null)  {
             OSM2Rendering.printUsageAndExit("unclear what to do: import into ohdm or create rendering database out of ohdm");
-        }
-        
-        // producing rendering requires definition of ohdm database
-        if( renderingDBConfig != null && ohdmDBConfig == null)  {
-            OSM2Rendering.printUsageAndExit("producing rendering requires definition of ohdm database");
         }
         
         // debug
@@ -120,7 +115,10 @@ public class OSM2Rendering {
         System.err.println("updateInterDBConfig: " + updateInterDBConfig);
         System.err.println("ohdmDBConfig: " + ohdmDBConfig);
         System.err.println("renderingDBConfig: " + renderingDBConfig);
-        
+        System.err.println("mapnikDBConfig: " + mapnikDBConfig);
+        System.err.println("polygon: " + polygonString);
+        System.err.println("date: " + dateString);
+
         OSM2Rendering.printMessage("start processes:");
         if(importInterDBConfig != null && osmFile != null && updateInterDBConfig == null) {
             OSM2Rendering.printMessage("import from osm file into intermediate db");
@@ -169,6 +167,14 @@ public class OSM2Rendering {
         if(ohdmDBConfig != null &&  renderingDBConfig != null) {
             OHDM2Rendering.main(new String[]{ohdmDBConfig, renderingDBConfig});
         }
+
+        if(renderingDBConfig != null &&  mapnikDBConfig != null) {
+            OHDMRendering2MapnikTables.main(new String[]{renderingDBConfig, mapnikDBConfig});
+        }
+
+        if(renderingDBConfig != null &&  osmFile != null && polygonString != null && dateString != null) {
+            OSMFileExporter.main(new String[]{renderingDBConfig, dateString, polygonString, osmFile});
+        }
     }
 
     private static void printUsageAndExit(String message) {
@@ -200,6 +206,9 @@ public class OSM2Rendering {
         out.println("-u [parameter file intermediateDB update]");
         out.println("-d [parameter file OHDM DB]");
         out.println("-r [parameter file rendering DB]");
+        out.println("-m [parameter file mapnik DB]");
+        out.println("-p [polygon for osm extraction]");
+        out.println("-t [date like 2117-12-11]");
         out.println("Note 1: -i and -u exclude each other: It's either an import or an update, never both");
         out.println("Note 2: The process comprises up to three steps");
         out.println("1) Import or update OSM file to intermediate DB (requires -o and (-i or -u) )");

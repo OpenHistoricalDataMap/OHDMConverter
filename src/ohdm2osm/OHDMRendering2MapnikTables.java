@@ -70,176 +70,90 @@ public class OHDMRendering2MapnikTables {
     }
 
     private void convertPoints(List<String> pointTableNames) throws SQLException {
-        SQLStatementQueue insertSQL = new SQLStatementQueue(DB.createConnection(this.targetParameter));
-        OSMClassification osmC = OSMClassification.getOSMClassification();
-
         if(pointTableNames != null) {
             for(String tableName : pointTableNames) {
                 System.out.println("converting " + tableName);
                 sql.append("SELECT st_asewkt(point), geom_id, name, valid_since, valid_until, subclassname, classid  FROM ");
                 sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
 
-                try {
-                    ResultSet resultSet = sql.executeWithResult();
-
-                    while(resultSet.next()) {
-                        String className = osmC.getClassNameByFullName(
-                                osmC.getFullClassName(resultSet.getInt("classid")));
-                        String subClassName = resultSet.getString("subclassname");
-
-                        className = this.ohdmClass2mapnikColumn(className);
-                        subClassName = this.ohdmSubClassName2mapnikColumnValue(className, subClassName);
-
-                        insertSQL.append("INSERT into ");
-                        insertSQL.append(util.DB.getFullTableName(this.targetParameter.getSchema(), POINT_TABLE_NAME));
-                        insertSQL.append("(way, osm_id, name, valid_since, valid_until, ");
-                        insertSQL.append(className);
-                        insertSQL.append(") VALUES (ST_GeomFromEWKT('");
-                        insertSQL.append(resultSet.getString(1));
-                        insertSQL.append("'), ");
-                        insertSQL.append(resultSet.getString(2));
-                        insertSQL.append(", '");
-                        insertSQL.append(resultSet.getString(3));
-                        insertSQL.append("', '");
-                        insertSQL.append(resultSet.getString(4));
-                        insertSQL.append("', '");
-                        insertSQL.append(resultSet.getString(5));
-                        insertSQL.append("', '");
-                        insertSQL.append(subClassName);
-                        insertSQL.append(" ');");
-                        insertSQL.couldExecute();
-                    }
-                }
-                catch(SQLException sqle) {
-                    System.err.println("error while select: " + sqle.toString());
-                    System.err.println(sql.toString());
-                }
-
-                try {
-                    insertSQL.forceExecute();
-                }
-                catch(Exception e) {
-                    System.err.println("error while converting points");
-                    System.err.println(insertSQL.toString().substring(0, 50));
-                }
+                ResultSet resultSet = sql.executeWithResult();
+                this.doInsert(resultSet, POINT_TABLE_NAME);
             }
         }
-        insertSQL.close();
     }
 
     // FYI: https://www.postgresql.org/docs/9.1/hstore.html
     private void convertLines(List<String> lineTableNames) throws SQLException {
-        SQLStatementQueue insertSQL = new SQLStatementQueue(DB.createConnection(this.targetParameter));
-        OSMClassification osmC = OSMClassification.getOSMClassification();
-
         if(lineTableNames != null) {
-            for(String tableName : lineTableNames) {
+            for (String tableName : lineTableNames) {
                 System.out.println("converting " + tableName);
                 sql.append("SELECT st_asewkt(line), geom_id, name, valid_since, valid_until, subclassname, classid  FROM ");
                 sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
 
-                try {
-                    ResultSet resultSet = sql.executeWithResult();
-
-                    while(resultSet.next()) {
-                        String className = osmC.getClassNameByFullName(
-                                osmC.getFullClassName(resultSet.getInt("classid")));
-                        String subClassName = resultSet.getString("subclassname");
-
-                        className = this.ohdmClass2mapnikColumn(className);
-                        subClassName = this.ohdmSubClassName2mapnikColumnValue(className, subClassName);
-
-                        insertSQL.append("INSERT into ");
-                        insertSQL.append(util.DB.getFullTableName(this.targetParameter.getSchema(), LINE_TABLE_NAME));
-                        insertSQL.append("(way, osm_id, name, valid_since, valid_until, ");
-                        insertSQL.append(className);
-                        insertSQL.append(") VALUES (ST_GeomFromEWKT('");
-                        insertSQL.append(resultSet.getString(1));
-                        insertSQL.append("'), ");
-                        insertSQL.append(resultSet.getString(2));
-                        insertSQL.append(", '");
-                        insertSQL.append(resultSet.getString(3));
-                        insertSQL.append("', '");
-                        insertSQL.append(resultSet.getString(4));
-                        insertSQL.append("', '");
-                        insertSQL.append(resultSet.getString(5));
-                        insertSQL.append("', '");
-                        insertSQL.append(subClassName);
-                        insertSQL.append(" ');");
-                        insertSQL.couldExecute();
-                    }
-                }
-                catch(SQLException sqle) {
-                    System.err.println("error while select: " + sqle.toString());
-                    System.err.println(sql.toString());
-                }
-
-                try {
-                    insertSQL.forceExecute();
-                }
-                catch(Exception e) {
-                    System.err.println("error while converting lines");
-                    System.err.println(insertSQL.toString().substring(0, 50));
-                }
+                ResultSet resultSet = sql.executeWithResult();
+                this.doInsert(resultSet, LINE_TABLE_NAME);
             }
         }
-        insertSQL.close();
     }
 
     private void convertPolygons(List<String> polygonTableNames) throws SQLException {
-        SQLStatementQueue insertSQL = new SQLStatementQueue(DB.createConnection(this.targetParameter));
-        OSMClassification osmC = OSMClassification.getOSMClassification();
-
         if(polygonTableNames != null) {
             for(String tableName : polygonTableNames) {
                 System.out.println("converting " + tableName);
                 sql.append("SELECT st_asewkt(polygon), geom_id, name, valid_since, valid_until, subclassname, classid  FROM ");
                 sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
 
-                try {
-                    ResultSet resultSet = sql.executeWithResult();
+                ResultSet resultSet = sql.executeWithResult();
+                this.doInsert(resultSet, POLYGON_TABLE_NAME);
+            }
+        }
+    }
 
-                    while(resultSet.next()) {
-                        String className = osmC.getClassNameByFullName(
-                                osmC.getFullClassName(resultSet.getInt("classid")));
-                        String subClassName = resultSet.getString("subclassname");
+    private void doInsert(ResultSet resultSet, String tableName) throws SQLException {
+        SQLStatementQueue insertSQL = new SQLStatementQueue(DB.createConnection(this.targetParameter));
+        OSMClassification osmC = OSMClassification.getOSMClassification();
 
-                        className = this.ohdmClass2mapnikColumn(className);
-                        subClassName = this.ohdmSubClassName2mapnikColumnValue(className, subClassName);
+        boolean first = true;
+        try {
+            while(resultSet.next()) {
+                String className = osmC.getClassNameByFullName(
+                        osmC.getFullClassName(resultSet.getInt("classid")));
+                String subClassName = resultSet.getString("subclassname");
 
-                        insertSQL.append("INSERT into ");
-                        insertSQL.append(util.DB.getFullTableName(this.targetParameter.getSchema(), POLYGON_TABLE_NAME));
-                        insertSQL.append("(way, osm_id, name, valid_since, valid_until, ");
-                        insertSQL.append(className);
-                        insertSQL.append(") VALUES (ST_GeomFromEWKT('");
-                        insertSQL.append(resultSet.getString(1));
-                        insertSQL.append("'), ");
-                        insertSQL.append(resultSet.getString(2));
-                        insertSQL.append(", '");
-                        insertSQL.append(resultSet.getString(3));
-                        insertSQL.append("', '");
-                        insertSQL.append(resultSet.getString(4));
-                        insertSQL.append("', '");
-                        insertSQL.append(resultSet.getString(5));
-                        insertSQL.append("', '");
-                        insertSQL.append(subClassName);
-                        insertSQL.append(" ');");
-                        insertSQL.couldExecute();
-                    }
-                }
-                catch(SQLException sqle) {
-                    System.err.println("error while select: " + sqle.toString());
-                    System.err.println(sql.toString());
-                }
+                className = this.ohdmClass2mapnikColumn(className);
+                subClassName = this.ohdmSubClassName2mapnikColumnValue(className, subClassName);
 
-                try {
+                insertSQL.append("INSERT into ");
+                insertSQL.append(util.DB.getFullTableName(this.targetParameter.getSchema(), tableName));
+                insertSQL.append("(way, osm_id, name, valid_since, valid_until, ");
+                insertSQL.append(className);
+                insertSQL.append(") VALUES (ST_GeomFromEWKT('");
+                insertSQL.append(resultSet.getString(1));
+                insertSQL.append("'), ");
+                insertSQL.append(resultSet.getString(2));
+                insertSQL.append(", '");
+                insertSQL.append(resultSet.getString(3));
+                insertSQL.append("', '");
+                insertSQL.append(resultSet.getString(4));
+                insertSQL.append("', '");
+                insertSQL.append(resultSet.getString(5));
+                insertSQL.append("', '");
+                insertSQL.append(subClassName);
+                insertSQL.append(" ');");
+                if(first) {
+                    // force first insert to be executed - causes possible error in the beginning
+                    first = false;
                     insertSQL.forceExecute();
-                }
-                catch(Exception e) {
-                    System.err.println("error while converting polygons");
-                    System.err.println(insertSQL.toString().substring(0, 50));
+                } else {
+                    insertSQL.couldExecute();
                 }
             }
+            // done with that table -
+            insertSQL.forceExecute();
+        }
+        catch(Exception e) {
+            System.err.println("error while filling mapnik tables:");
+            System.err.println(insertSQL.toString().substring(0, 100));
         }
         insertSQL.close();
     }

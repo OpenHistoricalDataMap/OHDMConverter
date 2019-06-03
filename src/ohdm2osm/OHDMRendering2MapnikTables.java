@@ -117,17 +117,13 @@ public class OHDMRendering2MapnikTables {
         String className, subClassName;
         try {
             while(resultSet.next()) {
-                className = osmC.getClassNameByFullName(
-                        osmC.getFullClassName(resultSet.getInt("classid")));
+                className = osmC.getClassNameById(resultSet.getInt("classid"));
                 subClassName = resultSet.getString("subclassname");
-
-                className = this.ohdmClass2mapnikColumn(className);
-                subClassName = this.ohdmSubClassName2mapnikColumnValue(className, subClassName);
 
                 insertSQL.append("INSERT into ");
                 insertSQL.append(util.DB.getFullTableName(this.targetParameter.getSchema(), tableName));
                 insertSQL.append("(way, osm_id, name, valid_since, valid_until, ");
-                insertSQL.append(className);
+                insertSQL.append(this.ohdmClass2mapnikColumn(className));
                 insertSQL.append(") VALUES (ST_GeomFromEWKT('");
                 insertSQL.append(resultSet.getString(1));
                 insertSQL.append("'), ");
@@ -139,7 +135,7 @@ public class OHDMRendering2MapnikTables {
                 insertSQL.append("', '");
                 insertSQL.append(resultSet.getString(5));
                 insertSQL.append("', '");
-                insertSQL.append(subClassName);
+                insertSQL.append(this.ohdmSubClassName2mapnikColumnValue(className, subClassName));
                 insertSQL.append(" ');");
                 if(first) {
                     // force first insert to be executed - causes possible error in the beginning
@@ -151,6 +147,7 @@ public class OHDMRendering2MapnikTables {
             }
             // done with that table -
             insertSQL.forceExecute();
+            Thread.sleep(100); // give gc some air.
         }
         catch(Exception e) {
             System.err.println("error while filling mapnik tables:");
@@ -355,7 +352,6 @@ public class OHDMRendering2MapnikTables {
     }
 
     String ohdmClass2mapnikColumn(String className) {
-        className = className.trim();
         if(className.equalsIgnoreCase("ohdm_boundary")) {
             return "admin_level";
         } else if(className.equalsIgnoreCase("man")) {
@@ -371,8 +367,6 @@ public class OHDMRendering2MapnikTables {
     }
 
     String ohdmSubClassName2mapnikColumnValue(String className, String subClassName) {
-        className = className.trim();
-        subClassName = subClassName.trim();
         if(className.equalsIgnoreCase("ohdm_boundary")) {
             int index = subClassName.indexOf("_");
             return subClassName.substring(index+1);

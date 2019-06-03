@@ -19,7 +19,9 @@ import util.DB;
 public class OSMClassification {
     // key: class (like highway, value: list of subclasses (like primary, secondary)
     public HashMap<String, List<String>> osmFeatureClasses = new HashMap();
-    
+    private final HashMap<String, Integer> classIDs = new HashMap<>();
+    private final ArrayList<String> fullClassNames = new ArrayList<>();
+
     public static final String UNDEFINED = "undefined";
     private static OSMClassification osmClassification = null;
     
@@ -1148,10 +1150,10 @@ public class OSMClassification {
                 
         this.setupClassIDs_Names();
     }
-    
-    private final HashMap<String, Integer> classIDs = new HashMap<>();
-    private final ArrayList<String> fullClassNames = new ArrayList<>();
-    
+
+    HashMap<Integer, String> classID_ClassName = new HashMap<>();
+    HashMap<Integer, String> classID_SubclassName = new HashMap<>();
+
     private void setupClassIDs_Names() {
         // no append real data
         int id = 1; // start with 1 as in database
@@ -1171,8 +1173,11 @@ public class OSMClassification {
                 // keep in memory
                 String fullClassName = OSMClassification.createFullClassName(className, subClassName);
                 
-                this.classIDs.put(fullClassName, id++);
+                this.classIDs.put(fullClassName, id);
                 this.fullClassNames.add(fullClassName);
+                this.classID_ClassName.put(id, className);
+                this.classID_SubclassName.put(id, subClassName);
+                id++;
             }
         }
     }
@@ -1183,6 +1188,10 @@ public class OSMClassification {
 
     public static String createFullClassName(String className, String subclassname) {
         return className + CLASS_SUBCLASS_SEPERATORS_SIGN + subclassname;
+    }
+
+    public String getClassNameById(int classid) {
+        return this.classID_ClassName.get(classid);
     }
 
     public String getClassNameByFullName(String fullClassName) {

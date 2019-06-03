@@ -114,11 +114,12 @@ public class OHDMRendering2MapnikTables {
         OSMClassification osmC = OSMClassification.getOSMClassification();
 
         boolean first = true;
+        String className, subClassName;
         try {
             while(resultSet.next()) {
-                String className = osmC.getClassNameByFullName(
+                className = osmC.getClassNameByFullName(
                         osmC.getFullClassName(resultSet.getInt("classid")));
-                String subClassName = resultSet.getString("subclassname");
+                subClassName = resultSet.getString("subclassname");
 
                 className = this.ohdmClass2mapnikColumn(className);
                 subClassName = this.ohdmSubClassName2mapnikColumnValue(className, subClassName);
@@ -153,6 +154,7 @@ public class OHDMRendering2MapnikTables {
         }
         catch(Exception e) {
             System.err.println("error while filling mapnik tables:");
+            e.printStackTrace();
             System.err.println(insertSQL.toString().substring(0, 100));
         }
         insertSQL.close();

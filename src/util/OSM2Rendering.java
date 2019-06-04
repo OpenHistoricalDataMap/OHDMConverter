@@ -16,6 +16,7 @@ import ohdm2osm.OSMFileExporter;
 import ohdm2rendering.OHDM2Rendering;
 import osm2inter.OSMImport;
 import inter2ohdm.OHDMUpdateInter;
+import rendering2strdf.Rendering2stRDF;
 
 /**
  *
@@ -35,6 +36,7 @@ public class OSM2Rendering {
         }
         
         String osmFile = null;
+        String stRDFFileString = null;
         String importInterDBConfig = null;
         String updateInterDBConfig = null;
         String ohdmDBConfig = null;
@@ -54,6 +56,9 @@ public class OSM2Rendering {
             // got some - overwrite defaults
             String value = argumentMap.get("-o");
             if (value != null) {  osmFile = value; }
+
+            value = argumentMap.get("-s");
+            if (value != null) { stRDFFileString = value; }
 
             value = argumentMap.get("-i");
             if (value != null) { importInterDBConfig = value; }
@@ -111,6 +116,7 @@ public class OSM2Rendering {
         
         // debug
         System.err.println("osmFile: " + osmFile);
+        System.err.println("stRDF file: " + stRDFFileString);
         System.err.println("importInterDBConfig: " + importInterDBConfig);
         System.err.println("updateInterDBConfig: " + updateInterDBConfig);
         System.err.println("ohdmDBConfig: " + ohdmDBConfig);
@@ -175,6 +181,10 @@ public class OSM2Rendering {
         if(renderingDBConfig != null &&  osmFile != null && polygonString != null && dateString != null) {
             OSMFileExporter.main(new String[]{renderingDBConfig, dateString, polygonString, osmFile});
         }
+
+        if(renderingDBConfig != null &&  stRDFFileString != null && polygonString != null) {
+            Rendering2stRDF.main(new String[]{renderingDBConfig, stRDFFileString, polygonString});
+        }
     }
 
     private static void printUsageAndExit(String message) {
@@ -201,23 +211,15 @@ public class OSM2Rendering {
     }
     
     private static void printUsageAndExit(PrintStream out) {
-        out.println("-o [osmfilename]");
+        out.println("-o [osm file (input or output]");
+        out.println("-s [stRDF output file]");
         out.println("-i [parameter file intermediateDB import]");
         out.println("-u [parameter file intermediateDB update]");
         out.println("-d [parameter file OHDM DB]");
         out.println("-r [parameter file rendering DB]");
         out.println("-m [parameter file mapnik DB]");
-        out.println("-p [polygon for osm extraction]");
+        out.println("-p [WKT polygon (EPSG 4326) for osm extraction]");
         out.println("-t [date like 2117-12-11]");
-        out.println("Note 1: -i and -u exclude each other: It's either an import or an update, never both");
-        out.println("Note 2: The process comprises up to three steps");
-        out.println("1) Import or update OSM file to intermediate DB (requires -o and (-i or -u) )");
-        out.println("2) Import/Update OHDM from intermediate DB (requires (-i or -u) and -d)");
-        out.println("3) Create rendering tables from OHDM from intermediate DB (requires -d und -r)");
-        out.println("Each step is performed if all required parameters are found");
-        out.println("Enter e.g. all parameter to create rendering tables from an OSM file");
-        out.println("Enter only e.g. -o, -u and -d to update OHDM with a new .osm file");
-        out.println("Enter only e.g. -d and -r to produce new rendering table from OHDM");
         System.exit(0);
     }
 }

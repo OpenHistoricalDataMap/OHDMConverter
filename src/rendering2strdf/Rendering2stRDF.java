@@ -22,6 +22,7 @@ public class Rendering2stRDF {
     public static void main(String[] args) throws IOException, SQLException {
         String sourceParameterFileName = "db_rendering.txt";
         String filename = "stRDF.out.txt";
+        String polygonString = null;
 
         if(args.length > 0) {
             sourceParameterFileName = args[0];
@@ -29,6 +30,11 @@ public class Rendering2stRDF {
 
         if(args.length > 1) {
             filename = args[1];
+        }
+
+        if(args.length > 2) {
+            polygonString = args[2];
+            System.err.println("POLYGON not yet supported (working on it)");
         }
 
         Rendering2stRDF rendering2stRDF = new Rendering2stRDF(new Parameter(sourceParameterFileName),

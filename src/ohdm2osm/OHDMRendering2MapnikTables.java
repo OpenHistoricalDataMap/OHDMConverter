@@ -1,10 +1,7 @@
 package ohdm2osm;
 
 import osm.OSMClassification;
-import util.DB;
-import util.OHDM_DB;
-import util.Parameter;
-import util.SQLStatementQueue;
+import util.*;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -69,15 +66,30 @@ public class OHDMRendering2MapnikTables {
         System.out.println("***************************************************************************************");
     }
 
-    private void convertPoints(List<String> pointTableNames) throws SQLException {
+    private void convertPoints(List<String> pointTableNames) {
         if(pointTableNames != null) {
             for(String tableName : pointTableNames) {
                 System.out.println("converting " + tableName);
-                sql.append("SELECT st_asewkt(point), geom_id, name, valid_since, valid_until, subclassname, classid  FROM ");
-                sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
 
-                ResultSet resultSet = sql.executeWithResult();
-                this.doInsert(resultSet, POINT_TABLE_NAME);
+/*
+INSERT INTO mapniktest.planet_osm_point (way, osm_id, name, amenity, valid_since, valid_until)
+(SELECT point, geom_id, name, subclassname, valid_since, valid_until FROM public.amenity_points)
+ */
+
+                sql.append("INSERT INTO ");
+                sql.append(util.DB.getFullTableName(this.targetParameter.getSchema(), POINT_TABLE_NAME));
+                sql.append(" (way, osm_id, name, ");
+                sql.append(this.ohdmRenderingTableName2mapnikColumnName(tableName));
+                sql.append(", valid_since, valid_until)");
+                sql.append(" (SELECT point, geom_id, name, subclassname, valid_since, valid_until FROM ");
+                sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
+                sql.append(");");
+
+                try {
+                    sql.forceExecute();
+                } catch (SQLException e) {
+                    Util.printExceptionMessage(e, sql, "error during mapnik conversion", true);
+                }
             }
         }
     }
@@ -87,11 +99,24 @@ public class OHDMRendering2MapnikTables {
         if(lineTableNames != null) {
             for (String tableName : lineTableNames) {
                 System.out.println("converting " + tableName);
-                sql.append("SELECT st_asewkt(line), geom_id, name, valid_since, valid_until, subclassname, classid  FROM ");
+/*
+INSERT INTO mapniktest.planet_osm_line (way, osm_id, name, amenity, valid_since, valid_until)
+(SELECT line, geom_id, name, subclassname, valid_since, valid_until FROM public.amenity_lines)
+*/
+                sql.append("INSERT INTO ");
+                sql.append(util.DB.getFullTableName(this.targetParameter.getSchema(), LINE_TABLE_NAME));
+                sql.append(" (way, osm_id, name, ");
+                sql.append(this.ohdmRenderingTableName2mapnikColumnName(tableName));
+                sql.append(", valid_since, valid_until)");
+                sql.append(" (SELECT line, geom_id, name, subclassname, valid_since, valid_until FROM ");
                 sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
+                sql.append(");");
 
-                ResultSet resultSet = sql.executeWithResult();
-                this.doInsert(resultSet, LINE_TABLE_NAME);
+                try {
+                    sql.forceExecute();
+                } catch (SQLException e) {
+                    Util.printExceptionMessage(e, sql, "error during mapnik conversion", true);
+                }
             }
         }
     }
@@ -100,61 +125,27 @@ public class OHDMRendering2MapnikTables {
         if(polygonTableNames != null) {
             for(String tableName : polygonTableNames) {
                 System.out.println("converting " + tableName);
-                sql.append("SELECT st_asewkt(polygon), geom_id, name, valid_since, valid_until, subclassname, classid  FROM ");
+
+/*
+INSERT INTO mapniktest.planet_osm_polygon (way, osm_id, name, amenity, valid_since, valid_until)
+(SELECT polygon, geom_id, name, subclassname, valid_since, valid_until FROM public.amenity_polygons)
+ */
+                sql.append("INSERT INTO ");
+                sql.append(util.DB.getFullTableName(this.targetParameter.getSchema(), POLYGON_TABLE_NAME));
+                sql.append(" (way, osm_id, name, ");
+                sql.append(this.ohdmRenderingTableName2mapnikColumnName(tableName));
+                sql.append(", valid_since, valid_until)");
+                sql.append(" (SELECT polygon, geom_id, name, subclassname, valid_since, valid_until FROM ");
                 sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
+                sql.append(");");
 
-                ResultSet resultSet = sql.executeWithResult();
-                this.doInsert(resultSet, POLYGON_TABLE_NAME);
-            }
-        }
-    }
-
-    private void doInsert(ResultSet resultSet, String tableName) throws SQLException {
-        SQLStatementQueue insertSQL = new SQLStatementQueue(DB.createConnection(this.targetParameter));
-        OSMClassification osmC = OSMClassification.getOSMClassification();
-
-        boolean first = true;
-        String className, subClassName;
-        try {
-            while(resultSet.next()) {
-                className = osmC.getClassNameById(resultSet.getInt("classid"));
-                subClassName = resultSet.getString("subclassname");
-
-                insertSQL.append("INSERT into ");
-                insertSQL.append(util.DB.getFullTableName(this.targetParameter.getSchema(), tableName));
-                insertSQL.append("(way, osm_id, name, valid_since, valid_until, ");
-                insertSQL.append(this.ohdmClass2mapnikColumn(className));
-                insertSQL.append(") VALUES (ST_GeomFromEWKT('");
-                insertSQL.append(resultSet.getString(1));
-                insertSQL.append("'), ");
-                insertSQL.append(resultSet.getString(2));
-                insertSQL.append(", '");
-                insertSQL.append(resultSet.getString(3));
-                insertSQL.append("', '");
-                insertSQL.append(resultSet.getString(4));
-                insertSQL.append("', '");
-                insertSQL.append(resultSet.getString(5));
-                insertSQL.append("', '");
-                insertSQL.append(this.ohdmSubClassName2mapnikColumnValue(className, subClassName));
-                insertSQL.append(" ');");
-                if(first) {
-                    // force first insert to be executed - causes possible error in the beginning
-                    first = false;
-                    insertSQL.forceExecute();
-                } else {
-                    insertSQL.couldExecute();
+                try {
+                    sql.forceExecute();
+                } catch (SQLException e) {
+                    Util.printExceptionMessage(e, sql, "error during mapnik conversion", true);
                 }
             }
-            // done with that table -
-            insertSQL.forceExecute();
-            Thread.sleep(100); // give gc some air.
         }
-        catch(Exception e) {
-            System.err.println("error while filling mapnik tables:");
-            e.printStackTrace();
-            System.err.println(insertSQL.toString().substring(0, 100));
-        }
-        insertSQL.close();
     }
 
     public static final String POINT_TABLE_NAME = "planet_osm_point";
@@ -351,8 +342,12 @@ public class OHDMRendering2MapnikTables {
         sql.forceExecute();
     }
 
-    String ohdmClass2mapnikColumn(String className) {
-        if(className.equalsIgnoreCase("ohdm_boundary")) {
+    String ohdmRenderingTableName2mapnikColumnName(String tableName) {
+        String className = OSMClassification.getOSMClassification().getClassNameByFullName(tableName);
+        if(
+                className.equalsIgnoreCase("ohdm_boundary")
+                || className.equalsIgnoreCase("boundary")
+        ) {
             return "admin_level";
         } else if(className.equalsIgnoreCase("man")) {
             return "man_made";
@@ -363,15 +358,6 @@ public class OHDMRendering2MapnikTables {
         // default - nothing to convert
         else {
             return className;
-        }
-    }
-
-    String ohdmSubClassName2mapnikColumnValue(String className, String subClassName) {
-        if(className.equalsIgnoreCase("ohdm_boundary")) {
-            int index = subClassName.indexOf("_");
-            return subClassName.substring(index+1);
-        } else {
-            return subClassName;
         }
     }
 
@@ -406,11 +392,13 @@ public class OHDMRendering2MapnikTables {
 
         OHDMRendering2MapnikTables converter = new OHDMRendering2MapnikTables(source, target);
 
+        System.err.println("TODO: that converter does not understand all OHDM rendering tables!!!");
         converter.convert(
                 cleanList(nodeTables),
                 cleanList(linesTables),
                 cleanList(polygonTables)
         );
+        System.err.println("TODO: that converter does not understand all OHDM rendering tables!!!");
     }
 
     /**

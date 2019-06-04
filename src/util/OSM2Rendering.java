@@ -220,6 +220,7 @@ public class OSM2Rendering {
         out.println("-m [parameter file mapnik DB]");
         out.println("-p [WKT polygon (EPSG 4326) for osm extraction]");
         out.println("-t [date like 2117-12-11]");
+        out.println("see https://github.com/OpenHistoricalDataMap/OSMImportUpdate/wiki for details");
         System.exit(0);
     }
 }

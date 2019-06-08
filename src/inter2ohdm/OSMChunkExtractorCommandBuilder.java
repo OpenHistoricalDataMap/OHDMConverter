@@ -234,10 +234,10 @@ public class OSMChunkExtractorCommandBuilder {
         sb.append(jarFiles);
         
         sb.append(" ");
-        sb.append("util.OSM2Rendering");
+        sb.append("util.OHDMConverter");
 
         sb.append(" ");
-        sb.append(OSM2Rendering.CHUNK_PROCESS);
+        sb.append(OHDMConverter.CHUNK_PROCESS);
 
         sb.append(" -i ");
         sb.append(dbInter);

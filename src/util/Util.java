@@ -120,15 +120,22 @@ public class Util {
     public static void printExceptionMessage(Throwable e, SQLStatementQueue sql, String additionalMessage, boolean goahead) {
         Util.printExceptionMessage(System.err, e, sql, additionalMessage, goahead);
     }
+
+    public static String getNowAsFormatedDateString() {
+        StringBuilder sb = new StringBuilder();
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss.SSS");
+        sb.append("time: ");
+        sb.append(df.format(new Date()));
+        sb.append("\n");
+
+        return sb.toString();
+    }
     
     public static void printExceptionMessage(PrintStream err, Throwable e, SQLStatementQueue sql, String additionalMessage, boolean goahead) {
         StringBuilder sb = new StringBuilder();
 
         sb.append("****************************************************************************************\n");
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'||'HH:mm:ss.SSS");
-        sb.append("time: ");
-        sb.append(df.format(new Date()));
-        sb.append("\n");
+        sb.append(Util.getNowAsFormatedDateString());
 
         if(additionalMessage != null ) {
             sb.append(additionalMessage);

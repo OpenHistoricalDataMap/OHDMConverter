@@ -441,7 +441,7 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
 
         System.out.println("Start importing entites from " + elementTableName);
         System.out.println("with ID within [" + fromID + ", " + toID + "]");
-        System.out.println(this.getStatistics());
+        //System.out.println(this.getStatistics());
         boolean lastRound = false;
         boolean again = true;
 
@@ -597,7 +597,8 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
         }
         
         StringBuilder sb = new StringBuilder();
-        
+
+        /*
         sb.append("max ids: ");
         sb.append("n:");
         sb.append(Util.setDotsInStringValue(this.nodesTableEntries));
@@ -606,7 +607,9 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
         sb.append(",r:");
         sb.append(Util.setDotsInStringValue(this.relationsTableEntries));
         sb.append("\n");
-        
+        */
+
+        sb.append(Util.getNowAsFormatedDateString());
         sb.append(this.lowerIDString);
         sb.append(" =< current range < ");
         sb.append(this.upperIDString);

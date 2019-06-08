@@ -131,7 +131,7 @@ public class UtilCopyImport {
 	}
 
 	/**
-	 * Methode escapeSpecialChar()<br>
+	 * Methode escapeSpecialChar4SQL()<br>
 	 * überprüft ob '-Zeichen in String str vorkommt<br>
 	 * maskiert dieses Zeichen falls es vorkommt<br>
 	 * @param str ist der String welcher überprüft wird

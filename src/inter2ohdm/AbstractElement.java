@@ -50,7 +50,7 @@ public class AbstractElement {
             sb.append("\"");
             sb.append(key);
             sb.append("\"=>\"");
-            sb.append(Util.escapeSpecialChar(value));
+            sb.append(Util.escapeSpecialChar4SQL(value));
             sb.append("\",");
         }
 

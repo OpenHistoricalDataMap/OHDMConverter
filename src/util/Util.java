@@ -7,6 +7,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.StringTokenizer;
 
 /**
  *
@@ -172,7 +174,38 @@ public class Util {
         Util.printExceptionMessage(System.err, e, sql, additionalMessage, true);
     }
 
-    public static String escapeSpecialChar(String t) {
+    public static String escapeXML(String s) {
+        if(!s.contains("& ")) return s;
+
+        s = s.replace("& ", "&amp; ");
+        return Util.escapeXML(s);
+/*
+        int offset = 0;
+        int index = s.indexOf("&");
+        if(index < 0) return s;
+
+        StringBuilder sb = new StringBuilder();
+
+        while (index > -1) {
+            if (index > offset) {
+                // head
+                sb.append(s.substring(offset, index));
+            }
+            // replace
+            sb.append("&amp");
+
+            offset = index+1;
+            index = s.indexOf("&", offset);
+
+        }
+        // tail
+        sb.append(s.substring(offset));
+
+        return sb.toString();
+        */
+    }
+
+    public static String escapeSpecialChar4SQL(String t) {
         if(t == null) return "";
         boolean wasQuoted = false;
         if(t.startsWith("'")) {
@@ -320,5 +353,42 @@ public class Util {
         }
 
         return argumentMap;
+    }
+
+    public static Map<String, String> jsonText2Map(String jsonString) {
+
+/*
+"addr:city"=>"Berlin", "addr:street"=>"Edisonstraße", "addr:suburb"=>"Oberschöneweide", "addr:country"=>"DE", "addr:postcode"=>"12459", "addr:housenumber"=>"54"
+ */
+        Map<String, String> map = new HashMap<>();
+
+        if(jsonString == null || jsonString.length() == 0) return map;
+
+
+        int first = jsonString.indexOf("\"");
+        int last = jsonString.indexOf("\"", first+1);
+
+        int offset = 0;
+        boolean isKey = true;
+        String keyString = null;
+        String valueString;
+
+        while(first > -1 && last > -1) {
+            if(isKey) {
+                keyString = jsonString.substring(first+1, last);
+                offset = jsonString.indexOf("=>", first);
+            } else {
+                valueString = jsonString.substring(first+1, last);
+                if(valueString.length() == 0) valueString = null;
+                map.put(Util.escapeXML(keyString), Util.escapeXML(valueString));
+                offset = last+1;
+            }
+
+            isKey = !isKey;
+            first = jsonString.indexOf("\"", offset);
+            last = jsonString.indexOf("\"", first+1);
+        }
+
+        return map;
     }
 }

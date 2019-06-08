@@ -2,7 +2,6 @@ package osm2inter;
 
 import util.InterDB;
 import java.io.File;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import org.xml.sax.Attributes;
@@ -13,8 +12,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import util.DB;
 import util.ManagedFileSQLStatementQueue;
 import util.Parameter;
@@ -389,7 +387,7 @@ public class SQL_OSMImporter extends DefaultHandler {
         this.memberQueue.append(" VALUES ( ");
         this.memberQueue.append(this.currentElementID);
         this.memberQueue.append(", '");
-        this.memberQueue.append(Util.escapeSpecialChar(attributes.getValue("role")));
+        this.memberQueue.append(Util.escapeSpecialChar4SQL(attributes.getValue("role")));
         this.memberQueue.append("', ");
         this.memberQueue.append(attributes.getValue("ref"));
         this.memberQueue.append("); ");

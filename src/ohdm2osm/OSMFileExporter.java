@@ -11,10 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import osm.OSMClassification;
-import util.DB;
-import util.OHDM_DB;
-import util.Parameter;
-import util.SQLStatementQueue;
+import util.*;
 
 /**
  *
@@ -59,11 +56,24 @@ public class OSMFileExporter {
         this.linesTableNames = linesTableNames;
         this.polygonTableNames = polygonTableNames;
         this.bboxWKT = polygonString;
+
+        this.setBoundingBox(polygonString);
+
         this.dateString = dateString;
 
         this.dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
         this.ldfID = 1;
+    }
+
+    private void setBoundingBox(String polygonString) {
+        System.out.println("TODO: bouding box must be calculated!!!!");
+
+        this.minLatString = "45";
+        this.minLongString = "4";
+        this.maxLatString = "55";
+        this.maxLongString = "14";
+
     }
 
     private void exportPoints() throws SQLException {
@@ -79,7 +89,7 @@ public class OSMFileExporter {
         if(this.pointTableNames != null) {
             for(String tableName : this.pointTableNames) {
                 sql.append("SELECT ST_X(ST_TRANSFORM(point, 4326)), ST_Y(ST_TRANSFORM(point, 4326)), ");
-                sql.append("classid, name, valid_since, tags FROM ");
+                sql.append("classid, name, valid_since, text(tags)::varchar as tags FROM ");
                 sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
                 sql.append(" WHERE valid_since <= '");
                 sql.append(this.dateString);
@@ -97,7 +107,8 @@ public class OSMFileExporter {
                             resultSet.getDouble("st_y"),
                             resultSet.getDouble("st_x"),
                             resultSet.getBigDecimal("classid"),
-                            resultSet.getString("name")
+                            resultSet.getString("name"),
+                            resultSet.getString("tags")
                     );
                 }
             }
@@ -117,7 +128,8 @@ SELECT st_astext(st_transform(line, 4326)), name, classid, valid_since
 
         if(this.linesTableNames != null) {
             for(String tableName : this.linesTableNames) {
-                sql.append("SELECT ST_AsText(st_transform(line, 4326)), name, classid, valid_since FROM ");
+                sql.append("SELECT ST_AsText(st_transform(line, 4326)), name, classid,  ");
+                sql.append("valid_since, text(tags)::varchar as tags FROM ");
                 sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
                 sql.append(" WHERE valid_since <= '");
                 sql.append(this.dateString);
@@ -134,6 +146,7 @@ SELECT st_astext(st_transform(line, 4326)), name, classid, valid_since
                             resultSet.getString(1),
                             resultSet.getBigDecimal("classid"),
                             resultSet.getString("name"),
+                            resultSet.getString("tags"),
                             false
                     );
                 }
@@ -160,7 +173,7 @@ st_astext(ST_InteriorRingN(polygon, 1)), subclassname, name, valid_since
         if(this.polygonTableNames != null) {
             for(String tableName : this.polygonTableNames) {
                 sql.append("SELECT st_astext(st_transform((ST_ExteriorRing(polygon)),4326)), " +
-                        "ST_NumInteriorRings(polygon), classid, name, valid_since, geom_id FROM ");
+                        "ST_NumInteriorRings(polygon), classid, name, valid_since, geom_id, text(tags)::varchar as tags FROM ");
                 sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
                 sql.append(" WHERE valid_since <= '");
                 sql.append(this.dateString);
@@ -175,16 +188,17 @@ st_astext(ST_InteriorRingN(polygon, 1)), subclassname, name, valid_since
                     java.sql.Date valid_since = resultSet.getDate("valid_since");
                     BigDecimal classid = resultSet.getBigDecimal("classid");
                     String name = resultSet.getString("name");
+                    String tags = resultSet.getString("tags");
                     int numberInteriorRings = resultSet.getInt(2);
 
                     if(numberInteriorRings == 0) {
                         // just a closed way
                         this.printWay(valid_since, resultSet.getString(1),
-                                classid, name, true);
+                                classid, name, tags,true);
                     } else {
                         // becomes a multipolygon
                         this.printWay(valid_since, resultSet.getString(1),
-                                null, null, true);
+                                null, null, null,true);
                         // TODO: classid and name null or to be set?!
 
                         // remember Id out ring
@@ -210,7 +224,7 @@ SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
                             resultSet = sql.executeWithResult();
                             if(resultSet.next()) {
                                 this.printWay(valid_since, resultSet.getString(1),
-                                        null, null,true);
+                                        null, null, null,true);
 
                                 innerIDs.add(this.ldfID-1);
                             }
@@ -237,8 +251,6 @@ SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
 
                         this.relationStream.println(" visible='true' version='1' changeset='1'>");
 
-                        this.printTag("type", "multipolygon", this.relationStream);
-
                         this.relationStream.print(PADDING);
                         this.relationStream.print(PADDING);
                         this.relationStream.print("<member type='way' ref='");
@@ -253,10 +265,8 @@ SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
                             this.relationStream.println("' role='inner' />");
                         }
 
-                        this.printClassificationTag(classid, this.relationStream);
-                        if(name != null) {
-                            this.printTag("name", name, this.relationStream);
-                        }
+                        this.printTag("type", "multipolygon", this.relationStream);
+                        this.printAllTags(classid, name, tags, this.relationStream);
 
                         this.relationStream.print(PADDING);
                         this.relationStream.println("</relation>");
@@ -267,7 +277,7 @@ SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
     }
 
     private void printNode(java.sql.Date valid_since, double latitude, double longitude,
-                           BigDecimal classid, String name) {
+                           BigDecimal classid, String name, String tags) {
         // cut length latitude
         String latString = Double.toString(latitude);
         if(latString.length() > 10) {
@@ -280,11 +290,11 @@ SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
             longString = longString.substring(0, 11);
         }
 
-        this.printNode(valid_since, latString, longString, classid, name);
+        this.printNode(valid_since, latString, longString, classid, name, tags);
     }
 
     private void printNode(java.sql.Date valid_since, String latString, String longString,
-                           BigDecimal classid, String name) {
+                           BigDecimal classid, String name, String tags) {
         this.nodeStream.print(PADDING);
         this.nodeStream.print("<node id='");
         this.nodeStream.print(this.ldfID++);
@@ -305,22 +315,39 @@ SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
         this.nodeStream.print(longString);
         this.nodeStream.print("'");
 
-
-        if(classid == null && name == null) {
+        if(tags != null && tags.length() == 0) tags = null;
+        if(classid == null && name == null && tags == null) {
             // anonymous node
             this.nodeStream.println(" />");
         } else {
             this.nodeStream.println(" >");
 
-            this.printClassificationTag(classid, this.nodeStream);
-
-            if(name != null) {
-                this.printTag("name", name, this.nodeStream);
-            }
-
+            this.printAllTags(classid, name, tags, this.nodeStream);
 
             this.nodeStream.print(PADDING);
             this.nodeStream.println("</node>");
+        }
+    }
+
+    private void printAllTags(BigDecimal classid, String name, String tags, PrintStream stream) {
+        this.printClassificationTag(classid, stream);
+
+        if(name != null) {
+            this.printTag("name", name, stream);
+        }
+
+        if(tags != null && tags.length() > 0) {
+            this.printTags(tags, stream);
+        }
+    }
+
+    private void printTags(String tags, PrintStream stream) {
+        // parse tags
+        if(tags != null && tags.length() > 0) {
+            Map<String, String> tagMap = Util.jsonText2Map(tags);
+            for (String key : tagMap.keySet()) {
+                this.printTag(key, tagMap.get(key), stream);
+            }
         }
     }
 
@@ -388,7 +415,7 @@ SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
         return latLongList;
     }
 
-    private void printWay(java.sql.Date valid_since, String linestring, BigDecimal classid, String name,
+    private void printWay(java.sql.Date valid_since, String linestring, BigDecimal classid, String name, String tags,
                           boolean isPolygon) {
         int firstNodeID = this.ldfID;
         // extract nodes from linestring
@@ -400,14 +427,14 @@ SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
         String longString = iterator.next();
 
         do {
-            this.printNode(valid_since, latString, longString, null, null);
+            this.printNode(valid_since, latString, longString, null, null, null);
             latString = iterator.next();
             longString = iterator.next();
         } while(iterator.hasNext());
 
         if(!isPolygon) {
             // it is a way - save final node - in a polygon: it is the same point
-            this.printNode(valid_since, latString, longString, null, null);
+            this.printNode(valid_since, latString, longString, null, null, null);
         }
 
         int lastNodeID = this.ldfID-1;
@@ -453,7 +480,7 @@ SELECT st_astext(ST_TRANSFORM(ST_InteriorRingN(polygon, 1), 4326))
             this.wayStream.println("' />");
         }
 
-        this.printClassificationTag(classid, this.wayStream);
+        this.printAllTags(classid, name, tags, this.wayStream);
 
         this.wayStream.print(PADDING);
         this.wayStream.println("</way>");

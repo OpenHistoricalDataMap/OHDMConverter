@@ -79,7 +79,7 @@ public class OSMFileExporter {
         if(this.pointTableNames != null) {
             for(String tableName : this.pointTableNames) {
                 sql.append("SELECT ST_X(ST_TRANSFORM(point, 4326)), ST_Y(ST_TRANSFORM(point, 4326)), ");
-                sql.append("classid, name, valid_since FROM ");
+                sql.append("classid, name, valid_since, tags FROM ");
                 sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
                 sql.append(" WHERE valid_since <= '");
                 sql.append(this.dateString);
@@ -90,6 +90,7 @@ public class OSMFileExporter {
                 sql.append("'), 3857))");
 
                 ResultSet resultSet = sql.executeWithResult();
+
                 while(resultSet.next()) {
                     this.printNode(
                             resultSet.getDate("valid_since"),

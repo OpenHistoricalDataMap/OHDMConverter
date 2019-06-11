@@ -45,19 +45,47 @@ public class OSMFileExporter {
                            List<String> pointTableNames, List<String> linesTableNames,
                            List<String> polygonTableNames,
                            String polygonString, String dateString) throws SQLException {
-        
+
         this.sourceParameter = sourceParameter;
         this.sourceConnection = DB.createConnection(sourceParameter);
         this.sql = new SQLStatementQueue(this.sourceConnection);
+
+        // calculate bouding box
+        this.sql.append("SELECT ST_AsText(ST_Envelope('");
+        this.sql.append(polygonString);
+        this.sql.append("'::geometry));");
+
+        ResultSet resultSet = this.sql.executeWithResult();
+        // polygonString is a valid wkt - keep it
+        this.bboxWKT = polygonString;
+
+        resultSet.next();
+        String envelopePolygoneString = resultSet.getString(1);
+
+        // extract min / max long / lat
+        // first point is min/min, third max/max - get them: example: POLYGON((0 0,0 3,2 3,2 0,0 0))
+
+        // min min
+        int end = envelopePolygoneString.indexOf(',');
+        TwoInt twoInt = new TwoInt(envelopePolygoneString.substring("POLYGON((".length(), end));
+        this.minLongString = twoInt.first;
+        this.minLatString = twoInt.second;
+
+        // max max
+        int begin = envelopePolygoneString.indexOf(',', end+1);
+        begin++;
+        end = envelopePolygoneString.indexOf(',', begin);
+        twoInt = new TwoInt(envelopePolygoneString.substring(begin, end));
+        this.maxLongString = twoInt.first;
+        this.maxLatString = twoInt.second;
+
         this.nodeStream = new PrintStream(nodeOSStream);
         this.wayStream = new PrintStream(wayOSStream);
         this.relationStream = new PrintStream(relationOSStream);
         this.pointTableNames = pointTableNames;
         this.linesTableNames = linesTableNames;
         this.polygonTableNames = polygonTableNames;
-        this.bboxWKT = polygonString;
 
-        this.setBoundingBox(polygonString);
 
         this.dateString = dateString;
 
@@ -66,15 +94,16 @@ public class OSMFileExporter {
         this.ldfID = 1;
     }
 
-    private void setBoundingBox(String polygonString) {
-        System.out.println("TODO: bouding box must be calculated!!!!");
-
-        this.minLatString = "45";
-        this.minLongString = "4";
-        this.maxLatString = "55";
-        this.maxLongString = "14";
-
+    private class TwoInt {
+        String first, second;
+        TwoInt(String twoIntString) {
+            StringTokenizer st = new StringTokenizer(twoIntString, " ");
+            this.first = st.nextToken();
+            this.second = st.nextToken();
+        }
     }
+
+
 
     private void exportPoints() throws SQLException {
         // points

@@ -229,14 +229,14 @@ where gg.type_target = 3 AND p.id = gg.id_target AND o.id = gg.id_geoobject_sour
 
             sql.append(geometryName);
 
-            sql.append(", object_id, geom_id, classid, subclassname, name, valid_since, valid_until, tags) ");
+            sql.append(", object_id, geom_id, classid, subclassname, name, valid_since, valid_until, tags, user_id) ");
         }
 
         sql.append("select g.");
         sql.append(geometryName);
 
         sql.append(", o.id as object_id, g.id as geom_id, c.id as classid, c.subclassname, o.name, gg.valid_since, ");
-        sql.append("gg.valid_until, gg.tags ");
+        sql.append("gg.valid_until, gg.tags, gg.user_id ");
 
         // create and fill in first loop
         if(dropAndCreate) {
@@ -253,7 +253,7 @@ where gg.type_target = 3 AND p.id = gg.id_target AND o.id = gg.id_geoobject_sour
 
         // geoobject_geometry gg
         sql.append("(SELECT id_target, classification_id, type_target, id_geoobject_source, valid_since, ");
-        sql.append("valid_until, tags FROM ");
+        sql.append("valid_until, tags, source_user_id as user_id FROM ");
         sql.append(sourceSchema);
         sql.append(".geoobject_geometry where classification_id = ");
         sql.append(classID);

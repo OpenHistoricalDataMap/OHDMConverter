@@ -60,22 +60,22 @@ public class OSMFileExporter {
         this.bboxWKT = polygonString;
 
         resultSet.next();
-        String envelopePolygoneString = resultSet.getString(1);
+        String envelopePolygonString = resultSet.getString(1);
 
         // extract min / max long / lat
         // first point is min/min, third max/max - get them: example: POLYGON((0 0,0 3,2 3,2 0,0 0))
 
         // min min
-        int end = envelopePolygoneString.indexOf(',');
-        TwoInt twoInt = new TwoInt(envelopePolygoneString.substring("POLYGON((".length(), end));
+        int end = envelopePolygonString.indexOf(',');
+        TwoInt twoInt = new TwoInt(envelopePolygonString.substring("POLYGON((".length(), end));
         this.minLongString = twoInt.first;
         this.minLatString = twoInt.second;
 
         // max max
-        int begin = envelopePolygoneString.indexOf(',', end+1);
+        int begin = envelopePolygonString.indexOf(',', end+1);
         begin++;
-        end = envelopePolygoneString.indexOf(',', begin);
-        twoInt = new TwoInt(envelopePolygoneString.substring(begin, end));
+        end = envelopePolygonString.indexOf(',', begin);
+        twoInt = new TwoInt(envelopePolygonString.substring(begin, end));
         this.maxLongString = twoInt.first;
         this.maxLatString = twoInt.second;
 

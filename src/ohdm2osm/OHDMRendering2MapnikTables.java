@@ -80,8 +80,8 @@ INSERT INTO mapniktest.planet_osm_point (way, osm_id, name, amenity, valid_since
                 sql.append(util.DB.getFullTableName(this.targetParameter.getSchema(), POINT_TABLE_NAME));
                 sql.append(" (way, osm_id, name, ");
                 sql.append(this.ohdmRenderingTableName2mapnikColumnName(tableName));
-                sql.append(", valid_since, valid_until)");
-                sql.append(" (SELECT point, geom_id, name, subclassname, valid_since, valid_until FROM ");
+                sql.append(", valid_since, valid_until, tags)");
+                sql.append(" (SELECT point, geom_id, name, subclassname, valid_since, valid_until, tags FROM ");
                 sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
                 sql.append(");");
 
@@ -107,8 +107,8 @@ INSERT INTO mapniktest.planet_osm_line (way, osm_id, name, amenity, valid_since,
                 sql.append(util.DB.getFullTableName(this.targetParameter.getSchema(), LINE_TABLE_NAME));
                 sql.append(" (way, osm_id, name, ");
                 sql.append(this.ohdmRenderingTableName2mapnikColumnName(tableName));
-                sql.append(", valid_since, valid_until)");
-                sql.append(" (SELECT line, geom_id, name, subclassname, valid_since, valid_until FROM ");
+                sql.append(", valid_since, valid_until, tags)");
+                sql.append(" (SELECT line, geom_id, name, subclassname, valid_since, valid_until, tags FROM ");
                 sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
                 sql.append(");");
 
@@ -134,8 +134,8 @@ INSERT INTO mapniktest.planet_osm_polygon (way, osm_id, name, amenity, valid_sin
                 sql.append(util.DB.getFullTableName(this.targetParameter.getSchema(), POLYGON_TABLE_NAME));
                 sql.append(" (way, osm_id, name, ");
                 sql.append(this.ohdmRenderingTableName2mapnikColumnName(tableName));
-                sql.append(", valid_since, valid_until)");
-                sql.append(" (SELECT polygon, geom_id, name, subclassname, valid_since, valid_until FROM ");
+                sql.append(", valid_since, valid_until, tags)");
+                sql.append(" (SELECT polygon, geom_id, name, subclassname, valid_since, valid_until, tags FROM ");
                 sql.append(util.DB.getFullTableName(this.sourceParameter.getSchema(), tableName));
                 sql.append(");");
 

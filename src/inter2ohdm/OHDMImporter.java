@@ -638,11 +638,12 @@ public class OHDMImporter extends Importer {
             }
 
             sq.append(");");
+            /*
             if(osmElement.hasFreeAttributes()) {
                 sq.forceExecute(); // that's for debugging purposes only: TODO
-            } else {
+            } else { */
                 sq.couldExecute();
-            }
+            //}
             
             if(classIDIter.hasNext()) {
                 classCodeString = classIDIter.next();

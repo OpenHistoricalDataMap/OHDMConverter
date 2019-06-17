@@ -233,7 +233,7 @@ public class OSMChunkExtractorCommandBuilder {
         sb.append(" -classpath ");
         sb.append(jarFiles);
         
-        sb.append(" ");
+        sb.append(" -jar ");
         sb.append("util.OHDMConverter");
 
         sb.append(" ");

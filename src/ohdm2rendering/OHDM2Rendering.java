@@ -283,11 +283,15 @@ where gg.type_target = 3 AND p.id = gg.id_target AND o.id = gg.id_geoobject_sour
 
         sql.append(" AND g.id = gg.id_target AND o.id = gg.id_geoobject_source;");
 
+        long now = System.currentTimeMillis();
         sql.forceExecute();
+        long now2 = System.currentTimeMillis();
+
+        long duration = now2 - now;
 
         System.out.println("done: " + 
             OSMClassification.getOSMClassification().getFullClassName(Integer.toString(classID)) +
-            " (" + classID + ") into " + targetFullTableName);
+            " (" + classID + ") into " + targetFullTableName + " time: " + util.Util.getTimeString(duration));
 
     }
     

@@ -310,7 +310,15 @@ where gg.type_target = 3 AND p.id = gg.id_target AND o.id = gg.id_geoobject_sour
         sql.append(" = ST_TRANSFORM(");
         sql.append(geometryName);
         sql.append(", 3857);");
+
+        long now = System.currentTimeMillis();
+
         sql.forceExecute();
+
+        long now2 = System.currentTimeMillis();
+        long duration = now2 - now;
+
+        System.out.println("done converting to 4326->3857: time: " + util.Util.getTimeString(duration));
 //        System.out.println("..done");
 
         // create function
@@ -324,6 +332,7 @@ where gg.type_target = 3 AND p.id = gg.id_target AND o.id = gg.id_geoobject_sour
 
         String createBBOXName = targetSchema + OHDM2Rendering.BBOX_FUNCTION_TAIL;
 
+        /*
 //        System.out.println("create function " + tableFunctionName);
         sql.append("CREATE OR REPLACE FUNCTION ");
         sql.append(tableFunctionName);
@@ -340,6 +349,7 @@ where gg.type_target = 3 AND p.id = gg.id_target AND o.id = gg.id_geoobject_sour
         sql.append(" $$ LANGUAGE SQL;");
         sql.forceExecute();
 //        System.out.println("done");
+         */
 
         /*
         a call like this can now be used to retrieve valid geometries (from highway lines in that case)
@@ -359,12 +369,15 @@ where gg.type_target = 3 AND p.id = gg.id_target AND o.id = gg.id_geoobject_sour
         sql.append(geometryName);
         sql.append("); ");
 
-//        System.out.println(sql.getCurrentStatement());
-        sql.forceExecute();
-//        System.out.println("done");
+        now = System.currentTimeMillis();
 
         sql.forceExecute();
-        
+
+        now2 = System.currentTimeMillis();
+        duration = now2 - now;
+
+        System.out.println("done creating spatial index: time: " + util.Util.getTimeString(duration));
+
     }
     
     /**

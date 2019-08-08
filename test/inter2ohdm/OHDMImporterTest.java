@@ -14,6 +14,19 @@ import java.util.Calendar;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ *
+ * @author kakaoKeks
+ */
+
+
+/**
+ * These tests are created for testing the basic functionalities of the system.
+ * first a test map is imported to a test database.
+ * With the data imported we request all the parameters we want to test via sql statements and save the results in variables.
+ * Next we update the database using a second test map where we have changed some aspects to cover all test cases.
+ * And last we are fetching the new data again and check if it has changed (or in some cases has not) as it was supposed to.
+ * **/
 
 class OHDMImporterTest {
 

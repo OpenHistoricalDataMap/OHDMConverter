@@ -38,9 +38,9 @@ class OHDMImporterTest {
     private SQLStatementQueue insertSQL = null;
 
     /** hier bitte die Pfade angeben*/
-    private String ohdmProperties;
-    private String intermediateProperties;
-    private String updateProperties;
+    static String ohdmProperties;
+    static String intermediateProperties;
+    static String updateProperties;
     private String testMapV1 = "test/resources/testMapV1.osm";
     private String testMapV2 = "test/resources/testMapV2.osm";
 
@@ -192,7 +192,7 @@ class OHDMImporterTest {
         int numberOfObjects = resultSet30.getInt("count");
 
         //33-TC Way of a relation changes
-        insertSQL.append("select");
+        insertSQL.append("select ");
         insertSQL.append(parameter.getSchema());
         insertSQL.append(".");
         insertSQL.append(geoobject_geometry);
@@ -225,7 +225,7 @@ class OHDMImporterTest {
         insertSQL.flushThreads();
 
         //34-TC Polygone of a relation changes
-        insertSQL.append("select");
+        insertSQL.append("select ");
         insertSQL.append(parameter.getSchema());
         insertSQL.append(".");
         insertSQL.append(geoobject_geometry);
@@ -482,7 +482,7 @@ class OHDMImporterTest {
         assertNotEquals(numberOfObjects,numberOfObjectsb);
 
         //33-TC Way of a relation has changed
-        insertSQL.append("select");
+        insertSQL.append("select ");
         insertSQL.append(parameter.getSchema());
         insertSQL.append(".");
         insertSQL.append(geoobject_geometry);
@@ -523,8 +523,8 @@ class OHDMImporterTest {
         assertNotEquals(id_target33,id_target33b);
         assertNotEquals(getDateById(geoobjGeomID33),getDateById(geoobjGeomID33b));
 
-        //33-TC Way of a relation has changed
-        insertSQL.append("select");
+        //34-TC polygon of a relation has changed
+        insertSQL.append("select ");
         insertSQL.append(parameter.getSchema());
         insertSQL.append(".");
         insertSQL.append(geoobject_geometry);
@@ -718,7 +718,7 @@ class OHDMImporterTest {
     }
     private ArrayList<Long> getListOfIds(String name) throws SQLException {
         ArrayList<Long> idList = new ArrayList<>();
-        insertSQL.append("select");
+        insertSQL.append("select ");
         insertSQL.append(parameter.getSchema());
         insertSQL.append(".");
         insertSQL.append(geoobject_geometry);

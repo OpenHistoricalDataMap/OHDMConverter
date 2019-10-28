@@ -41,8 +41,8 @@ class OHDMImporterTest {
     static String ohdmProperties;
     static String intermediateProperties;
     static String updateProperties;
-    private String testMapV1 = "test/resources/testMapV1.osm";
-    private String testMapV2 = "test/resources/testMapV2.osm";
+    private String testMapV1 = "test/testdata/testMapV1.osm";
+    private String testMapV2 = "test/testdata/testMapV2.osm";
 
     @Test
     public void nodeUnchanged() throws IOException, SQLException {

@@ -1,0 +1,15 @@
+servername:localhost
+portnumber:5432
+username:username
+pwd:password
+dbname:update
+schema:public
+maxThreads: 5
+recordFileName: osm2updateRecord.txt
+connectionType:copy
+delimiter:|
+nodesColumnNames:osm_id|tstamp|classcode|otherclasscodes|serializedtags|longitude|latitude|has_name|valid
+relationmemberColumnNames:relation_id|node_id|way_id|member_rel_id|role
+relationsColumnNames:osm_id|tstamp|classcode|otherclasscodes|serializedtags|member_ids|has_name|valid
+waynodesColumnNames:way_id|node_id
+waysColumnNames:osm_id|tstamp|classcode|otherclasscodes|serializedtags|node_ids|has_name|valid

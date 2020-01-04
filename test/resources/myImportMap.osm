@@ -1,0 +1,108 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version='0.6' generator='JOSM'>
+  <bounds minlat='54.088958' minlon='12.248757' maxlat='54.09139' maxlon='12.25248' origin='CGImap 0.0.2' />
+  <node id='-102262' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09133494353' lon='12.24887226795' />
+  <node id='-102264' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09133494353' lon='12.2498267405' />
+  <node id='-102266' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09109993532' lon='12.2498267405' />
+  <node id='-102268' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09109993532' lon='12.2493765176' />
+  <node id='-102270' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09091509647' lon='12.2493765176' />
+  <node id='-102272' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09091773703' lon='12.24886326349' />
+  <node id='-102274' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09041338687' lon='12.24876871668' />
+  <node id='-102276' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09138511364' lon='12.25070467515' />
+  <node id='-102278' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09132174085' lon='12.25142953402' />
+  <node id='-102280' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09132174085' lon='12.2522489397' />
+  <node id='-102282' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09108937312' lon='12.2522489397' />
+  <node id='-102284' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09109201367' lon='12.25144304071' />
+  <node id='-102286' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09090717479' lon='12.25146555185' />
+  <node id='-102288' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09090717479' lon='12.25223543301' />
+  <node id='-102290' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09070121049' lon='12.25223993524' />
+  <node id='-102292' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09070913221' lon='12.25147905854' />
+  <node id='-102295' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09002785853' lon='12.24899833036' />
+  <node id='-102297' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09003049915' lon='12.24994379845' />
+  <node id='-102299' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09044507398' lon='12.24993929622' />
+  <node id='-102301' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09099431322' lon='12.25119091588' />
+  <node id='-102303' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09045299575' lon='12.25109186685' />
+  <node id='-102305' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09045035516' lon='12.25132148052' />
+  <node id='-102307' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09044771457' lon='12.25198781042' />
+  <node id='-102309' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09028663823' lon='12.25198781042' />
+  <node id='-102311' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09028663823' lon='12.25233448205' />
+  <node id='-102313' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.08906402201' lon='12.25234798874' />
+  <node id='-102315' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.08906666269' lon='12.2494080332' />
+  <node id='-102317' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.08982188987' lon='12.25022743888' />
+  <node id='-102319' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09028663823' lon='12.25023194111' />
+  <node id='-102321' timestamp='2019-10-01T04:20:00Z' visible='true' lat='54.09029191943' lon='12.25132148052' />
+  <way id='-102322' timestamp='2019-10-01T04:20:00Z' visible='true'>
+    <nd ref='-102262' />
+    <nd ref='-102264' />
+    <nd ref='-102266' />
+    <nd ref='-102268' />
+    <nd ref='-102270' />
+    <nd ref='-102272' />
+    <nd ref='-102262' />
+    <tag k='ele' v='243' />
+    <tag k='gnis:created' v='11/17/2019' />
+    <tag k='gnis:feature_id' v='277263' />
+    <tag k='gnis:state_id' v='06' />
+    <tag k='leisure' v='park' />
+    <tag k='name' v='Memorial Park' />
+  </way>
+  <way id='-102323' timestamp='2019-10-01T04:20:00Z' visible='true'>
+    <nd ref='-102274' />
+    <nd ref='-102276' />
+    <tag k='name' v='Highway number 001' />
+    <tag k='railway' v='rail' />
+    <tag k='usage' v='main' />
+  </way>
+  <way id='-102324' timestamp='2019-10-01T04:20:00Z' visible='true'>
+    <nd ref='-102278' />
+    <nd ref='-102280' />
+    <nd ref='-102282' />
+    <nd ref='-102284' />
+    <nd ref='-102278' />
+    <tag k='name' v='House 1' />
+  </way>
+  <way id='-102325' timestamp='2019-10-01T04:20:00Z' visible='true'>
+    <nd ref='-102286' />
+    <nd ref='-102288' />
+    <nd ref='-102290' />
+    <nd ref='-102292' />
+    <nd ref='-102286' />
+    <tag k='name' v='House 2' />
+  </way>
+  <way id='-102326' timestamp='2019-10-01T04:20:00Z' visible='true'>
+    <nd ref='-102295' />
+    <nd ref='-102297' />
+    <nd ref='-102299' />
+    <nd ref='-102301' />
+    <nd ref='-102303' />
+    <tag k='highway' v='cycleway' />
+    <tag k='name' v='Bikelane' />
+  </way>
+  <way id='-102327' timestamp='2019-10-01T04:20:00Z' visible='true'>
+    <nd ref='-102305' />
+    <nd ref='-102307' />
+    <nd ref='-102309' />
+    <nd ref='-102311' />
+    <nd ref='-102313' />
+    <nd ref='-102315' />
+    <nd ref='-102317' />
+    <nd ref='-102319' />
+    <nd ref='-102321' />
+    <nd ref='-102305' />
+    <tag k='admin_level' v='4' />
+    <tag k='attribution' v='CASIL CSP_Opbdys072008' />
+    <tag k='boundary' v='national_park' />
+    <tag k='csp:unitcode' v='537' />
+    <tag k='leisure' v='park' />
+    <tag k='name' v='Andy Anderson - Skate Park' />
+    <tag k='park:type' v='skate_park' />
+  </way>
+  <relation id='-104933' timestamp='2019-10-01T04:20:00Z' visible='true'>
+    <member type='way' ref='-102325' role='' />
+    <tag k='type' v='building' />
+  </relation>
+  <relation id='-107517' timestamp='2019-10-01T04:20:00Z' visible='true'>
+    <member type='way' ref='-102324' role='' />
+    <tag k='type' v='building' />
+  </relation>
+</osm>

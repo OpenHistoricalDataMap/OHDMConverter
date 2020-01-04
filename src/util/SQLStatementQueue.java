@@ -367,7 +367,8 @@ public class SQLStatementQueue {
     
     public ResultSet executeWithResult() throws SQLException {
         Connection conn = this.getFreeConnection();
-        PreparedStatement stmt = conn.prepareStatement(this.sqlQueue.toString());
+        PreparedStatement stmt = conn.prepareStatement(this.sqlQueue.toString(), ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_READ_ONLY);
         
         try {
             ResultSet result = stmt.executeQuery();

@@ -12,7 +12,7 @@ import inter2ohdm.OSMChunkExtractor;
 import inter2ohdm.OSMChunkExtractorCommandBuilder;
 import ohdm2osm.OHDMRendering2MapnikTables;
 import ohdm2osm.OSMFileExporter;
-import ohdm2geoserverrendering.OHDM2Georendering;
+import ohdm2geoserverrendering.OHDM2Geoserverrendering;
 import ohdm2rendering.OHDM2Rendering;
 import osm2inter.OSMImport;
 import rendering2strdf.Rendering2stRDF;
@@ -179,7 +179,7 @@ public class OHDMConverter {
         }
 
         if(ohdmDBConfig != null &&  geoserverRenderingDBConfig != null) {
-            OHDM2Georendering.main(new String[]{ohdmDBConfig, geoserverRenderingDBConfig});
+            OHDM2Geoserverrendering.main(new String[]{ohdmDBConfig, geoserverRenderingDBConfig});
         }
 
         if(renderingDBConfig != null &&  mapnikDBConfig != null) {

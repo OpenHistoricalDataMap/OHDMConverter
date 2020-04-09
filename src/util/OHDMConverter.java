@@ -10,6 +10,7 @@ import java.util.HashMap;
 import inter2ohdm.OHDMUpdateInter;
 import inter2ohdm.OSMChunkExtractor;
 import inter2ohdm.OSMChunkExtractorCommandBuilder;
+import ohdm2mapnik.OHDM2MapnikTables;
 import ohdm2osm.OHDMRendering2MapnikTables;
 import ohdm2osm.OSMFileExporter;
 import ohdm2rendering.OHDM2Rendering;
@@ -108,7 +109,7 @@ public class OHDMConverter {
         }
         
         // unclear what to do: import into ohdm or create rendering database out of ohdm
-        if( ohdmDBConfig != null && importInterDBConfig == null && updateInterDBConfig == null && renderingDBConfig == null)  {
+        if( ohdmDBConfig != null && importInterDBConfig == null && updateInterDBConfig == null && renderingDBConfig == null && mapnikDBConfig == null)  {
             OHDMConverter.printUsageAndExit("unclear what to do: import into ohdm or create rendering database out of ohdm");
         }
         
@@ -170,6 +171,10 @@ public class OHDMConverter {
 
         if(ohdmDBConfig != null &&  renderingDBConfig != null) {
             OHDM2Rendering.main(new String[]{ohdmDBConfig, renderingDBConfig});
+        }
+
+        if(ohdmDBConfig != null &&  mapnikDBConfig != null) {
+            OHDM2MapnikTables.main(new String[]{ohdmDBConfig, mapnikDBConfig});
         }
 
         if(renderingDBConfig != null &&  mapnikDBConfig != null) {

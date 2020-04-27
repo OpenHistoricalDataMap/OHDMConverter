@@ -12,6 +12,7 @@ import inter2ohdm.OSMChunkExtractor;
 import inter2ohdm.OSMChunkExtractorCommandBuilder;
 import ohdm2osm.OHDMRendering2MapnikTables;
 import ohdm2osm.OSMFileExporter;
+import ohdm2geoserverrendering.OHDM2Geoserverrendering;
 import ohdm2rendering.OHDM2Rendering;
 import osm2inter.OSMImport;
 import rendering2strdf.Rendering2stRDF;
@@ -39,6 +40,7 @@ public class OHDMConverter {
         String updateInterDBConfig = null;
         String ohdmDBConfig = null;
         String renderingDBConfig = null;
+        String geoserverRenderingDBConfig = null;
         String mapnikDBConfig = null;
         String polygonString = null;
         String dateString = null;
@@ -69,6 +71,9 @@ public class OHDMConverter {
 
             value = argumentMap.get("-r");
             if (value != null) { renderingDBConfig = value; }
+
+            value = argumentMap.get("-g");
+            if (value != null) { geoserverRenderingDBConfig = value; }
 
             value = argumentMap.get("-m");
             if (value != null) { mapnikDBConfig = value; }
@@ -108,8 +113,8 @@ public class OHDMConverter {
         }
         
         // unclear what to do: import into ohdm or create rendering database out of ohdm
-        if( ohdmDBConfig != null && importInterDBConfig == null && updateInterDBConfig == null && renderingDBConfig == null)  {
-            OHDMConverter.printUsageAndExit("unclear what to do: import into ohdm or create rendering database out of ohdm");
+        if( ohdmDBConfig != null && importInterDBConfig == null && updateInterDBConfig == null && renderingDBConfig == null && geoserverRenderingDBConfig == null)  {
+            OHDMConverter.printUsageAndExit("unclear what to do: import into ohdm or create (Geoserver-/) rendering database out of ohdm");
         }
         
         // debug
@@ -119,6 +124,7 @@ public class OHDMConverter {
         System.err.println("updateInterDBConfig: " + updateInterDBConfig);
         System.err.println("ohdmDBConfig: " + ohdmDBConfig);
         System.err.println("renderingDBConfig: " + renderingDBConfig);
+        System.err.println("geoserverRenderingDBConfig: " + geoserverRenderingDBConfig);
         System.err.println("mapnikDBConfig: " + mapnikDBConfig);
         System.err.println("polygon: " + polygonString);
         System.err.println("date: " + dateString);
@@ -172,6 +178,10 @@ public class OHDMConverter {
             OHDM2Rendering.main(new String[]{ohdmDBConfig, renderingDBConfig});
         }
 
+        if(ohdmDBConfig != null &&  geoserverRenderingDBConfig != null) {
+            OHDM2Geoserverrendering.main(new String[]{ohdmDBConfig, geoserverRenderingDBConfig});
+        }
+
         if(renderingDBConfig != null &&  mapnikDBConfig != null) {
             OHDMRendering2MapnikTables.main(new String[]{renderingDBConfig, mapnikDBConfig});
         }
@@ -215,6 +225,7 @@ public class OHDMConverter {
         out.println("-u [parameter file intermediateDB update]");
         out.println("-d [parameter file OHDM DB]");
         out.println("-r [parameter file rendering DB]");
+        out.println("-g [parameter file Geoserver rendering DB]");
         out.println("-m [parameter file mapnik DB]");
         out.println("-p [WKT polygon (EPSG 4326) for osm extraction]");
         out.println("-t [date like 2117-12-11]");

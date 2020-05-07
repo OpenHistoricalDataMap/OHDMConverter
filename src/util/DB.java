@@ -5,6 +5,9 @@ import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Properties;
 
 /**
@@ -12,8 +15,8 @@ import java.util.Properties;
  * @author thsc
  */
 public class DB {
-    
-    
+    private static final String TIME_STAMP_TABLE = "creationInformation";
+
     ////////////////////////////////////////////////////////////////////////
     //                          CREATE STRUCTURES                         //
     ////////////////////////////////////////////////////////////////////////
@@ -87,7 +90,7 @@ public class DB {
             sq.forceExecute();
         }
         catch(SQLException e) {
-            System.err.println("cannot drop table (prob. non-fatal): " + sq.toString());
+            System.out.println("cannot drop table (can be ignored in most cases): " + sq.toString());
         }
     }
     
@@ -176,5 +179,40 @@ public class DB {
         }
         
         return new SQLStatementQueue(target, recordFile, maxThreads);
+    }
+
+    public static void writeTimeStamp(SQLStatementQueue sq, String targetSchema) throws SQLException {
+        DB.drop(sq, targetSchema, DB.TIME_STAMP_TABLE);
+
+        sq.append("CREATE TABLE ");
+        sq.append(DB.getFullTableName(targetSchema, DB.TIME_STAMP_TABLE));
+        sq.append(" (");
+        sq.append("timestampstring character varying");
+        sq.append(");");
+        sq.forceExecute();
+
+        // get time string
+        System.currentTimeMillis();
+        Date time = Calendar.getInstance().getTime();
+        DateFormat df = DateFormat.getInstance();
+        String timeString = df.format(time);
+
+        sq.append("INSERT INTO ");
+        sq.append(DB.getFullTableName(targetSchema, DB.TIME_STAMP_TABLE));
+        sq.append(" VALUES (' ");
+        sq.append(timeString);
+        sq.append(" '); ");
+
+        sq.forceExecute();
+
+        /*
+        sq.append("INSERT ");
+        sq.append(DB.getFullTableName(targetSchema, TABLE_IMPORTS_UPDATES));
+        sq.append(" SET lastupdate = '");
+        sq.append(osmfilecreationdate);
+        sq.append("' WHERE externalsystemID = 0;");
+        sq.forceExecute();
+
+         */
     }
 }

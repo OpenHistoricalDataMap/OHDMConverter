@@ -40,7 +40,7 @@ public class OHDM_DB {
     public static final int LINESTRING = 2;
     public static final int POLYGON = 3;
     public static final int RELATION = 0;
-    
+
     public static String getGeometryName(int type) {
         switch(type) {
             case OHDM_DB.OHDM_POINT_GEOMTYPE: return "point";
@@ -83,6 +83,9 @@ public class OHDM_DB {
     
     public static void createOHDMTables(Connection targetConnection, String schema) throws SQLException {
         SQLStatementQueue sq = new SQLStatementQueue(targetConnection);
+
+        // write timestamp first
+        DB.writeTimeStamp(sq, schema);
 
         // EXTERNAL_SYSTEMS
         DB.createSequence(targetConnection, schema, TABLE_EXTERNAL_SYSTEMS);
@@ -278,7 +281,7 @@ public class OHDM_DB {
     }
 
     public static void writeUpdateDate(Connection targetConnection, String targetSchema,
-                                              String osmfilecreationdate) throws SQLException {
+                                       String osmfilecreationdate) throws SQLException {
 
         SQLStatementQueue sq = new SQLStatementQueue(targetConnection);
         sq.append("UPDATE ");

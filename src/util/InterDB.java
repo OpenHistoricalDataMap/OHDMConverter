@@ -34,6 +34,9 @@ public class InterDB {
         }
 
         try {
+            // write timestamp first
+            DB.writeTimeStamp(sql, schema);
+
             // setup classification
 //            OSMClassification.getOSMClassification().setupClassificationTable(sql, schema);
             
@@ -152,7 +155,7 @@ public class InterDB {
             sql.append(");");
             sql.forceExecute();
 //            System.out.println("intermediate database is ready for import");
-      
+
         } catch (SQLException e) {
             Util.printExceptionMessage(e, sql, "when creating database", false);
         }

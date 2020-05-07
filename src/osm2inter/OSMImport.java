@@ -89,7 +89,6 @@ public class OSMImport {
                     connector.close();
                 }
             }
-
         } catch (Exception t) {
             PrintStream err = System.err;
             // maybe another stream was defined and could be opened

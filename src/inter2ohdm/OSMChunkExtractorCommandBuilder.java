@@ -20,12 +20,14 @@ public class OSMChunkExtractorCommandBuilder {
 
     public static void main(String args[]) {
         String jarFileNames = null;
+        String mainJarName = null;
 
         String path = OSMChunkExtractorCommandBuilder.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         File f;
         try {
             File jarFile = new File(OSMChunkExtractorCommandBuilder.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
-            jarFileNames = jarFile.getCanonicalPath();
+//            jarFileNames = jarFile.getCanonicalPath();
+            mainJarName = jarFile.getCanonicalPath();
         } catch (Exception e) {
             System.err.println("cannot figure out jar name - abort: " + e.getLocalizedMessage());
             System.exit(0);
@@ -44,16 +46,16 @@ public class OSMChunkExtractorCommandBuilder {
         usage.append("\n");
         long size = 1000000;
 
-        usage.append("-jar [additional jar files - optional]");
+        usage.append("-classpath [additional jar files - optional]");
         usage.append("\n");
 
-        usage.append("-parallel [number of parallel processes - default: 0 (no parallel process at all]");
+        usage.append("-parallel [number of parallel processes - default: 0 (default: 2)]");
         usage.append("\n");
         int parallelProcs = 0;
 
-        usage.append("-nice [if set - process are started with lower schedule priority (default: false)]");
+        usage.append("-notnice [if set - process does not start with lower schedule priority (default: false)]");
         usage.append("\n");
-        boolean nice = false;
+        boolean nice = true;
 
         // now get real parameters
         HashMap<String, String> argumentMap = Util.parametersToMap(args, false, usage.toString());
@@ -74,28 +76,33 @@ public class OSMChunkExtractorCommandBuilder {
                 size = Integer.parseInt(value);
             }
 
-            value = argumentMap.get("-jar");
+            value = argumentMap.get("-classpath");
             if (value != null) {
-                jarFileNames = jarFileNames + ":" + value;
+                if(jarFileNames == null) {
+                    jarFileNames = value;
+                } else {
+                    jarFileNames = jarFileNames + ":" + value;
+                }
             }
 
             value = argumentMap.get("-parallel");
             if (value != null) {
                 parallelProcs = Integer.parseInt(value);
-                if(parallelProcs < 0) parallelProcs = 0;
+                if(parallelProcs < 0) parallelProcs = 2;
             }
 
-            if(argumentMap.containsKey("-nice")) {
-                nice = true;
+            if(argumentMap.containsKey("-notnice")) {
+                nice = false;
             }
         }
 
+        /*
         if(jarFileNames == null) {
             System.err.println("jar filename missing:");
             System.err.println(usage);
             System.exit(0);
         }
-
+*/
 
         OSMChunkExtractorCommandBuilder cef = new OSMChunkExtractorCommandBuilder();
 
@@ -115,11 +122,13 @@ public class OSMChunkExtractorCommandBuilder {
             String entityTypes[] = new String[] {"nodes", "ways", "relations"};
 
             for(String entityType : entityTypes) {
+                long effectiveSize = size;
                 String fullTableName = null;
 
                 switch(entityType) {
                     case "nodes":
                         fullTableName = DB.getFullTableName(sourceParameter.getSchema(), InterDB.NODETABLE);
+                        effectiveSize *= 10; // make bigger steps when processing nodes
                         break;
                     case "ways":
                         fullTableName = DB.getFullTableName(sourceParameter.getSchema(), InterDB.WAYTABLE);
@@ -133,10 +142,10 @@ public class OSMChunkExtractorCommandBuilder {
                 // get min and max id
                 cef.getMaxID(sourceSQL, fullTableName);
 
-                // nodes
+                // start
                 long from = cef.minID;
-                long to = from + size;
-                if(to > cef.maxID) to = cef.maxID;
+                long to = from + effectiveSize;
+                to = to > cef.maxID ? cef.maxID : to;
 
                 int parallelCounter = parallelProcs;
 
@@ -144,7 +153,7 @@ public class OSMChunkExtractorCommandBuilder {
                     do {
                         boolean parallel = false;
 
-                        if(to + size*5 < cef.maxID && from > cef.minID) {
+                        if(to + effectiveSize*5 < cef.maxID && from > cef.minID) {
                         /* last couple of processes are not parallel to end import of one
                         entity before starting another one
                           */
@@ -167,6 +176,7 @@ public class OSMChunkExtractorCommandBuilder {
                         }
 
                         cef.writeCommand(
+                                mainJarName,
                                 jarFileNames,
                                 sourceParameterFileName,
                                 targetParameterFileName,
@@ -183,7 +193,7 @@ public class OSMChunkExtractorCommandBuilder {
 
                         // next loop
                         from = to+1; // plus 1: its an including interval
-                        to = from + size;
+                        to = from + effectiveSize;
                         if(to > cef.maxID) to = cef.maxID;
                     } while(from < cef.maxID);
                 }
@@ -218,7 +228,7 @@ public class OSMChunkExtractorCommandBuilder {
     }
 
 
-    private void writeCommand(String jarFiles, String dbInter, String dbOHDM,
+    private void writeCommand(String mainJarFile, String jarFiles, String dbInter, String dbOHDM,
            boolean reset, long from, long to, String entityName, String logFile,
            String errorLogFile, boolean parallel, boolean nice) throws IOException {
 
@@ -229,13 +239,20 @@ public class OSMChunkExtractorCommandBuilder {
         if(nice) {
             sb.append(" nice ");
         }
-        sb.append(this.jvmPath);
-        sb.append(" -classpath ");
-        sb.append(jarFiles);
-        
-        sb.append(" -jar ");
-        sb.append("util.OHDMConverter");
 
+        // java
+        sb.append(this.jvmPath);
+
+        // -jar
+        sb.append(" -jar ");
+        sb.append(mainJarFile);
+//        sb.append("OHDMConverter");
+
+        if(jarFiles != null) {
+            sb.append(" -classpath ");
+            sb.append(jarFiles);
+        }
+        
         sb.append(" ");
         sb.append(OHDMConverter.CHUNK_PROCESS);
 

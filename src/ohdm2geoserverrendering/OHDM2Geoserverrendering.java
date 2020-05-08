@@ -46,7 +46,7 @@ public class OHDM2Geoserverrendering {
     final static String MY_ROADS = "my_roads";
     final static String MY_TRANSPORT_AREAS = "my_transport_areas";
     final static String MY_TRANSPORT_POINTS = "my_transport_points";
-    final static String MY_WATERAREAS = "my_waterareas";
+    final static String MY_WATERAREA = "my_waterarea";
     final static String MY_WATERWAYS = "my_waterways";
 
     public static void main(String[] args) throws SQLException, IOException {
@@ -367,7 +367,7 @@ public class OHDM2Geoserverrendering {
         tables.add(MY_ROADS);
         tables.add(MY_TRANSPORT_AREAS);
         tables.add(MY_TRANSPORT_POINTS);
-        tables.add(MY_WATERAREAS);
+        tables.add(MY_WATERAREA);
         tables.add(MY_WATERWAYS);
 
         for(String table : tables){

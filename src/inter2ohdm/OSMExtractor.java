@@ -1,6 +1,7 @@
 package inter2ohdm;
 
 import java.io.PrintStream;
+//import java.lang.management.ManagementFactory;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -608,6 +609,13 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
         sb.append(Util.setDotsInStringValue(this.relationsTableEntries));
         sb.append("\n");
         */
+
+        /* requires java 9 or higher - print process id
+        String systemid = ManagementFactory.getRuntimeMXBean().getName();
+        sb.append("pid: ");
+        sb.append(systemid);
+        sb.append(" | ");
+         */
 
         sb.append(Util.getNowAsFormatedDateString());
         sb.append(this.lowerIDString);

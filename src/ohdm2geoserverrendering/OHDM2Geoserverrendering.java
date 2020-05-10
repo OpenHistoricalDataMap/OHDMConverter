@@ -31,10 +31,28 @@ public class OHDM2Geoserverrendering {
     String waterarea_sql = "";
     String waterways_sql = "";
 
+    //EPSG Codes
+    final static String PSEUDO_MERCATOR_EPSG = "3857";
+    final static String WGS_EPSG = "4326";
+
+    //Table names
+    final static String MY_ADMIN_LABELS = "my_admin_labels";
+    final static String MY_AMENITIES = "my_amenities";
+    final static String MY_BOUNDARIES = "my_boundaries";
+    final static String MY_BUILDINGS = "my_buildings";
+    final static String MY_LANDUSAGES = "my_landusages";
+    final static String MY_HOUSENUMBERS = "my_housenumbers";
+    final static String MY_PLACES = "my_places";
+    final static String MY_ROADS = "my_roads";
+    final static String MY_TRANSPORT_AREAS = "my_transport_areas";
+    final static String MY_TRANSPORT_POINTS = "my_transport_points";
+    final static String MY_WATERAREA = "my_waterarea";
+    final static String MY_WATERWAYS = "my_waterways";
+
     public static void main(String[] args) throws SQLException, IOException {
         String sourceParameterFileName = "db_ohdm.txt";
         String targetParameterFileName = "db_rendering.txt";
-        
+
 
         if(args.length > 0) {
             sourceParameterFileName = args[0];
@@ -43,7 +61,7 @@ public class OHDM2Geoserverrendering {
         if(args.length > 1) {
             targetParameterFileName = args[1];
         }
-            
+
 //            Connection sourceConnection = Importer.createLocalTestSourceConnection();
 //            Connection targetConnection = Importer.createLocalTestTargetConnection();
 
@@ -53,18 +71,17 @@ public class OHDM2Geoserverrendering {
         Connection connection = DB.createConnection(targetParameter);
 
         String targetSchema = targetParameter.getSchema();
-            
+
         String sourceSchema = sourceParameter.getSchema();
-        
+
         SQLStatementQueue sql = new SQLStatementQueue(connection);
         OHDM2Geoserverrendering renderer = new OHDM2Geoserverrendering();
 
         renderer.loadSQLFiles();
         renderer.changeDefaultParametersToActual(targetSchema, sourceSchema);
 
-
         renderer.executeSQLStatements(sql);
-        
+
         System.out.println("Render tables creation for Geoserver finished");
 
         System.out.println("Start copying symbols into user-dir..");
@@ -79,23 +96,25 @@ public class OHDM2Geoserverrendering {
             System.out.println("CSS and symbolfiles has been created successfully.");
         }
 
+        System.out.println("Start transforming epsg-system..");
+        renderer.transformEpsg(sql, targetSchema, PSEUDO_MERCATOR_EPSG);
     }
 
     void loadSQLFiles(){
-            System.out.println("Load SQL-Files...");
+        System.out.println("Load SQL-Files...");
 
-            admin_labels_sql = loadSqlFromResources("resources/sqls/admin_labels.sql");
-            amenities_sql = loadSqlFromResources("resources/sqls/amenities.sql");
-            boundaries_sql = loadSqlFromResources("resources/sqls/boundaries.sql");
-            buildings_sql = loadSqlFromResources("resources/sqls/buildings.sql");
-            housenumbers_sql = loadSqlFromResources("resources/sqls/housenumbers.sql");
-            landusages_sql = loadSqlFromResources("resources/sqls/landusages.sql");
-            places_sql = loadSqlFromResources("resources/sqls/places.sql");
-            roads_sql  = loadSqlFromResources("resources/sqls/roads.sql");
-            transport_areas_sql = loadSqlFromResources("resources/sqls/transport_areas.sql");
-            transport_points_sql = loadSqlFromResources("resources/sqls/transport_points.sql");
-            waterarea_sql = loadSqlFromResources("resources/sqls/waterarea.sql");
-            waterways_sql = loadSqlFromResources("resources/sqls/waterways.sql");
+        admin_labels_sql = loadSqlFromResources("resources/sqls/admin_labels.sql");
+        amenities_sql = loadSqlFromResources("resources/sqls/amenities.sql");
+        boundaries_sql = loadSqlFromResources("resources/sqls/boundaries.sql");
+        buildings_sql = loadSqlFromResources("resources/sqls/buildings.sql");
+        housenumbers_sql = loadSqlFromResources("resources/sqls/housenumbers.sql");
+        landusages_sql = loadSqlFromResources("resources/sqls/landusages.sql");
+        places_sql = loadSqlFromResources("resources/sqls/places.sql");
+        roads_sql  = loadSqlFromResources("resources/sqls/roads.sql");
+        transport_areas_sql = loadSqlFromResources("resources/sqls/transport_areas.sql");
+        transport_points_sql = loadSqlFromResources("resources/sqls/transport_points.sql");
+        waterarea_sql = loadSqlFromResources("resources/sqls/waterarea.sql");
+        waterways_sql = loadSqlFromResources("resources/sqls/waterways.sql");
 
         defaultSQLStatementList.add(admin_labels_sql);
         defaultSQLStatementList.add(amenities_sql);
@@ -128,17 +147,17 @@ public class OHDM2Geoserverrendering {
         float eachPercentage = 100/actualSQLStatementList.size();
         float currentPercentage = 0;
 
-            for(String statement: actualSQLStatementList){
-                sql.append(statement);
-                try {
-                    sql.forceExecute();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-                sql.resetStatement();
-                currentPercentage = currentPercentage + eachPercentage;
-                System.out.println(currentPercentage + " % finished.");
+        for(String statement: actualSQLStatementList){
+            sql.append(statement);
+            try {
+                sql.forceExecute();
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
+            sql.resetStatement();
+            currentPercentage = currentPercentage + eachPercentage;
+            System.out.println(currentPercentage + " % finished.");
+        }
 
 
         System.out.println("100 % finished.");
@@ -323,4 +342,59 @@ public class OHDM2Geoserverrendering {
         return symbolFiles && cssFiles;
     }
 
+    /**
+     * Transforms the geometrys to the given epsg-code format
+     * @param sql
+     * @param targetSchema
+     * @param epsgCode Target epsg code
+     */
+    public void transformEpsg(SQLStatementQueue sql, String targetSchema, String epsgCode){
+        System.out.println("Transforming EPSG System (4326 -> " + epsgCode +  ") ...");
+
+        String fullName = "";
+        String geometryName = "";
+
+        int errorCounter = 0;
+
+        List<String> tables = new ArrayList<>();
+        tables.add(MY_HOUSENUMBERS);
+        tables.add(MY_ADMIN_LABELS);
+        tables.add(MY_BOUNDARIES);
+        tables.add(MY_BUILDINGS);
+        tables.add(MY_AMENITIES);
+        tables.add(MY_LANDUSAGES);
+        tables.add(MY_PLACES);
+        tables.add(MY_ROADS);
+        tables.add(MY_TRANSPORT_AREAS);
+        tables.add(MY_TRANSPORT_POINTS);
+        tables.add(MY_WATERAREA);
+        tables.add(MY_WATERWAYS);
+
+        for(String table : tables){
+            try {
+
+                fullName = targetSchema + "." + table;
+
+                System.out.println("Do transform: " + fullName);
+
+                sql.append("UPDATE ");
+                sql.append(fullName);
+                sql.append(" SET ");
+                sql.append("geometry");
+                sql.append(" = ST_TRANSFORM(");
+                sql.append("geometry");
+                sql.append(", 3857);");
+
+                sql.forceExecute();
+                sql.resetStatement();
+
+            } catch (SQLException e) {
+                System.err.println("Could not transform table '" + fullName + "' with geometrytype '" + geometryName + "'.");
+                System.err.println("= >Exception: " + e.getClass().getSimpleName());
+                e.printStackTrace();
+                errorCounter++;
+            }
+        }
+        System.out.println("Transforming finished with " + errorCounter + " errors.");
+    }
 }

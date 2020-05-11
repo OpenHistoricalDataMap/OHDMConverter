@@ -437,8 +437,8 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
         this.upperID = this.initialUpperID;
 
         // for statistics output
-        this.upperIDString = Util.setDotsInStringValue(this.upperID.toPlainString());
-        this.lowerIDString = Util.setDotsInStringValue(lowerID.toPlainString());
+        this.upperIDString = Util.setCommasInStringValue(this.upperID.toPlainString());
+        this.lowerIDString = Util.setCommasInStringValue(lowerID.toPlainString());
 
         System.out.println("Start importing entites from " + elementTableName);
         System.out.println("with ID within [" + fromID + ", " + toID + "]");
@@ -496,8 +496,8 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
                     lastRound = true;
                 }
                 
-                this.upperIDString = Util.setDotsInStringValue(this.upperID.toPlainString());
-                this.lowerIDString = Util.setDotsInStringValue(lowerID.toPlainString());
+                this.upperIDString = Util.setCommasInStringValue(this.upperID.toPlainString());
+                this.lowerIDString = Util.setCommasInStringValue(lowerID.toPlainString());
 
             } while(again);
         } 
@@ -589,14 +589,16 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
     
     private long lastCheckedEntities = 0;
     private long lastCheckTime;
-    
+    private long numberRoundsNoProgress = 0;
+    private static final long MAX_NUMBER_NO_PROGRESS = 10;
+
     public String getStatistics() {
         try {
             Thread.sleep(2000); // ??
         } catch (InterruptedException ex) {
             Logger.getLogger(OSMExtractor.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         StringBuilder sb = new StringBuilder();
 
         /*
@@ -621,129 +623,146 @@ public class OSMExtractor extends IntermediateDB implements TriggerRecipient {
         sb.append(this.lowerIDString);
         sb.append(" =< current range < ");
         sb.append(this.upperIDString);
-        sb.append(") | read steps: " + Util.getValueWithDots(this.steplen));
+        sb.append(") | read steps: " + Util.getValueWithCommas(this.steplen));
         sb.append("\n");
-        
-        long newCheckedEntities =  this.numberCheckedNodes + this.numberCheckedWays + this.numberCheckedRelations;
+
+        long newCheckedEntities = this.numberCheckedNodes + this.numberCheckedWays + this.numberCheckedRelations;
         long diffCheckedEntities = newCheckedEntities - this.lastCheckedEntities;
         this.lastCheckedEntities = newCheckedEntities;
-        
+
         //////////////////////////////////////////////////////////////////////
         //                             checked                              //
         //////////////////////////////////////////////////////////////////////
         sb.append("checked : ");
-        sb.append(Util.getValueWithDots(this.lastCheckedEntities));
+        sb.append(Util.getValueWithCommas(this.lastCheckedEntities));
         sb.append(" (n:");
-        sb.append(Util.getValueWithDots(this.numberCheckedNodes));
-        sb.append(",w:");
-        sb.append(Util.getValueWithDots(this.numberCheckedWays));
-        sb.append(",r:");
-        sb.append(Util.getValueWithDots(this.numberCheckedRelations));
+        sb.append(Util.getValueWithCommas(this.numberCheckedNodes));
+        sb.append(" | w:");
+        sb.append(Util.getValueWithCommas(this.numberCheckedWays));
+        sb.append(" | r:");
+        sb.append(Util.getValueWithCommas(this.numberCheckedRelations));
         sb.append(")\n");
 
         //////////////////////////////////////////////////////////////////////
         //                             imported                             //
         //////////////////////////////////////////////////////////////////////
         sb.append("imported: ");
-        sb.append(Util.getValueWithDots(this.numberImportedNodes + this.numberImportedWays + this.numberImportedRelations));
+        sb.append(Util.getValueWithCommas(this.numberImportedNodes + this.numberImportedWays + this.numberImportedRelations));
         sb.append(" (n:");
-        sb.append(Util.getValueWithDots(this.numberImportedNodes));
-        sb.append(",w:");
-        sb.append(Util.getValueWithDots(this.numberImportedWays));
-        sb.append(",r:");
-        sb.append(Util.getValueWithDots(this.numberImportedRelations));
+        sb.append(Util.getValueWithCommas(this.numberImportedNodes));
+        sb.append(" | w:");
+        sb.append(Util.getValueWithCommas(this.numberImportedWays));
+        sb.append(" | r:");
+        sb.append(Util.getValueWithCommas(this.numberImportedRelations));
         sb.append(") ");
-        
+
         sb.append("historic: ");
-        sb.append(Util.getValueWithDots(this.historicInfos));
+        sb.append(Util.getValueWithCommas(this.historicInfos));
         sb.append(" | elapsed: ");
         sb.append(Util.getElapsedTime(this.startTime));
         sb.append("\n");
-        
-        
+
+
         //////////////////////////////////////////////////////////////////////
         //                          new / speed                             //
         //////////////////////////////////////////////////////////////////////
-        
+
         this.lastCheckTime = this.lastCheckTime > 0 ? this.lastCheckTime : this.startTime;
         long now = System.currentTimeMillis();
         long diffTime = now - this.lastCheckTime;
         this.lastCheckTime = now;
-        
-        long diffInSeconds = diffTime / 1000;
-        long speed = 0;
-        if(diffInSeconds > 0) {
-            speed = diffCheckedEntities / diffInSeconds;
-        }
-        if(speed > 0) {
-            sb.append("new     : ");
-            sb.append(Util.getValueWithDots(diffCheckedEntities));
-            sb.append(" | ");
-            sb.append(speed);
-            sb.append(" per sec ");
-            
-            if(speed > 0 && !this.nodesTableEntries.equalsIgnoreCase("?")) {
-                String currentEntriesMaxString;
-                long readEntities = 0;
 
-                if(this.waysTableEntries.equalsIgnoreCase("?")) {
-                    currentEntriesMaxString = this.nodesTableEntries;
-                    readEntities = this.numberCheckedNodes;
-                } else if(this.relationsTableEntries.equalsIgnoreCase("?")) {
-                    currentEntriesMaxString = this.waysTableEntries;
-                    readEntities = this.numberCheckedWays;
-                } else {
-                    currentEntriesMaxString = this.relationsTableEntries;
-                    readEntities = this.numberCheckedRelations;
+        long diffInSeconds = diffTime / 1000;
+
+        if (diffCheckedEntities == 0) {
+            // no progress
+            this.numberRoundsNoProgress++;
+            sb.append("no progress since last statistics (#rounds: ");
+            sb.append(this.numberRoundsNoProgress);
+            sb.append(" / ");
+            sb.append(MAX_NUMBER_NO_PROGRESS);
+            sb.append(")\n");
+
+            if(numberRoundsNoProgress >= MAX_NUMBER_NO_PROGRESS) {
+                sb.append("Should kill this process - seems to be dead\n");
+            }
+        } else {
+            // there is progress
+            this.numberRoundsNoProgress = 0;
+            long speed = 0;
+            if (diffInSeconds > 0) {
+                speed = diffCheckedEntities / diffInSeconds;
+            }
+            if (speed > 0) {
+                sb.append("new     : ");
+                sb.append(Util.getValueWithCommas(diffCheckedEntities));
+                sb.append(" | ");
+                sb.append(speed);
+                sb.append(" per sec ");
+
+                if (speed > 0 && !this.nodesTableEntries.equalsIgnoreCase("?")) {
+                    String currentEntriesMaxString;
+                    long readEntities = 0;
+
+                    if (this.waysTableEntries.equalsIgnoreCase("?")) {
+                        currentEntriesMaxString = this.nodesTableEntries;
+                        readEntities = this.numberCheckedNodes;
+                    } else if (this.relationsTableEntries.equalsIgnoreCase("?")) {
+                        currentEntriesMaxString = this.waysTableEntries;
+                        readEntities = this.numberCheckedWays;
+                    } else {
+                        currentEntriesMaxString = this.relationsTableEntries;
+                        readEntities = this.numberCheckedRelations;
+                    }
+
+                    long maxID = Long.parseLong(currentEntriesMaxString);
+
+                    //                long remains = maxID - readEntities;
+                        /* calculate with upper boundary and not read items
+                        a reasonable number of items are dropped
+                         */
+                    long remains = maxID - this.upperID.longValue();
+
+                    long eta = (remains / speed);
+
+                    sb.append(" | eta: ");
+                    sb.append(Util.getTimeString(eta));
+                }
+                sb.append("\n");
+
+                long avgTime = getAndResetAvgTime(TIME_SELECT_ELEMENTS);
+                sb.append("avg time: ");
+                sb.append("select (" + Util.getValueWithCommas(this.steplen) + "): ");
+                sb.append(Util.getValueWithCommas(avgTime));
+                sb.append(" ms ");
+
+                avgTime = getAndResetAvgTime(TIME_PROCESS_ELEMENTS);
+                if (avgTime > -1) {
+                    sb.append(" | ");
+                    sb.append("process(" + this.avgTimeScale + "): ");
+                    sb.append(Util.getValueWithCommas(avgTime));
+                    sb.append(" ms ");
                 }
 
-                long maxID = Long.parseLong(currentEntriesMaxString);
+                sb.append("\n");
+                sb.append("          ");
+                avgTime = getAndResetAvgTime(TIME_ADD_NODES);
+                if (avgTime > -1) {
+                    sb.append("addNodes(" + this.avgTimeScale + "): ");
+                    sb.append(Util.getValueWithCommas(avgTime));
+                    sb.append(" ms ");
+                }
 
-//                long remains = maxID - readEntities;
-                /* calculate with upper boundary and not read items
-                a reasonable number of items are dropped
-                 */
-                long remains = maxID - this.upperID.longValue();
+                avgTime = getAndResetAvgTime(TIME_CREATE_NODE);
+                if (avgTime > -1) {
+                    sb.append(" | ");
+                    sb.append("createNode(" + this.avgTimeScale + "): ");
+                    sb.append(Util.getValueWithCommas(avgTime));
+                    sb.append(" ms ");
+                }
 
-                long eta = (remains / speed);
-                
-                sb.append(" | eta: ");
-                sb.append(Util.getTimeString(eta));
+                sb.append("\n");
             }
-            sb.append("\n");
-
-            long avgTime = getAndResetAvgTime(TIME_SELECT_ELEMENTS);
-            sb.append("avg time: ");
-            sb.append("select (" + Util.getValueWithDots(this.steplen) + "): ");
-            sb.append(Util.getValueWithDots(avgTime));
-            sb.append(" ms ");
-            
-            avgTime = getAndResetAvgTime(TIME_PROCESS_ELEMENTS);
-            if(avgTime > -1) { 
-                sb.append(" | ");
-                sb.append("process(" + this.avgTimeScale + "): ");
-                sb.append(Util.getValueWithDots(avgTime));
-                sb.append(" ms ");
-            }
-            
-            sb.append("\n");
-            sb.append("          ");
-            avgTime = getAndResetAvgTime(TIME_ADD_NODES);
-            if(avgTime > -1) { 
-                sb.append("addNodes(" + this.avgTimeScale + "): ");
-                sb.append(Util.getValueWithDots(avgTime));
-                sb.append(" ms ");
-            }
-            
-            avgTime = getAndResetAvgTime(TIME_CREATE_NODE);
-            if(avgTime > -1) { 
-                sb.append(" | ");
-                sb.append("createNode(" + this.avgTimeScale + "): ");
-                sb.append(Util.getValueWithDots(avgTime));
-                sb.append(" ms ");
-            }
-            
-            sb.append("\n");
         }
         
         return sb.toString();

@@ -236,7 +236,7 @@ public class Util {
         return s.toString();
     }
     
-    public static String setDotsInStringValue(String value) {
+    public static String setCommasInStringValue(String value) {
         if(value.length() <= 3) return value;
         
         StringBuilder s = new StringBuilder();
@@ -249,7 +249,7 @@ public class Util {
         int from = firstlength;
         while(from < value.length()) {
             if(from != 0) {
-                s.append(".");
+                s.append(",");
             }
             s.append(value.subSequence(from, from+3));
             from += 3;
@@ -258,7 +258,7 @@ public class Util {
         return s.toString();
     }
     
-    public static String getValueWithDots(long value) {
+    public static String getValueWithCommas(long value) {
         if(value < 1000) {
             return String.valueOf(value);
         }
@@ -269,12 +269,12 @@ public class Util {
         value /= 1000;
         
         while(value >= 1000) {
-            result = Util.getThreeDigitString(value % 1000) + "." + result;
+            result = Util.getThreeDigitString(value % 1000) + "," + result;
             value /= 1000;
         } 
         
         // finally
-        result = value + "." + result;
+        result = value + "," + result;
         return result;
     }
 

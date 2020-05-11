@@ -165,7 +165,7 @@ public class AbstractElement {
             
             if(serializedAttributes.substring(index).startsWith("0000")) {
                 index+=4;
-                System.err.println("null value for key (when deserializing attributes): " + key);
+                //System.err.println("null value for key (when deserializing attributes): " + key);
                 a.put(key, null);
             } else {
                 String value = this.unwrapStringWithLength(serializedAttributes, index);

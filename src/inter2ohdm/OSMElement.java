@@ -16,6 +16,9 @@ import util.SQLStatementQueue;
  * @author thsc
  */
 public abstract class OSMElement extends AbstractElement {
+    public static final String UNKNOWN_OSM_UID = "-1";
+    public static final String UNKNOWN_OSM_USER_NAME = "unknown";
+
     private final String osmIDString;
     private final String classCodeString;
     List<String> otherClassCodeList;
@@ -214,7 +217,7 @@ public abstract class OSMElement extends AbstractElement {
         
         return this.subClassName;
     }
-    
+
     private String uid = null;
     /**
      * return osm user id
@@ -225,7 +228,7 @@ public abstract class OSMElement extends AbstractElement {
             this.uid = this.getValue("uid");
 
             if(this.uid == null) {
-                this.uid = "-1";
+                this.uid = UNKNOWN_OSM_UID;
             }
         }
         
@@ -238,7 +241,7 @@ public abstract class OSMElement extends AbstractElement {
             this.username = this.getValue("user");
 
             if(this.username == null) {
-                this.username = "unknown";
+                this.username = UNKNOWN_OSM_USER_NAME;
             }
         }
         return this.username;

@@ -194,7 +194,7 @@ public class OHDMImporter extends Importer {
         1) Relation is stored as geometry only in two cases:
         
         a) that relation is a polygon but made up by several ways
-        b) is a multipolygone with holes
+        b) is a multipolygon with holes
         
         2) Otherwise, relation is stored as geoobject wit relations to 
         other geoobjects.

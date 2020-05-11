@@ -141,6 +141,8 @@ public class AbstractElement {
         return sAttributes.toString();
 
     }
+
+    private int missingUID_Name_Count = 0;
     
     protected final HashMap<String, String> deserializeAttributes(String serializedAttributes) {
         HashMap<String, String> a = new HashMap<>();
@@ -165,7 +167,15 @@ public class AbstractElement {
             
             if(serializedAttributes.substring(index).startsWith("0000")) {
                 index+=4;
-                //System.err.println("null value for key (when deserializing attributes): " + key);
+                if(!key.equalsIgnoreCase("uid") && key.equalsIgnoreCase("user")) {
+                    System.err.println("null value for key (when deserializing attributes): " + key);
+                } else {
+                    // too many of those failures.
+                    this.missingUID_Name_Count++;
+                    if(this.missingUID_Name_Count % 1000 == 1) {
+                        System.err.println("key uid or user have null value. Total number: " + this.missingUID_Name_Count);
+                    }
+                }
                 a.put(key, null);
             } else {
                 String value = this.unwrapStringWithLength(serializedAttributes, index);

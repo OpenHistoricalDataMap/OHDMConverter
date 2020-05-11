@@ -153,9 +153,9 @@ public class OSMChunkExtractorCommandBuilder {
                     do {
                         boolean parallel = false;
 
-                        if(to + effectiveSize*5 < cef.maxID && from > cef.minID) {
-                        /* last couple of processes are not parallel to end import of one
-                        entity before starting another one
+                        if(to + effectiveSize*3 < cef.maxID && from > cef.minID) {
+                        /* slow down process at the end of each geometry type to avoid overlaps
+                        with another type
                           */
                             if (parallelCounter < 0){
                                 // rewind

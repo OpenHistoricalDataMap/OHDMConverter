@@ -49,22 +49,25 @@ public class Polygon extends GeoObject {
             "waterway",
     };
 
-    public Polygon(long wayId, long geoobjectId, String name, String classificationClass, String classificationSubclassname, String tags, Date validSince, Date validUntil, String way) {
+    protected double wayArea;
+
+    public Polygon(long wayId, long geoobjectId, String name, String classificationClass, String classificationSubclassname, String tags, Date validSince, Date validUntil, double wayArea, String way) {
         super(wayId, geoobjectId, name, classificationClass, classificationSubclassname, tags, validSince, validUntil, way);
+        this.wayArea = wayArea;
     }
 
     @Override
     public String getMapnikQuery(String targetSchema) {
         /*
         INSERT INTO public.planet_osm_point(
-        id, osm_id, version, visible, geoobject, access, "addr:housename", "addr:housenumber", admin_level, aerialway, aeroway, amenity, barrier, boundary, building, highway, historic, junction, landuse, layer, leisure, lock, man_made, military, name, "natural", oneway, place, power, railway, ref, religion, shop, tourism, water, waterway, tags, way, valid_since, valid_until)
+        id, osm_id, version, visible, geoobject, access, "addr:housename", "addr:housenumber", admin_level, aerialway, aeroway, amenity, barrier, boundary, building, highway, historic, junction, landuse, layer, leisure, lock, man_made, military, name, "natural", oneway, place, power, railway, ref, religion, shop, tourism, water, waterway, tags, way_area, way, valid_since, valid_until)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
          */
 
         super.tags.setZorderRoads();
 
         StringBuilder query = new StringBuilder("INSERT INTO " + targetSchema + ".planet_osm_polygon( ");
-        query.append("geoobject, layer, tags, way, valid_since, valid_until, z_order");
+        query.append("geoobject, layer, tags, way, way_area, valid_since, valid_until, z_order");
         for (int i = 0; i < fileds.length; i++) {
             query.append(", \"" + fileds[i] + "\"");
         }
@@ -84,19 +87,20 @@ public class Polygon extends GeoObject {
 
         // tags
         super.tags.cleanupTags();
-        query.append("\'");
+        query.append("'");
         query.append(super.tags.getHstoreTags());
-        query.append("\', ");
+        query.append("', ");
 
         // geometry
-        query.append("\'" + super.way + "\', ");
+        query.append("'" + super.way + "', ");
+        query.append("'" + this.wayArea + "', ");
 
         // valid range
-        query.append("\'");
+        query.append("'");
         query.append(super.validSince.toString());
-        query.append("\', \'");
+        query.append("', '");
         query.append(super.validUntil.toString());
-        query.append("\'");
+        query.append("'");
 
         // z_order
         query.append(", " + super.tags.getzOrder());
@@ -107,7 +111,7 @@ public class Polygon extends GeoObject {
             if (value.equals("NULL")) {
                 query.append(", NULL");
             } else {
-                query.append(", \'" + value + "\'");
+                query.append(", '" + value + "'");
             }
         }
 

@@ -65,7 +65,7 @@ public class Line extends GeoObject {
 
         StringBuilder query = new StringBuilder("INSERT INTO " + targetSchema + ".planet_osm_line( ");
         query.append("geoobject, layer, tags, way, valid_since, valid_until, z_order");
-        for(int i = 0; i< fileds.length; i++){
+        for (int i = 0; i < fileds.length; i++) {
             query.append(", \"" + fileds[i] + "\"");
         }
         query.append(") VALUES (");
@@ -84,30 +84,30 @@ public class Line extends GeoObject {
 
         // tags
         super.tags.cleanupTags();
-        query.append("\'");
+        query.append("'");
         query.append(super.tags.getHstoreTags());
-        query.append("\', ");
+        query.append("', ");
 
         // geometry
-        query.append("\'" + super.way + "\', ");
+        query.append("'" + super.way + "', ");
 
         // valid range
-        query.append("\'");
+        query.append("'");
         query.append(super.validSince.toString());
-        query.append("\', \'");
+        query.append("', '");
         query.append(super.validUntil.toString());
-        query.append("\'");
+        query.append("'");
 
         // z_order
         query.append(", " + super.tags.getzOrder());
 
         // fields
-        for(int i = 0; i< fileds.length; i++){
+        for (int i = 0; i < fileds.length; i++) {
             String value = super.tags.get(fileds[i]);
             if (value.equals("NULL")) {
                 query.append(", NULL");
             } else {
-                query.append(", \'" + value + "\'");
+                query.append(", '" + value + "'");
             }
         }
 
@@ -118,7 +118,7 @@ public class Line extends GeoObject {
         String roadsQuery = "";
         if (tags.isRoads()) {
             roadsQuery = query.toString();
-            roadsQuery = roadsQuery.replace(".planet_osm_line( ",".planet_osm_roads( ");
+            roadsQuery = roadsQuery.replace(".planet_osm_line( ", ".planet_osm_roads( ");
         }
 
         return query.toString() + roadsQuery;

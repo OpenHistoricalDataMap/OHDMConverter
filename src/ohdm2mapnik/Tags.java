@@ -160,7 +160,7 @@ public class Tags {
             String value = this.tags.get(key);
 
             // remove unused prefix
-            for(int i = 0; i< deletePrefixes.length; i++){
+            for (int i = 0; i < deletePrefixes.length; i++) {
                 if (key.startsWith(deletePrefixes[i])) {
                     key = key.replace(deletePrefixes[i], "");
                     continue;
@@ -168,7 +168,7 @@ public class Tags {
             }
 
             // remove unused tags
-            for(int i = 0; i< deleteTags.length; i++){
+            for (int i = 0; i < deleteTags.length; i++) {
                 if (key.equals(deleteTags[i])) {
                     key = "";
                     break;
@@ -356,7 +356,7 @@ public class Tags {
             return "";
         }
 
-        StringBuilder hstoreTags = new StringBuilder("");
+        StringBuilder hstoreTags = new StringBuilder();
         for (String key : this.tags.keySet()) {
             hstoreTags.append("\"" + key + "\"=>\"" + this.tags.get(key) + "\", ");
         }

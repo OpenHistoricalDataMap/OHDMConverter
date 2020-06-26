@@ -1,0 +1,1452 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version='0.6' generator='JOSM'>
+  <node id='-107536' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.03768432345' lon='-0.05309043329'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='04-TC' />
+   
+  </node>
+  <node id='-107538' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.03750466043' lon='-0.03449530691'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='05-TC' />
+   
+  </node>
+  <node id='-107540' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.03849280703' lon='-0.02120024071'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='06-TC' />
+   
+  </node>
+  <node id='-107542' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.03885213306' lon='-0.00763567992'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='07-TCV2' />
+   
+  </node>
+  <node id='-107544' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.03885213306' lon='0.0085339952'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='08-TCV2' />
+   
+  </node>
+  <node id='-107546' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.02560207458' lon='-0.059019404'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107548' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.0286563462' lon='-0.05389900688'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107550' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.0252427485' lon='-0.04626332696'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107552' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.02650038977' lon='-0.03799882635'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107554' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.02425460178' lon='-0.03296826076'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107556' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.02650038000' lon='-0.02838685000'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107558' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.02676988432' lon='-0.02057150984'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107560' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.02461392786' lon='-0.01329515604'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107562' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.02676988432' lon='-0.00619846529'>
+    <tag k='building' v='apartments' />
+	
+  </node>
+  <node id='-207562' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.01676988432' lon='-0.01619846529'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107564' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.02641055825' lon='0.01679840598'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107566' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.02560207458' lon='0.02182897157'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-207566' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.02760207458' lon='0.02582897157'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107568' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.02676988432' lon='0.02838667315'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107570' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.01841555284' lon='-0.03790899482'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107572' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.01607993321' lon='-0.03359708146'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107574' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.01859521589' lon='-0.02820718975'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107576' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.01895454198' lon='-0.0188647108'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107578' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.01616976473' lon='-0.01356465062'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107580' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.0194036996' lon='-0.00691711752'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107582' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.01994268874' lon='0.00287451908'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107584' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.01563077558' lon='0.00871356842'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107586' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.01922403655' lon='0.01419329166'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107588' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.02721904192' lon='-0.00026958442'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107590' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.02470375938' lon='0.00601862257'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107594' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.0069171175' lon='-0.05866007788'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107596' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.00026940475' lon='-0.05883974094'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107598' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.00026940475' lon='-0.04949726199'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107600' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.00709678056' lon='-0.04958709351'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107604' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.00026940475' lon='-0.03763950024'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107606' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.00053889934' lon='-0.0280275267'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107610' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.00934693183' lon='-0.01322140604'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107612' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.00548417614' lon='-0.01295191145'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107614' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.00584350226' lon='-0.00765185128'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107616' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.00970625795' lon='-0.00783151434'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107618' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.00637812834' lon='0.00287451908'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107622' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.0011678997' lon='0.01006104135'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107624' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.00655779139' lon='0.00970171524'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107626' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.00700694903' lon='0.02012217253'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107628' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.00125773123' lon='0.02021200406'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107630' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.0011678997' lon='0.02667987411'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107632' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.00727644361' lon='0.02694936869'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107634' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.00709678056' lon='0.03099178747'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107636' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.00098823664' lon='0.03135111358'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107638' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.00125773123' lon='0.03889696197'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107640' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.00745610667' lon='0.03826814127'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-107650' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.01455261761' lon='-0.02048167831'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='27-TC' />
+   
+  </node>
+  <node id='-107652' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.01464244914' lon='-0.01446296591'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='27-TC' />
+   
+  </node>
+  <node id='-107654' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.00898306297' lon='-0.01437313438'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='27-TC' />
+   
+  </node>
+  <node id='-107656' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.00862373686' lon='-0.01976302608'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='27-TC' />
+   
+  </node>
+  <node id='-107658' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.02614088403' lon='-0.0552464798'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='39-TC' />
+   
+    <tag k='wohnkomplex' v='1' />
+  </node>
+  <node id='-107660' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.02919515564' lon='-0.05515664828'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='39-TC' />
+   
+    <tag k='wohnkomplex' v='1' />
+  </node>
+  <node id='-107662' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.02919515564' lon='-0.04877860976'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='39-TC' />
+   
+    <tag k='wohnkomplex' v='1' />
+  </node>
+  <node id='-107664' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.02596122099' lon='-0.04904810434'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='39-TC' />
+   
+    <tag k='wohnkomplex' v='1' />
+  </node>
+  <node id='-107666' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.03458504651' lon='-0.05632445815'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='39-TC' />
+   
+    <tag k='wohnkomplex' v='1' />
+  </node>
+  <node id='-107668' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.03278841625' lon='-0.05246170242'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='39-TC' />
+   
+    <tag k='wohnkomplex' v='1' />
+  </node>
+  <node id='-107670' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.03692066579' lon='-0.0523718709'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='39-TC' />
+   
+    <tag k='wohnkomplex' v='1' />
+  </node>
+  <node id='-107672' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.03575285616' lon='-0.04850911517'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='39-TC' />
+   
+    <tag k='wohnkomplex' v='1' />
+  </node>
+  <node id='-107674' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.03045279687' lon='-0.04617349544'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='39-TC' />
+   
+    <tag k='wohnkomplex' v='1' />
+  </node>
+  <node id='-107694' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.02829684047' lon='-0.00633321258'>
+    <tag k='building' v='school' />
+    <tag k='name' v='28-TC' />
+   
+    <tag k='wohnkomplex' v='3' />
+  </node>
+  <node id='-107696' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.02650021011' lon='-0.00247045686'>
+    <tag k='building' v='school' />
+    <tag k='name' v='28-TC' />
+   
+    <tag k='wohnkomplex' v='3' />
+  </node>
+  <node id='-107698' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.0306324599' lon='-0.00238062533'>
+    <tag k='building' v='school' />
+    <tag k='name' v='28-TC' />
+   
+    <tag k='wohnkomplex' v='3' />
+  </node>
+  <node id='-107700' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.02946465019' lon='0.00148213039'>
+    <tag k='building' v='school' />
+    <tag k='name' v='28-TC' />
+   
+    <tag k='wohnkomplex' v='3' />
+  </node>
+  <node id='-107702' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.0229069493' lon='-0.00516540272'>
+    <tag k='building' v='school' />
+    <tag k='name' v='28-TC' />
+   
+  </node>
+  <node id='-107704' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.01985267755' lon='-0.00525523424'>
+    <tag k='building' v='school' />
+    <tag k='name' v='28-TC' />
+   
+  </node>
+  <node id='-107706' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.02416459059' lon='0.00381775013'>
+    <tag k='building' v='school' />
+    <tag k='name' v='28-TC' />
+   
+    <tag k='wohnkomplex' v='3' />
+  </node>
+  <node id='-107708' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.0229069493' lon='0.0012126358'>
+    <tag k='building' v='school' />
+    <tag k='name' v='28-TC' />
+   
+  </node>
+  <node id='-107710' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.0196730145' lon='0.00094314122'>
+    <tag k='building' v='school' />
+    <tag k='name' v='28-TC' />
+   
+  </node>
+  <node id='-107712' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.02883582957' lon='0.0170229848'>
+    <tag k='building' v='apartments' />
+   
+    <tag k='wohnkomplex' v='29-TCV2' />
+  </node>
+  <node id='-107714' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.02703919922' lon='0.02088574052'>
+    <tag k='building' v='apartments' />
+   
+    <tag k='wohnkomplex' v='29-TCV2' />
+  </node>
+  <node id='-107716' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.03117144899' lon='0.02097557205'>
+    <tag k='building' v='apartments' />
+   
+    <tag k='wohnkomplex' v='29-TCV2' />
+  </node>
+  <node id='-107718' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.03000363929' lon='0.02483832777'>
+    <tag k='building' v='apartments' />
+   
+    <tag k='wohnkomplex' v='29-TCV2' />
+  </node>
+  <node id='-107720' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.02344593843' lon='0.01819079467'>
+    <tag k='building' v='apartments' />
+   
+    <tag k='wohnkomplex' v='29-TCV2' />
+  </node>
+  <node id='-107722' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.02039166669' lon='0.01810096314'>
+    <tag k='building' v='apartments' />
+   
+    <tag k='wohnkomplex' v='29-TCV2' />
+  </node>
+  <node id='-107724' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.02470357972' lon='0.02717394751'>
+    <tag k='building' v='apartments' />
+   
+    <tag k='wohnkomplex' v='29-TCV2' />
+  </node>
+  <node id='-107726' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.02344593843' lon='0.02456883319'>
+    <tag k='building' v='apartments' />
+   
+    <tag k='wohnkomplex' v='29-TCV2' />
+  </node>
+  <node id='-107728' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.02021200364' lon='0.0242993386'>
+    <tag k='building' v='apartments' />
+   
+    <tag k='wohnkomplex' v='29-TCV2' />
+  </node>
+  <node id='-107730' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05560534803' lon='-0.05574082271'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='30-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107732' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05380871828' lon='-0.05187806698'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='30-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107734' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05794096662' lon='-0.05178823546'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='30-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107736' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05677315734' lon='-0.04792547973'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='30-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107738' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05021545863' lon='-0.05457301284'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='30-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107740' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.04716118776' lon='-0.05466284436'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='30-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107742' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05147309953' lon='-0.04558986'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='30-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107744' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05021545863' lon='-0.04819497432'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='30-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107746' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.04698152477' lon='-0.0484644689'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='30-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107748' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05524602209' lon='-0.02951001641'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='31-TC' />
+   
+    <tag k='wohnkomplex' v='6' />
+  </node>
+  <node id='-107750' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05344939233' lon='-0.02564726069'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='31-TC' />
+   
+    <tag k='wohnkomplex' v='6' />
+  </node>
+  <node id='-107752' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05758164069' lon='-0.02555742916'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='31-TC' />
+   
+    <tag k='wohnkomplex' v='6' />
+  </node>
+  <node id='-107754' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.0564138314' lon='-0.02169467344'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='31-TC' />
+   
+    <tag k='wohnkomplex' v='6' />
+  </node>
+  <node id='-107756' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.04985613265' lon='-0.02834220654'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='31-TC' />
+   
+    <tag k='wohnkomplex' v='6' />
+  </node>
+  <node id='-107758' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.04680186177' lon='-0.02843203807'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='31-TC' />
+   
+    <tag k='wohnkomplex' v='6' />
+  </node>
+  <node id='-107760' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05111377356' lon='-0.0193590537'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='31-TC' />
+   
+    <tag k='wohnkomplex' v='6' />
+  </node>
+  <node id='-107762' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.04985613265' lon='-0.02196416802'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='31-TC' />
+   
+    <tag k='wohnkomplex' v='6' />
+  </node>
+  <node id='-107764' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.04662219877' lon='-0.02223366261'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='31-TC' />
+   
+    <tag k='wohnkomplex' v='6' />
+  </node>
+  <node id='-107766' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05596467398' lon='-0.00687247125'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='32-TC' />
+   
+    <tag k='wohnkomplex' v='7' />
+  </node>
+  <node id='-107768' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05416804424' lon='-0.00300971553'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='32-TC' />
+   
+    <tag k='wohnkomplex' v='7' />
+  </node>
+  <node id='-107770' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05830029255' lon='-0.002919884'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='32-TC' />
+   
+    <tag k='wohnkomplex' v='7' />
+  </node>
+  <node id='-107772' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05713248328' lon='0.00094287172'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='32-TC' />
+   
+    <tag k='wohnkomplex' v='7' />
+  </node>
+  <node id='-107774' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.0505747846' lon='-0.00570466138'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='32-TC' />
+   
+    <tag k='wohnkomplex' v='7' />
+  </node>
+  <node id='-107776' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.04752051376' lon='-0.00579449291'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='32-TC' />
+   
+    <tag k='wohnkomplex' v='7' />
+  </node>
+  <node id='-107778' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.0518324255' lon='0.00327849146'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='32-TC' />
+   
+    <tag k='wohnkomplex' v='7' />
+  </node>
+  <node id='-107780' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.0505747846' lon='0.00067337714'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='32-TC' />
+   
+    <tag k='wohnkomplex' v='7' />
+  </node>
+  <node id='-107782' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.04734085076' lon='0.00040388255'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='32-TC' />
+   
+    <tag k='wohnkomplex' v='7' />
+  </node>
+  <node id='-107784' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05401485952' lon='0.01810672729'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='33-TC' />
+   
+    <tag k='wohnkomplex' v='8' />
+  </node>
+  <node id='-107786' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05221822972' lon='0.02196948301'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='33-TC' />
+   
+    <tag k='wohnkomplex' v='8' />
+  </node>
+  <node id='-107788' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05635047817' lon='0.02205931454'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='33-TC' />
+   
+    <tag k='wohnkomplex' v='8' />
+  </node>
+  <node id='-107790' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05518266886' lon='0.02592207026'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='33-TC' />
+   
+    <tag k='wohnkomplex' v='8' />
+  </node>
+  <node id='-107792' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.0505747846' lon='0.01908884046'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='33-TC' />
+   
+    <tag k='wohnkomplex' v='8' />
+  </node>
+  <node id='-107794' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.04752051376' lon='0.01899900893'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='33-TC' />
+   
+    <tag k='wohnkomplex' v='8' />
+  </node>
+  <node id='-107796' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.0518324255' lon='0.0280719933'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='33-TC' />
+   
+    <tag k='wohnkomplex' v='8' />
+  </node>
+  <node id='-107798' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.0505747846' lon='0.02546687898'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='33-TC' />
+   
+    <tag k='wohnkomplex' v='8' />
+  </node>
+  <node id='-107800' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.04734085076' lon='0.02519738439'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='33-TC' />
+   
+    <tag k='wohnkomplex' v='8' />
+  </node>
+  <node id='-107806' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07799420626' lon='-0.05168065194'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='34-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107808' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07403626199' lon='-0.05837460923'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='34-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107810' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07098199246' lon='-0.05846444075'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='34-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107812' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07269415067' lon='-0.04934503221'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='34-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107814' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07403626199' lon='-0.05199657071'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='34-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107816' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07080232955' lon='-0.05226606529'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='34-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107818' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07682639746' lon='-0.05949599492'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='34-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107820' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07502976847' lon='-0.05563323919'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='34-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107822' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07916201503' lon='-0.05554340767'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='34-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107824' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07668512744' lon='-0.02250686863'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='35-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107826' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07012743125' lon='-0.02915440174'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='35-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107828' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.06707316147' lon='-0.02924423326'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='35-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107830' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07166361652' lon='-0.02453512137'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='35-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107832' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07012743125' lon='-0.02277636322'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='35-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107834' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.06689349854' lon='-0.0230458578'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='35-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107836' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.0755173186' lon='-0.03032221161'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='35-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107838' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07372068955' lon='-0.02645945588'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='35-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107840' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07785293624' lon='-0.02636962436'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='35-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107842' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07724616123' lon='0.00273967461'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='36-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107848' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07194610554' lon='0.00507529434'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='36-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107854' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.0760783524' lon='-0.00507566837'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='36-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107856' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07428172338' lon='-0.00121291264'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='36-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107858' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07841397001' lon='-0.00112308112'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='36-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107860' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07649811617' lon='0.027612195'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='37-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107862' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.06994041996' lon='0.02096466189'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='37-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107864' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.06688615016' lon='0.02087483037'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='37-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107868' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.06994041996' lon='0.02734270041'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='37-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107870' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.06670648724' lon='0.02707320583'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='37-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107872' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07533030733' lon='0.01979685202'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='37-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107874' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07353367827' lon='0.02365960775'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='37-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107876' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.07766592498' lon='0.02374943927'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='37-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107880' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.08901556753' lon='-0.06206841368'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='38-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107882' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.08596129912' lon='-0.0621582452'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='38-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107884' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.09027320738' lon='-0.05308526084'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='38-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107886' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.08901556753' lon='-0.05569037516'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='38-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-107888' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.08578163627' lon='-0.05595986974'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='38-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-108007' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.00735671771' lon='-0.05746617844'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-108009' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.01418391375' lon='-0.0576458415'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-108011' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.01427374527' lon='-0.04857285713'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-108013' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.00726688618' lon='-0.04884235171'>
+    <tag k='building' v='apartments' />
+   
+  </node>
+  <node id='-108138' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.00724221774' lon='-0.02808667244'>
+   
+  </node>
+  <node id='-108141' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='0.00742791444' lon='-0.03723223496'>
+   
+  </node>
+  <node id='-108831' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.00624402834' lon='-0.01648060542'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='27-TC' />
+   
+  </node>
+  <node id='-109027' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05171647777' lon='-0.05069524578'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='30-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-109029' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05394483723' lon='-0.05060239743'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='30-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-109031' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05399126139' lon='-0.04781694692'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='30-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-109033' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05167005361' lon='-0.04767767439'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='30-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-109037' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.0539563498' lon='-0.04991164283'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='30-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </node>
+  <node id='-109066' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05013801001' lon='-0.0298972617'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='31-TC' />
+   
+    <tag k='wohnkomplex' v='6' />
+  </node>
+  <node id='-109068' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05264491446' lon='-0.02813314304'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='31-TC' />
+   
+    <tag k='wohnkomplex' v='6' />
+  </node>
+  <node id='-109070' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.04985613265' lon='-0.02562623758'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='31-TC' />
+   
+    <tag k='wohnkomplex' v='6' />
+  </node>
+  <node id='-109073' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05375909419' lon='-0.02274793871'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='31-TC' />
+   
+    <tag k='wohnkomplex' v='6' />
+  </node>
+  <node id='-109100' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true' lat='-0.05245921784' lon='-0.00547814553'>
+    <tag k='building' v='apartments' />
+    <tag k='name' v='32-TC' />
+   
+    <tag k='wohnkomplex' v='7' />
+  </node>
+  <way id='-109101' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107546' />
+    <nd ref='-107548' />
+    <nd ref='-107550' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='10-TC' />
+   
+  </way>
+  <way id='-109102' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107552' />
+    <nd ref='-107554' />
+    <nd ref='-107556' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='11-TC' />
+   
+  </way>
+  <way id='-109103' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107558' />
+    <nd ref='-107560' />
+    <nd ref='-107562' />
+	<nd ref='-207562' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='12-TC' />
+   
+  </way>
+  <way id='-109104' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107564' />
+    <nd ref='-107566' />
+	<nd ref='-207566' />
+    <nd ref='-107568' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='14-TC' />
+   
+  </way>
+  <way id='-109105' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107570' />
+    <nd ref='-107572' />
+    <nd ref='-107574' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='16-TC' />
+   
+  </way>
+  <way id='-109106' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107576' />
+    <nd ref='-107578' />
+    <nd ref='-107580' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='17-TC' />
+   
+  </way>
+  <way id='-109107' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107582' />
+    <nd ref='-107584' />
+    <nd ref='-107586' />
+    <tag k='building' v='school' />
+    <tag k='name' v='18-TC' />
+   
+  </way>
+  <way id='-109108' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107588' />
+    <nd ref='-107590' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='13-TC' />
+   
+  </way>
+  <way id='-109109' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107594' />
+    <nd ref='-107596' />
+    <nd ref='-107598' />
+    <nd ref='-107600' />
+    <nd ref='-107594' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='19-TC' />
+   
+  </way>
+  <way id='-109110' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107604' />
+    <nd ref='-107606' />
+    <nd ref='-108138' />
+    <nd ref='-108141' />
+    <nd ref='-107604' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='22-TC' />
+   
+  </way>
+  <way id='-109111' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107610' />
+    <nd ref='-107612' />
+    <nd ref='-107614' />
+    <nd ref='-107616' />
+    <nd ref='-107610' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='23-TC' />
+   
+  </way>
+  <way id='-109112' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107618' />
+    <nd ref='-107622' />
+    <nd ref='-107624' />
+    <nd ref='-107618' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='24-TC' />
+   
+  </way>
+  <way id='-109113' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107626' />
+    <nd ref='-107628' />
+    <nd ref='-107630' />
+    <nd ref='-107632' />
+    <nd ref='-107626' />
+    <tag k='building' v='school' />
+    <tag k='name' v='25-TC' />
+   
+  </way>
+  <way id='-109114' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107634' />
+    <nd ref='-107636' />
+    <nd ref='-107638' />
+    <nd ref='-107640' />
+    <nd ref='-107634' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='26-TCV2' />
+   
+  </way>
+  <way id='-109115' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107650' />
+    <nd ref='-107652' />
+    <nd ref='-107654' />
+    <nd ref='-107656' />
+    <nd ref='-107650' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='27-TC' />
+   
+  </way>
+  <way id='-109116' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107658' />
+    <nd ref='-107660' />
+    <nd ref='-107662' />
+    <nd ref='-107664' />
+    <nd ref='-107658' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='39-TC' />
+   
+    <tag k='wohnkomplex' v='1' />
+  </way>
+  <way id='-109117' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107666' />
+    <nd ref='-107668' />
+    <nd ref='-107670' />
+    <nd ref='-107672' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='39-TC' />
+   
+    <tag k='wohnkomplex' v='1' />
+  </way>
+  <way id='-109118' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107694' />
+    <nd ref='-107696' />
+    <nd ref='-107698' />
+    <nd ref='-107700' />
+    <tag k='building' v='school' />
+    <tag k='name' v='28-TC' />
+   
+    <tag k='wohnkomplex' v='3' />
+  </way>
+  <way id='-109119' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107704' />
+    <nd ref='-107702' />
+    <nd ref='-107708' />
+    <nd ref='-107710' />
+    <nd ref='-107704' />
+    <tag k='building' v='school' />
+    <tag k='name' v='28-TC' />
+   
+    <tag k='wohnkomplex' v='3' />
+  </way>
+  <way id='-109120' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107712' />
+    <nd ref='-107714' />
+    <nd ref='-107716' />
+    <nd ref='-107718' />
+    <tag k='building' v='apartments' />
+   
+    <tag k='wohnkomplex' v='29-TCV2' />
+  </way>
+  <way id='-109121' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107722' />
+    <nd ref='-107720' />
+    <nd ref='-107726' />
+    <nd ref='-107728' />
+    <nd ref='-107722' />
+    <tag k='building' v='apartments' />
+   
+    <tag k='wohnkomplex' v='29-TCV2' />
+  </way>
+  <way id='-109122' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107730' />
+    <nd ref='-107732' />
+    <nd ref='-107734' />
+    <nd ref='-107736' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='30-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </way>
+  <way id='-109123' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107740' />
+    <nd ref='-107738' />
+    <nd ref='-107744' />
+    <nd ref='-107746' />
+    <nd ref='-107740' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='30-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </way>
+  <way id='-109124' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107748' />
+    <nd ref='-107750' />
+    <nd ref='-107752' />
+    <nd ref='-107754' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='31-TC' />
+   
+    <tag k='wohnkomplex' v='6' />
+  </way>
+  <way id='-109125' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107758' />
+    <nd ref='-107756' />
+    <nd ref='-109070' />
+    <nd ref='-107762' />
+    <nd ref='-107764' />
+    <nd ref='-107758' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='31-TC' />
+   
+    <tag k='wohnkomplex' v='6' />
+  </way>
+  <way id='-109126' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107766' />
+    <nd ref='-107768' />
+    <nd ref='-107770' />
+    <nd ref='-107772' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='32-TC' />
+   
+    <tag k='wohnkomplex' v='7' />
+  </way>
+  <way id='-109127' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107776' />
+    <nd ref='-107774' />
+    <nd ref='-107780' />
+    <nd ref='-107782' />
+    <nd ref='-107776' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='32-TC' />
+   
+    <tag k='wohnkomplex' v='7' />
+  </way>
+  <way id='-109128' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107784' />
+    <nd ref='-107786' />
+    <nd ref='-107788' />
+    <nd ref='-107790' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='33-TC' />
+   
+    <tag k='wohnkomplex' v='8' />
+  </way>
+  <way id='-109129' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107794' />
+    <nd ref='-107792' />
+    <nd ref='-107798' />
+    <nd ref='-107800' />
+    <nd ref='-107794' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='33-TC' />
+   
+    <tag k='wohnkomplex' v='8' />
+  </way>
+  <way id='-109130' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107818' />
+    <nd ref='-107820' />
+    <nd ref='-107822' />
+    <nd ref='-107806' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='34-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </way>
+  <way id='-109131' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107810' />
+    <nd ref='-107808' />
+    <nd ref='-107814' />
+    <nd ref='-107816' />
+    <nd ref='-107810' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='34-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </way>
+  <way id='-109132' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107836' />
+    <nd ref='-107838' />
+    <nd ref='-107840' />
+    <nd ref='-107824' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='35-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </way>
+  <way id='-109133' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107828' />
+    <nd ref='-107826' />
+    <nd ref='-107832' />
+    <nd ref='-107834' />
+    <nd ref='-107828' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='35-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </way>
+  <way id='-109134' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107854' />
+    <nd ref='-107856' />
+    <nd ref='-107858' />
+    <nd ref='-107842' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='36-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </way>
+  <way id='-109135' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107872' />
+    <nd ref='-107874' />
+    <nd ref='-107876' />
+    <nd ref='-107860' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='37-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </way>
+  <way id='-109136' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107864' />
+    <nd ref='-107862' />
+    <nd ref='-107868' />
+    <nd ref='-107870' />
+    <nd ref='-107864' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='37-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </way>
+  <way id='-109137' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107882' />
+    <nd ref='-107880' />
+    <nd ref='-107886' />
+    <nd ref='-107888' />
+    <nd ref='-107882' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='38-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </way>
+  <way id='-109138' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-108007' />
+    <nd ref='-108009' />
+    <nd ref='-108011' />
+    <nd ref='-108013' />
+    <nd ref='-108007' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='21-TC' />
+   
+  </way>
+  <way id='-109139' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-107654' />
+    <nd ref='-107656' />
+    <nd ref='-108831' />
+    <nd ref='-107654' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='27-TC' />
+   
+  </way>
+  <way id='-109140' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-109027' />
+    <nd ref='-109029' />
+    <nd ref='-109037' />
+    <nd ref='-109031' />
+    <nd ref='-109033' />
+    <nd ref='-109027' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='30-TC' />
+   
+    <tag k='wohnkomplex' v='5' />
+  </way>
+  <way id='-109141' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <nd ref='-109066' />
+    <nd ref='-109068' />
+    <nd ref='-109070' />
+    <nd ref='-109073' />
+    <tag k='building' v='apartments' />
+    <tag k='name' v='31-TC' />
+   
+    <tag k='wohnkomplex' v='6' />
+  </way>
+  <relation id='-109142' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <member type='node' ref='-107672' role='' />
+    <member type='node' ref='-107662' role='' />
+    <member type='node' ref='-107668' role='' />
+    <member type='node' ref='-107674' role='' />
+    <member type='node' ref='-107658' role='' />
+    <member type='node' ref='-107664' role='' />
+    <member type='node' ref='-107670' role='' />
+    <member type='node' ref='-107660' role='' />
+    <member type='node' ref='-107666' role='' />
+    <member type='way' ref='-109117' role='' />
+    <member type='way' ref='-109116' role='' />
+  </relation>
+  <relation id='-109143' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+  </relation>
+  <relation id='-109144' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <member type='node' ref='-107704' role='' />
+    <member type='node' ref='-107694' role='' />
+    <member type='node' ref='-107700' role='' />
+    <member type='node' ref='-107710' role='' />
+    <member type='node' ref='-107696' role='' />
+    <member type='node' ref='-107706' role='' />
+    <member type='node' ref='-107702' role='' />
+    <member type='node' ref='-107698' role='' />
+    <member type='node' ref='-107708' role='' />
+    <member type='way' ref='-109119' role='' />
+    <member type='way' ref='-109118' role='' />
+  </relation>
+  <relation id='-109145' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <member type='node' ref='-107726' role='' />
+    <member type='node' ref='-107716' role='' />
+    <member type='node' ref='-107722' role='' />
+    <member type='node' ref='-107728' role='' />
+    <member type='node' ref='-107712' role='' />
+    <member type='node' ref='-107718' role='' />
+    <member type='node' ref='-107724' role='' />
+    <member type='node' ref='-107714' role='' />
+    <member type='node' ref='-107720' role='' />
+    <member type='way' ref='-109120' role='' />
+    <member type='way' ref='-109121' role='' />
+  </relation>
+  <relation id='-109146' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <member type='node' ref='-107732' role='' />
+    <member type='node' ref='-107738' role='' />
+    <member type='node' ref='-107744' role='' />
+    <member type='node' ref='-107734' role='' />
+    <member type='node' ref='-107740' role='' />
+    <member type='node' ref='-107746' role='' />
+    <member type='node' ref='-107730' role='' />
+    <member type='node' ref='-107736' role='' />
+    <member type='node' ref='-107742' role='' />
+    <member type='way' ref='-109122' role='' />
+    <member type='way' ref='-109123' role='' />
+  </relation>
+  <relation id='-109147' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <member type='node' ref='-107760' role='' />
+    <member type='node' ref='-107750' role='' />
+    <member type='node' ref='-107756' role='' />
+    <member type='node' ref='-107762' role='' />
+    <member type='node' ref='-107752' role='' />
+    <member type='node' ref='-107758' role='' />
+    <member type='node' ref='-107764' role='' />
+    <member type='node' ref='-107748' role='' />
+    <member type='node' ref='-107754' role='' />
+    <member type='way' ref='-109124' role='' />
+    <member type='way' ref='-109125' role='' />
+  </relation>
+  <relation id='-109148' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <member type='node' ref='-107770' role='' />
+    <member type='node' ref='-107776' role='' />
+    <member type='node' ref='-107766' role='' />
+    <member type='node' ref='-107782' role='' />
+    <member type='node' ref='-107772' role='' />
+    <member type='node' ref='-107778' role='' />
+    <member type='node' ref='-107768' role='' />
+    <member type='node' ref='-107774' role='' />
+    <member type='node' ref='-107780' role='' />
+    <member type='way' ref='-109126' role='' />
+    <member type='way' ref='-109127' role='' />
+  </relation>
+  <relation id='-109149' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <member type='node' ref='-107798' role='' />
+    <member type='node' ref='-107788' role='' />
+    <member type='node' ref='-107794' role='' />
+    <member type='node' ref='-107800' role='' />
+    <member type='node' ref='-107784' role='' />
+    <member type='node' ref='-107790' role='' />
+    <member type='node' ref='-107796' role='' />
+    <member type='node' ref='-107786' role='' />
+    <member type='node' ref='-107792' role='' />
+    <member type='way' ref='-109128' role='' />
+    <member type='way' ref='-109129' role='' />
+  </relation>
+  <relation id='-109150' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <member type='node' ref='-107822' role='' />
+    <member type='node' ref='-107814' role='' />
+    <member type='node' ref='-107816' role='' />
+    <member type='node' ref='-107806' role='' />
+    <member type='node' ref='-107818' role='' />
+    <member type='node' ref='-107808' role='' />
+    <member type='node' ref='-107810' role='' />
+    <member type='node' ref='-107820' role='' />
+    <member type='node' ref='-107812' role='' />
+    <member type='way' ref='-109131' role='' />
+    <member type='way' ref='-109130' role='' />
+  </relation>
+  <relation id='-109151' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <member type='node' ref='-107832' role='' />
+    <member type='node' ref='-107840' role='' />
+    <member type='node' ref='-107834' role='' />
+    <member type='node' ref='-107824' role='' />
+    <member type='node' ref='-107836' role='' />
+    <member type='node' ref='-107826' role='' />
+    <member type='node' ref='-107828' role='' />
+    <member type='node' ref='-107838' role='' />
+    <member type='node' ref='-107830' role='' />
+    <member type='way' ref='-109133' role='' />
+    <member type='way' ref='-109132' role='' />
+  </relation>
+  <relation id='-109152' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <member type='node' ref='-107848' role='' />
+    <member type='node' ref='-107858' role='' />
+    <member type='node' ref='-107842' role='' />
+    <member type='node' ref='-107854' role='' />
+    <member type='node' ref='-107856' role='' />
+    <member type='way' ref='-109134' role='' />
+  </relation>
+  <relation id='-109153' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <member type='node' ref='-107876' role='' />
+    <member type='node' ref='-107868' role='' />
+    <member type='node' ref='-107870' role='' />
+    <member type='node' ref='-107860' role='' />
+    <member type='node' ref='-107872' role='' />
+    <member type='node' ref='-107862' role='' />
+    <member type='node' ref='-107864' role='' />
+    <member type='node' ref='-107874' role='' />
+    <member type='way' ref='-109135' role='' />
+    <member type='way' ref='-109136' role='' />
+  </relation>
+  <relation id='-109154' action='modify' timestamp='2001-04-21T04:20:00Z' visible='true'>
+    <member type='node' ref='-107886' role='' />
+    <member type='node' ref='-107888' role='' />
+    <member type='node' ref='-107880' role='' />
+    <member type='node' ref='-107882' role='' />
+    <member type='node' ref='-107884' role='' />
+    <member type='way' ref='-109137' role='' />
+  </relation>
+</osm>

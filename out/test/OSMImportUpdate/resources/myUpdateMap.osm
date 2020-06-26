@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version='0.6' generator='JOSM'>
+  <bounds minlat='54.088958' minlon='12.248757' maxlat='54.09139' maxlon='12.25248' origin='CGImap 0.0.2' />
+  <node id='-102274' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09041338687' lon='12.24876871668' />
+  <node id='-102276' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09138511364' lon='12.25070467515' />
+  <node id='-102278' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09132174085' lon='12.25142953402' />
+  <node id='-102280' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09132174085' lon='12.2522489397' />
+  <node id='-102282' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09108937312' lon='12.2522489397' />
+  <node id='-102284' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09109201367' lon='12.25144304071' />
+  <node id='-102286' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09089925311' lon='12.25167715661' />
+  <node id='-102288' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09090717479' lon='12.25223543301' />
+  <node id='-102290' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09070121049' lon='12.25223993524' />
+  <node id='-102292' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09069856991' lon='12.25147455631' />
+  <node id='-102295' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09002785853' lon='12.24899833036' />
+  <node id='-102297' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09003049915' lon='12.24994379845' />
+  <node id='-102299' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09044507398' lon='12.24993929622' />
+  <node id='-102301' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09099431322' lon='12.25119091588' />
+  <node id='-102303' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09045299575' lon='12.25109186685' />
+  <node id='-102305' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09045035516' lon='12.25132148052' />
+  <node id='-102307' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09044771457' lon='12.25198781042' />
+  <node id='-102309' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09028663823' lon='12.25198781042' />
+  <node id='-102311' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09028663823' lon='12.25233448205' />
+  <node id='-102313' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.08906402201' lon='12.25234798874' />
+  <node id='-102315' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.08906666269' lon='12.2494080332' />
+  <node id='-102317' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.08982188987' lon='12.25022743888' />
+  <node id='-102319' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09028663823' lon='12.25023194111' />
+  <node id='-102321' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09029191943' lon='12.25132148052' />
+  <node id='-107533' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09103920265' lon='12.24876421445' />
+  <node id='-107534' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09138511364' lon='12.24955660676' />
+  <node id='-107536' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09097582933' lon='12.24876871668' />
+  <node id='-107537' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09137191099' lon='12.24965565579' />
+  <node id='-107705' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09069328877' lon='12.25185274355' />
+  <node id='-107751' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09078042765' lon='12.25166815216' />
+  <node id='-107775' timestamp='2019-11-01T04:20:00Z' visible='true' lat='54.09077514651' lon='12.25147005408' />
+  <way id='-102323' timestamp='2019-11-01T04:20:00Z' visible='true'>
+    <nd ref='-102274' />
+    <nd ref='-102276' />
+    <tag k='name' v='Highway number 001' />
+    <tag k='railway' v='rail' />
+    <tag k='usage' v='main' />
+  </way>
+  <way id='-102324' timestamp='2019-11-01T04:20:00Z' visible='true'>
+    <nd ref='-102278' />
+    <nd ref='-102280' />
+    <nd ref='-102282' />
+    <nd ref='-102284' />
+    <nd ref='-102278' />
+    <tag k='name' v='House 1 - Nr. 01' />
+  </way>
+  <way id='-102325' timestamp='2019-11-01T04:20:00Z' visible='true'>
+    <nd ref='-102286' />
+    <nd ref='-102288' />
+    <nd ref='-102290' />
+    <nd ref='-107705' />
+    <nd ref='-102292' />
+    <nd ref='-107775' />
+    <nd ref='-107751' />
+    <nd ref='-102286' />
+    <tag k='name' v='House 2 - Nr. 53' />
+  </way>
+  <way id='-102326' timestamp='2019-11-01T04:20:00Z' visible='true'>
+    <nd ref='-102295' />
+    <nd ref='-102297' />
+    <nd ref='-102299' />
+    <nd ref='-102301' />
+    <nd ref='-102303' />
+    <tag k='highway' v='cycleway' />
+    <tag k='name' v='Bikelane' />
+  </way>
+  <way id='-102327' timestamp='2019-11-01T04:20:00Z' visible='true'>
+    <nd ref='-102305' />
+    <nd ref='-102307' />
+    <nd ref='-102309' />
+    <nd ref='-102311' />
+    <nd ref='-102313' />
+    <nd ref='-102315' />
+    <nd ref='-102317' />
+    <nd ref='-102319' />
+    <nd ref='-102321' />
+    <nd ref='-102305' />
+    <tag k='admin_level' v='4' />
+    <tag k='attribution' v='CASIL CSP_Opbdys072008' />
+    <tag k='boundary' v='national_park' />
+    <tag k='csp:unitcode' v='537' />
+    <tag k='leisure' v='park' />
+    <tag k='name' v='Andy Anderson - Skate Park - Berlin' />
+    <tag k='park:type' v='skate_park' />
+  </way>
+  <way id='-107535' timestamp='2019-11-01T04:20:00Z' visible='true'>
+    <nd ref='-107533' />
+    <nd ref='-107534' />
+    <tag k='highway' v='motorway' />
+    <tag k='oneway' v='no' />
+    <tag k='ref' v='Highway' />
+  </way>
+  <way id='-107538' timestamp='2019-11-01T04:20:00Z' visible='true'>
+    <nd ref='-107536' />
+    <nd ref='-107537' />
+    <tag k='highway' v='motorway' />
+    <tag k='oneway' v='no' />
+    <tag k='ref' v='Highway' />
+  </way>
+  <way id='-107563' timestamp='2019-11-01T04:20:00Z' visible='true'>
+    <nd ref='-102299' />
+    <nd ref='-102303' />
+    <tag k='highway' v='cycleway' />
+    <tag k='name' v='Bikelane' />
+  </way>
+  <relation id='-104933' timestamp='2019-10-01T04:20:00Z' visible='true'>
+    <member type='way' ref='-102325' role='' />
+    <tag k='type' v='building' />
+  </relation>
+  <relation id='-107517' timestamp='2019-10-01T04:20:00Z' visible='true'>
+    <member type='way' ref='-102324' role='' />
+    <tag k='type' v='building' />
+  </relation>
+</osm>

@@ -1,5 +1,6 @@
 package ohdm2geoserverrendering;
 
+import ohdm2geoserverrendering.IsRunningChecker;
 import util.DB;
 import util.Parameter;
 import util.SQLStatementQueue;
@@ -7,6 +8,7 @@ import util.SQLStatementQueue;
 import java.io.*;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -49,6 +51,9 @@ public class OHDM2Geoserverrendering {
     final static String MY_WATERAREA = "my_waterarea";
     final static String MY_WATERWAYS = "my_waterways";
 
+    //for IsRunningChecker notificator
+    private static Parameter targetParameterChecker;
+
     public static void main(String[] args) throws SQLException, IOException {
         String sourceParameterFileName = "db_ohdm.txt";
         String targetParameterFileName = "db_rendering.txt";
@@ -67,6 +72,9 @@ public class OHDM2Geoserverrendering {
 
         Parameter sourceParameter = new Parameter(sourceParameterFileName);
         Parameter targetParameter = new Parameter(targetParameterFileName);
+        setTargetParameterChecker(targetParameterFileName);
+
+
 
         Connection connection = DB.createConnection(targetParameter);
 
@@ -98,6 +106,18 @@ public class OHDM2Geoserverrendering {
 
         System.out.println("Start transforming epsg-system..");
         renderer.transformEpsg(sql, targetSchema, PSEUDO_MERCATOR_EPSG);
+
+       System.out.println("Start creating spatial indexes..");
+       renderer.createSpatialIndex(sql,targetSchema);
+
+    }
+
+    static void setTargetParameterChecker(String targetParameterCheckerString){
+        try {
+            targetParameterChecker= new Parameter(targetParameterCheckerString);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     void loadSQLFiles(){
@@ -149,14 +169,24 @@ public class OHDM2Geoserverrendering {
 
         for(String statement: actualSQLStatementList){
             sql.append(statement);
+
+            IsRunningChecker runningChecker= new IsRunningChecker(targetParameterChecker.getServerName(),targetParameterChecker.getPortNumber(),targetParameterChecker.getUserName(),targetParameterChecker.getPWD(),targetParameterChecker.getdbName(),targetParameterChecker.getSchema(),"my_");
+            runningChecker.start();
+
             try {
                 sql.forceExecute();
+
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+            runningChecker.update();
+            runningChecker.interrupt();
             sql.resetStatement();
+            System.out.print("Statement finished at:   ");
+            System.out.println(LocalDateTime.now());
             currentPercentage = currentPercentage + eachPercentage;
-            System.out.println(currentPercentage + " % finished.");
+            System.out.println(currentPercentage + " % finished."+"\n");
+
         }
 
 
@@ -397,4 +427,53 @@ public class OHDM2Geoserverrendering {
         }
         System.out.println("Transforming finished with " + errorCounter + " errors.");
     }
+
+
+    public void createSpatialIndex(SQLStatementQueue sql, String targetSchema){
+
+        String fullName = "";
+        int errorCounter = 0;
+
+        List<String> tables = new ArrayList<>();
+        tables.add(MY_HOUSENUMBERS);
+        tables.add(MY_ADMIN_LABELS);
+        tables.add(MY_BOUNDARIES);
+        tables.add(MY_BUILDINGS);
+        tables.add(MY_AMENITIES);
+        tables.add(MY_LANDUSAGES);
+        tables.add(MY_PLACES);
+        tables.add(MY_ROADS);
+        tables.add(MY_TRANSPORT_AREAS);
+        tables.add(MY_TRANSPORT_POINTS);
+        tables.add(MY_WATERAREA);
+        tables.add(MY_WATERWAYS);
+
+        for(String table : tables){
+            try {
+
+                fullName = targetParameterChecker.getdbName()+"."+ targetParameterChecker.getSchema() +"."+  table;
+
+                System.out.println("Create Spatial Index: " + fullName);
+
+
+                sql.append("CREATE INDEX " +table);
+                sql.append("_geometry_idx ON ");
+                sql.append(fullName);
+                sql.append(" USING GIST (geometry);" );
+
+
+                sql.forceExecute();
+                sql.resetStatement();
+
+
+            } catch (SQLException e) {
+                System.err.println("Could not create spatial index for '" + fullName + "'.");
+                System.err.println("= >Exception: " + e.getClass().getSimpleName());
+                e.printStackTrace();
+                errorCounter++;
+            }
+        }
+        System.out.println("Spatial indexing finished with " + errorCounter + " errors.");
+    }
+
 }

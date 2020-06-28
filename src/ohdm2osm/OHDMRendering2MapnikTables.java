@@ -175,17 +175,27 @@ INSERT INTO mapniktest.planet_osm_polygon (way, osm_id, name, amenity, valid_sin
         sql.append("aerialway text COLLATE pg_catalog.\"default\",");
         sql.append("aeroway text COLLATE pg_catalog.\"default\",");
         sql.append("amenity text COLLATE pg_catalog.\"default\",");
+        sql.append("area text COLLATE pg_catalog.\"default\",");
         sql.append("barrier text COLLATE pg_catalog.\"default\",");
         sql.append("bicycle text COLLATE pg_catalog.\"default\",");
+        sql.append("brand text COLLATE pg_catalog.\"default\",");
         sql.append("bridge text COLLATE pg_catalog.\"default\",");
         sql.append("boundary text COLLATE pg_catalog.\"default\",");
         sql.append("building text COLLATE pg_catalog.\"default\",");
         sql.append("construction text COLLATE pg_catalog.\"default\",");
         sql.append("covered text COLLATE pg_catalog.\"default\",");
+        sql.append("culvert text COLLATE pg_catalog.\"default\",");
+        sql.append("cutting text COLLATE pg_catalog.\"default\",");
+        sql.append("denomination text COLLATE pg_catalog.\"default\",");
+        sql.append("disused text COLLATE pg_catalog.\"default\",");
+        sql.append("embankment text COLLATE pg_catalog.\"default\",");
         sql.append("foot text COLLATE pg_catalog.\"default\",");
+        sql.append("\"generator:source\" text COLLATE pg_catalog.\"default\",");
+        sql.append("harbour text COLLATE pg_catalog.\"default\",");
         sql.append("highway text COLLATE pg_catalog.\"default\",");
         sql.append("historic text COLLATE pg_catalog.\"default\",");
         sql.append("horse text COLLATE pg_catalog.\"default\",");
+        sql.append("intermittent text COLLATE pg_catalog.\"default\",");
         sql.append("junction text COLLATE pg_catalog.\"default\",");
         sql.append("landuse text COLLATE pg_catalog.\"default\",");
         sql.append("layer integer,");
@@ -193,23 +203,35 @@ INSERT INTO mapniktest.planet_osm_polygon (way, osm_id, name, amenity, valid_sin
         sql.append("lock text COLLATE pg_catalog.\"default\",");
         sql.append("man_made text COLLATE pg_catalog.\"default\",");
         sql.append("military text COLLATE pg_catalog.\"default\",");
+        sql.append("motorcar text COLLATE pg_catalog.\"default\",");
         sql.append("name text COLLATE pg_catalog.\"default\",");
         sql.append("\"natural\" text COLLATE pg_catalog.\"default\",");
+        sql.append("office text COLLATE pg_catalog.\"default\",");
         sql.append("oneway text COLLATE pg_catalog.\"default\",");
+        sql.append("operator text COLLATE pg_catalog.\"default\",");
         sql.append("place text COLLATE pg_catalog.\"default\",");
+        sql.append("population text COLLATE pg_catalog.\"default\",");
         sql.append("power text COLLATE pg_catalog.\"default\",");
+        sql.append("power_source text COLLATE pg_catalog.\"default\",");
+        sql.append("public_transport text COLLATE pg_catalog.\"default\",");
         sql.append("railway text COLLATE pg_catalog.\"default\",");
         sql.append("ref text COLLATE pg_catalog.\"default\",");
         sql.append("religion text COLLATE pg_catalog.\"default\",");
         sql.append("route text COLLATE pg_catalog.\"default\",");
         sql.append("service text COLLATE pg_catalog.\"default\",");
         sql.append("shop text COLLATE pg_catalog.\"default\",");
+        sql.append("sport text COLLATE pg_catalog.\"default\",");
         sql.append("surface text COLLATE pg_catalog.\"default\",");
+        sql.append("toll text COLLATE pg_catalog.\"default\",");
         sql.append("tourism text COLLATE pg_catalog.\"default\",");
+        sql.append("\"tower:type\" text COLLATE pg_catalog.\"default\",");
         sql.append("tracktype text COLLATE pg_catalog.\"default\",");
         sql.append("tunnel text COLLATE pg_catalog.\"default\",");
         sql.append("water text COLLATE pg_catalog.\"default\",");
         sql.append("waterway text COLLATE pg_catalog.\"default\",");
+        sql.append("wetland text COLLATE pg_catalog.\"default\",");
+        sql.append("width text COLLATE pg_catalog.\"default\",");
+        sql.append("wood text COLLATE pg_catalog.\"default\",");
         sql.append("way_area real,");
         sql.append("z_order integer,");
         sql.append("tags hstore,");
@@ -242,42 +264,64 @@ INSERT INTO mapniktest.planet_osm_polygon (way, osm_id, name, amenity, valid_sin
         sql.append("admin_level text COLLATE pg_catalog.\"default\",");
         sql.append("aerialway text COLLATE pg_catalog.\"default\",");
         sql.append("aeroway text COLLATE pg_catalog.\"default\",");
-        sql.append("amenity text COLLATE pg_catalog.\"default\",");
+        sql.append("amenity text COLLATE pg_catalog.\"default\","); //area
+        sql.append("area text COLLATE pg_catalog.\"default\",");
         sql.append("barrier text COLLATE pg_catalog.\"default\",");
-        sql.append("bicycle text COLLATE pg_catalog.\"default\",");
+        sql.append("bicycle text COLLATE pg_catalog.\"default\","); //brand
+        sql.append("brand text COLLATE pg_catalog.\"default\",");
         sql.append("bridge text COLLATE pg_catalog.\"default\",");
         sql.append("boundary text COLLATE pg_catalog.\"default\",");
         sql.append("building text COLLATE pg_catalog.\"default\",");
         sql.append("construction text COLLATE pg_catalog.\"default\",");
-        sql.append("covered text COLLATE pg_catalog.\"default\",");
-        sql.append("foot text COLLATE pg_catalog.\"default\",");
+        sql.append("covered text COLLATE pg_catalog.\"default\","); //culvert, cutting, denomination, disused, embankment
+        sql.append("culvert text COLLATE pg_catalog.\"default\",");
+        sql.append("cutting text COLLATE pg_catalog.\"default\",");
+        sql.append("denomination text COLLATE pg_catalog.\"default\",");
+        sql.append("disused text COLLATE pg_catalog.\"default\",");
+        sql.append("embankment text COLLATE pg_catalog.\"default\",");
+        sql.append("foot text COLLATE pg_catalog.\"default\","); //generator:source, harbour
+        sql.append("\"generator:source\" text COLLATE pg_catalog.\"default\",");
+        sql.append("harbour text COLLATE pg_catalog.\"default\",");
         sql.append("highway text COLLATE pg_catalog.\"default\",");
         sql.append("historic text COLLATE pg_catalog.\"default\",");
-        sql.append("horse text COLLATE pg_catalog.\"default\",");
+        sql.append("horse text COLLATE pg_catalog.\"default\","); //intermittent
+        sql.append("intermittent text COLLATE pg_catalog.\"default\",");
         sql.append("junction text COLLATE pg_catalog.\"default\",");
         sql.append("landuse text COLLATE pg_catalog.\"default\",");
         sql.append("layer integer,");
         sql.append("leisure text COLLATE pg_catalog.\"default\",");
         sql.append("lock text COLLATE pg_catalog.\"default\",");
         sql.append("man_made text COLLATE pg_catalog.\"default\",");
-        sql.append("military text COLLATE pg_catalog.\"default\",");
+        sql.append("military text COLLATE pg_catalog.\"default\","); //motorcar
+        sql.append("motorcar text COLLATE pg_catalog.\"default\",");
         sql.append("name text COLLATE pg_catalog.\"default\",");
-        sql.append("\"natural\" text COLLATE pg_catalog.\"default\",");
-        sql.append("oneway text COLLATE pg_catalog.\"default\",");
-        sql.append("place text COLLATE pg_catalog.\"default\",");
-        sql.append("power text COLLATE pg_catalog.\"default\",");
+        sql.append("\"natural\" text COLLATE pg_catalog.\"default\","); //office
+        sql.append("office text COLLATE pg_catalog.\"default\",");
+        sql.append("oneway text COLLATE pg_catalog.\"default\","); //operator
+        sql.append("operator text COLLATE pg_catalog.\"default\",");
+        sql.append("place text COLLATE pg_catalog.\"default\","); //population
+        sql.append("population text COLLATE pg_catalog.\"default\",");
+        sql.append("power text COLLATE pg_catalog.\"default\","); //power_source, public_transport
+        sql.append("power_source text COLLATE pg_catalog.\"default\",");
+        sql.append("public_transport text COLLATE pg_catalog.\"default\",");
         sql.append("railway text COLLATE pg_catalog.\"default\",");
         sql.append("ref text COLLATE pg_catalog.\"default\",");
         sql.append("religion text COLLATE pg_catalog.\"default\",");
         sql.append("route text COLLATE pg_catalog.\"default\",");
         sql.append("service text COLLATE pg_catalog.\"default\",");
-        sql.append("shop text COLLATE pg_catalog.\"default\",");
-        sql.append("surface text COLLATE pg_catalog.\"default\",");
-        sql.append("tourism text COLLATE pg_catalog.\"default\",");
+        sql.append("shop text COLLATE pg_catalog.\"default\","); //sport
+        sql.append("sport text COLLATE pg_catalog.\"default\",");
+        sql.append("surface text COLLATE pg_catalog.\"default\","); //toll
+        sql.append("toll text COLLATE pg_catalog.\"default\",");
+        sql.append("tourism text COLLATE pg_catalog.\"default\","); //tower:type
+        sql.append("\"tower:type\" text COLLATE pg_catalog.\"default\",");
         sql.append("tracktype text COLLATE pg_catalog.\"default\",");
         sql.append("tunnel text COLLATE pg_catalog.\"default\",");
         sql.append("water text COLLATE pg_catalog.\"default\",");
-        sql.append("waterway text COLLATE pg_catalog.\"default\",");
+        sql.append("waterway text COLLATE pg_catalog.\"default\","); //wetland, width, wood
+        sql.append("wetland text COLLATE pg_catalog.\"default\",");
+        sql.append("width text COLLATE pg_catalog.\"default\",");
+        sql.append("wood text COLLATE pg_catalog.\"default\",");
         sql.append("way_area real,");
         sql.append("z_order integer,");
         sql.append("tags hstore,");
@@ -285,7 +329,7 @@ INSERT INTO mapniktest.planet_osm_polygon (way, osm_id, name, amenity, valid_sin
         sql.append("valid_since date NOT NULL,");
         sql.append("valid_until date NOT NULL)");
 
-        sql.forceExecute();
+        sql.forceExecute(); //22 missing
     }
 
     void setupPointTable() throws SQLException {
@@ -305,41 +349,77 @@ INSERT INTO mapniktest.planet_osm_polygon (way, osm_id, name, amenity, valid_sin
         sql.append("osm_id bigint,");
         sql.append("access text COLLATE pg_catalog.\"default\",");
         sql.append("\"addr:housename\" text COLLATE pg_catalog.\"default\",");
-        sql.append("\"addr:housenumber\" text COLLATE pg_catalog.\"default\",");
+        sql.append("\"addr:housenumber\" text COLLATE pg_catalog.\"default\","); //addr:interpolation
+        sql.append("\"addr:interpolation\" text COLLATE pg_catalog.\"default\",");
         sql.append("admin_level text COLLATE pg_catalog.\"default\",");
         sql.append("aerialway text COLLATE pg_catalog.\"default\",");
         sql.append("aeroway text COLLATE pg_catalog.\"default\",");
-        sql.append("amenity text COLLATE pg_catalog.\"default\",");
-        sql.append("barrier text COLLATE pg_catalog.\"default\",");
+        sql.append("amenity text COLLATE pg_catalog.\"default\","); //area
+        sql.append("area text COLLATE pg_catalog.\"default\",");
+        sql.append("barrier text COLLATE pg_catalog.\"default\","); //bicycle, brand, bridge
+        sql.append("bicycle text COLLATE pg_catalog.\"default\",");
+        sql.append("brand text COLLATE pg_catalog.\"default\",");
+        sql.append("bridge text COLLATE pg_catalog.\"default\",");
         sql.append("boundary text COLLATE pg_catalog.\"default\",");
-        sql.append("building text COLLATE pg_catalog.\"default\",");
+        sql.append("building text COLLATE pg_catalog.\"default\",");//capital, construction, covered, culvert, cutting, denomination, disused, ele, embankment, foot, generator:source, harbour
+        sql.append("capital text COLLATE pg_catalog.\"default\",");
+        sql.append("construction text COLLATE pg_catalog.\"default\",");
+        sql.append("covered text COLLATE pg_catalog.\"default\",");
+        sql.append("culvert text COLLATE pg_catalog.\"default\",");
+        sql.append("cutting text COLLATE pg_catalog.\"default\",");
+        sql.append("denomination text COLLATE pg_catalog.\"default\",");
+        sql.append("disused text COLLATE pg_catalog.\"default\",");
+        sql.append("ele text COLLATE pg_catalog.\"default\",");
+        sql.append("embankment text COLLATE pg_catalog.\"default\",");
+        sql.append("foot text COLLATE pg_catalog.\"default\",");
+        sql.append("\"generator:source\" text COLLATE pg_catalog.\"default\",");
+        sql.append("harbour text COLLATE pg_catalog.\"default\",");
         sql.append("highway text COLLATE pg_catalog.\"default\",");
-        sql.append("historic text COLLATE pg_catalog.\"default\",");
+        sql.append("historic text COLLATE pg_catalog.\"default\","); //horse, intermittent
+        sql.append("horse text COLLATE pg_catalog.\"default\",");
+        sql.append("intermittent text COLLATE pg_catalog.\"default\",");
         sql.append("junction text COLLATE pg_catalog.\"default\",");
         sql.append("landuse text COLLATE pg_catalog.\"default\",");
         sql.append("layer integer,");
         sql.append("leisure text COLLATE pg_catalog.\"default\",");
         sql.append("lock text COLLATE pg_catalog.\"default\",");
         sql.append("man_made text COLLATE pg_catalog.\"default\",");
-        sql.append("military text COLLATE pg_catalog.\"default\",");
+        sql.append("military text COLLATE pg_catalog.\"default\","); //motorcar
+        sql.append("motorcar text COLLATE pg_catalog.\"default\",");
         sql.append("name text COLLATE pg_catalog.\"default\",");
-        sql.append("\"natural\" text COLLATE pg_catalog.\"default\",");
-        sql.append("oneway text COLLATE pg_catalog.\"default\",");
-        sql.append("place text COLLATE pg_catalog.\"default\",");
-        sql.append("power text COLLATE pg_catalog.\"default\",");
+        sql.append("\"natural\" text COLLATE pg_catalog.\"default\","); //office
+        sql.append("office text COLLATE pg_catalog.\"default\",");
+        sql.append("oneway text COLLATE pg_catalog.\"default\","); //operator
+        sql.append("operator text COLLATE pg_catalog.\"default\",");
+        sql.append("place text COLLATE pg_catalog.\"default\","); //population
+        sql.append("population text COLLATE pg_catalog.\"default\",");
+        sql.append("power text COLLATE pg_catalog.\"default\","); //power_source, public_transport
+        sql.append("power_source text COLLATE pg_catalog.\"default\",");
+        sql.append("public_transport text COLLATE pg_catalog.\"default\",");
         sql.append("railway text COLLATE pg_catalog.\"default\",");
         sql.append("ref text COLLATE pg_catalog.\"default\",");
-        sql.append("religion text COLLATE pg_catalog.\"default\",");
-        sql.append("shop text COLLATE pg_catalog.\"default\",");
-        sql.append("tourism text COLLATE pg_catalog.\"default\",");
-        sql.append("water text COLLATE pg_catalog.\"default\",");
+        sql.append("religion text COLLATE pg_catalog.\"default\","); //route, service
+        sql.append("route text COLLATE pg_catalog.\"default\",");
+        sql.append("service text COLLATE pg_catalog.\"default\",");
+        sql.append("shop text COLLATE pg_catalog.\"default\","); //sport, surface, toll
+        sql.append("sport text COLLATE pg_catalog.\"default\",");
+        sql.append("surface text COLLATE pg_catalog.\"default\",");
+        sql.append("toll text COLLATE pg_catalog.\"default\",");
+        sql.append("tourism text COLLATE pg_catalog.\"default\","); //tower:type, tunnel
+        sql.append("\"tower:type\" text COLLATE pg_catalog.\"default\",");
+        sql.append("tunnel text COLLATE pg_catalog.\"default\",");
+        sql.append("water text COLLATE pg_catalog.\"default\","); //wetland, width, wood
         sql.append("waterway text COLLATE pg_catalog.\"default\",");
+        sql.append("wetland text COLLATE pg_catalog.\"default\",");
+        sql.append("width text COLLATE pg_catalog.\"default\",");
+        sql.append("wood text COLLATE pg_catalog.\"default\","); //z_order
+        sql.append("z_order integer,");
         sql.append("tags hstore,");
         sql.append("way geometry(Point,3857),");
         sql.append("valid_since date NOT NULL,");
         sql.append("valid_until date NOT NULL)");
 
-        sql.forceExecute();
+        sql.forceExecute(); //36 missing
     }
 
     String ohdmRenderingTableName2mapnikColumnName(String tableName) {

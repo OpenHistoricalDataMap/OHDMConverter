@@ -29,24 +29,92 @@ FROM
 
  (SELECT id, name from ohdm.geoobject) as o, 
  
- (SELECT id_target, classification_id, type_target, id_geoobject_source, valid_since, valid_until, tags, source_user_id as user_id FROM ohdm.geoobject_geometry where classification_id between 159 and 261 or 
-  /* ... between (SELECT id from ohdm.classification where class = 'amenity') ...*/
- classification_id between 911 and 922 or
- classification_id between 400 and 448 ) as gg,
+ (SELECT id_target, classification_id, type_target, id_geoobject_source, valid_since, valid_until, tags, source_user_id as user_id FROM ohdm.geoobject_geometry) as gg,
  
- /* KLASSENID */
- /* amenity: 159 bis 261    as camenity
-    aeroway: 911 bis 922    as caeroway
-    building: 400 bis 448   as cbuilding */
+
  
  (SELECT id, polygon as geometry FROM ohdm.polygons) as g,
  
  /* hier jeweils ohdm.polygons, lines, points*/
  
  (SELECT id, subclassname FROM ohdm.classification where 
-  id between 159 and 261 or 
-  id between 911 and 922 or
-  id between 400 and 448) as c
+  subclassname = 'apartments'
+OR subclassname = 'bungalow'
+OR subclassname = 'cabin'
+OR subclassname = 'detached'
+OR subclassname = 'dormitory'
+OR subclassname = 'farm'
+OR subclassname = 'ger'
+OR subclassname = 'hotel'
+OR subclassname = 'house'
+OR subclassname = 'houseboat'
+OR subclassname = 'residential'
+OR subclassname = 'semidetached_house'
+OR subclassname = 'static_caravan'
+OR subclassname = 'terrace'
+OR subclassname = 'commercial'
+OR subclassname = 'industrial'
+OR subclassname = 'kiosk'
+OR subclassname = 'office'
+OR subclassname = 'retail'
+OR subclassname = 'supermarket'
+OR subclassname = 'warehouse'
+OR subclassname = 'cathedral'
+OR subclassname = 'chapel'
+OR subclassname = 'church'
+OR subclassname = 'mosque'
+OR subclassname = 'religious'
+OR subclassname = 'shrine'
+OR subclassname = 'synagogue'
+OR subclassname = 'temple'
+OR subclassname = 'bakehouse'
+OR subclassname = 'civic'
+OR subclassname = 'fire_station'
+OR subclassname = 'government'
+OR subclassname = 'hospital'
+OR subclassname = 'kindergarten'
+OR subclassname = 'public'
+OR subclassname = 'school'
+OR subclassname = 'toilets'
+OR subclassname = 'train_station'
+OR subclassname = 'transportation'
+OR subclassname = 'conservatory'
+OR subclassname = 'university'
+OR subclassname = 'barn'
+OR subclassname = 'conservatory'
+OR subclassname = 'cowshed'
+OR subclassname = 'farm_auxiliary'
+OR subclassname = 'greenhouse'
+OR subclassname = 'slurry_tank'
+OR subclassname = 'stable'
+OR subclassname = 'sty'
+OR subclassname = 'grandstand'
+OR subclassname = 'pavilion'
+OR subclassname = 'riding_hall'
+OR subclassname = 'sports_hall'
+OR subclassname = 'stadium'
+OR subclassname = 'hangar'
+OR subclassname = 'hut'
+OR subclassname = 'shed'
+OR subclassname = 'carport'
+OR subclassname = 'garage'
+OR subclassname = 'garages'
+OR subclassname = 'parking'
+OR subclassname = 'digester'
+OR subclassname = 'service'
+OR subclassname = 'transformer_tower'
+OR subclassname = 'water_tower'
+OR subclassname = 'bunker'
+OR subclassname = 'bridge'
+OR subclassname = 'construction'
+OR subclassname = 'gatehouse'
+OR subclassname = 'roof'
+OR subclassname = 'ruins'
+OR subclassname = 'tree_house'
+OR subclassname = 'yes'
+OR subclassname = 'user defined'
+
+  ) as c
  
  WHERE gg.type_target = 3 AND g.id = gg.id_target AND o.id = gg.id_geoobject_source AND c.id = gg.classification_id;
  
@@ -65,23 +133,91 @@ FROM
 
  (SELECT id, name from ohdm.geoobject) as o, 
  
- (SELECT id_target, classification_id, type_target, id_geoobject_source, valid_since, valid_until, tags, source_user_id as user_id FROM ohdm.geoobject_geometry where classification_id between 159 and 261 or 
- classification_id between 911 and 922 or
- classification_id between 400 and 448 ) as gg,
+ (SELECT id_target, classification_id, type_target, id_geoobject_source, valid_since, valid_until, tags, source_user_id as user_id FROM ohdm.geoobject_geometry) as gg,
  
- /* KLASSENID */
- /* amenity: 159 bis 261    as camenity
-    aeroway: 911 bis 922    as caeroway
-    building: 400 bis 448   as cbuilding */
+
  
  (SELECT id, line as geometry FROM ohdm.lines) as g,
  
  /* hier jeweils ohdm.polygons, lines, points*/
  
  (SELECT id, subclassname FROM ohdm.classification where 
-  id between 159 and 261 or 
-  id between 911 and 922 or
-  id between 400 and 448) as c
+  subclassname = 'apartments'
+OR subclassname = 'bungalow'
+OR subclassname = 'cabin'
+OR subclassname = 'detached'
+OR subclassname = 'dormitory'
+OR subclassname = 'farm'
+OR subclassname = 'ger'
+OR subclassname = 'hotel'
+OR subclassname = 'house'
+OR subclassname = 'houseboat'
+OR subclassname = 'residential'
+OR subclassname = 'semidetached_house'
+OR subclassname = 'static_caravan'
+OR subclassname = 'terrace'
+OR subclassname = 'commercial'
+OR subclassname = 'industrial'
+OR subclassname = 'kiosk'
+OR subclassname = 'office'
+OR subclassname = 'retail'
+OR subclassname = 'supermarket'
+OR subclassname = 'warehouse'
+OR subclassname = 'cathedral'
+OR subclassname = 'chapel'
+OR subclassname = 'church'
+OR subclassname = 'mosque'
+OR subclassname = 'religious'
+OR subclassname = 'shrine'
+OR subclassname = 'synagogue'
+OR subclassname = 'temple'
+OR subclassname = 'bakehouse'
+OR subclassname = 'civic'
+OR subclassname = 'fire_station'
+OR subclassname = 'government'
+OR subclassname = 'hospital'
+OR subclassname = 'kindergarten'
+OR subclassname = 'public'
+OR subclassname = 'school'
+OR subclassname = 'toilets'
+OR subclassname = 'train_station'
+OR subclassname = 'transportation'
+OR subclassname = 'conservatory'
+OR subclassname = 'university'
+OR subclassname = 'barn'
+OR subclassname = 'conservatory'
+OR subclassname = 'cowshed'
+OR subclassname = 'farm_auxiliary'
+OR subclassname = 'greenhouse'
+OR subclassname = 'slurry_tank'
+OR subclassname = 'stable'
+OR subclassname = 'sty'
+OR subclassname = 'grandstand'
+OR subclassname = 'pavilion'
+OR subclassname = 'riding_hall'
+OR subclassname = 'sports_hall'
+OR subclassname = 'stadium'
+OR subclassname = 'hangar'
+OR subclassname = 'hut'
+OR subclassname = 'shed'
+OR subclassname = 'carport'
+OR subclassname = 'garage'
+OR subclassname = 'garages'
+OR subclassname = 'parking'
+OR subclassname = 'digester'
+OR subclassname = 'service'
+OR subclassname = 'transformer_tower'
+OR subclassname = 'water_tower'
+OR subclassname = 'bunker'
+OR subclassname = 'bridge'
+OR subclassname = 'construction'
+OR subclassname = 'gatehouse'
+OR subclassname = 'roof'
+OR subclassname = 'ruins'
+OR subclassname = 'tree_house'
+OR subclassname = 'yes'
+OR subclassname = 'user defined'
+) as c
  
  WHERE gg.type_target = 2 AND g.id = gg.id_target AND o.id = gg.id_geoobject_source AND  c.id = gg.classification_id;
  
@@ -99,9 +235,7 @@ FROM
 
  (SELECT id, name from ohdm.geoobject) as o, 
  
- (SELECT id_target, classification_id, type_target, id_geoobject_source, valid_since, valid_until, tags, source_user_id as user_id FROM ohdm.geoobject_geometry where classification_id between 159 and 261 or 
- classification_id between 911 and 922 or
- classification_id between 400 and 448 ) as gg,
+ (SELECT id_target, classification_id, type_target, id_geoobject_source, valid_since, valid_until, tags, source_user_id as user_id FROM ohdm.geoobject_geometry) as gg,
  
  /* KLASSENID */
  /* amenity: 159 bis 261    as camenity
@@ -113,8 +247,81 @@ FROM
  /* hier jeweils ohdm.polygons, lines, points*/
  
  (SELECT id, subclassname FROM ohdm.classification where 
-  id between 159 and 261 or 
-  id between 911 and 922 or
-  id between 400 and 448) as c
+  subclassname = 'apartments'
+OR subclassname = 'bungalow'
+OR subclassname = 'cabin'
+OR subclassname = 'detached'
+OR subclassname = 'dormitory'
+OR subclassname = 'farm'
+OR subclassname = 'ger'
+OR subclassname = 'hotel'
+OR subclassname = 'house'
+OR subclassname = 'houseboat'
+OR subclassname = 'residential'
+OR subclassname = 'semidetached_house'
+OR subclassname = 'static_caravan'
+OR subclassname = 'terrace'
+OR subclassname = 'commercial'
+OR subclassname = 'industrial'
+OR subclassname = 'kiosk'
+OR subclassname = 'office'
+OR subclassname = 'retail'
+OR subclassname = 'supermarket'
+OR subclassname = 'warehouse'
+OR subclassname = 'cathedral'
+OR subclassname = 'chapel'
+OR subclassname = 'church'
+OR subclassname = 'mosque'
+OR subclassname = 'religious'
+OR subclassname = 'shrine'
+OR subclassname = 'synagogue'
+OR subclassname = 'temple'
+OR subclassname = 'bakehouse'
+OR subclassname = 'civic'
+OR subclassname = 'fire_station'
+OR subclassname = 'government'
+OR subclassname = 'hospital'
+OR subclassname = 'kindergarten'
+OR subclassname = 'public'
+OR subclassname = 'school'
+OR subclassname = 'toilets'
+OR subclassname = 'train_station'
+OR subclassname = 'transportation'
+OR subclassname = 'conservatory'
+OR subclassname = 'university'
+OR subclassname = 'barn'
+OR subclassname = 'conservatory'
+OR subclassname = 'cowshed'
+OR subclassname = 'farm_auxiliary'
+OR subclassname = 'greenhouse'
+OR subclassname = 'slurry_tank'
+OR subclassname = 'stable'
+OR subclassname = 'sty'
+OR subclassname = 'grandstand'
+OR subclassname = 'pavilion'
+OR subclassname = 'riding_hall'
+OR subclassname = 'sports_hall'
+OR subclassname = 'stadium'
+OR subclassname = 'hangar'
+OR subclassname = 'hut'
+OR subclassname = 'shed'
+OR subclassname = 'carport'
+OR subclassname = 'garage'
+OR subclassname = 'garages'
+OR subclassname = 'parking'
+OR subclassname = 'digester'
+OR subclassname = 'service'
+OR subclassname = 'transformer_tower'
+OR subclassname = 'water_tower'
+OR subclassname = 'bunker'
+OR subclassname = 'bridge'
+OR subclassname = 'construction'
+OR subclassname = 'gatehouse'
+OR subclassname = 'roof'
+OR subclassname = 'ruins'
+OR subclassname = 'tree_house'
+OR subclassname = 'yes'
+OR subclassname = 'user defined'
+) as c
  
  WHERE gg.type_target = 1 AND  g.id = gg.id_target AND o.id = gg.id_geoobject_source AND c.id = gg.classification_id;

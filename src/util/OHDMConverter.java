@@ -113,8 +113,10 @@ public class OHDMConverter {
         }
         
         // unclear what to do: import into ohdm or create rendering database out of ohdm
-        if( ohdmDBConfig != null && importInterDBConfig == null && updateInterDBConfig == null && renderingDBConfig == null && geoserverRenderingDBConfig == null)  {
-            OHDMConverter.printUsageAndExit("unclear what to do: import into ohdm or create (Geoserver-/) rendering database out of ohdm");
+        if( ohdmDBConfig != null
+                && importInterDBConfig == null && updateInterDBConfig == null && renderingDBConfig == null
+                && geoserverRenderingDBConfig == null)  {
+            OHDMConverter.printUsageAndExit("unclear what to do: ohdm db defined but no import (-i) nor output (-[r|g|m|u]");
         }
         
         // debug
@@ -229,7 +231,7 @@ public class OHDMConverter {
         out.println("-m [parameter file mapnik DB]");
         out.println("-p [WKT polygon (EPSG 4326) for osm extraction]");
         out.println("-t [date like 2117-12-11]");
-        out.println(CHUNK_FACTORY + " -parallel [#processes] -jar [further libs] -size [steps] [usual parameters] .. creates command list for parallel processing of huge data sets");
+        out.println(CHUNK_FACTORY + " -parallel [#processes] -classpath [further libs] -size [steps] [usual parameters] .. creates command list for parallel processing of huge data sets");
         out.println("see https://github.com/OpenHistoricalDataMap/OSMImportUpdate/wiki for details");
         System.exit(0);
     }

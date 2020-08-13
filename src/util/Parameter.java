@@ -48,6 +48,9 @@ public class Parameter {
     private int logMessageInterval = 5;
     private int SerTagsSize = 200000;
     private String osmfilecreationdatestring;
+    private String columnNameObjectName;
+    private String columnNameGeometry;
+    private String tableName;
 
     public String getConnectionType() {
         return connectionType;
@@ -166,6 +169,9 @@ public class Parameter {
                             case "waysColumnNames": this.waysColumnNames = value.split("\\|"); break;
                             case "serTagsSize": this.SerTagsSize = Integer.parseInt(value); break;
                             case "osmfilecreationdate": this.checkDateFormat(value); break;
+                            case "columnNameObjectName": this.columnNameObjectName = value;
+                            case "columnNameGeometry": this.columnNameGeometry = value;
+                            case "tableName": this.tableName = value;
                         }
                     }
                 }
@@ -197,6 +203,10 @@ public class Parameter {
         }
         return this.osmfilecreationdatestring;
     }
+    public String getColumnNameObjectName() { return this.columnNameObjectName; }
+    public String getColumnNameGeometry() { return this.columnNameGeometry; }
+    public String getTableName() { return this.tableName; }
+
 
     private String paddWithLeadingZeros(String value, int requiredLength) {
         if(value.length() >= requiredLength) return value;

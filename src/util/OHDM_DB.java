@@ -22,6 +22,7 @@ public class OHDM_DB {
     public static final String TABLE_SUBSEQUENT_GEOM_USER = "subsequent_geom_user";
     public static final String TABLE_EXTERNAL_SYSTEMS = "external_systems";
     public static final String TABLE_GEOOBJECT_CONTENT = "geoobject_content";
+    public static final String TABLE_EXTERNAL_IMPORTS = "external_imports";
 
     public static final String TABLE_IMPORTS_UPDATES = "import_updates";
 
@@ -40,6 +41,9 @@ public class OHDM_DB {
     public static final int LINESTRING = 2;
     public static final int POLYGON = 3;
     public static final int RELATION = 0;
+    public static final String LINE_GEOMETRY_COLUMN_NAME = "line";
+    public static final String POINT_GEOMETRY_COLUMN_NAME = "point";
+    public static final String POLYGON_GEOMETRY_COLUMN_NAME = "polygon";
 
     public static String getGeometryName(int type) {
         switch(type) {
@@ -66,8 +70,8 @@ public class OHDM_DB {
         DB.drop(targetConnection, targetSchema, URL);
         DB.drop(targetConnection, targetSchema, TABLE_SUBSEQUENT_GEOM_USER);
         DB.drop(targetConnection, targetSchema, TABLE_IMPORTS_UPDATES);
+        DB.drop(targetConnection, targetSchema, TABLE_EXTERNAL_IMPORTS);
     }
-
 
     public static void dropNodeTables(Connection targetConnection, String targetSchema) throws SQLException {
         DB.drop(targetConnection, targetSchema, TABLE_LINES);
@@ -195,13 +199,14 @@ public class OHDM_DB {
         sq.append("valid_until_offset bigint DEFAULT 0");
         sq.append(");");
         sq.forceExecute();
-        
+
         // LINES
         DB.createSequence(targetConnection, schema, TABLE_LINES);
         sq = new SQLStatementQueue(targetConnection);
         sq.append(DB.getCreateTableBegin(schema, TABLE_LINES));
         sq.append(",");
-        sq.append("line geometry,");
+        sq.append(LINE_GEOMETRY_COLUMN_NAME);
+        sq.append(" geometry,");
         sq.append("source_user_id bigint");
         sq.append(");");
         sq.forceExecute();
@@ -211,7 +216,8 @@ public class OHDM_DB {
         sq = new SQLStatementQueue(targetConnection);
         sq.append(DB.getCreateTableBegin(schema, TABLE_POINTS));
         sq.append(",");
-        sq.append("point geometry,");
+        sq.append(POINT_GEOMETRY_COLUMN_NAME);
+        sq.append(" geometry,");
         sq.append("source_user_id bigint");
         sq.append(");");
         sq.forceExecute();
@@ -221,7 +227,8 @@ public class OHDM_DB {
         sq = new SQLStatementQueue(targetConnection);
         sq.append(DB.getCreateTableBegin(schema, TABLE_POLYGONS));
         sq.append(",");
-        sq.append("polygon geometry,");
+        sq.append(POLYGON_GEOMETRY_COLUMN_NAME);
+        sq.append(" geometry,");
         sq.append("source_user_id bigint");
         sq.append(");");
         sq.forceExecute();
@@ -265,6 +272,22 @@ public class OHDM_DB {
         sq.append(DB.getFullTableName(schema, TABLE_IMPORTS_UPDATES));
         sq.append("(externalsystemID) VALUES (0);");
 
+        sq.forceExecute();
+
+        // IMPORT SHAPEFILES etc.
+        DB.createSequence(targetConnection, schema, TABLE_EXTERNAL_IMPORTS);
+        // table
+        sq.append(DB.getCreateTableBegin(schema, TABLE_EXTERNAL_IMPORTS));
+        // add table specifics
+        sq.append(",");
+        sq.append("source_user_id bigint, ");
+        sq.append("importDate timestamp,");
+        sq.append("importedPoints character varying,");
+        sq.append("importedLines character varying,");
+        sq.append("importedPolygons character varying,");
+        sq.append("importedObjects character varying,");
+        sq.append("importedObjectGeometries character varying");
+        sq.append(");");
         sq.forceExecute();
     }
 

@@ -3,12 +3,10 @@ package util;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.StringTokenizer;
+import java.util.*;
 
 /**
  *
@@ -46,8 +44,7 @@ public class Util {
 
         target.append(s);
     }
-    
-  
+
     public static void serializeAttributes(StringBuilder target, String key, String value) {
         if(target == null) return;
         
@@ -319,6 +316,49 @@ public class Util {
         }
         
         return psqlProcess;
+    }
+
+    public static String bigDecimalList2String(List<BigDecimal> list) {
+        StringBuilder sb = new StringBuilder();
+
+        boolean first = true;
+        for(BigDecimal id : list) {
+            if(!first) sb.append(",");
+            else first = false;
+            sb.append(id);
+        }
+
+        return sb.toString();
+    }
+
+    public static String getDateTodayString() {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DATE, 0);
+
+        SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd");
+
+        String formatted = format1.format(cal.getTime());
+        return formatted;
+    }
+
+    public static String getNowTimeString() {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DATE, 0);
+
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        String formatted = format.format(cal.getTime());
+        return formatted;
+    }
+
+    public static List<BigDecimal> string2BigDecimalList(String idString) {
+        List<BigDecimal> list = new ArrayList<>();
+        String[] split = idString.split(",");
+        for(String idS : split) {
+            list.add(new BigDecimal(idS));
+        }
+
+        return list;
     }
 
     public static HashMap<String, String> parametersToMap(String args[], boolean valueRequired, String helpMessage) {

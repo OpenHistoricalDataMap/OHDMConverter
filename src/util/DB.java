@@ -73,7 +73,10 @@ public class DB {
      * @param tableName 
      */
     static public void drop(SQLStatementQueue sq, String schema, String tableName) {
-        String fullTableName = DB.getFullTableName(schema, tableName);
+        drop(sq, DB.getFullTableName(schema, tableName));
+    }
+
+    static public void drop(SQLStatementQueue sq, String fullTableName) {
         try {
             sq.append("DROP SEQUENCE ");
             sq.append(DB.getSequenceName(fullTableName));
@@ -105,7 +108,7 @@ public class DB {
     static public String getFullTableName(String schema, String tableName) {
         return schema + "." + tableName;
     }
-    
+
     ////////////////////////////////////////////////////////////////////////
     //                                helper                               //
     ////////////////////////////////////////////////////////////////////////

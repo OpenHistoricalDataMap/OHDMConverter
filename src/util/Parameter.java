@@ -1,6 +1,8 @@
 package util;
 
+import inter2ohdm.OSMChunkExtractor;
 import ohdm2rendering.OHDM2Rendering;
+import osm.OSMClassification;
 
 import java.io.*;
 import java.text.*;
@@ -48,9 +50,13 @@ public class Parameter {
     private int logMessageInterval = 5;
     private int SerTagsSize = 200000;
     private String osmfilecreationdatestring;
+
     private String columnNameObjectName;
     private String columnNameGeometry;
     private String tableName;
+    private int classificationID = -1;
+    private String validSince;
+    private String validUntil;
 
     public String getConnectionType() {
         return connectionType;
@@ -86,6 +92,11 @@ public class Parameter {
     public String[] getWaysColumnNames() {
         return waysColumnNames;
     }
+
+    public int getClassificationID() { return this.classificationID; }
+    public String getValidSince() { return this.validSince; }
+    public String getValidUntil() { return this.validUntil; }
+
 
     private String[] waynodesColumnNames;
     private String[] waysColumnNames;
@@ -169,9 +180,12 @@ public class Parameter {
                             case "waysColumnNames": this.waysColumnNames = value.split("\\|"); break;
                             case "serTagsSize": this.SerTagsSize = Integer.parseInt(value); break;
                             case "osmfilecreationdate": this.checkDateFormat(value); break;
-                            case "columnNameObjectName": this.columnNameObjectName = value;
-                            case "columnNameGeometry": this.columnNameGeometry = value;
-                            case "tableName": this.tableName = value;
+                            case "columnNameObjectName": this.columnNameObjectName = value; break;
+                            case "columnNameGeometry": this.columnNameGeometry = value; break;
+                            case "tableName": this.tableName = value; break;
+                            case "validSince": this.validSince = value; this.checkDateFormat(validSince); break;
+                            case "validUntil": this.validUntil = value; this.checkDateFormat(validUntil); break;
+                            case "classificationID": this.classificationID = Integer.parseInt(value); break;
                         }
                     }
                 }

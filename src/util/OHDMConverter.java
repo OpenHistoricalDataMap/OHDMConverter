@@ -16,6 +16,7 @@ import ohdm2geoserverrendering.OHDM2Geoserverrendering;
 import ohdm2rendering.OHDM2Rendering;
 import osm2inter.OSMImport;
 import rendering2strdf.Rendering2stRDF;
+import shp2ohdm.Shapefile2OHDM;
 
 /**
  *
@@ -44,6 +45,7 @@ public class OHDMConverter {
         String mapnikDBConfig = null;
         String polygonString = null;
         String dateString = null;
+        String historicImportDBConfig = null;
 
         boolean chunkCmdBuilder = false;
         boolean chunkProcess = false;
@@ -84,6 +86,9 @@ public class OHDMConverter {
             value = argumentMap.get("-t");
             if (value != null) { dateString = value; }
 
+            value = argumentMap.get("-h");
+            if (value != null) { historicImportDBConfig = value; }
+
             chunkCmdBuilder = argumentMap.containsKey(CHUNK_FACTORY);
             chunkProcess = argumentMap.containsKey(CHUNK_PROCESS);
         }
@@ -115,8 +120,8 @@ public class OHDMConverter {
         // unclear what to do: import into ohdm or create rendering database out of ohdm
         if( ohdmDBConfig != null
                 && importInterDBConfig == null && updateInterDBConfig == null && renderingDBConfig == null
-                && geoserverRenderingDBConfig == null)  {
-            OHDMConverter.printUsageAndExit("unclear what to do: ohdm db defined but no import (-i) nor output (-[r|g|m|u]");
+                && geoserverRenderingDBConfig == null && historicImportDBConfig == null)  {
+            OHDMConverter.printUsageAndExit("unclear what to do: ohdm db defined but no import (-i) nor output (-[r|g|m|u|h]");
         }
         
         // debug
@@ -127,6 +132,7 @@ public class OHDMConverter {
         System.err.println("ohdmDBConfig: " + ohdmDBConfig);
         System.err.println("renderingDBConfig: " + renderingDBConfig);
         System.err.println("geoserverRenderingDBConfig: " + geoserverRenderingDBConfig);
+        System.err.println("historicImportDBConfig: " + historicImportDBConfig);
         System.err.println("mapnikDBConfig: " + mapnikDBConfig);
         System.err.println("polygon: " + polygonString);
         System.err.println("date: " + dateString);
@@ -195,6 +201,10 @@ public class OHDMConverter {
         if(renderingDBConfig != null &&  stRDFFileString != null && polygonString != null) {
             Rendering2stRDF.main(new String[]{renderingDBConfig, stRDFFileString, polygonString});
         }
+
+        if(historicImportDBConfig != null &&  ohdmDBConfig != null) {
+            Shapefile2OHDM.main(new String[]{historicImportDBConfig, ohdmDBConfig});
+        }
     }
 
     private static void printUsageAndExit(String message) {
@@ -229,8 +239,10 @@ public class OHDMConverter {
         out.println("-r [parameter file rendering DB]");
         out.println("-g [parameter file Geoserver rendering DB]");
         out.println("-m [parameter file mapnik DB]");
+        out.println("-h [parameter file import historic geometries]");
         out.println("-p [WKT polygon (EPSG 4326) for osm extraction]");
         out.println("-t [date like 2117-12-11]");
+        out.print("\n");
         out.println(CHUNK_FACTORY + " -parallel [#processes] -classpath [further libs] -size [steps] [usual parameters] .. creates command list for parallel processing of huge data sets");
         out.println("see https://github.com/OpenHistoricalDataMap/OSMImportUpdate/wiki for details");
         System.exit(0);

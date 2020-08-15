@@ -129,6 +129,17 @@ public class Shapefile2OHDM {
             String columnNameObjectName = this.importParameter.getColumnNameObjectName();
             String columnNameGeometry = this.importParameter.getColumnNameGeometry();
 
+            // set srid
+            System.out.println("4326 is assumed as import format - going to set explicitly.");
+            sqlQueue.append("UPDATE ");
+            sqlQueue.append(DB.getFullTableName(importParameter.getSchema(), importParameter.getTableName()));
+            sqlQueue.append(" SET ");
+            sqlQueue.append(columnNameGeometry);
+            sqlQueue.append(" = st_setsrid(");
+            sqlQueue.append(columnNameGeometry);
+            sqlQueue.append(", 4326)");
+            sqlQueue.forceExecute();
+
             // SELECT prov_name, st_asewkt(geom), st_geometrytype(geom) FROM test.preussen_1830;
             sqlQueue.append("select pg_typeof(");
             sqlQueue.append(pkColumnName);

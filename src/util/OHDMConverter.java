@@ -26,6 +26,8 @@ public class OHDMConverter {
     public static final String CHUNK_FACTORY = "-buildimportcmd";
     public static final String CHUNK_PROCESS = "-chunkprocess";
 
+    public static final String JARNAME = "OHDMConverter.jar"; // TODO: replace this literal with a variable from commandline
+
     public static void main(String[] args) throws IOException, SQLException {
 
         if(args.length < 4) {

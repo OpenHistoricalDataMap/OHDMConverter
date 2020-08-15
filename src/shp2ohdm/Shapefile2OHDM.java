@@ -14,8 +14,6 @@ import java.util.List;
 public class Shapefile2OHDM {
     private final Parameter targetParameter;
     private final Parameter importParameter;
-    private int lfd = 0;
-    private BufferedWriter out;
     private SQLStatementQueue sqlQueue;
     private String pkColumnName = null;
     private BigDecimal importerUserID;

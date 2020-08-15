@@ -2,6 +2,7 @@ package ohdm2geoserverrendering;
 
 import ohdm2geoserverrendering.IsRunningChecker;
 import util.DB;
+import util.OHDMConverter;
 import util.Parameter;
 import util.SQLStatementQueue;
 
@@ -153,8 +154,8 @@ public class OHDM2Geoserverrendering {
     void changeDefaultParametersToActual(String targetSchema, String sourceSchema){
         for (String statement : defaultSQLStatementList) {
 
-            String actualStatement = statement.replaceAll("my_test_schema", targetSchema);
-            actualStatement = actualStatement.replaceAll("ohdm", sourceSchema);
+            String actualStatement = statement.replaceAll("target_schema_to_be_replaced", targetSchema);
+            actualStatement = actualStatement.replaceAll("source_schema_to_be_replaced", sourceSchema);
 
             actualSQLStatementList.add(actualStatement);
         }
@@ -250,7 +251,7 @@ public class OHDM2Geoserverrendering {
         JarFile jar = null;
         String path = "resources/css/";
         try {
-            jar = new JarFile("OSMImportUpdate.jar");
+            jar = new JarFile(OHDMConverter.JARNAME);
             Enumeration<JarEntry> entries = jar.entries();
             while (entries.hasMoreElements()) {
                 JarEntry entry = entries.nextElement();
@@ -310,7 +311,7 @@ public class OHDM2Geoserverrendering {
         JarFile jar = null;
         String path = "resources/symbols/";
         try {
-            jar = new JarFile("OSMImportUpdate.jar");
+            jar = new JarFile(OHDMConverter.JARNAME);
             Enumeration<JarEntry> entries = jar.entries();
             while (entries.hasMoreElements()) {
                 JarEntry entry = entries.nextElement();

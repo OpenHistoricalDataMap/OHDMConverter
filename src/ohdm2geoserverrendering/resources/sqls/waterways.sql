@@ -1,22 +1,3 @@
-/* Schema erstellen */
-
-DROP TABLE IF EXISTS target_schema_to_be_replaced.my_waterways;
-
-CREATE TABLE target_schema_to_be_replaced.my_waterways (
-geometry geometry,
-object_id bigint,
-geom_id bigint,
-classid bigint,
-type character varying,
-name character varying,
-valid_since date,
-valid_until date,
-tags hstore,
-user_id bigint,
-tunnel VARCHAR(50),
-intermittent VARCHAR(50),
-bridge VARCHAR(50),
-lock VARCHAR(50));
 
 /* Daten hinzufügen */
 /* POLYGON */

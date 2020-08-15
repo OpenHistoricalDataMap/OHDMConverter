@@ -1,19 +1,3 @@
-/* Schema erstellen */
-
-DROP TABLE IF EXISTS target_schema_to_be_replaced.my_buildings;
-
-CREATE TABLE target_schema_to_be_replaced.my_buildings (
-
-geometry geometry,
-object_id bigint,
-geom_id bigint,
-classid bigint,
-type character varying,
-name character varying,
-valid_since date,
-valid_until date,
-tags hstore,
-user_id bigint);
 
 /* Daten hinzufügen */
 /* POLYGON */

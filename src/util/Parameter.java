@@ -57,6 +57,7 @@ public class Parameter {
     private int classificationID = -1;
     private String validSince;
     private String validUntil;
+    private boolean dropAndRecreate = true;
 
     public String getConnectionType() {
         return connectionType;
@@ -96,7 +97,7 @@ public class Parameter {
     public int getClassificationID() { return this.classificationID; }
     public String getValidSince() { return this.validSince; }
     public String getValidUntil() { return this.validUntil; }
-
+    public boolean getDropAndRecreate() { return this.dropAndRecreate; }
 
     private String[] waynodesColumnNames;
     private String[] waysColumnNames;
@@ -186,6 +187,7 @@ public class Parameter {
                             case "validSince": this.validSince = value; this.checkDateFormat(validSince); break;
                             case "validUntil": this.validUntil = value; this.checkDateFormat(validUntil); break;
                             case "classificationID": this.classificationID = Integer.parseInt(value); break;
+                            case "dropAndRecreate": this.dropAndRecreate = this.getTrueOrFalse(value); break;
                         }
                     }
                 }

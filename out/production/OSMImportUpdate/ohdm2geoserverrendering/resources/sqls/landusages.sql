@@ -1,29 +1,8 @@
-/* Table erstellen */
-
-DROP TABLE IF EXISTS my_test_schema.my_landusages;
-
-CREATE TABLE my_test_schema.my_landusages (
-
-geometry geometry,
-object_id bigint,
-geom_id bigint,
-classid bigint,
-type character varying,
-name character varying,
-valid_since date,
-valid_until date,
-tags hstore,
-user_id bigint,
-religion character varying,
-area real,
-layer integer,
-z_order integer);
-
 /* Daten hinzufügen */
 /* POLYGON */
 INSERT INTO
 
-my_test_schema.my_landusages(geometry, object_id, geom_id, classid, type, name, valid_since, valid_until, tags, user_id, religion, area, layer, z_order)
+target_schema_to_be_replaced.my_landusages(geometry, object_id, geom_id, classid, type, name, valid_since, valid_until, tags, user_id, religion, area, layer, z_order)
 
 SELECT 
 
@@ -32,18 +11,18 @@ gg.valid_until, gg.tags, gg.user_id, gg.religion, St_Area(g.geometry,true), CAST
 
 FROM
 
- (SELECT id, name from ohdm.geoobject) as o,
+ (SELECT id, name from source_schema_to_be_replaced.geoobject) as o,
 
  (SELECT id_target, classification_id, type_target, id_geoobject_source, valid_since, valid_until, tags, source_user_id as user_id,
   tags -> 'religion' as religion,
   tags -> 'layer' as layer,
-  tags -> 'z_order' as z_order FROM ohdm.geoobject_geometry) as gg,
+  tags -> 'z_order' as z_order FROM source_schema_to_be_replaced.geoobject_geometry) as gg,
 
- (SELECT id, polygon as geometry FROM ohdm.polygons WHERE ST_IsValid(polygon) = '1') as g,
+ (SELECT id, polygon as geometry FROM source_schema_to_be_replaced.polygons WHERE ST_IsValid(polygon) = '1') as g,
 
- /* hier jeweils ohdm.polygons, lines, points*/
+ /* hier jeweils source_schema_to_be_replaced.polygons, lines, points*/
 
- (SELECT id, subclassname FROM ohdm.classification WHERE subclassname = 'commercial'
+ (SELECT id, subclassname FROM source_schema_to_be_replaced.classification WHERE subclassname = 'commercial'
 OR subclassname = 'construction'
 OR subclassname = 'industrial'
 OR subclassname = 'residential'
@@ -80,7 +59,7 @@ OR subclassname = 'village_green') as c
 /* LINES */
 INSERT INTO
 
-my_test_schema.my_landusages(geometry, object_id, geom_id, classid, type, name, valid_since, valid_until, tags, user_id, religion, area, layer, z_order)
+target_schema_to_be_replaced.my_landusages(geometry, object_id, geom_id, classid, type, name, valid_since, valid_until, tags, user_id, religion, area, layer, z_order)
 
 SELECT
 
@@ -89,18 +68,18 @@ gg.valid_until, gg.tags, gg.user_id, gg.religion, St_Area(g.geometry,true), CAST
 
 FROM
 
- (SELECT id, name from ohdm.geoobject) as o,
+ (SELECT id, name from source_schema_to_be_replaced.geoobject) as o,
 
  (SELECT id_target, classification_id, type_target, id_geoobject_source, valid_since, valid_until, tags, source_user_id as user_id,
   tags -> 'religion' as religion,
   tags -> 'layer' as layer,
-  tags -> 'z_order' as z_order FROM ohdm.geoobject_geometry) as gg,
+  tags -> 'z_order' as z_order FROM source_schema_to_be_replaced.geoobject_geometry) as gg,
 
- (SELECT id, line as geometry FROM ohdm.lines) as g,
+ (SELECT id, line as geometry FROM source_schema_to_be_replaced.lines) as g,
 
- /* hier jeweils ohdm.polygons, lines, points*/
+ /* hier jeweils source_schema_to_be_replaced.polygons, lines, points*/
 
- (SELECT id, subclassname FROM ohdm.classification WHERE subclassname = 'commercial'
+ (SELECT id, subclassname FROM source_schema_to_be_replaced.classification WHERE subclassname = 'commercial'
 OR subclassname = 'construction'
 OR subclassname = 'industrial'
 OR subclassname = 'residential'
@@ -138,7 +117,7 @@ OR subclassname = 'village_green') as c
 /* POINTS */
 INSERT INTO
 
-my_test_schema.my_landusages(geometry, object_id, geom_id, classid, type, name, valid_since, valid_until, tags, user_id, religion, area, layer, z_order)
+target_schema_to_be_replaced.my_landusages(geometry, object_id, geom_id, classid, type, name, valid_since, valid_until, tags, user_id, religion, area, layer, z_order)
 
 SELECT
 
@@ -147,18 +126,18 @@ gg.valid_until, gg.tags, gg.user_id, gg.religion, St_Area(g.geometry,true), CAST
 
 FROM
 
- (SELECT id, name from ohdm.geoobject) as o,
+ (SELECT id, name from source_schema_to_be_replaced.geoobject) as o,
 
  (SELECT id_target, classification_id, type_target, id_geoobject_source, valid_since, valid_until, tags, source_user_id as user_id,
   tags -> 'religion' as religion,
   tags -> 'layer' as layer,
-  tags -> 'z_order' as z_order FROM ohdm.geoobject_geometry) as gg,
+  tags -> 'z_order' as z_order FROM source_schema_to_be_replaced.geoobject_geometry) as gg,
 
- (SELECT id, point as geometry FROM ohdm.points) as g,
+ (SELECT id, point as geometry FROM source_schema_to_be_replaced.points) as g,
 
- /* hier jeweils ohdm.polygons, lines, points*/
+ /* hier jeweils source_schema_to_be_replaced.polygons, lines, points*/
 
-(SELECT id, subclassname FROM ohdm.classification WHERE subclassname = 'commercial'
+(SELECT id, subclassname FROM source_schema_to_be_replaced.classification WHERE subclassname = 'commercial'
 OR subclassname = 'construction'
 OR subclassname = 'industrial'
 OR subclassname = 'residential'

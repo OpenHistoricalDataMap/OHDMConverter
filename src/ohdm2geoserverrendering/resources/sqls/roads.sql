@@ -1,35 +1,3 @@
-/* Schema erstellen */
-
-DROP TABLE IF EXISTS target_schema_to_be_replaced.my_roads;
-
-CREATE TABLE target_schema_to_be_replaced.my_roads (
-geometry geometry,
-object_id bigint,
-geom_id bigint,
-classid bigint,
-type character varying,
-name character varying,
-valid_since date,
-valid_until date,
-tags hstore,
-user_id bigint,
-highway character varying,
-tunnel smallint,
-bridge smallint,
-oneway smallint,
-ref character varying,
-layer character varying,
-access character varying,
-service character varying,
-horse character varying,
-bicycle character varying,
-construction character varying,
-surface character varying,
-tracktype character varying,
-z_order character varying,
-highspeed character varying,
-usage character varying,
-class character varying);
 
 /* Daten hinzufügen */
 /* POLYGON */

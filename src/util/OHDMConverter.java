@@ -127,17 +127,17 @@ public class OHDMConverter {
         }
         
         // debug
-        System.err.println("osmFile: " + osmFile);
-        System.err.println("stRDF file: " + stRDFFileString);
-        System.err.println("importInterDBConfig: " + importInterDBConfig);
-        System.err.println("updateInterDBConfig: " + updateInterDBConfig);
-        System.err.println("ohdmDBConfig: " + ohdmDBConfig);
-        System.err.println("renderingDBConfig: " + renderingDBConfig);
-        System.err.println("geoserverRenderingDBConfig: " + geoserverRenderingDBConfig);
-        System.err.println("historicImportDBConfig: " + historicImportDBConfig);
-        System.err.println("mapnikDBConfig: " + mapnikDBConfig);
-        System.err.println("polygon: " + polygonString);
-        System.err.println("date: " + dateString);
+        System.out.println("osmFile: " + osmFile);
+        System.out.println("stRDF file: " + stRDFFileString);
+        System.out.println("importInterDBConfig: " + importInterDBConfig);
+        System.out.println("updateInterDBConfig: " + updateInterDBConfig);
+        System.out.println("ohdmDBConfig: " + ohdmDBConfig);
+        System.out.println("renderingDBConfig: " + renderingDBConfig);
+        System.out.println("geoserverRenderingDBConfig: " + geoserverRenderingDBConfig);
+        System.out.println("historicImportDBConfig: " + historicImportDBConfig);
+        System.out.println("mapnikDBConfig: " + mapnikDBConfig);
+        System.out.println("polygon: " + polygonString);
+        System.out.println("date: " + dateString);
 
         OHDMConverter.printMessage("start processes:");
         if(importInterDBConfig != null && osmFile != null && updateInterDBConfig == null) {

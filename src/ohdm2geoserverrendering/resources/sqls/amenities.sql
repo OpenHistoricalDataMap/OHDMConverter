@@ -1,24 +1,3 @@
-/* Table erstellen */
-
-DROP TABLE IF EXISTS target_schema_to_be_replaced.my_amenities;
-
-CREATE TABLE target_schema_to_be_replaced.my_amenities (
-
-geometry geometry,
-object_id bigint,
-geom_id bigint,
-classid bigint,
-type character varying,
-name character varying,
-valid_since date,
-valid_until date,
-tags hstore,
-user_id bigint,
-religion character varying,
-denomination character varying,
-power_source character varying,
-score integer,
-access character varying);
 
 /* Daten hinzufügen */
 /* POLYGON */

@@ -1,22 +1,3 @@
-/* Table erstellen */
-DROP TABLE IF EXISTS target_schema_to_be_replaced.my_places;
-
-CREATE TABLE target_schema_to_be_replaced.my_places (
-
-geometry geometry,
-object_id bigint,
-geom_id bigint,
-classid bigint,
-type character varying,
-name character varying,
-valid_since date,
-valid_until date,
-tags hstore,
-user_id bigint,
-capital character varying,
-z_order INTEGER,
-population INTEGER);
-
 /* Daten hinzufügen */
 /* POLYGON */
 INSERT INTO

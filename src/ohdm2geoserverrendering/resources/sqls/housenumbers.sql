@@ -1,24 +1,3 @@
-/* Schema erstellen */
-
-DROP TABLE IF EXISTS target_schema_to_be_replaced.my_housenumbers;
-
-CREATE TABLE target_schema_to_be_replaced.my_housenumbers (
-
-geometry geometry,
-object_id bigint,
-geom_id bigint,
-classid bigint,
-type character varying,
-name character varying,
-valid_since date,
-valid_until date,
-tags hstore,
-user_id bigint,
-addr_street character varying,
-addr_postcode character varying,
-addr_city character varying,
-addr_unit character varying default '',
-addr_housename character varying);
 
 /* Daten hinzufügen */
 /* POLYGON */

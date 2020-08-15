@@ -1,6 +1,5 @@
 package ohdm2geoserverrendering;
 
-import ohdm2geoserverrendering.IsRunningChecker;
 import util.DB;
 import util.OHDMConverter;
 import util.Parameter;
@@ -18,10 +17,10 @@ import java.util.jar.JarFile;
 
 public class OHDM2Geoserverrendering {
 
-    public List<String> defaultSQLStatementList = new ArrayList<>();
-    public List<String> actualSQLStatementList = new ArrayList<>();
+    public List<String> templateSQLStatementList;
+    public List<String> actualSQLStatementList;
 
-    String admin_labels_sql = "";
+    String sqlTemplate = "";
     String amenities_sql = "";
     String boundaries_sql = "";
     String buildings_sql = "";
@@ -59,7 +58,6 @@ public class OHDM2Geoserverrendering {
         String sourceParameterFileName = "db_ohdm.txt";
         String targetParameterFileName = "db_rendering.txt";
 
-
         if(args.length > 0) {
             sourceParameterFileName = args[0];
         }
@@ -68,30 +66,31 @@ public class OHDM2Geoserverrendering {
             targetParameterFileName = args[1];
         }
 
-//            Connection sourceConnection = Importer.createLocalTestSourceConnection();
-//            Connection targetConnection = Importer.createLocalTestTargetConnection();
-
         Parameter sourceParameter = new Parameter(sourceParameterFileName);
         Parameter targetParameter = new Parameter(targetParameterFileName);
         setTargetParameterChecker(targetParameterFileName);
 
-
-
         Connection connection = DB.createConnection(targetParameter);
 
         String targetSchema = targetParameter.getSchema();
-
         String sourceSchema = sourceParameter.getSchema();
 
         SQLStatementQueue sql = new SQLStatementQueue(connection);
         OHDM2Geoserverrendering renderer = new OHDM2Geoserverrendering();
 
+        if(targetParameter.getDropAndRecreate()) {
+            System.out.println("Drop and recreate rendering tables (to prevent resetting tables, set parameter dropAndRecreate: false)");
+            renderer.loadDropAndRecreateSQL();
+            renderer.changeDefaultParametersToActual(targetSchema, sourceSchema);
+            renderer.executeSQLStatements(sql);
+            System.out.println("Render tables created");
+        }
+
+        System.out.println("Start producing rendering.");
         renderer.loadSQLFiles();
         renderer.changeDefaultParametersToActual(targetSchema, sourceSchema);
-
         renderer.executeSQLStatements(sql);
-
-        System.out.println("Render tables creation for Geoserver finished");
+        System.out.println("Render tables produced");
 
         System.out.println("Start copying symbols into user-dir..");
         renderer.loadSymbolsFromResources();
@@ -99,7 +98,7 @@ public class OHDM2Geoserverrendering {
         renderer.loadCssFromResourecs();
 
         if(!renderer.checkFiles()){
-            System.out.println("CSS and/or symbolfiles couldnt be created successfully.\n" +
+            System.out.println("Could not create CSS and/or symbol files.\n" +
                     "Please download these files manually from: https://github.com/teceP/OSMImportUpdateGeoserverResources");
         }else{
             System.out.println("CSS and symbolfiles has been created successfully.");
@@ -110,7 +109,6 @@ public class OHDM2Geoserverrendering {
 
        System.out.println("Start creating spatial indexes..");
        renderer.createSpatialIndex(sql,targetSchema);
-
     }
 
     static void setTargetParameterChecker(String targetParameterCheckerString){
@@ -122,9 +120,10 @@ public class OHDM2Geoserverrendering {
     }
 
     void loadSQLFiles(){
+        this.templateSQLStatementList = new ArrayList<>();
         System.out.println("Load SQL-Files...");
 
-        admin_labels_sql = loadSqlFromResources("resources/sqls/admin_labels.sql");
+        sqlTemplate = loadSqlFromResources("resources/sqls/admin_labels.sql");
         amenities_sql = loadSqlFromResources("resources/sqls/amenities.sql");
         boundaries_sql = loadSqlFromResources("resources/sqls/boundaries.sql");
         buildings_sql = loadSqlFromResources("resources/sqls/buildings.sql");
@@ -137,22 +136,29 @@ public class OHDM2Geoserverrendering {
         waterarea_sql = loadSqlFromResources("resources/sqls/waterarea.sql");
         waterways_sql = loadSqlFromResources("resources/sqls/waterways.sql");
 
-        defaultSQLStatementList.add(admin_labels_sql);
-        defaultSQLStatementList.add(amenities_sql);
-        defaultSQLStatementList.add(boundaries_sql);
-        defaultSQLStatementList.add(buildings_sql);
-        defaultSQLStatementList.add(housenumbers_sql);
-        defaultSQLStatementList.add(landusages_sql);
-        defaultSQLStatementList.add(places_sql);
-        defaultSQLStatementList.add(roads_sql);
-        defaultSQLStatementList.add(transport_areas_sql);
-        defaultSQLStatementList.add(transport_points_sql);
-        defaultSQLStatementList.add(waterarea_sql);
-        defaultSQLStatementList.add(waterways_sql);
+        templateSQLStatementList.add(sqlTemplate);
+        templateSQLStatementList.add(amenities_sql);
+        templateSQLStatementList.add(boundaries_sql);
+        templateSQLStatementList.add(buildings_sql);
+        templateSQLStatementList.add(housenumbers_sql);
+        templateSQLStatementList.add(landusages_sql);
+        templateSQLStatementList.add(places_sql);
+        templateSQLStatementList.add(roads_sql);
+        templateSQLStatementList.add(transport_areas_sql);
+        templateSQLStatementList.add(transport_points_sql);
+        templateSQLStatementList.add(waterarea_sql);
+        templateSQLStatementList.add(waterways_sql);
+    }
+
+    private void loadDropAndRecreateSQL() {
+        this.templateSQLStatementList = new ArrayList<>();
+        System.out.println("Load SQL-Files...");
+        templateSQLStatementList.add(loadSqlFromResources("resources/sqls/dropAndCreate.sql"));
     }
 
     void changeDefaultParametersToActual(String targetSchema, String sourceSchema){
-        for (String statement : defaultSQLStatementList) {
+        this.actualSQLStatementList = new ArrayList<>();
+        for (String statement : templateSQLStatementList) {
 
             String actualStatement = statement.replaceAll("target_schema_to_be_replaced", targetSchema);
             actualStatement = actualStatement.replaceAll("source_schema_to_be_replaced", sourceSchema);

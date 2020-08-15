@@ -1,24 +1,3 @@
-/* Table erstellen */
-
-DROP TABLE IF EXISTS target_schema_to_be_replaced.my_landusages;
-
-CREATE TABLE target_schema_to_be_replaced.my_landusages (
-
-geometry geometry,
-object_id bigint,
-geom_id bigint,
-classid bigint,
-type character varying,
-name character varying,
-valid_since date,
-valid_until date,
-tags hstore,
-user_id bigint,
-religion character varying,
-area real,
-layer integer,
-z_order integer);
-
 /* Daten hinzufügen */
 /* POLYGON */
 INSERT INTO

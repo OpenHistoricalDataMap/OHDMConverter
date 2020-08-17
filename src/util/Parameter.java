@@ -59,6 +59,13 @@ public class Parameter {
     private String validUntil;
     private boolean dropAndRecreate = true;
 
+    public String columnValidSinceYear = null;
+    public String columnValidSinceMonth = null;
+    public String columnValidSinceDay = null;
+    public String columnValidUntilYear = null;
+    public String columnValidUntilMonth = null;
+    public String columnValidUntilDay = null;
+
     public String getConnectionType() {
         return connectionType;
     }
@@ -188,6 +195,12 @@ public class Parameter {
                             case "validUntil": this.validUntil = value; this.checkDateFormat(validUntil); break;
                             case "classificationID": this.classificationID = Integer.parseInt(value); break;
                             case "dropAndRecreate": this.dropAndRecreate = this.getTrueOrFalse(value); break;
+                            case "columnValidSinceYear": this.columnValidSinceYear = value; break;
+                            case "columnValidSinceMonth": this.columnValidSinceMonth = value; break;
+                            case "columnValidSinceDay": this.columnValidSinceDay = value; break;
+                            case "columnValidUntilYear": this.columnValidUntilYear = value; break;
+                            case "columnValidUntilMonth": this.columnValidUntilMonth = value; break;
+                            case "columnValidUntilDay": this.columnValidUntilDay = value; break;
                         }
                     }
                 }
@@ -335,4 +348,12 @@ public class Parameter {
 
         return stream;
     }
+
+    public String getColumnValidSinceYear() { return this.columnValidSinceYear; }
+    public String getColumnValidSinceMonth() { return this.columnValidSinceMonth; }
+    public String getColumnValidSinceDay() { return this.columnValidSinceDay; }
+
+    public String getColumnValidUntilYear() { return this.columnValidUntilYear;}
+    public String getColumnValidUntilMonth() { return this.columnValidUntilMonth;}
+    public String getColumnValidUntilDay() { return this.columnValidUntilDay;}
 }

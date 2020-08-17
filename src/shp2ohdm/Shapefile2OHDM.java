@@ -2,7 +2,6 @@ package shp2ohdm;
 
 import util.*;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -93,10 +92,14 @@ public class Shapefile2OHDM {
             this.importerUserID = new BigDecimal(42);
 
             String validSinceString = importParameter.getValidSince();
+            String columnValidSinceYear = importParameter.getColumnValidSinceYear();
             String validUntilString = importParameter.getValidUntil();
+            String columnValidUntilYear = importParameter.getColumnValidUntilYear();
 
-            if (validSinceString == null || validUntilString == null || this.importParameter.getClassificationID() == -1) {
-                throw new SQLException("validSince, validUntil and classification must be set - fatal, give up");
+            if ( (validSinceString == null && columnValidSinceYear == null)
+                || (validUntilString == null && columnValidUntilYear == null)
+                || this.importParameter.getClassificationID() == -1) {
+                throw new SQLException("validSince, validUntil (at least year) and classification must be set - fatal, give up");
             }
 
             // both schemas are in the same db - ensured, see constructor
@@ -212,6 +215,7 @@ public class Shapefile2OHDM {
                 importedObjectIDs.add(objectOHDMID);
 
                 /////////////////// objects - geometry ////////////////////////////////////////////////
+
                 String fullOGTableName = DB.getFullTableName(this.targetParameter.getSchema(), OHDM_DB.TABLE_GEOOBJECT_GEOMETRY);
                 StringBuilder sb = new StringBuilder();
                 sb.append("insert into ");
@@ -220,7 +224,7 @@ public class Shapefile2OHDM {
                 if (this.importerUserIDSet) {
                     sb.append("source_user_id, ");
                 }
-                sb.append("id_geoobject_source, classification_id, valid_since, valid_until, type_target, id_target) VALUES (");
+                sb.append("id_geoobject_source, classification_id, valid_since, valid_until, type_target, id_target) SELECT ");
                 if (this.importerUserIDSet) {
                     sb.append(this.importerUserID.longValue());
                     sb.append(", ");
@@ -228,16 +232,83 @@ public class Shapefile2OHDM {
                 sb.append(objectOHDMID.longValue()); // object id
                 sb.append(", ");
                 sb.append(this.importParameter.getClassificationID()); // classification id
-                sb.append(", '");
-                sb.append(validSinceString);
-                sb.append("', '");
-                sb.append(validUntilString);
-                sb.append("', ");
+                sb.append(", ");
+
+/*
+insert into ohdmhistoric.geoobject_geometry
+(id_geoobject_source, classification_id, source_user_id, valid_since)
+select 123456, 56, 42, to_timestamp(
+	concat(
+		cast(gwsyear as varchar(4)), '-',
+		cast(gwsmonth as varchar(2)), '-',
+		 cast(gwsday as varchar(2))
+	), 'YYYY-MM-DD') FROM test.cshapes returning id
+ */
+
+                String validSinceValue = null;
+                // since
+                if(validSinceString != null) {
+                    validSinceValue = "'" + validSinceString + "'";
+                } else { // at least year is in the table
+                    validSinceValue = "to_timestamp(concat(cast(";
+                    validSinceValue += columnValidSinceYear;
+                    validSinceValue += " as varchar(4)), '-',";
+                    String columnValidSinceMonth = this.importParameter.getColumnValidSinceMonth();
+                    if(columnValidSinceMonth == null) {
+                        validSinceValue += "'01-',";
+                    } else {
+                        validSinceValue += "cast(";
+                        validSinceValue += columnValidSinceMonth;
+                        validSinceValue += " as varchar(2)), '-',";
+                    }
+                    String columnValidSinceDay = this.importParameter.getColumnValidSinceDay();
+                    if(columnValidSinceDay == null) {
+                        validSinceValue += "'01',";
+                    } else {
+                        validSinceValue += "cast(";
+                        validSinceValue += columnValidSinceDay;
+                        validSinceValue += " as varchar(2))";
+                    }
+                    validSinceValue += "), 'YYYY-MM-DD')";
+                }
+
+                sb.append(validSinceValue);
+                sb.append(", ");
+
+                String validUntilValue = null;
+                // until
+                if(validUntilString != null) {
+                    validUntilValue = "'" + validUntilString + "'";
+                } else { // at least year is in the table
+                    validUntilValue = "to_timestamp(concat(cast(";
+                    validUntilValue += columnValidUntilYear;
+                    validUntilValue += " as varchar(4)), '-',";
+                    String columnValidUntilMonth = this.importParameter.getColumnValidUntilMonth();
+                    if(columnValidUntilMonth == null) {
+                        validUntilValue += "'01-',";
+                    } else {
+                        validUntilValue += "cast(";
+                        validUntilValue += columnValidUntilMonth;
+                        validUntilValue += " as varchar(2)), '-',";
+                    }
+                    String columnValidUntilDay = this.importParameter.getColumnValidUntilDay();
+                    if(columnValidUntilDay == null) {
+                        validUntilValue += "'01',";
+                    } else {
+                        validUntilValue += "cast(";
+                        validUntilValue += columnValidUntilDay;
+                        validUntilValue += " as varchar(2))";
+                    }
+                    validUntilValue += "), 'YYYY-MM-DD')";
+                }
+
+                sb.append(validUntilValue);
+                sb.append(", ");
 
                 // add geometries
-                importedObjectGeometryIDs = this.addGeomsAndInsert(sb.toString(), currentRow.pointIDs, OHDM_DB.POINT, importedObjectGeometryIDs);
-                importedObjectGeometryIDs = this.addGeomsAndInsert(sb.toString(), currentRow.lineIDs, OHDM_DB.LINESTRING, importedObjectGeometryIDs);
-                importedObjectGeometryIDs = this.addGeomsAndInsert(sb.toString(), currentRow.polygonIDs, OHDM_DB.POLYGON, importedObjectGeometryIDs);
+                importedObjectGeometryIDs = this.addGeomsAndInsert(sb.toString(), currentRow.pointIDs, OHDM_DB.POINT, importedObjectGeometryIDs, currentRow);
+                importedObjectGeometryIDs = this.addGeomsAndInsert(sb.toString(), currentRow.lineIDs, OHDM_DB.LINESTRING, importedObjectGeometryIDs, currentRow);
+                importedObjectGeometryIDs = this.addGeomsAndInsert(sb.toString(), currentRow.polygonIDs, OHDM_DB.POLYGON, importedObjectGeometryIDs, currentRow);
             }
 
             for (ImportRow currentRow : importRows) {
@@ -288,7 +359,7 @@ public class Shapefile2OHDM {
     }
 
     private List<BigDecimal> addGeomsAndInsert(String insertPreamble, List<BigDecimal> ohdmIDs, int geomType,
-                           List<BigDecimal> goIDs) throws SQLException {
+                                               List<BigDecimal> goIDs, ImportRow currentRow) throws SQLException {
 
         if(ohdmIDs.isEmpty()) return goIDs; // don't do anything
 
@@ -297,9 +368,15 @@ public class Shapefile2OHDM {
             sqlQueue.append(geomType);
             sqlQueue.append(", ");
             sqlQueue.append(id.longValue());
-            sqlQueue.append(") returning id ");
-            ResultSet resultSet = sqlQueue.executeWithResult();
+            sqlQueue.append(" FROM ");
+            sqlQueue.append(DB.getFullTableName(importParameter.getSchema(), importParameter.getTableName()));
+            sqlQueue.append(" WHERE ");
+            sqlQueue.append(this.pkColumnName);
+            sqlQueue.append(" = ");
+            sqlQueue.append(currentRow.pk.toString());
+            sqlQueue.append(" returning id ");
 
+            ResultSet resultSet = sqlQueue.executeWithResult();
             resultSet.next();
             goIDs.add(resultSet.getBigDecimal(1));
         }

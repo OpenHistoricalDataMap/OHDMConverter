@@ -17,6 +17,7 @@ import java.util.logging.Logger;
  */
 //todo add parameter description
 public class Parameter {
+    private final String parameterFilename;
     private String servername;
     private String portnumber;
     private String username;
@@ -65,6 +66,10 @@ public class Parameter {
     public String columnValidUntilYear = null;
     public String columnValidUntilMonth = null;
     public String columnValidUntilDay = null;
+    private String sourceURL = "";
+    private String sourceLicense = "";
+    private String sourceComments = "";
+    private String sourceCitation = "";
 
     public String getConnectionType() {
         return connectionType;
@@ -113,6 +118,8 @@ public class Parameter {
     public Parameter(String filename) throws FileNotFoundException, IOException {
         long now = System.currentTimeMillis();
 
+        this.parameterFilename = filename;
+
         FileInputStream fInput = new FileInputStream(filename);
         File file = new File(filename);
         FileReader fr = new FileReader(file);
@@ -147,68 +154,82 @@ public class Parameter {
             }
 
             if(!skip) {
-                StringTokenizer st = new StringTokenizer(inLine, ":");
-                if(st.hasMoreTokens()) {
-                    String key, value;
-                    key = st.nextToken();
-                    if(st.hasMoreTokens()) {
-                        value = st.nextToken();
-                        value = value.trim();
+                // find delimiter
+                String key, value;
+                int delimiterIndex = inLine.indexOf(":");
+                if(delimiterIndex < 1) continue; // missing or first character - both invalid
+//                StringTokenizer st = new StringTokenizer(inLine, ":");
+//                if(st.hasMoreTokens()) {
+//                String key, value;
+//                key = st.nextToken();
+//                if(st.hasMoreTokens()) {
+//                value = st.nextToken();
 
-                        // fill parameters
-                        switch(key) {
-                            case "servername": this.servername = value; break;
-                            case "portnumber": this.portnumber = value; break;
-                            case "username": this.username = value; break;
-                            case "pwd": this.pwd = value; break;
-                            case "dbname": this.dbname = value; break;
-                            case "schema": this.schema = value; break;
-                            case "maxThreads": this.maxThreads = value; break;
-                            case "recordFileName": this.recordFileName = value; break;
-                            case "readsteplen": this.readStepLen = value; break;
-                            case "outFile": this.outFile = value; break;
-                            case "logFile": this.logFile = value; break;
-                            case "errFile": this.errFile = value; break;
-                            case "usePSQL": this.usePSQL = this.getTrueOrFalse(value); break;
-                            case "forgetPreviousImport": this.forgetPreviousImport = this.getTrueOrFalse(value); break;
-                            case "importNodes": this.importNodes = this.getTrueOrFalse(value); break;
-                            case "importWays": this.importWays = this.getTrueOrFalse(value); break;
-                            case "importRelations": this.importRelations = this.getTrueOrFalse(value); break;
-                            case "fullPSQLPath": this.fullPSQLPath = value; break;
-                            case "maxSQLFileSize": this.maxSQLFileSize = Integer.parseInt(value); break;
-                            case "maxPSQLProcesses": this.maxPSQLProcesses = Integer.parseInt(value); break;
-                            case "renderoutput": this.renderoutput = value.toLowerCase(); break;
-                            case "logMessageInterval": this.logMessageInterval = Integer.parseInt(value); break;
-                            case "connectionType": this.connectionType = value; break;
-                            case "delimiter": this.delimiter = value; break;
-                            case "nodesColumnNames": this.nodesColumnNames = value.split("\\|"); break;
-                            case "relationmemberColumnNames": this.relationmemberColumnNames = value.split("\\|"); break;
-                            case "relationsColumnNames": this.relationsColumnNames = value.split("\\|"); break;
-                            case "waynodesColumnNames": this.waynodesColumnNames = value.split("\\|"); break;
-                            case "waysColumnNames": this.waysColumnNames = value.split("\\|"); break;
-                            case "serTagsSize": this.SerTagsSize = Integer.parseInt(value); break;
-                            case "osmfilecreationdate": this.checkDateFormat(value); break;
-                            case "columnNameObjectName": this.columnNameObjectName = value; break;
-                            case "columnNameGeometry": this.columnNameGeometry = value; break;
-                            case "tableName": this.tableName = value; break;
-                            case "validSince": this.validSince = value; this.checkDateFormat(validSince); break;
-                            case "validUntil": this.validUntil = value; this.checkDateFormat(validUntil); break;
-                            case "classificationID": this.classificationID = Integer.parseInt(value); break;
-                            case "dropAndRecreate": this.dropAndRecreate = this.getTrueOrFalse(value); break;
-                            case "columnValidSinceYear": this.columnValidSinceYear = value; break;
-                            case "columnValidSinceMonth": this.columnValidSinceMonth = value; break;
-                            case "columnValidSinceDay": this.columnValidSinceDay = value; break;
-                            case "columnValidUntilYear": this.columnValidUntilYear = value; break;
-                            case "columnValidUntilMonth": this.columnValidUntilMonth = value; break;
-                            case "columnValidUntilDay": this.columnValidUntilDay = value; break;
-                        }
-                    }
+                key = inLine.substring(0, delimiterIndex);
+                key = key.trim();
+                value = inLine.substring(delimiterIndex+1); // just behind ":"
+                value = value.trim();
+
+                // fill parameters
+                switch(key) {
+                    case "servername": this.servername = value; break;
+                    case "portnumber": this.portnumber = value; break;
+                    case "username": this.username = value; break;
+                    case "pwd": this.pwd = value; break;
+                    case "dbname": this.dbname = value; break;
+                    case "schema": this.schema = value; break;
+                    case "maxThreads": this.maxThreads = value; break;
+                    case "recordFileName": this.recordFileName = value; break;
+                    case "readsteplen": this.readStepLen = value; break;
+                    case "outFile": this.outFile = value; break;
+                    case "logFile": this.logFile = value; break;
+                    case "errFile": this.errFile = value; break;
+                    case "usePSQL": this.usePSQL = this.getTrueOrFalse(value); break;
+                    case "forgetPreviousImport": this.forgetPreviousImport = this.getTrueOrFalse(value); break;
+                    case "importNodes": this.importNodes = this.getTrueOrFalse(value); break;
+                    case "importWays": this.importWays = this.getTrueOrFalse(value); break;
+                    case "importRelations": this.importRelations = this.getTrueOrFalse(value); break;
+                    case "fullPSQLPath": this.fullPSQLPath = value; break;
+                    case "maxSQLFileSize": this.maxSQLFileSize = Integer.parseInt(value); break;
+                    case "maxPSQLProcesses": this.maxPSQLProcesses = Integer.parseInt(value); break;
+                    case "renderoutput": this.renderoutput = value.toLowerCase(); break;
+                    case "logMessageInterval": this.logMessageInterval = Integer.parseInt(value); break;
+                    case "connectionType": this.connectionType = value; break;
+                    case "delimiter": this.delimiter = value; break;
+                    case "nodesColumnNames": this.nodesColumnNames = value.split("\\|"); break;
+                    case "relationmemberColumnNames": this.relationmemberColumnNames = value.split("\\|"); break;
+                    case "relationsColumnNames": this.relationsColumnNames = value.split("\\|"); break;
+                    case "waynodesColumnNames": this.waynodesColumnNames = value.split("\\|"); break;
+                    case "waysColumnNames": this.waysColumnNames = value.split("\\|"); break;
+                    case "serTagsSize": this.SerTagsSize = Integer.parseInt(value); break;
+                    case "osmfilecreationdate": this.checkDateFormat(value); break;
+                    case "columnNameObjectName": this.columnNameObjectName = value; break;
+                    case "columnNameGeometry": this.columnNameGeometry = value; break;
+                    case "tableName": this.tableName = value; break;
+                    case "validSince": this.validSince = value; this.checkDateFormat(validSince); break;
+                    case "validUntil": this.validUntil = value; this.checkDateFormat(validUntil); break;
+                    case "classificationID": this.classificationID = Integer.parseInt(value); break;
+                    case "dropAndRecreate": this.dropAndRecreate = this.getTrueOrFalse(value); break;
+                    case "columnValidSinceYear": this.columnValidSinceYear = value; break;
+                    case "columnValidSinceMonth": this.columnValidSinceMonth = value; break;
+                    case "columnValidSinceDay": this.columnValidSinceDay = value; break;
+                    case "columnValidUntilYear": this.columnValidUntilYear = value; break;
+                    case "columnValidUntilMonth": this.columnValidUntilMonth = value; break;
+                    case "columnValidUntilDay": this.columnValidUntilDay = value; break;
+                    case "sourceURL": this.sourceURL = value; break;
+                    case "sourceLicense": this.sourceLicense = value; break;
+                    case "sourceComments": this.sourceComments = value; break;
+                    case "sourceCitation": this.sourceCitation = value; break;
                 }
+//                }
+//                }
             }
             // next line
             inLine = br.readLine();
         }
     }
+
+    public String getParameterFilename() { return this.parameterFilename; }
 
     private boolean getTrueOrFalse(String value) {
         return (value.equalsIgnoreCase("yes")
@@ -356,4 +377,9 @@ public class Parameter {
     public String getColumnValidUntilYear() { return this.columnValidUntilYear;}
     public String getColumnValidUntilMonth() { return this.columnValidUntilMonth;}
     public String getColumnValidUntilDay() { return this.columnValidUntilDay;}
+
+    public String getSourceURL() { return this.sourceURL; }
+    public String geSourceLicense() { return this.sourceLicense; }
+    public String geSourceComments() { return this.sourceComments; }
+    public String geSourceCitation() { return this.sourceCitation; }
 }

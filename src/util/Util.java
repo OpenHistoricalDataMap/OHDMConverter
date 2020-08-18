@@ -202,6 +202,25 @@ public class Util {
         */
     }
 
+    public static String makeValidTableName(String t) {
+        t = Util.fillWhiteSpacesWithUnderline(t);
+        t = t.replace(":", "");
+        t = t.replace("-", "");
+        t = t.replace("\\", "");
+        t = t.replace("/", "");
+
+        return t;
+    }
+
+    public static String fillWhiteSpacesWithUnderline(String t) {
+        if(t == null) return "";
+        t = t.replace(" ", "_");
+        t = t.replace("\t", "_");
+        t = t.replace("\\n", "_");
+
+        return t;
+    }
+
     public static String escapeSpecialChar4SQL(String t) {
         if(t == null) return "";
         boolean wasQuoted = false;

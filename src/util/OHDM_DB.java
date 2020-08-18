@@ -282,11 +282,13 @@ public class OHDM_DB {
         sq.append(",");
         sq.append("source_user_id bigint, ");
         sq.append("importDate timestamp,");
-        sq.append("importedPoints character varying,");
-        sq.append("importedLines character varying,");
-        sq.append("importedPolygons character varying,");
-        sq.append("importedObjects character varying,");
-        sq.append("importedObjectGeometries character varying");
+        sq.append("importParameterFileName character varying,");
+        sq.append("importTableName character varying,");
+        sq.append("importedGObject_Geometry_IDs_Table character varying,");
+        sq.append("source_url character varying,");
+        sq.append("source_license character varying,");
+        sq.append("source_citation character varying,");
+        sq.append("source_comments character varying");
         sq.append(");");
         sq.forceExecute();
     }

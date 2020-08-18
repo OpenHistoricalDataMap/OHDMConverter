@@ -87,9 +87,9 @@ public class Shapefile2OHDM {
             connection.close();
 
             String importerUserName = this.importParameter.getUserName();
-            System.err.println("set user id!");
+            System.err.println("deal with user id!");
             this.importerUserIDSet = true;
-            this.importerUserID = new BigDecimal(42);
+            this.importerUserID = new BigDecimal(-1);
 
             String validSinceString = importParameter.getValidSince();
             String columnValidSinceYear = importParameter.getColumnValidSinceYear();

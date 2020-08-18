@@ -157,7 +157,7 @@ public class Parameter {
                 // find delimiter
                 String key, value;
                 int delimiterIndex = inLine.indexOf(":");
-                if(delimiterIndex < 1) continue; // missing or first character - both invalid
+                if(delimiterIndex < 1) {inLine = br.readLine(); continue;} // missing or first character - both invalid
 //                StringTokenizer st = new StringTokenizer(inLine, ":");
 //                if(st.hasMoreTokens()) {
 //                String key, value;

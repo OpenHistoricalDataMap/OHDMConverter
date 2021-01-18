@@ -15,6 +15,7 @@ import ohdm2osm.OSMFileExporter;
 import ohdm2geoserverrendering.OHDM2Geoserverrendering;
 import ohdm2rendering.OHDM2Rendering;
 import osm2inter.OSMImport;
+import rendering2rdf.Rendering2rdf;
 import rendering2strdf.Rendering2stRDF;
 import shp2ohdm.Shapefile2OHDM;
 
@@ -28,6 +29,7 @@ public class OHDMConverter {
 
     public static final String JARNAME = "OHDMConverter.jar"; // TODO: replace this literal with a variable from commandline
 
+
     public static void main(String[] args) throws IOException, SQLException {
 
         if(args.length < 4) {
@@ -36,7 +38,8 @@ public class OHDMConverter {
             */
             OHDMConverter.printUsageAndExit("at least two parameters are required");
         }
-        
+
+        String rdfFileString = null;
         String osmFile = null;
         String stRDFFileString = null;
         String importInterDBConfig = null;
@@ -63,6 +66,9 @@ public class OHDMConverter {
 
             value = argumentMap.get("-s");
             if (value != null) { stRDFFileString = value; }
+
+            value = argumentMap.get("-f");
+            if (value != null) { rdfFileString = value; }
 
             value = argumentMap.get("-i");
             if (value != null) { importInterDBConfig = value; }
@@ -129,6 +135,7 @@ public class OHDMConverter {
         // debug
         System.out.println("osmFile: " + osmFile);
         System.out.println("stRDF file: " + stRDFFileString);
+        System.out.println("RDF file: " + rdfFileString);
         System.out.println("importInterDBConfig: " + importInterDBConfig);
         System.out.println("updateInterDBConfig: " + updateInterDBConfig);
         System.out.println("ohdmDBConfig: " + ohdmDBConfig);
@@ -158,6 +165,10 @@ public class OHDMConverter {
         
         if(renderingDBConfig != null && ohdmDBConfig != null) {
             OHDMConverter.printMessage("produce rendering db");
+        }
+
+        if(renderingDBConfig != null && rdfFileString != null) {
+            OHDMConverter.printMessage("produce RDF/Turtle");
         }
         
         if(osmFile != null && importInterDBConfig != null && updateInterDBConfig == null) {
@@ -204,6 +215,10 @@ public class OHDMConverter {
             Rendering2stRDF.main(new String[]{renderingDBConfig, stRDFFileString, polygonString});
         }
 
+        if(renderingDBConfig != null &&  rdfFileString != null) {
+            Rendering2rdf.main(new String[]{renderingDBConfig, rdfFileString});
+        }
+
         if(historicImportDBConfig != null &&  ohdmDBConfig != null) {
             Shapefile2OHDM.main(new String[]{historicImportDBConfig, ohdmDBConfig});
         }
@@ -235,6 +250,7 @@ public class OHDMConverter {
     private static void printUsageAndExit(PrintStream out) {
         out.println("-o [osm file (input or output]");
         out.println("-s [stRDF output file]");
+        out.println("-f [RDF output file]");
         out.println("-i [parameter file intermediateDB import]");
         out.println("-u [parameter file intermediateDB update]");
         out.println("-d [parameter file OHDM DB]");

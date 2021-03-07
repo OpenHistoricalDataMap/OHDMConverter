@@ -19,14 +19,16 @@ public class Shapefile2OHDM {
     private boolean importerUserIDSet;
 
     public static void main(String[] args) {
-        String targetParameterFileName = "db_ohdm_historic_local.txt";
-        String importParameterFileName = "db_shape_import.txt";
+        String importParameterFileName ="db_ohdm_historic_local.txt";  // "C:\\Program Files\\Apache Software Foundation\\Tomcat 9.0\\bin\\configFiles\\db_ohdm_historic_local"; //
+        String targetParameterFileName =  "db_shape_import.txt"; // "C:\\Program Files\\Apache Software Foundation\\Tomcat 9.0\\bin\\configFiles\\db_shape_import";//
 
-        if(args.length > 0) {
+      if(args.length > 0) {
             importParameterFileName = args[0];
-        } else if(args.length > 1) {
+        }
+        if(args.length > 1) {
             targetParameterFileName = args[1];
-        }  if(args.length > 2) {
+        }
+         else{ //(args.length > 2)
             System.err.println("at most two parameter required: shape-import description and ohdm target description");
             System.exit(1);
         }
@@ -99,13 +101,18 @@ public class Shapefile2OHDM {
             if ( (validSinceString == null && columnValidSinceYear == null)
                 || (validUntilString == null && columnValidUntilYear == null)
                 || this.importParameter.getClassificationID() == -1) {
-                throw new SQLException("validSince, validUntil (at least year) and classification must be set - fatal, give up");
+
+                validSinceString = java.time.LocalDate.now().toString() ;
+                validUntilString = java.time.LocalDate.now().toString() ;
+
+
+               // throw new SQLException("validSince, validUntil (at least year) and classification must be set - fatal, give up");
             }
 
             // both schemas are in the same db - ensured, see constructor
             this.sqlQueue = new SQLStatementQueue(this.importParameter);
 
-            // find primary key column
+           // find primary key column
             sqlQueue.append("SELECT kcu.COLUMN_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS tc " +
                     "INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS kcu\n" +
                     "    ON kcu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME\n" +
@@ -116,6 +123,7 @@ public class Shapefile2OHDM {
             sqlQueue.append("'");
 
             ResultSet resultSet = sqlQueue.executeWithResult();
+
             if (resultSet.next()) {
                 // got primary key column name
                 pkColumnName = resultSet.getString(1);
@@ -250,7 +258,8 @@ public class Shapefile2OHDM {
                     // since
                     if (columnValidSinceYear == null) {
                         validSinceValue = "'" + validSinceString + "'";
-                    } else { // at least year is in the table
+                    }
+                    else { // at least year is in the table
                         validSinceValue = "to_timestamp(concat(cast(";
                         validSinceValue += columnValidSinceYear;
                         validSinceValue += " as varchar(4)), '-',";
@@ -280,7 +289,8 @@ public class Shapefile2OHDM {
                     // until
                     if (columnValidUntilYear == null) {
                         validUntilValue = "'" + validUntilString + "'";
-                    } else { // at least year is in the table
+                    }
+                    else { // at least year is in the table
                         validUntilValue = "to_timestamp(concat(cast(";
                         validUntilValue += columnValidUntilYear;
                         validUntilValue += " as varchar(4)), '-',";
@@ -327,7 +337,7 @@ public class Shapefile2OHDM {
             insertedIDsTableName = Util.makeValidTableName(insertedIDsTableName);
             insertedIDsTableName = DB.getFullTableName(this.importParameter.getSchema(), insertedIDsTableName);
 
-            sqlQueue.append("CREATE TABLE ");
+            sqlQueue.append("CREATE TABLE IF NOT EXISTS ");
             sqlQueue.append(insertedIDsTableName);
             sqlQueue.append(" (id_geoobject_geometry bigint);");
             sqlQueue.forceExecute();

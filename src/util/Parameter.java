@@ -55,17 +55,17 @@ public class Parameter {
     private String columnNameObjectName;
     private String columnNameGeometry;
     private String tableName;
-    private int classificationID = -1;
+    private int classificationID =44;// -1;
     private String validSince;
     private String validUntil;
     private boolean dropAndRecreate = true;
 
-    public String columnValidSinceYear = null;
-    public String columnValidSinceMonth = null;
-    public String columnValidSinceDay = null;
-    public String columnValidUntilYear = null;
-    public String columnValidUntilMonth = null;
-    public String columnValidUntilDay = null;
+    public String columnValidSinceYear ;
+    public String columnValidSinceMonth ;
+    public String columnValidSinceDay;
+    public String columnValidUntilYear ;
+    public String columnValidUntilMonth;
+    public String columnValidUntilDay ;
     private String sourceURL = "";
     private String sourceLicense = "";
     private String sourceComments = "";
@@ -205,7 +205,7 @@ public class Parameter {
                     case "osmfilecreationdate": this.checkDateFormat(value); break;
                     case "columnNameObjectName": this.columnNameObjectName = value; break;
                     case "columnNameGeometry": this.columnNameGeometry = value; break;
-                    case "tableName": this.tableName = value; break;
+                    case "tableName":  this.tableName = value; break;
                     case "validSince": this.validSince = value; this.checkDateFormat(validSince); break;
                     case "validUntil": this.validUntil = value; this.checkDateFormat(validUntil); break;
                     case "classificationID": this.classificationID = Integer.parseInt(value); break;

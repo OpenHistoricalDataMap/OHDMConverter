@@ -101,7 +101,7 @@ public class OHDM_DB {
         sq.forceExecute();
         sq.append("INSERT INTO ");
         sq.append(DB.getFullTableName(schema, TABLE_EXTERNAL_SYSTEMS));
-        sq.append(" (name, description) VALUES ('osm', 'Open Street Map');");
+        sq.append("(name, description) VALUES ('osm', 'Open Street Map');");
         sq.forceExecute();
         
         // EXTERNAL_USERS

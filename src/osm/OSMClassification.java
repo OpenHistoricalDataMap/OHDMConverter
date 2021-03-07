@@ -1538,14 +1538,15 @@ public class OSMClassification {
     public void write2Table(Connection targetConnection, String classificationTableName) throws SQLException {
         
         SQLStatementQueue sq = new SQLStatementQueue(targetConnection);
-        
+        try{
         // init first line: unknown classification
         sq.append("INSERT INTO ");
         sq.append(classificationTableName);
         sq.append(" VALUES (-1, 'no_class', 'no_subclass');");
 
         sq.forceExecute();
-        
+        }
+        catch(Exception e){}
         // now append real data
         int n = 0;
 
@@ -1602,10 +1603,14 @@ public class OSMClassification {
         sq.append("subclassname character varying);");
 
         // init first line: unknown classification
+        try{
         sq.append("INSERT INTO ");
         sq.append(DB.getFullTableName(schema, CLASSIFICATIONTABLE));
         sq.append(" VALUES (-1, 'no_class', 'no_subclass');");
+}
+catch(Exception e){
 
+}
         // now append real data
         int id = 0;
 

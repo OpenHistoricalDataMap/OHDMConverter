@@ -1,0 +1,30 @@
+\part{osm2inter}
+\chapter{osm2pgsql}
+\section{Intro}
+Als Importierungskomponente kann osm2pgsql\cite{osm2pgsql-manual} sehr vielseitig eingesetzt werden. Innerhalb des Projektes löst osm2pgsql den OHDMConverter zum importieren von osm\textbar osm.pbf\textbar osm.bz2 in die intermediate Datenbank ab.\\
+
+Den größten Vorteil von osm2pgsql bietet die Benutzung des \gequote{Flex Output}. Hierbei wird die Konvertierung mit einem lua Script angepasst.
+
+\section{osm2pgsql Flags}
+Für die fehlerfreie Importierung sind mehrere Flags notwendig. In der nachfolgenden \autoref{tb:flags} sind diese vermerkt.
+\begin{table}[h]
+	\caption{flags}
+	\label{tb:flags}
+	\renewcommand{\arraystretch}{1.5}
+	\begin{tabularx}{\linewidth}{|l|X|}\hline
+		Flag & Beschreibung\\\hline
+		-c & Spezifiziert die osm Datei\\\hline
+		-d & Name der Datenbank \\\hline
+		-U & Name des Datenbankbenutzers mit Rechten zur Erstellung (Standard: postgres)\\\hline
+		-O & Spezifiziert den Output z.B.: flex, pgsql (Standard), gazetteer und null\newline Für die Benutzung des lua Script basierten konvertierens, wird dieser Wert auf flex gesetzt\\\hline
+		-x & Ermöglicht die Verwendung von user name, user id, changeset id, timestamp and version\\\hline
+		-S & Dies gibt an, wie die Daten in die Datenbank importiert werden, ihr Format hängt von der Ausgabe ab\newline in diesem Flag muss das lua Script angegeben werden\\\hline		
+	\end{tabularx}\vspace{0.5cm}
+In Windows muss zusätzlich -W für eine Passworteingabe als Flag gesetzt werden
+\end{table}
+
+Ein Importierungsbefehl könnte nun wie folgt aussehen:
+\begin{lstlisting}
+	osm2pgsql -d ohdm -U postgres -O flex -x -S osm2inter.lua -c berlin.osm
+\end{lstlisting}
+

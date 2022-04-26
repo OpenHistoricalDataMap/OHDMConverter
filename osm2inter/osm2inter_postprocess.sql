@@ -23,65 +23,90 @@ BEGIN
     -- admin_level BETWEEN 1 - 12
     UPDATE inter.osm_object_mapfeatures AS features SET feature_id =
     (
-        SELECT cla.id FROM inter.osm_object_mapfeatures AS oom, misc.classification AS cla
+        SELECT cla.id FROM misc.classification AS cla
         WHERE
-            oom.osm_id = features.osm_id AND
-	        cla.classname LIKE 'ohdm%' AND 
-	        oom.feature_key LIKE 'admin%' AND
-            oom.feature_value ~ '[1-9]?[0-2]?' AND
-            cla.subclassname = CONCAT('adminlevel_', feature_value)
+	        cla.classname LIKE 'ohdm%' AND
+	        features.feature_key LIKE 'admin%' AND
+            features.feature_value ~ '[1-9]?[0-2]?' AND
+            cla.subclassname = CONCAT('adminlevel_', features.feature_value)
     );
 
     -- admin_level undefined
     UPDATE inter.osm_object_mapfeatures AS features SET feature_id =
     (
-        SELECT cla.id FROM inter.osm_object_mapfeatures AS oom, misc.classification AS cla
+        SELECT cla.id FROM misc.classification AS cla
         WHERE
-            oom.osm_id = features.osm_id AND
-	        cla.classname LIKE 'ohdm%' AND 
-	        oom.feature_key LIKE 'admin%' AND
+	        cla.classname LIKE 'ohdm%' AND
+	        features.feature_key LIKE 'admin%' AND
             cla.subclassname = 'undefined'
     );
 
     -- mapfeature and subfeature exists
     UPDATE inter.osm_object_mapfeatures AS features SET feature_id =
     (
-        SELECT cla.id FROM inter.osm_object_mapfeatures AS oom, misc.classification AS cla
+        SELECT cla.id FROM misc.classification AS cla
         WHERE
-            oom.osm_id = features.osm_id AND
-            cla.classname = oom.feature_key AND
-	        cla.subclassname = oom.feature_value
+            cla.classname = features.feature_key AND
+	        cla.subclassname = features.feature_value
     );
     
     -- mapfeature and subfeature is undefined
     UPDATE inter.osm_object_mapfeatures AS features SET feature_id =
-    (   SELECT cla.id FROM inter.osm_object_mapfeatures AS oom, misc.classification AS cla
+    (   SELECT cla.id FROM misc.classification AS cla
         WHERE
-            oom.osm_id = features.osm_id AND
-            cla.classname = oom.feature_key AND
-            oom.feature_value NOTNULL AND
+            cla.classname = features.feature_key AND
+            features.feature_value NOTNULL AND
 	        cla.subclassname = 'undefined'
-    );
+    )
+    WHERE features.feature_value NOT IN (SELECT subclassname FROM misc.classification);
     
     RAISE NOTICE E'\nUPDATE osm_object_mapfeatures\nTime spent=%\n\n', clock_timestamp() -t;
     
     SELECT clock_timestamp() INTO t;
 
-    -- node.osm_id exist in cross-reference table
-    UPDATE inter.nodes AS nodes SET mapfeatures_ids = 
-    (
-        SELECT oom.feature_id FROM inter.nodes AS n ,inter.osm_object_mapfeatures AS oom
-        WHERE nodes.osm_id = n.osm_id = oom.osm_id
-    );
-
-    -- node.osm_id exist in cross-reference table
-    UPDATE inter.nodes AS n SET mapfeatures_ids = 
-    (
-        CASE WHEN n.osm_id NOT IN (SELECT osm_id FROM inter.osm_object_mapfeatures) THEN '-1' END
-    );
-
-
-    RAISE NOTICE E'\nUPDATE mapfeatures_ids\nTime spent=%\n\n', clock_timestamp() -t;
+--    -- node.osm_id exist in cross-reference table
+--    UPDATE inter.nodes AS nodes SET mapfeatures_ids =
+--    (
+--        SELECT string_agg(oom.feature_id::VARCHAR, '; ') FROM inter.osm_object_mapfeatures AS oom
+--        WHERE
+--            nodes.osm_id = oom.osm_id
+--    );
+--
+--
+--    SELECT clock_timestamp() INTO t;
+--    -- node.osm_id exist in cross-reference table
+--    UPDATE inter.nodes AS nodes SET mapfeatures_ids = '-1'
+--    WHERE nodes.osm_id NOT IN (SELECT osm_id FROM inter.osm_object_mapfeatures);
+--    RAISE NOTICE E'\nUPDATE nodes.mapfeatures_ids\nTime spent=%\n\n', clock_timestamp() -t;
+--
+--    SELECT clock_timestamp() INTO t;
+--    -- way.osm_id exist in cross-reference table
+--    UPDATE inter.ways AS ways SET mapfeatures_ids =
+--    (
+--        SELECT string_agg(oom.feature_id::VARCHAR, '; ') FROM inter.osm_object_mapfeatures AS oom
+--        WHERE
+--            ways.osm_id = oom.osm_id
+--    );
+--
+--    -- way.osm_id exist in cross-reference table
+--    UPDATE inter.ways AS ways SET mapfeatures_ids = '-1'
+--    WHERE ways.osm_id NOT IN (SELECT osm_id FROM inter.osm_object_mapfeatures);
+--    RAISE NOTICE E'\nUPDATE ways.mapfeatures_ids\nTime spent=%\n\n', clock_timestamp() -t;
+--
+--    SELECT clock_timestamp() INTO t;
+--    -- relation.osm_id exist in cross-reference table
+--    UPDATE inter.relations AS relations SET mapfeatures_ids =
+--    (
+--        SELECT string_agg(oom.feature_id::VARCHAR, '; ') FROM inter.osm_object_mapfeatures AS oom
+--        WHERE
+--            relations.osm_id = oom.osm_id
+--    );
+--
+--    -- relation.osm_id exist in cross-reference table
+--    UPDATE inter.relations AS relations SET mapfeatures_ids = '-1'
+--    WHERE relations.osm_id NOT IN (SELECT osm_id FROM inter.osm_object_mapfeatures);
+--
+--    RAISE NOTICE E'\nUPDATE relations.mapfeatures_ids\nTime spent=%\n\n', clock_timestamp() -t;
 
 
 END;

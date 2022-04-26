@@ -1,0 +1,2 @@
+DROP SCHEMA IF EXISTS inter, misc CASCADE;
+CREATE SCHEMA inter;

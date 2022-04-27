@@ -53,14 +53,14 @@ sudo -iu <databaseuser> osm2pgsql -d <databasename> -W \
 * `sudo -iu <database_user>` &rarr; to run followed commands as specified user
 * `-d <database_name>` &rarr; specifies the database in which to work
 * `-W` &rarr; will promt a password input for the database connection
-* `--extra-attributes` &rarr; needed for using timestamp, uid and username from osm tags
-* `--output=flex` &rarr; activate using spezified style files
-* `--style=<your_defined_lua_script>` &rarr; specify lua file wich will use
+* `-x` &rarr; needed for using timestamp, uid and username from osm tags
+* `-O flex` &rarr; activate using spezified style files
+* `-S <your_defined_lua_script>` &rarr; specify lua file wich will use
 * `-c <your_osm_file>` &rarr; specify the osm file wich will use
 
 i.e.
 ```
-sudo -iu postgres osm2pgsql -d ohdm -W --extra-attributes --output=flex --style=osm2inter.lua -c berlin-latest.osm
+sudo -iu postgres osm2pgsql -d ohdm -W -x -O flex -S osm2inter.lua -c berlin-latest.osm
 ```
 
 </details><br><br>
@@ -72,7 +72,7 @@ sudo -iu postgres osm2pgsql -d ohdm -W --extra-attributes --output=flex --style=
 You can [download prebuilt binaries](https://osm2pgsql.org/download/windows/). Unpack the ZIP file and you can immediately use osm2pgsql.
 
 ```
-C:\Program Files\osm2pgsql\.\osm2pgsql.exe -d ohdm -U postgres -W --output=flex --style=osm2inter.lua -c berlin-latest.osm
+C:\Program Files\osm2pgsql\.\osm2pgsql.exe -d ohdm -U postgres -W -x -O flex -S osm2inter.lua -c berlin-latest.osm
 ```
 
 </details>

@@ -24,7 +24,6 @@ tables.nodes = osm2pgsql.define_table({
     columns = {
         { column = 'id', sql_type = 'bigserial', create_only = true },
         { column = 'tstamp', sql_type = 'timestamp' },
-        { column = 'mapfeatures_ids', type = 'text' },
         { column = 'serializedtags', type = 'hstore' },
         { column = 'geom', type = 'point', projection = 4326 },
         { column = 'uid', type = 'text' },
@@ -59,7 +58,6 @@ tables.ways = osm2pgsql.define_table({
     columns = {
         { column = 'id', sql_type = 'bigserial', create_only = true },
         { column = 'tstamp', sql_type = 'timestamp' },
-        { column = 'mapfeatures_ids', type = 'text' },
         { column = 'serializedtags', type = 'hstore' },
         { column = 'geom', type = 'linestring', projection = 4326 },
         { column = 'uid', type = 'text' },
@@ -98,7 +96,6 @@ tables.relations = osm2pgsql.define_table({
     columns = {
         { column = 'id', sql_type = 'bigserial', create_only = true },
         { column = 'tstamp', sql_type = 'timestamp' },
-        { column = 'mapfeatures_ids', type = 'text' },
         { column = 'serializedtags', type = 'hstore' },
         { column = 'geom', type = 'geometry', projection = 4326 },
         { column = 'uid', type = 'text' },

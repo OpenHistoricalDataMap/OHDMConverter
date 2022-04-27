@@ -23,8 +23,9 @@ Für die fehlerfreie Importierung sind mehrere Flags notwendig. In der nachfolge
 In Windows muss zusätzlich -W für eine Passworteingabe als Flag gesetzt werden
 \end{table}
 
+\todo[inline]{Befehl mit \lstinline|sudo -iu postgres| und absoluten pfaden}
 Ein Importierungsbefehl könnte nun wie folgt aussehen:
 \begin{lstlisting}
 	osm2pgsql -d ohdm -U postgres -O flex -x -S osm2inter.lua -c berlin.osm
 \end{lstlisting}
-
+\todo[inline]{Anleitung psql}

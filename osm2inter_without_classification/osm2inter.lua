@@ -133,17 +133,6 @@ for name, dtable in pairs(tables) do
     print("\t" .. name)
 end
 
--- Helper function to remove some of the tags we usually are not interested in.
--- Returns true if there are no tags left.
-local function clean_tags(tags)
-    tags.odbl = nil
-    tags.created_by = nil
-    tags.source = nil
-    tags['source:ref'] = nil
-
-    return next(tags) == nil
-end
-
 -- table to define all columns, there map features
 local map_features = {
     'admin_level',
@@ -230,6 +219,9 @@ local function get_tag_quadruple(object)
     end
     -- If the table is empty, an empty table should not be saved.
     -- Instead, the value is set to nil (PostgreSQL NULL)
+    if next(features) == nil then
+        features = nil
+    end
     if next(ser) == nil then
         ser = nil
     end
@@ -239,10 +231,6 @@ end
 
 -- function for all nodes
 function osm2pgsql.process_node(object)
-    if clean_tags(object.tags) then
-        return
-    end
-
     local object_name, object_features, object_url, object_serializedtags = get_tag_quadruple(object)
     tables.nodes:add_row({
         name = object_name,
@@ -264,9 +252,6 @@ end
 
 -- function for all ways
 function osm2pgsql.process_way(object)
-    if clean_tags(object.tags) then
-        return
-    end
     local object_name, object_features, object_url, object_serializedtags = get_tag_quadruple(object)
     tables.ways:add_row({
         name = object_name,
@@ -296,9 +281,6 @@ end
 
 -- function for all relations
 function osm2pgsql.process_relation(object)
-    if clean_tags(object.tags) then
-        return
-    end
     local object_name, object_features, object_url, object_serializedtags = get_tag_quadruple(object)
     tables.relations:add_row({
         name = object_name,

@@ -6,10 +6,10 @@ Als Importierungskomponente kann osm2pgsql\cite{osm2pgsql-manual} sehr vielseiti
 Den größten Vorteil von osm2pgsql bietet die Benutzung des \gequote{Flex Output}. Hierbei wird die Konvertierung mit einem lua Script angepasst.
 
 \section{osm2pgsql Flags}
-Für die fehlerfreie Importierung sind mehrere Flags notwendig. In der nachfolgenden \autoref{tb:flags} sind diese vermerkt.
+Für die fehlerfreie Importierung sind mehrere Flags notwendig. In der nachfolgenden \autoref{tb:osm2pgsql-flags} sind diese vermerkt.
 \begin{table}[h]
 	\caption{flags}
-	\label{tb:flags}
+	\label{tb:osm2pgsql-flags}
 	\renewcommand{\arraystretch}{1.5}
 	\begin{tabularx}{\linewidth}{|l|X|}\hline
 		Flag & Beschreibung\\\hline
@@ -23,9 +23,225 @@ Für die fehlerfreie Importierung sind mehrere Flags notwendig. In der nachfolge
 In Windows muss zusätzlich -W für eine Passworteingabe als Flag gesetzt werden
 \end{table}
 
-\todo[inline]{Befehl mit \lstinline|sudo -iu postgres| und absoluten pfaden}
-Ein Importierungsbefehl könnte nun wie folgt aussehen:
-\begin{lstlisting}
-	osm2pgsql -d ohdm -U postgres -O flex -x -S osm2inter.lua -c berlin.osm
+\newpage
+\section{Lua Script}
+Für die Importierung in das bestehende intermediate Schema wird ein lua Script benötigt, welches die Importierung von osm Daten in die intermediate Datenbank spezifiziert.\\
+Für eine bessere Erklärung möchte ich das lua Script in drei Abschnitte unterteilen:
+\begin{enumerate}
+	\item Tabelleninizialisierung
+	\item Hilfsfunktionen und Variablen
+	\item Prozessfunktionen
+\end{enumerate}
+Diese Beschreibung ist projektspezifisch, weitere Informationen zur Verwendung des lua Script können unter folgendem Link eingesehen werden: \\
+\url{https://osm2pgsql.org/doc/manual.html#the-flex-output}
+\subsection{Tabelleninizialisierung}\label{subsec:table-init}
+Im lua Script werden erforderliche Tabellen wie in \autoref{lst:table-init-nodes} angelegt. Dies wird benötigt um die Tabelle zu spezifizieren.
+\begin{lstlisting}[language={[5.0]Lua}, caption={Initialisierung eine Tabelle für alle nodes},label={lst:table-init-nodes}]
+tables.nodes = osm2pgsql.define_table({
+	name = 'nodes',						
+	ids = { type = 'node', id_column = 'osm_id' },
+	columns = {
+		{ column = 'id', sql_type = 'bigserial', create_only = true },
+		{ column = 'tstamp', sql_type = 'timestamp' },
+		{ column = 'mapfeatures', type = 'hstore' },
+		{ column = 'serializedtags', type = 'hstore' },
+		{ column = 'geom', type = 'point', projection = 4326 },
+		{ column = 'uid', type = 'text' },
+		{ column = 'username', type = 'text' },
+		{ column = 'name', type = 'text' },
+		{ column = 'url', type = 'text' },
+		{ column = 'geom_changed', type = 'bool' },
+		{ column = 'object_changed', type = 'bool' },
+		{ column = 'deleted', type = 'bool' },
+		{ column = 'object_new', type = 'bool' },
+		{ column = 'has_name', type = 'bool' },
+		{ column = 'valid', type = 'bool' }
+	},
+	schema = SCHEMA_NAME
+})
 \end{lstlisting}
-\todo[inline]{Anleitung psql}
+\autoref{lst:table-init-nodes} Zeile 4 spezifiziert den osm Typ für den die Tabelle angelegt werden soll (in dem Fall, für alle nodes) und die id der node wird in die Spalte \gequote{osm\_id} eingetragen.\\
+Zeile 6 erzeugt eine Spalte mit einem uniquen Integer Wert, welcher mit einem weiteren SQL Script in einen \gequote{Primary Key} verändert werden kann.\\
+Die Einträge Zeile 7 - 20 definieren die weiteren Spalten der Tabelle \gequote{nodes}, welche mit einer Prozess Funktion beschrieben werden.\\
+Des Weiteren kann wie in Zeile 22 ein Schema definiert werden, in die diese Tabelle geschrieben wird.
+
+\subsection{Hilfsfunktionen und Variablen}
+\subsubsection{mapfeatures}
+\begin{lstlisting}[language={[5.0]Lua}, caption={Deklaration einer lua Tabelle für die mapfeatures},label={lst:table-mapfeatures}]
+local map_features = {
+	'admin_level', 'aerialway', 'aeroway', 'amenity', 'barrier', 'boundary',
+	'building', 'craft', 'emergency', 'geological', 'healthcare', 'highway',
+	'historic', 'landuse', 'leisure', 'man_made', 'military', 'natural',
+	'office', 'place', 'power', 'public_transport', 'railway', 'route',
+	'shop', 'sport', 'telecom', 'tourism', 'water', 'waterway'
+}
+\end{lstlisting}
+In \autoref{lst:table-mapfeatures} werden die sogenannten \gequote{mapfeatures}\cite{osm-mapfeatures} definiert. \\
+OpenStreetMap stellt physische Merkmale am Boden (z. B. Straßen oder Gebäude) mithilfe von Tags dar, die an seine grundlegenden Datenstrukturen (nodes, ways und relations) angehängt sind. Jedes Tag beschreibt ein geografisches Attribut des Features, das von diesem bestimmten nodes, ways oder dieser relations angezeigt wird.
+
+\subsubsection{Hilfsfunktion für name, mapfeatures, serializedtags und url}\label{subsubsec:get.quadruple}
+Die Hilfsfunktion in \autoref{lst:get-quadruple} (nächste Seite) analysiert das übergebene Objekt und gibt vier Werte zurück.
+\begin{description}
+	\item[name] Der primäre Name: im allgemeinen der prominenteste ausgeschilderte Name oder der gebräuchlichste Name in der/den Landessprache(n). 
+	\item[mapfeatures] Eine lua Tabelle, welche ein key-value Paar enthält. Diese Tabelle enthält alle tags welche eine Übereinstimmung mit der \lstinline|map_features| lua Tabelle (siehe \autoref{lst:table-mapfeatures}) haben.
+	\item[serializedtags] Eine lua Tabelle mit alle object.tags, welche nicht direkt für die weitere Konvertierung benötigt werden.
+	\item[url] Bei der Analyse der osm Dateien wurde festgestellt, dass eine url beziehungsweise Websitenreferenz auf verschiedene Arten eingetragen werden kann. Dieses Problem wurde ebenfalls mit der Hilfsfunktion \lstinline| get_tag_quadruple()| realisiert.
+\end{description}
+Der \textit{goto} Befehl entspricht in diesem Beispiel dem \textit{break} in Java.\\
+Zusätzlich dienen die Zeilen 23 - 42 der Vereinfachung der Tabelleneinträge. Alle Variablen die \lstinline|nil| sind werden in PostgreSQL mit \lstinline|NULL| eingetragen, somit entfällt eine String Vergleich um leere Einträge zu finden. Es kann direkt nach \lstinline|ISNULL| oder \lstinline|NOTNULL| im SQL Statement gefragt werden.
+
+\newpage\begin{lstlisting}[language={[5.0]Lua}, caption={Hilfsfunktion zur osm object.tag Verarbeitung},label={lst:get-quadruple}]
+local function get_tag_quadruple(object)
+	local features = {}
+	local ser = {}
+	local url = nil
+	local name = object:grab_tag('name')
+	-- Iterate over each tag from the osm object
+	for key, value in pairs(object.tags) do
+		-- find url or website entry
+		if key == 'url' then
+			url = object:grab_tag(key)
+			goto continue
+		elseif key == 'website' then
+			url = object:grab_tag(key)
+			goto continue
+		elseif osm2pgsql.has_suffix(key, ':url') then
+			url = object:grab_tag(key)
+			goto continue
+		elseif osm2pgsql.has_suffix(key, ':website') then
+			url = object:grab_tag(key)
+			goto continue
+	end
+	
+	if list_contains(map_features, key) then
+		-- osm object.tag is definied as a mapfeature
+		features[key] = value
+		goto continue
+	else
+		-- osm object.tag is not very relevant,
+		-- therefore it is stored in serializedtags table
+		ser[key] = value
+		goto continue
+	end
+	::continue::
+	end
+	-- If the table is empty, an empty table should not be saved.
+	-- Instead, the value is set to nil (PostgreSQL NULL)
+	if next(features) == nil then
+		features = nil
+	end
+	if next(ser) == nil then
+		ser = nil
+	end
+	
+	return name, features, url, ser
+end
+\end{lstlisting}
+
+\newpage
+\subsection{Prozessfunktionen}
+Damit die nodes, ways, relations spezifisch in die gewünschten Tabellen eingetragen werden, müssen die lua Funktionen \lstinline|osm2pgsql.process_node| \lstinline|osm2pgsql.process_way| \lstinline|osm2pgsql.process_relation| entsprechend aufgerufen werden. Beispielhaft wurde die definierte Funktion \lstinline|osm2pgsql.process_relation| siehe nächste Seite in \autoref{lst:process-relation} aufgeführt.
+Diese enthält:
+\begin{table}[h]
+	\caption{Kurze Zeilen Beschreibung von \autoref{lst:process-relation}}
+	\renewcommand{\arraystretch}{1.5}
+	\begin{tabularx}{\linewidth}{|l|l|X|}\hline
+		Name & \multirow{2}{*}{\parbox{1.6cm}{Zeilen-\\ nummern}} & Beschreibung\\
+		&& \\\hline
+		\lstinline|get_tag_quadruple()| & 2 & Erstellung von vier Variablen mit einer Hilfsfunktion (siehe \autoref{subsubsec:get.quadruple})\\\hline
+		\lstinline|tables.relations:add_row()| & 3-18 & Fügt ein osm Objekt entsprechend der Tabelleninitialisierung (beispielhaft \autoref{subsec:table-init}) in eine Tabelle ein. \newline Hierbei wird die id automatisch vergeben und eine Geometrie anhand der Bestehenden Daten erzeugt.\\\hline
+		Schleife über alle relationmembers & 19-49 & Alle nodes, ways, relations, die im tag \textit{members} vermerkt sind werden in eine seperate Tabelle \textit{relationmembers} eingetragen. Für die Eindeutigkeit wird der Typ des \textit{members} abgefragt. \\\hline
+	\end{tabularx}
+\end{table}
+
+Die Prozessfunktionen für nodes und ways sieht ähnliches aus, nur das die \lstinline|osm2pgsql.process_node| Funktion keine zusätzlichen \textit{members} besitzt und in \lstinline|osm2pgsql.process_way| die Einträge der ways nur aus nodes bestehen.
+
+\newpage\begin{lstlisting}[language={[5.0]Lua}, caption={Hilfsfunktion zur osm object.tag Verarbeitung},label={lst:process-relation}]
+function osm2pgsql.process_relation(object)
+	local object_name, object_features, object_url, object_serializedtags = get_tag_quadruple(object)
+	tables.relations:add_row({
+		name = object_name,
+		url = object_url,
+		tstamp = reformat_date(object.timestamp),
+		mapfeatures = object_features,
+		serializedtags = object_serializedtags,
+		geom = { create = 'area' },
+		uid = object.uid,
+		username = object.user,
+		geom_changed = false,
+		object_changed = false,
+		deleted = false,
+		object_new = false,
+		has_name = false,
+		valid = false
+	})
+	for _, member in ipairs(object.members) do
+		-- if type is a node
+		if member.type == "n" then
+			tables.relationmembers:add_row({
+				relation_id = object.id,
+				node_id = member.ref,
+				way_id = nil,
+				member_rel_id = nil,
+				role = member.role
+			})
+		end
+		-- if type is a way
+		if member.type == "w" then
+			tables.relationmembers:add_row({
+				relation_id = object.id,
+				node_id = nil,
+				way_id = member.ref,
+				member_rel_id = nil,
+				role = member.role
+			})
+		end
+		-- if type is a relation
+		if member.type == "r" then
+			tables.relationmembers:add_row({
+				relation_id = object.id,
+				node_id = nil,
+				way_id = nil,
+				member_rel_id = member.ref,
+				role = member.role
+			})
+		end
+	end
+end
+\end{lstlisting}
+
+
+\newpage
+\section{Ausführung}
+Alle vorherigen Sektionen beschreiben die wichtigen Teile des Befehls zur Importierung von osm Daten in die intermediate Datenbank. Der Prozess der Importierung kann nun wie folgt ausgeführt werden.\\[0.5cm]
+
+\begin{lstlisting}
+	osm2pgsql -d ohdm -U postgres -O flex -x \
+		-S /home/stesad/osm2inter/osm2inter.lua \
+		-c /home/stesad/osm2inter/berlin.osm
+\end{lstlisting}
+\textbf{Hinweis:} Die Dateien müssen mit absoluten Pfaden angegeben werden, oder im Verzeichnis des Datenbanknutzers gespeichert werden.\\
+Powershell beziehungsweise Windows Command Ausführung in Appendix \autoref{app:osm2pgsql:win}
+
+\chapter{psql}
+psql ist ein terminalbasiertes Frontend für PostgreSQL. Es ermöglicht Ihnen, Abfragen interaktiv einzugeben, sie an PostgreSQL auszugeben und die Abfrageergebnisse anzuzeigen. Alternativ kann die Eingabe aus einer Datei erfolgen. Darüber hinaus bietet es eine Reihe von Meta-Befehlen und verschiedene shell-ähnliche Funktionen, um das Schreiben von Skripten und die Automatisierung einer Vielzahl von Aufgaben zu erleichtern.\cite{postgres-psql}
+
+Für die Ausführung von psql werden in diesem Beispiel Flags benötigt die in \autoref{tb:psql-flags} aufgeführt sind.
+\begin{table}[h]
+	\caption{flags}
+	\label{tb:psql-flags}
+	\renewcommand{\arraystretch}{1.5}
+	\begin{tabularx}{\linewidth}{|l|X|}\hline
+		Flag & Beschreibung\\\hline
+		-d & Name der Datenbank \\\hline
+		-c cammand & Spezifiziert ein Kommando das mit psql ausgeführt werden soll. \\\hline
+		-f & Ermöglich die Verwendung von Dateien als Quelle für Befehle.\\\hline
+	\end{tabularx}\vspace{0.5cm}
+	In Windows muss zusätzlich -W für eine Passworteingabe als Flag gesetzt werden
+\end{table}
+\begin{lstlisting}
+	sudo -iu postgres psql -d ohdm \
+	-f /home/stesad/osm2inter/osm2inter_postprocess.sql
+\end{lstlisting}
+\textbf{Hinweis:} Die Dateien müssen mit absoluten Pfaden angegeben werden, oder im Verzeichnis des Datenbanknutzers gespeichert werden.\\
+Powershell beziehungsweise Windows Command Ausführung in Appendix \autoref{app:psql:win}

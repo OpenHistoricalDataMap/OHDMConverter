@@ -1,0 +1,16 @@
+\appendix
+\chapter{Windows}
+\section{osm2pgsql}\label{app:osm2pgsql:win}
+\todo[inline]{change to windows variant}
+\begin{lstlisting}
+osm2pgsql -d ohdm -U postgres -O flex -x \
+-S /home/stesad/osm2inter/osm2inter.lua \
+-c /home/stesad/osm2inter/berlin.osm
+\end{lstlisting}
+
+\section{psql}\label{app:psql:win}
+\todo[inline]{change to windows variant}
+\begin{lstlisting}
+sudo -iu postgres psql -d ohdm \
+-f /home/stesad/osm2inter/osm2inter_postprocess.sql
+\end{lstlisting}

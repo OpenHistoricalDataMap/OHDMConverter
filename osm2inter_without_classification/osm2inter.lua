@@ -24,7 +24,7 @@ tables.nodes = osm2pgsql.define_table({
     columns = {
         { column = 'id', sql_type = 'bigserial', create_only = true },
         { column = 'tstamp', sql_type = 'timestamp' },
-        { column = 'mapfeatures_ids', type = 'text' },
+        { column = 'mapfeatures', type = 'hstore' },
         { column = 'serializedtags', type = 'hstore' },
         { column = 'geom', type = 'point', projection = 4326 },
         { column = 'uid', type = 'text' },
@@ -59,7 +59,7 @@ tables.ways = osm2pgsql.define_table({
     columns = {
         { column = 'id', sql_type = 'bigserial', create_only = true },
         { column = 'tstamp', sql_type = 'timestamp' },
-        { column = 'mapfeatures_ids', type = 'text' },
+        { column = 'mapfeatures', type = 'hstore' },
         { column = 'serializedtags', type = 'hstore' },
         { column = 'geom', type = 'linestring', projection = 4326 },
         { column = 'uid', type = 'text' },
@@ -98,7 +98,7 @@ tables.relations = osm2pgsql.define_table({
     columns = {
         { column = 'id', sql_type = 'bigserial', create_only = true },
         { column = 'tstamp', sql_type = 'timestamp' },
-        { column = 'mapfeatures_ids', type = 'text' },
+        { column = 'mapfeatures', type = 'hstore' },
         { column = 'serializedtags', type = 'hstore' },
         { column = 'geom', type = 'geometry', projection = 4326 },
         { column = 'uid', type = 'text' },
@@ -194,7 +194,7 @@ local function reformat_date(object_timestamp)
 end
 
 -- Helper function to name, url and serializedtags
-local function get_tag_triple(object)
+local function get_tag_quadruple(object)
     local features = {}
     local ser = {}
     local url = nil
@@ -218,11 +218,7 @@ local function get_tag_triple(object)
 
         if list_contains(map_features, key) then
             -- osm object.tag is definied as a mapfeature
-            tables.osm_object_mapfeatures:add_row({
-                osm_id = object.id,
-                feature_key = key,
-                feature_value = value
-            })
+            features[key] = value
             goto continue
         else
             -- osm object.tag is not very relevant,
@@ -238,7 +234,7 @@ local function get_tag_triple(object)
         ser = nil
     end
 
-    return name, url, ser
+    return name, features, url, ser
 end
 
 -- function for all nodes
@@ -247,11 +243,12 @@ function osm2pgsql.process_node(object)
         return
     end
 
-    local object_name, object_url, object_serializedtags = get_tag_triple(object)
+    local object_name, object_features, object_url, object_serializedtags = get_tag_quadruple(object)
     tables.nodes:add_row({
         name = object_name,
         url = object_url,
         tstamp = reformat_date(object.timestamp),
+        mapfeatures = object_features,
         serializedtags = object_serializedtags,
         geom = { create = 'point' },
         uid = object.uid,
@@ -270,11 +267,12 @@ function osm2pgsql.process_way(object)
     if clean_tags(object.tags) then
         return
     end
-    local object_name, object_url, object_serializedtags = get_tag_triple(object)
+    local object_name, object_features, object_url, object_serializedtags = get_tag_quadruple(object)
     tables.ways:add_row({
         name = object_name,
         url = object_url,
         tstamp = reformat_date(object.timestamp),
+        mapfeatures = object_features,
         serializedtags = object_serializedtags,
         geom = { create = 'line' },
         uid = object.uid,
@@ -301,11 +299,12 @@ function osm2pgsql.process_relation(object)
     if clean_tags(object.tags) then
         return
     end
-    local object_name, object_url, object_serializedtags = get_tag_triple(object)
+    local object_name, object_features, object_url, object_serializedtags = get_tag_quadruple(object)
     tables.relations:add_row({
         name = object_name,
         url = object_url,
         tstamp = reformat_date(object.timestamp),
+        mapfeatures = object_features,
         serializedtags = object_serializedtags,
         geom = { create = 'area' },
         uid = object.uid,

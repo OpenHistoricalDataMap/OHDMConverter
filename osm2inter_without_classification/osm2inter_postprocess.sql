@@ -1,3 +1,4 @@
+\timing
 DO $$
 DECLARE t TIMESTAMP := clock_timestamp();
 BEGIN

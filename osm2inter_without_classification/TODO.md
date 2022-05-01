@@ -1,1 +1,0 @@
-change lua, to extract mapfeatures as key-value pair

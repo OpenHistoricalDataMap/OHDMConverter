@@ -1,4 +1,3 @@
-\timing
 DO $$
 DECLARE t TIMESTAMP := clock_timestamp();
 BEGIN
@@ -17,6 +16,7 @@ BEGIN
     ALTER TABLE inter.waynodes ADD PRIMARY KEY (id);
     ALTER TABLE inter.relations ADD PRIMARY KEY (id);
     ALTER TABLE inter.relationmembers ADD PRIMARY KEY (id);
+    ALTER TABLE inter.osm_object_mapfeatures ADD PRIMARY KEY (id);
     RAISE NOTICE E'\nALTER all other tables WITH real primary key\nTime spent=%\n\n', clock_timestamp() -t;
 END;
 $$

@@ -1,6 +1,3 @@
 *.osm
-*.sh
-# win batch files
-*.bat
 .idea/*
 !littlemap.osm

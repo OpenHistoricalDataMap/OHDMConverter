@@ -1,3 +1,11 @@
+-- PostgreSQL script that must be run after osm2pgsql
+-- add current timestamp on creationinformation and
+-- add real primary keys on other tables
+--
+-- NOTE: this script must run with access rights on the database
+-- author: SteSad
+
+\timing
 DO $$
 DECLARE t TIMESTAMP := clock_timestamp();
 BEGIN
@@ -16,7 +24,6 @@ BEGIN
     ALTER TABLE inter.waynodes ADD PRIMARY KEY (id);
     ALTER TABLE inter.relations ADD PRIMARY KEY (id);
     ALTER TABLE inter.relationmembers ADD PRIMARY KEY (id);
-    ALTER TABLE inter.osm_object_mapfeatures ADD PRIMARY KEY (id);
     RAISE NOTICE E'\nALTER all other tables WITH real primary key\nTime spent=%\n\n', clock_timestamp() -t;
 END;
 $$

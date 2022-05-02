@@ -1,5 +1,6 @@
 #! /bin/bash
-path=$(pwd)
+full_file_name=$(realpath -e $0)
+path=${full_file_name%/*} 
 t1=$(date +%s)
 sudo -iu postgres psql -d ohdm -f $path'/preprocess.sql'
 sleep 3

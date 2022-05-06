@@ -7,6 +7,9 @@
 -- NOTE: these 2 lines only in testing processes
 DO $$
 BEGIN
+    CREATE EXTENSION IF NOT EXISTS hstore;
+    CREATE EXTENSION IF NOT EXISTS postgis;
+
     DROP SCHEMA IF EXISTS inter CASCADE;
     CREATE SCHEMA inter;
     RAISE NOTICE E'\nRecreated inter schema\n';

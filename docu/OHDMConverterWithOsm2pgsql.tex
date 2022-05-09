@@ -1,9 +1,12 @@
 \documentclass[bibliography=totoc, paper=a4, fontsize=12pt]{scrreprt}
 %fürs nächste mal nicht so große Abstände
 \usepackage[left=2.5cm,right=2cm,top=1cm,bottom=1cm]{geometry}
-\geometry{headheight=0.5cm, headsep=1.5cm, includehead}
+\geometry{headheight=1cm, headsep=1.5cm, includehead}
 \geometry{footskip=1.5cm ,includefoot}
 \usepackage[ngerman]{babel}
+\usepackage{lineno}
+\usepackage{csquotes}
+\usepackage{enumitem}
 \usepackage{caption}
 \usepackage{booktabs}
 \usepackage[colorlinks = true,
@@ -12,14 +15,11 @@ urlcolor  = blue,
 citecolor = black,
 anchorcolor = blue]{hyperref}
 \usepackage{graphicx} 
-\usepackage[headsepline,footsepline, automark, autooneside=false, markcase=used]{scrlayer-scrpage}
+\usepackage[headsepline, footsepline, plainheadsepline=false, plainfootsepline=false, automark, autooneside=false, markcase=used]{scrlayer-scrpage}
 \pagestyle{scrheadings}
 \usepackage{blindtext}
-\usepackage{acronym}
-\usepackage{enumitem}
+\usepackage[printonlyused,withpage]{acronym}
 \usepackage{tabularx}
-\usepackage{enumitem}
-\usepackage{ulem}
 \usepackage[table]{xcolor}
 \usepackage{xcolor,colortbl}
 \usepackage{makecell} %for bigger lines in table
@@ -31,16 +31,23 @@ anchorcolor = blue]{hyperref}
 \usepackage{amsfonts} % <- zusätzliche Mathesymbole
 \usepackage{mathtools} % <- zusätzliche Mathesymbole
 \usepackage{setspace} %Zeilenabstand
-\usepackage{pgfplots}
+\usepackage{pgfplots} \pgfplotsset{compat=1.7}
 \usepackage{todonotes}
 \usepackage{makecell}
-\usepackage{lineno}
 \usepackage{pdfpages}
-\usepackage[parfill]{parskip} % <- delete all intents after paragraph
+\usepackage{numprint}
+\npthousandsep{\,}
 %%-----------------------------------------------------------------------------------
 %% BibLaTex
 \usepackage[backend=bibtex, style=numeric, sorting=none]{biblatex}
-\addbibresource{source/quellen.bib}
+\addbibresource{quellen.bib}
+\DeclareFieldFormat{booktitle}{\newline{\textit{#1}}}%
+\DeclareFieldFormat{url}{\newline \url{#1}\newline}%
+\DeclareFieldFormat[inproceedings,standard,report]{title}{\newline #1}% Wenn der Titel zu lang wird kann mit, hier weiter Arten hinzufügen
+\DeclareFieldFormat[misc]{note}{\newline #1}%
+
+\renewcommand*{\labelnamepunct}{\addcolon\addspace}     % Semikollon nach Autor
+\renewcommand*{\newunitpunct}{\addsemicolon\space} 		% Trennzeichen Semikolon
 
 %----------------------------------------------------------------------------------------
 % 						Helping Commands
@@ -51,6 +58,7 @@ anchorcolor = blue]{hyperref}
 
 %Tabellenlinie
 \newcommand\btrule[1]{\specialrule{#1}{0pt}{0pt}}
+\newcolumntype{?}{!{\vrule width 1pt}}
 
 %Tabellenheader White & Bold
 \newcommand{\whitebf}[1]{\color{white}\textbf{#1}}
@@ -77,9 +85,6 @@ anchorcolor = blue]{hyperref}
 %\let\olditem\item
 %\newcommand{\blueitem}{\color{blue}\olditem}
 %\renewcommand{\item}{\color{black}\olditem}
-
-\newcommand{\tablehead}[2]{\rowcolor{magicmint}\multicolumn{#1}{|c|}{#2}}
-\newcommand{\foreign}[1]{\dashuline{#1}}
 
 %tabularx Gimmick
 \newcolumntype{R}{>{\raggedleft\arraybackslash}X}
@@ -108,7 +113,7 @@ anchorcolor = blue]{hyperref}
 	breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
 	breaklines=true,                 % sets automatic line breaking
 	captionpos=t,                    % sets the caption-position to bottom
-	commentstyle=\color{mygreen},    % comment style
+	commentstyle=\color{gray},    % comment style
 	deletekeywords={...},            % if you want to delete keywords from the given language
 	escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
 	extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
@@ -130,18 +135,15 @@ anchorcolor = blue]{hyperref}
 	tabsize=2,	                   % sets default tabsize to 2 spaces
 	title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
 }
-
-\ihead{}
-\chead{}
-\ohead{\headmark}
-%
-\ifoot{}
-\cfoot{\pagemark}
-\ofoot{}
+\setlength\parindent{0pt}
 
 \begin{document}
-\input{osm2inter.tex}
-\input{inter2ohdm.tex}
-\input{quellen.tex}
-\input{appendix.tex}
+	\input{titleAndToc.tex}
+	
+	\input{partI.tex}
+	\input{partII.tex}
+	\input{partIII.tex}
+	
+	\input{quellen.tex}
+	\input{appendix.tex}
 \end{document}

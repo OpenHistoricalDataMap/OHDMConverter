@@ -1,0 +1,240 @@
+\newpage \setheadsepline{.5px} \setfootsepline{.5px}
+\setcounter{page}{1}
+\ihead{} \chead{} \ohead{\headmark}
+\ifoot{} \cfoot{\pagemark} \ofoot{}
+\part{Praktikumsplan, Datenbank, javabasierte Konvertierung}
+\chapter{Praktikum}
+\section{Arbeitsauftrag}
+Im Rahmen des Praktikums sollte ein Linux-Server vor ein Kartenprojekt neu
+aufgesetzt werden. In Zusammenarbeit mit den Administratoren vor Ort musste ein
+PostGIS-Datenbankserver aufgesetzt werden. Danach sollte eine DBs aufgesetzt werden, die in Summe ca. 1
+TByte Daten verwalten kann. Das Füllen der DBs würde über vorhandene Tools erfolgen. Die zusätzliche Aufgabe war es Studierende zu unterstützt, die an der Weiterentwicklung dieser Tools arbeiten.
+
+Die Arbeit sollte wie folgt aufgeteilt werden:
+\begin{enumerate}
+	\item Dokumentation und Aufsetzen der Testumgebung
+	\begin{enumerate}
+		\item Dokumentation einer Installationsanleitung für die Benutzung des \newline OHDMConverters zur Importierung von \ac{OSM} Daten
+		\item Dokumentation der Aufsetzung einer Testumgebung
+		\item Dokumentation wie in 1a für Windows und MacOS Systeme
+	\end{enumerate}
+	\item Wiederaufsetzen des physischen OHM Servers
+	\begin{enumerate}
+		\item Aufsetzen 2 separater Datenbankserver auf dem physischen OHM Server
+		\item Importierung des planet.osm Datensatzes im Produktivdatenbankserver
+		\item Formulierung eines Cron-Jobs zur Automatisierung
+		\item Importierung von \ac{OSM} Daten von Deutschland im Integrationsdatenbankserver
+	\end{enumerate}
+\end{enumerate}
+
+\section{Planung}
+Die Aufteilung wurde in separierten Arbeitspaketen festgehalten, welche dann im Planungskalender für ein oder zwei Kalenderwochen Bearbeitungszeit eingetragen wurden.\\
+\begin{tabularx}{\linewidth}{|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|}
+	\hline
+	KW & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 14 & 15 & 16 & 17 & 18 & 19 & 20\\\hline
+	\multicolumn{2}{c}{\cellcolor{blue!25}AP 1a} &&&&&&&&&&&&&\\\hline
+	& \multicolumn{2}{c}{\cellcolor{blue!25}AP 1b} &&&&&&&&&&&&\\\hline
+	&&& \multicolumn{2}{c}{\cellcolor{blue!25}AP 2a} &&&&&&&&&&\\\hline
+	&&&& \multicolumn{2}{c}{\cellcolor{blue!25}AP 2b} &&&&&&&&&\\\hline
+	&&&&&& \multicolumn{2}{c}{\cellcolor{blue!25}AP 1c} &&&&&&&\\\hline
+	&&&&&&&& \multicolumn{2}{c}{\cellcolor{blue!25}AP 2c} &&&&&\\\hline
+	&&&&&&&&& \multicolumn{2}{c}{\cellcolor{blue!25}AP 2d} &&&&\\\hline
+\end{tabularx}
+
+\chapter{Datenbankserver}
+Der Datenbankserver sollte mit 2 separaten PostGIS Datenbanken erstellt werden. Die Erstellung und Einrichtung des Servers selbst geschah in enger Zusammenarbeit mit dem \\
+Laboringenieur Axel Wagner.\\
+Der OHM Server wurde mit einem \href{https://releases.ubuntu.com/20.04/}{\underline{Ubuntu 20.04}} in englischer Sprache und ohne \ac{GUI} eingerichtet.\\
+Des Weiteren wurden auf dem Server mehrere administrative Tools installiert, welche den Mitarbeitern beziehungsweise Laboringenieuren die Arbeit mit den Servern erleichtern.
+\begin{enumerate}[label=\textbf{\arabic*.}]
+	\item \textbf{aptitude}\\ist eine Erweiterung der Paketverwaltung APT, aber im Gegensatz zu apt-get führt aptitude über Änderungen der installierten Pakete \gequote{genauer} Buch, so dass nicht mehr benötigte Pakete automatisch erkannt und deinstalliert werden. Die Installationsgeschichte wird in ein Log geschrieben, wodurch später angezeigt werden kann, wann oder warum ein Paket installiert wurde.
+	\item \textbf{openssh-server}\\Die OpenSSH-Serverkomponente sshd wartet ständig auf Client-Verbindungen von einem der Client-Tools. Wenn eine Verbindungsanforderung auftritt, baut sshd die richtige Verbindung auf, je nachdem, welches Client-Tool die Verbindung herstellt. Wenn sich der entfernte Computer beispielsweise mit der ssh-Client-Anwendung verbindet, baut der OpenSSH-Server nach der Authentifizierung eine Fernsteuerungssitzung auf. Wenn ein entfernter Benutzer eine Verbindung zu einem OpenSSH-Server mit scp herstellt, initiiert der OpenSSH-Server-Daemon nach der Authentifizierung eine sichere Kopie von Dateien zwischen dem Server und dem Client.
+	\item \textbf{net-tools}\\Eine Sammlung von Programmen, die den Basissatz der NET-3-Netzwerkdistribution für das Linux-Betriebssystem bilden. Dieses Paket enthält arp, hostname, ifconfig, ipmaddr, iptunnel, mii-tool, nameif, netstat, plipconfig, rarp, route und slattach.
+	\item \textbf{git}\\ist ein dezentrales Versionsverwaltungssystem.
+	\item \textbf{nullmailer}\\ist ein reiner Weiterleitungs-MTA (Mail Transfer Agent). Das bedeutet, dass alle auf einem System eingehenden E-Mails an einen konfigurierten externen Mailserver weitergeleitet werden. Dies kann nützlich sein, wenn die Installation eines lokalen E-Mail-Servers nicht erwünscht oder nicht wirklich sinnvoll ist, aber zumindest die System-E-Mails müssen irgendwo hin weitergeleitet werden.
+	\item \textbf{logwatch}\\ist ein in Perl geschriebenes Tool zur Analyse von Logdateien. Es soll Systemadministratoren helfen, die Übersicht über alle Vorgänge auf einem Serversystem zu behalten. Logwatch durchsucht die Logdateien des Systems und generiert eine Kurzfassung daraus, deren Gestaltung individuell konfiguriert werden kann. Diese kann dann entweder als Datei weiterverarbeitet oder zum Versenden an einen Mailserver weitergereicht werden.
+	\item \textbf{apticron}\\ist ein kleines Shellskript zur automatischen Benachrichtigung über Paket-Updates per E-Mail.
+	\item \textbf{fail2ban}\\ist ein Set aus Client, Server und Konfigurationsdateien, welches Logdateien überwacht, dort nach vordefinierten Mustern sucht und nach diesen temporär IP-Adressen sperrt.
+\end{enumerate}\vspace{1cm}
+
+Der OHM Server ist wie auch das \ac{OHDM} Projekt eine HTW Berlin Projekt, somit musst auch die Erreichbarkeit des Server aus dem HTW Netz gewährleistet werden. Dies wurde mit einem bash Script realisiert, das \textit{iptables} Einträge zur Port/IP Freigabe enthält.\\
+
+Das \ac{OHDM} Projekt benutzt als \ac{DBMS} PostgreSQL mit PostGIS als Erweiterung.\\
+Der erste Schritt, ist die Installierung von PostgreSQL. Dieser lässt sich auf Ubuntu 20.04 wie in \autoref{lst:install-postgresql} installieren.
+\begin{lstlisting}[language=bash,caption={Installation PostgreSQL},label={lst:install-postgresql}]
+sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+sudo apt-get update
+sudo apt-get -y install postgresql-14
+# from 2022-02-24
+\end{lstlisting}
+Im Anschluss kann PostGIS als eine räumliche Datenbankerweiterung für PostgreSQL (siehe \autoref{lst:install-postgis}) installiert werden.
+\begin{lstlisting}[language=bash,caption={Installation PostGIS},label={lst:install-postgis}]
+sudo apt-get install postgresql-14-postgis-3
+sudo apt-get install postgresql-14-postgis-3-scripts
+\end{lstlisting}
+
+Während der Installationen sollte standardmäßig ein PostgreSQL Cluster\cite{postgresql-cluster} erstellt werden, welches folgende Daten besitzt:\\[0.5cm]
+\begin{tabular}{r l}
+	Servername: & localhost\\
+	Port: & 5432\\
+	Clustername: & main\\
+	Datenbankbenutzer & postgres\\
+	Standarddatenbank & postgres\\
+	Datenbasis & \lstinline[language=bash]|/var/lib/postgresql/14/main|\\
+	Datenbank log Datei & \lstinline[language=bash]|/var/log/postgresql/postgresql-14-main.log|\\
+	Pfad zu den Konfigurationen & \lstinline[language=bash]|/etc/postgresql/14/main/|\\
+\end{tabular}
+
+\newpage
+\section{Multiple Datenbanken in PostgreSQL}
+Mit PostgreSQL ist es möglich mehrere Datenbanken parallel laufen zu lassen.\\
+Anhand des Arbeitspaketes sollten 2 zusätzliche Cluster auf dem OHM Server entstehen. Hierfür wurden bestehende beziehungsweise mitinstallierte Tools verwendet.
+
+\subsection{Cluster erzeugen}\label{subsec:create-cluster}
+Zur Erzeugung eines neuen PostgreSQL Clusters wird der Befehl in \autoref{lst:create-cluster} verwendet. Für eine detaillierte Beschreibung der Clusterdaten dient \autoref{lst:create-cluster} Zeile \ref{ln:create-cluster} als Vorlage.\\ Weitere Überlegungen dazu in \autoref{ch:clustering}.
+\begin{lstlisting}[language=bash,caption={Erzeugung eines PostgreSQL Clusters},label={lst:create-cluster}]
+sudo pg_createcluster [postgresql_version_number] [clustername] -p [port]
+# Beispiel mit integration
+sudo pg_createcluster 14 integration -p 5433\%*\label{ln:create-cluster}*)
+\end{lstlisting}
+
+Durch die Verwendung des Befehls aus \autoref{lst:create-cluster} werden die Clusterdaten wie folgt erzeugt:\\[0.5cm]
+\begin{tabular}{r l}
+	Servername: & localhost\\
+	Port: & 5432\\
+	Clustername: & integration\\
+	Datenbankbenutzer & postgres\\
+	Standarddatenbank & postgres\\
+	Datenbasis & \lstinline[language=bash]|/var/lib/postgresql/14/integration|\\
+	Datenbank log Datei & \lstinline[language=bash]|/var/log/postgresql/postgresql-14-integration.log|\\
+	Pfad zu den Konfigurationen & \lstinline[language=bash]|/etc/postgresql/14/integration|\\
+\end{tabular}\vspace{0.5cm}
+
+Weitere Informationen unter:\\ \url{http://manpages.ubuntu.com/manpages/trusty/man8/pg_createcluster.8.html}\\[0.5cm]
+
+\subsection{Cluster steuern}
+Ein \lstinline[language=bash]|start|/\lstinline[language=bash]|stop| oder \lstinline[language=bash]|restart| lässt sich nun mit dem Befehl in \autoref{lst:ctlcluster} realisieren.
+\begin{lstlisting}[language=bash,caption={Steuerung des Clusters},label={lst:ctlcluster}]
+sudo pg_ctlcluster [postgresql_version_number] [clustername] [start|stop|restart]
+# Beispiel mit integration
+sudo pg_ctlcluster 14 integration [start|stop|restart]
+\end{lstlisting}
+Auch hierzu gibt es weitere Informationen, die unter:\\ \url{http://manpages.ubuntu.com/manpages/trusty/man8/pg_ctlcluster.8.html}\\
+eingesehen werden können.\newpage
+
+\subsection{Cluster als Service registrieren}
+Eine Integration des erstellten Clusters als Service ist in \autoref{lst:cluster-enable} einzusehen. Dies wird benötigt um auch nach einem Server Neustart gewährleisten zu können das der Datenbank Server dieses Clusters erreichbar ist.
+\begin{lstlisting}[language=bash,caption={Registierung des Clusters als System Service},label={lst:cluster-enable}]
+sudo systemctl enable postgresql@[postgresql_version_number]-[clustername].service
+# Beispiel mit integration
+sudo systemctl enable postgresql@14-integration.service
+\end{lstlisting}
+
+\section{Datenbank Fernzugriff}
+Für eine Freigabe des Zugriffs auf die Datenbank von anderen Adressen als den \lstinline|localhost| muss nicht nur der physische Server mit entsprechenden Freigaben eingestellt werden, sondern auch die Datenbank selbst.\\
+Hierfür müssen die Konfigurationsdateien \textit{postgresql.conf} und \textit{pg\_hba.conf} der Datenbank angepasst werden. Diese befinden sich im Pfad: \lstinline|/etc/postgresql/[version_number]/[clustername]/| beziehungsweise am Beispiel \lstinline|integration|: \lstinline|/etc/postgresql/14/integration| (vgl. \autoref{subsec:create-cluster})
+
+\subsection{postgresql.conf}
+In der Datenbankkonfigurationsdatei können einige Anpassungen vorgenommen werden. In diesem Beispiel wird sich auf die Anpassung der Abgehörten IP Adressen beschränkt.\\
+in den Grundeinstellungen ist ein PostgreSQL Datenbank Server so eingestellt das ein Zugriff auf die Daten nur Lokal möglich ist. Für die Möglichkeit eines Fernzugriffs auf die Daten muss der Eintrag (siehe \autoref{lst:postgrsql-conf}) geändert werden. Wie in den Kommentaren ersichtlich kann dabei auf 2 Varianten zurückgegriffen werden.
+\begin{enumerate}
+	\item Freigabe einer Liste von IP Adressen die durch Komma separiert sind oder
+	\item Freigabe aller IP Adressen durch Benutzung \gequote{*}
+\end{enumerate}
+Die 2. Variante sollte die fehlerfreie Freigabe von IP Adressen in den Firewall Einstellungen enthalten. Damit keine Sicherheitskonzepte verletzt werden.
+
+\begin{lstlisting}[language=bash,caption={postgresql.conf Ausschnitt},label={lst:postgrsql-conf},commentstyle=\color{black}]
+# - Connection Settings -
+
+#listen_addresses = 'localhost'		# what IP address(es) to listen on;
+# comma-separated list of addresses;
+# defaults to 'localhost'; use '*' for all
+# (change requires restart)
+\end{lstlisting}
+
+\newpage
+\subsection{pg\_hba.conf}
+Die Einstellungen der Authentifizierungsmethode werden in der Datenbankkonfigurationsdatei \textit{pg\_hba.conf} definiert. In \autoref{lst:pg-hba-conf} ist ein Ausschnitt einer solchen Datei auf einem Ubuntu 20.04 zu sehen. Diese definiert zum Beispiel in Zeile \ref{ln:postgres-without-password} eine Peer Authentifikation des Systembenutzers \textit{postgres}.\\
+Bei der Peer-Authentifizierungsmethode wird der Betriebssystem-Benutzername des Clients vom Kernel abgerufen und als zulässiger Datenbank-Benutzername verwendet (mit optionaler Zuordnung der Benutzernamen). Diese Methode wird nur bei lokalen Verbindungen unterstützt.(vgl. \autocite{peer-authentification})
+\begin{lstlisting}[caption={pg\_hba.conf Ausschnitt},label={lst:pg-hba-conf},deletekeywords={all}]
+# Database administrative login by Unix domain socket
+local		all				 		postgres	       					     peer\%*\label{ln:postgres-without-password}*)
+
+# TYPE  DATABASE    	USER        ADDRESS             METHOD
+
+# "local" is for Unix domain socket connections only
+local   all         	all                             peer
+# IPv4 local connections:
+host    all         	all         127.0.0.1/32        scram-sha-256
+# IPv6 local connections:
+host    all         	all         ::1/128             scram-sha-256
+# Allow replication connections from localhost, by a user with the
+# replication privilege.
+local   replication 	all                             peer
+host    replication 	all         127.0.0.1/32        scram-sha-256
+host    replication 	all         ::1/128             scram-sha-256
+\end{lstlisting}
+
+\chapter{Konvertierung}
+\section{OHDMConverter Java}
+Der javabasierte OHDMConverter diente als Projekthilfsprogramm um alle Importierungen oder Konvertierungen einer Datei/Schema in ein anderes zu realisieren.\\
+\textit{Annahme:} Da der OHDMConverter bis zum Beginn des Praktikums \gequote{nur} mit kleineren oder Testdatensätzen getestet und validiert wurde, konnten einige Fehler nicht gefunden werden.
+
+\subsection{Importierung der planet.osm Datei}
+Die Hauptaufgabe war es das planet.osm File in die PostgreSQL Datenbank zu importieren. Die Vorbereitung dieser Importierung musste mit größter Sorgfalt bearbeitet werden, um:
+\begin{itemize}
+	\item den fehlerfreien Ablauf zu gewährleisten,
+	\item die Auslastung des physischen Servers so minimal wie möglich zu beschränken und
+	\item Sicherheitskonzepte des physischen und des Datenbankservers einzuhalten.
+\end{itemize}
+Darüber hinaus musste auf die Größe der Datei berücksichtigt werden. Das heißt alle Tests fanden mit kleineren Dateien statt.
+
+\begin{table}[h]
+	\caption{Daten der planet.osm Datei}
+	\renewcommand{\arraystretch}{1.5}
+	\begin{tabularx}{\linewidth}{|C|C|}\hline
+		Eigenschaft & Wert\\\btrule{1.2pt}
+		Größe \ac{OSM} Datei & 115 GB\\\hline
+		Größe der \ac{PBF}\cite{pbf} Datei & 63 GB \\\hline
+		Anzahl Nodes in der Datenbank\cite{osm-taginfo} & \numprint{7663759219}\\\hline
+		Anzahl Ways in der Datenbank\cite{osm-taginfo} & \numprint{856401369}\\\hline
+		Anzahl Relations in der Datenbank\cite{osm-taginfo} & \numprint{9879181}\\\hline
+	\end{tabularx}
+	\caption*{Daten vom: 2022-05-03 23:59 UTC}
+\end{table}
+
+\newpage
+\subsection{Fehlverhalten bei der Importierung}\label{subsec:error}
+\subsubsection{admin\_level}
+Der Schlüssel admin\_level=* beschreibt die Verwaltungsebene eines Merkmals innerhalb einer Regierungshierarchie. Er wird hauptsächlich für die Grenzen territorialer politischer Einheiten (z. B. Land, Staat, Gemeinde) zusammen mit boundary=administrative verwendet. Aufgrund kultureller und politischer Unterschiede entsprechen die Verwaltungsebenen verschiedener Länder nur annähernd einander.(vgl. \cite{osm:admin-level})
+
+Von \ac{OSM} ist der Wert dieses Schlüssels als numerischer Wert zu speichern. Im \\OHDMConverter wurde auch von dieser Aussage ausgegangen, sodass für den Wert in Java ein Integer Wert angelegt wird und der Bedingung: Sollte der Wert nicht gelesen werden können wird das \ac{OSM} Objekt verworfen.\\
+Der Folgefehler daraus ist, dass alle \ac{OSM} Objekte, die mit einem nicht numerischen Wert für den Schlüssel: \textit{admin\_level} eingetragen sind, nicht gelesen werden. Leider gibt es sehr viele dieser Objekte die für andere \ac{OSM} Objekte wichtig sind, sodass im Umkehrschluss Objekt zu dem das Objekt gehört nicht mehr darstellbar sind beziehungsweise einen fehlerhaften Querverweis haben.
+
+\subsubsection{Abbruch}
+Die Importierung der \ac{OSM} Datei in die PostgreSQL Datenbank wurde nicht vollständig ausgeführt. Anhand der log Dateien konnte ein Aussage zur Menge der nicht betrachteten \ac{OSM} Objekte und einem weiteren Fehler getroffen werden. Die beiden letzten Zeilen des logs von osm2inter, allerdings für die Dokumentation aufbereitet, kann in \autoref{lst:germany-osm2inter.log} eingesehen werden.
+\begin{lstlisting}[language={},caption={Letzte zwei Zeilen des logs der Importierung von osm2inter},label={lst:germany-osm2inter.log}]
+nodes: 7,505,830,920 
+ways: 836,886,605 
+relations: 2,382,475 
+elapsed time:  9 : 5 : 58 : 30
+throwable caught in startElement: 
+java.lang.StringIndexOutOfBoundsException: 
+begin 1, end 0, length 1
+\end{lstlisting}
+
+Zum Zeitpunkt der Importierung waren laut:\\ \url{https://taginfo.openstreetmap.org/reports/database_statistics}\\
+\numprint{7565505545} Nodes, \numprint{844325562} Ways und \numprint{9742774} Relations in der planet.osm Datei enthalten. Somit fehlten der Datenbank:\\[0.5cm]
+\begin{tabular}{r<{ kurz} r<{, das entspricht} r l}
+	\numprint{60000000} & 60 Mio & 0,8\%& Nodes\\
+	\numprint{8000000} & 8 Mio & 0,9\%& Ways\\
+	\numprint{7000000} & 7 Mio &75,5\%& Relations	
+\end{tabular}
+
+\newpage
+\section{Erkenntnis}
+Aufgrund der gravierenden Fehler (vgl. \autoref{subsec:error}) im javabasierten OHDMConverter wurde die Lösung als Java Applikation verworfen. Dies geschah in Rücksprache mit dem Projektleiter Prof. Dr.-Ing. Thomas Schwotzer, welcher die Grundlegende Idee \ac{OSM} Daten in die \ac{OHDM} Datenbank zu importieren, als reines PsotgreSQL Projekt umsetzten wollte.\\
+Das \ac{OHDM} Projekt beziehungsweise der OHDMConverter als Java Applikation läuft bereits seit einigen Jahren kann aber mit den aktuellen Mitteln nicht stabil genug implementiert werden (auch in absehbarer Zeit nicht).\\
+
+Somit wurde die Projektidee neu definiert.

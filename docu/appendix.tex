@@ -1,16 +1,23 @@
+\setcounter{page}{1} \addtocontents{toc}{\protect\pagebreak}
+\part{\appendixname}
 \appendix
-\chapter{Windows}
-\section{osm2pgsql}\label{app:osm2pgsql:win}
-\todo[inline]{change to windows variant}
-\begin{lstlisting}
-osm2pgsql -d ohdm -U postgres -O flex -x \
--S /home/stesad/osm2inter/osm2inter.lua \
--c /home/stesad/osm2inter/berlin.osm
-\end{lstlisting}
+\ihead{} \chead{} \ohead{} \ifoot{} \cfoot{\pagemark} \ofoot{}
 
-\section{psql}\label{app:psql:win}
-\todo[inline]{change to windows variant}
-\begin{lstlisting}
-sudo -iu postgres psql -d ohdm \
--f /home/stesad/osm2inter/osm2inter_postprocess.sql
-\end{lstlisting}
+\newpage
+\setheadsepline{.5px}
+\setfootsepline{.5px}
+\ohead{\headmark}
+\chapter{Multiple Datenbanken in PostgreSQL}\label{ch:clustering}
+Die Alternative zur Erstellung eines PostgreSQL Clusters ist die Verwendung von \lstinline[language=bash]|initdb|\cite{postgresql-cluster}, allerdings gibt mit dieser Variante einige Herausforderungen die mit \lstinline[language=bash]|pg_createcluster| leichter beziehungsweise überhaupt zu bewältigen waren.
+\begin{enumerate}
+	\item Steuerung des Clusters für die Serververwaltung
+	\item Cluster als Service auch nach einem Neustart des Server starten
+\end{enumerate}
+
+\chapter{Windows Flag W}\label{ap:ch:win-pass}
+Theoretisch sollte es möglich sein auch in Windows eine Peer Authentifizierung zuzulassen. Dafür müsste die Einstellung in der \lstinline|pg_hba.conf| geändert werden und dann validiert ob und wie mit der Datenbank interagiert werden kann.
+
+\chapter{Curl Map Features}\label{ap:ch:curl-mapfeatures}
+Um die Arbeit mit den Map Features\cite{osm-mapfeatures} zu erleichtern, müsste man ein curl Script implemntieren, dass die Tabelleneinträge auf der Map Features Webseite ausliest und in eine csv Datei oder ähliches schreibt.\\
+
+\noindent Damit wäre es im Anschluss möglich die csv Datei als Insert Grundlage der classification Tabelle zu verweden.

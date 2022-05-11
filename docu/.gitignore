@@ -1,4 +1,8 @@
 ### Latex ###
+*.tex
+
+## Glossary style file
+*.ist
 
 ## Core latex/pdflatex auxiliary files:
 *.aux

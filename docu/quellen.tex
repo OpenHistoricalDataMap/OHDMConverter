@@ -2,5 +2,9 @@
 \clearscrheadings
 \setheadsepline{0px}
 \setfootsepline{0px}
-\printbibliography[title={Quellenverzeichnis}]
-\newpage
+\addcontentsline{toc}{chapter}{Quellen}
+\chapter*{Quellen}
+\section*{Bücher}
+\printbibliography[type=book, heading=none]
+\section*{Onlinehandbücher}
+\printbibliography[type=misc,heading=none]

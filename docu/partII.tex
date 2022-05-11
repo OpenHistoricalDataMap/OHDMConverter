@@ -1,40 +1,40 @@
 \part{OHDMConverter als PostgreSQL Projekt}
 \chapter{Projektidee}
-Die Grundidee von \ac{OHDM} ist immer noch die selbe, kurz es sollen \ac{OSM} Daten um die Dimension Zeit erweitert werden. Auch bleiben die bestehenden Datenbankschemata gleich. Die größte Änderung ist die Implementierung.
+Die Grundidee von \gls{ohdm} ist immer noch die selbe, kurz es sollen \gls{osm} Daten um die Dimension Zeit erweitert werden. Auch bleiben die bestehenden Datenbankschemata gleich. Die größte Änderung ist die Implementierung.
 
 \section{osm2inter}
-Für die Importierung von \ac{OSM} Dateien soll ein bestehendes Tool \gequote{osm2pgsql}\cite{osm2pgsql} verwendet werden. osm2pgsql ist dafür ausgelegt \ac{OSM} Daten in eine PostGIS Datenbank zu importieren.
+Für den Import von \gls{osm} Dateien soll ein bestehendes Tool \gequote{osm2pgsql}\cite{osm2pgsql} verwendet werden. osm2pgsql\cite{osm2pgsql} ist dafür ausgelegt \gls{osm} Daten in eine PostGIS Datenbank zu importieren.
 
 \begin{figure}[h]
-	\caption{Entity Relationship Diagramm der intermediate Datenbank}
+	\caption{Entity Relationship Diagramm der Intermediate Datenbank}
 	\label{fig:erd-inter}
 	\includegraphics[width=\linewidth]{img/intermediate-db-erd.pdf}
 \end{figure}
 
 \section{inter2ohdm}
-Die Konvertierung der intermediate Datenbank soll mithilfe von SQL Scripts realisiert werden. Hierbei soll, wenn möglich das Tool \gequote{psql} eingesetzt werden.
+Die Konvertierung der Intermediate Datenbank soll mithilfe von SQL Scripts realisiert werden. Hierbei soll, wenn möglich das Tool \gequote{psql}\cite{postgres-psql} eingesetzt werden.
 
 \begin{figure}[h]
-	\caption{Entity Realtionship Diagramm der \ac{OHDM} Datenbank}
+	\caption{Entity Realtionship Diagramm der \gls{ohdm} Datenbank}
 	\label{fig:erd-ohdm}
 	\includegraphics[width=\linewidth]{img/ohdm-db-erd.pdf}
 \end{figure}
 
 \section{Zusammenfassung}
-Die beiden Datenbankschemata intermediate (vgl. \autoref{fig:erd-inter}) und \ac{OHDM} (vgl. \autoref{fig:erd-ohdm}) sollen beibehalten werden. Allerdings soll jetzt mehr mit den Bordmittel von osm und PostgreSQL gearbeitet werden.\\
+Die beiden Datenbankschemata Intermediate (vgl. \autoref{fig:erd-inter}) und \gls{ohdm} (vgl. \autoref{fig:erd-ohdm}) sollen beibehalten werden. Allerdings soll jetzt mehr mit den Bordmittel von \gls{osm} und PostgreSQL gearbeitet werden.\\
 
 Die neue Projektidee musste mit bestehenden Datenstrukturen arbeiten, da sonst auch alle anderen Teilprojekte einer Anpassung bedurften.
 
 \chapter{osm2pgsql}
 \section{Intro}
-Als Importierungskomponente kann osm2pgsql\cite{osm2pgsql-manual} sehr vielseitig eingesetzt werden. Innerhalb des Projektes löst osm2pgsql den OHDMConverter zum importieren von \ac{OSM} in die intermediate Datenbank ab. Zusaätzlich lassen sich mit dem osm2pgsql nicht nur xml basierte \ac{OSM} Dateien importieren sondern auch pbf und bz2 Kontainer. Allgemein sind \ac{PBF} Datei zu bevorzugen, da sie nur ungefähr halb so groß, wie die xml basierenden \ac{OSM} Dateien sind.\cite{osm:pbf}\\
+Als Importkomponente kann osm2pgsql\cite{osm2pgsql-manual} sehr vielseitig eingesetzt werden. Innerhalb des Projektes löst osm2pgsql den \gls{ohdmconverter} zum importieren von \gls{osm} in die \gls{inter} Datenbank ab. Zusaätzlich lassen sich mit dem osm2pgsql nicht nur xml basierte \gls{osm} Dateien importieren sondern auch pbf und bz2 Kontainer. Allgemein sind \gls{pbf} Datei zu bevorzugen, da sie nur ungefähr halb so groß, wie die xml basierenden \gls{osm} Dateien sind.\cite{osm:pbf}\\
 
 Den größten Vorteil von osm2pgsql bietet die Benutzung des \gequote{Flex Output}. Hierbei wird die Konvertierung mit einem lua Script angepasst.\\
 
 Die Installation kann auf dem GitHub Repository über die \href{https://github.com/OpenHistoricalDataMap/OHDMConverter/tree/SteSad#readme}{Readme.md} eingesehen werden\\
 
 \section{osm2pgsql Flags}
-Für die fehlerfreie Importierung sind mehrere Flags notwendig. In der nachfolgenden \autoref{tb:osm2pgsql-flags} sind diese einzeln aufgelistet mit einer entsprechenden Erklärung.
+Für den fehlerfreien Import sind mehrere Flags notwendig. In der nachfolgenden \autoref{tb:osm2pgsql-flags} sind diese einzeln aufgelistet mit einer entsprechenden Erklärung.
 \begin{table}[h]
 	\caption{flags}
 	\label{tb:osm2pgsql-flags}
@@ -53,7 +53,7 @@ Für die fehlerfreie Importierung sind mehrere Flags notwendig. In der nachfolge
 
 \newpage
 \section{Lua Script}
-Für die Importierung in das bestehende intermediate Schema wird ein lua Script benötigt, welches die Importierung von osm Daten in die intermediate Datenbank spezifiziert.\\
+Für den Import in das bestehende \gls{inter} Schema wird ein lua Script benötigt, welches den Import von \gls{osm} Daten in die \gls{inter} Datenbank spezifiziert.\\
 Für eine bessere Erklärung wird das lua Script in drei Abschnitte unterteilen:
 \begin{enumerate}
 	\item Tabelleninizialisierung
@@ -247,11 +247,11 @@ end
 
 \newpage
 \section{Ausführung}
-Alle vorherigen Sektionen beschreiben die wichtigen Teile des Befehls zur Importierung von osm Daten in die intermediate Datenbank. Der Prozess der Importierung kann nun wie folgt ausgeführt werden.\\
-\begin{lstlisting}
+Alle vorherigen Sektionen beschreiben die wichtigen Teile des Befehls zum Import von \gls{osm} Daten in die \gls{inter} Datenbank. Der Prozess des Importes kann nun wie folgt ausgeführt werden.
+\begin{lstlisting}[language={}]
 	osm2pgsql -d ohdm -U postgres -O flex -x \
-	-S /home/stesad/osm2inter/osm2inter.lua \
-	-c /home/stesad/osm2inter/berlin.osm
+	-S /osm2inter/osm2inter.lua \
+	-c /osm2inter/berlin.osm
 \end{lstlisting}
 \textbf{Hinweis:} Die Dateien müssen mit absoluten Pfaden angegeben werden, oder im Verzeichnis des Datenbanknutzers gespeichert werden.\\
 
@@ -269,11 +269,9 @@ Für die Ausführung von psql werden in diesem Beispiel Flags benötigt die in \
 		-c command & Spezifiziert ein Kommando das mit psql ausgeführt werden soll. \\\hline
 		-f & Ermöglich die Verwendung von Dateien als Quelle für Befehle.\\\hline
 	\end{tabularx}\vspace{0.5cm}
-	In Windows muss zusätzlich -W für eine Passworteingabe als Flag gesetzt werden \\(mehr Ideen: \autoref{ap:ch:win-pass})
 \end{table}
-\begin{lstlisting}
-	sudo -iu postgres psql -d ohdm \
-	-f /home/stesad/osm2inter/osm2inter_postprocess.sql
+\begin{lstlisting}[language={}]
+	psql -d ohdm -f /osm2inter/osm2inter_postprocess.sql
 \end{lstlisting}
 \textbf{Hinweis:} Die Dateien müssen mit absoluten Pfaden angegeben werden, oder im Verzeichnis des Datenbanknutzers gespeichert werden.\\
 
@@ -323,9 +321,9 @@ Mehrere Tabellen werden mit simplen SQL Queries initialisiert. Im Beipsiel der T
 	);
 \end{lstlisting}\vspace{1cm}
 \section{Join Insert}
-Die meisten weiteren Initialisierungen werden mithilfe eines JOIN\footnote{vgl. \url{https://www.postgresql.org/docs/current/tutorial-join.html}} Statements realisiert. Hierbei wird eine Vereinigungsmenge gebildet, die abhänig von einer Spalte der beider zu vereinenden Tabellen ist. In \autoref{lst:insert-relation-geometry} wird eine spezielle Initialsiserung aufgezeigt, welche alle Relationen der intermediate Datenbank in Verbindung mit der \gequote{relationmembers} Tabelle in die \gequote{geoobject\_geometry} Tabelle der OHDM Datenbank einfügt.\newpage
+Die meisten weiteren Initialisierungen werden mithilfe eines JOIN\footnote{vgl. \url{https://www.postgresql.org/docs/current/tutorial-join.html}} Statements realisiert. Hierbei wird eine Vereinigungsmenge gebildet, die abhänig von einer Spalte der beider zu vereinenden Tabellen ist. In \autoref{lst:insert-relation-geometry} wird eine spezielle Initialsiserung aufgezeigt, welche alle Relationen der \gls{inter} Datenbank in Verbindung mit der \gequote{relationmembers} Tabelle in die \gequote{geoobject\_geometry} Tabelle der OHDM Datenbank einfügt.\newpage
 
-\begin{lstlisting}[language=SQL,caption={Insert Statement für die \gequote{geoobject\_geometry} Tabelle} auf Basis von allen Realationen der intermediate Datenbank,label={lst:insert-relation-geometry}]
+\begin{lstlisting}[language=SQL,caption={Insert Statement für die \gequote{geoobject\_geometry} Tabelle} auf Basis von allen Realationen der \gls{inter} Datenbank,label={lst:insert-relation-geometry}]
 	INSERT INTO ohdm.geoobject_geometry(
 	id_geoobject_source, 
 	id_polygon, 

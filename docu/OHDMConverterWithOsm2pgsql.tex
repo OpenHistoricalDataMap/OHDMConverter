@@ -1,24 +1,29 @@
-\documentclass[bibliography=totoc, paper=a4, fontsize=12pt]{scrreprt}
+\documentclass[paper=a4, fontsize=12pt]{scrreprt}
 %fürs nächste mal nicht so große Abstände
 \usepackage[left=2.5cm,right=2cm,top=1cm,bottom=1cm]{geometry}
 \geometry{headheight=1cm, headsep=1.5cm, includehead}
 \geometry{footskip=1.5cm ,includefoot}
 \usepackage[ngerman]{babel}
+\usepackage[
+	colorlinks = true,
+	linkcolor =,
+	urlcolor  = blue,
+	citecolor = black,
+	anchorcolor = blue,
+	hypertexnames=false
+]{hyperref}
 \usepackage{lineno}
 \usepackage{csquotes}
 \usepackage{enumitem}
 \usepackage{caption}
 \usepackage{booktabs}
-\usepackage[colorlinks = true,
-linkcolor =,
-urlcolor  = blue,
-citecolor = black,
-anchorcolor = blue]{hyperref}
 \usepackage{graphicx} 
 \usepackage[headsepline, footsepline, plainheadsepline=false, plainfootsepline=false, automark, autooneside=false, markcase=used]{scrlayer-scrpage}
+\automark{chapter}
 \pagestyle{scrheadings}
 \usepackage{blindtext}
-\usepackage[printonlyused,withpage]{acronym}
+\usepackage[acronym,nopostdot]{glossaries}
+\makeglossaries
 \usepackage{tabularx}
 \usepackage[table]{xcolor}
 \usepackage{xcolor,colortbl}
@@ -41,11 +46,6 @@ anchorcolor = blue]{hyperref}
 %% BibLaTex
 \usepackage[backend=bibtex, style=numeric, sorting=none]{biblatex}
 \addbibresource{quellen.bib}
-\DeclareFieldFormat{booktitle}{\newline{\textit{#1}}}%
-\DeclareFieldFormat{url}{\newline \url{#1}\newline}%
-\DeclareFieldFormat[inproceedings,standard,report]{title}{\newline #1}% Wenn der Titel zu lang wird kann mit, hier weiter Arten hinzufügen
-\DeclareFieldFormat[misc]{note}{\newline #1}%
-
 \renewcommand*{\labelnamepunct}{\addcolon\addspace}     % Semikollon nach Autor
 \renewcommand*{\newunitpunct}{\addsemicolon\space} 		% Trennzeichen Semikolon
 
@@ -65,6 +65,14 @@ anchorcolor = blue]{hyperref}
 
 %deutsche Anführungszeichen (german quote)
 \newcommand{\gequote}[1]{\glqq #1\grqq{}}
+
+%url in footnotesize
+\newcommand{\smallerurl}[1]{{\footnotesize\url{#1}}}
+
+% Parttitle nutzbar machen
+\let\Oldpart\part
+\newcommand{\parttitle}{}
+\renewcommand{\part}[1]{\Oldpart{#1}\renewcommand{\parttitle}{#1}}
 
 %Auch bei chapter Header und Footer
 \renewcommand*\chapterpagestyle{useheadings}
@@ -136,6 +144,52 @@ anchorcolor = blue]{hyperref}
 	title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
 }
 \setlength\parindent{0pt}
+
+%----------------------------------------------------------------------------------------
+% Glossary
+\setglossarysection{section}
+\newglossarystyle{tabX3col}{
+	\renewenvironment{theglossary}%
+	{\renewcommand{\arraystretch}{1.5}\tabular{p{.2\linewidth} p{.55\linewidth} >{\raggedleft\arraybackslash}p{.15\linewidth}}}%
+	{\endtabular}%
+	\renewcommand*{\glossaryheader}{\textbf{Bezeichnung} & \textbf{Erklärung} & \textbf{Seitenzahlen}\\[5px]}%
+	\renewcommand*{\glsgroupheading}[1]{}%
+	\renewcommand*{\glsgroupskip}{}%
+	\renewcommand{\glossentry}[2]{%
+		\glossentryname{##1} & \glossentrydesc{##1}\hfill & ##2\\\hline%
+	}%
+	\renewcommand*{\subglossentry}[3]{}
+}
+% Glossaryentry
+\newglossaryentry{ohdmconverter}{
+	name=OHDMConverter,
+	description={Javabasierte Applikation, die alle Portierungen der verschiedenen Datenbankschemata und Skripte enthält}	
+}
+\newglossaryentry{ohm}{
+	name=OHM,
+	description={HTW Berlin interne Bezeichnung für den physischen Server für das Open Historical Data Map Projekt}	
+}
+
+\newglossaryentry{inter}{
+	name=Intermediate,
+	description={Benamung für das Datenbankschema, das für die Konvertierung von einer OpenStreetMap Datei in eine Zwischendatenbank genutzt wird}
+}
+
+\newglossaryentry{osm2inter}{
+	name=osm2inter,
+	description={Abkürzung für die Konvertierungsmethode von einer OpenStreetMap Datei in eine Zwischendatenbank (Intermediate Datenbank)}
+}
+
+% Acronyms
+\newacronym{gui}{GUI}{Graphical User Interface}
+\newacronym{ohdm}{OHDM}{Open Historical Data Map}
+\newacronym{dbms}{DBMS}{Database Management System}
+\newacronym{db}{DB}{Datenbank}
+\newacronym{osm}{OSM}{OpenStreetMap}
+\newacronym{pbf}{PBF}{Protocolbuffer Binary Format}
+\newacronym{htw}{HTW}{Hochschule für Technik und Wirtschaft}
+%----------------------------------------------------------------------------------------
+\newcommand{\printTitle}{Bericht über die Praktikumstätigkeit}
 
 \begin{document}
 	\input{titleAndToc.tex}

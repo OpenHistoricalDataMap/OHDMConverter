@@ -1,8 +1,15 @@
 \part{Schlussbetrachtung}
 \chapter{Fazit}
-Die Implementation des Prototypes ist soweit abgeschlossen, das auch bestehende Tools des OHDMConverters weiterhin das \ac{OHDM} Datenbankschema verwenden können. \\
+Die Implementation des Prototyps ist soweit abgeschlossen, wodurch auch bestehende Tools des OHDMConverters weiterhin das \gls{ohdm} Datenbankschema verwenden können. \\
+Im Praktikum wurde viel Wissen erlernt das für den späteren Berufsalltag von Nutzen sein wird:
+\begin{itemize}
+	\item Der Umgang mit mehreren Komponenten,
+	\item Aneignung von Fähigkeiten zur Benutzung von Komponenten durch Lesen der Dokumentationen,
+	\item Vertiefung des Wissens im Bereich Datenbank für PostgreSQL,
+	\item Umgang mit der Skriptsprache lua
+\end{itemize}
 
-\chapter{Zusätzliche Ergebnisse}
+\chapter{Zusätzliche Ergebnisse und Überlegungen}
 \section{Laufzeitanalyse}
 \begin{table}[h]
 	\label{tb:duration}
@@ -12,13 +19,19 @@ Die Implementation des Prototypes ist soweit abgeschlossen, das auch bestehende 
 	\begin{tabular}{|l?r|r|r|r|}\hline
 		 Laufzeit & Max & Min & Durchschnitt & Median \\\btrule{1.2pt}
 		 Sekunden & 138 & 108 & 128.16 & 128\\\hline
-		 Minuten:Sekunden & 02:17 & 01:48 & 02:07 &  02:07\\\hline
+		 Minuten:Sekunden & 02:18 & 01:48 & 02:08 &  02:08\\\hline
 	\end{tabular}	
 \end{table}
 
 \vspace{1cm}
-\section{Backgroundprozess}
-\todo[inline]{sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper}
-
-\chapter{Weitere Überlegungen}
-
+\section{Backgroundprocess}
+Im ersten Versuch des Importprozess als Backgroundprocess zu starten wurde folgende Fehlermeldung geloggt.\\
+\lstinline[language={}]|sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper|\\
+Somit müssen bei dem Backgroundprocess zwei Dinge beachtet werden:
+\begin{enumerate}
+	\item Die Authentifizierung mit der Datenbank muss per Passwort erfolgen, das heißt dies muss gegebenfalls in der Konfiguration geändert werden.
+	\item Der User welcher den Backgroundprocess ausführt muss entsprechende Rechte in der Datenbank besitzen.
+	\item psql\cite{postgres-psql} und osm2pgsql\cite{osm2pgsql} müssen mit dem Flag \gequote{-W} ausgeführt werden, um sicherzustellen das die Passworteingabe erfolgen muss.
+	\item Das Passwort muss einmalig eingegeben oder zu Ausführung hinterlegt werden.
+\end{enumerate}
+Hierfür kann ein expect oder Python Skript geschrieben werden.

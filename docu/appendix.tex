@@ -1,23 +1,20 @@
-\setcounter{page}{1} \addtocontents{toc}{\protect\pagebreak}
+%\setcounter{page}{1} \addtocontents{toc}{\protect\pagebreak}
 \part{\appendixname}
 \appendix
-\ihead{} \chead{} \ohead{} \ifoot{} \cfoot{\pagemark} \ofoot{}
+\ihead{\thepart. \parttitle} \chead{} \ohead{\headmark}
+\ifoot{\printTitle} \cfoot{Seite \pagemark} \ofoot{}
 
 \newpage
 \setheadsepline{.5px}
 \setfootsepline{.5px}
-\ohead{\headmark}
 \chapter{Multiple Datenbanken in PostgreSQL}\label{ch:clustering}
-Die Alternative zur Erstellung eines PostgreSQL Clusters ist die Verwendung von \lstinline[language=bash]|initdb|\cite{postgresql-cluster}, allerdings gibt mit dieser Variante einige Herausforderungen die mit \lstinline[language=bash]|pg_createcluster| leichter beziehungsweise überhaupt zu bewältigen waren.
+Die Alternative zur Erstellung eines PostgreSQL Clusters\cite{postgresql-cluster} ist die Verwendung von \lstinline[language=bash]|initdb|\cite{postgresql-cluster}, allerdings gibt mit dieser Variante einige Herausforderungen die mit \lstinline[language=bash]|pg_createcluster| leichter beziehungsweise überhaupt zu bewältigen waren.
 \begin{enumerate}
-	\item Steuerung des Clusters für die Serververwaltung
+	\item Steuerung des Clusters\cite{postgresql-cluster} für die Serververwaltung
 	\item Cluster als Service auch nach einem Neustart des Server starten
 \end{enumerate}
 
-\chapter{Windows Flag W}\label{ap:ch:win-pass}
-Theoretisch sollte es möglich sein auch in Windows eine Peer Authentifizierung zuzulassen. Dafür müsste die Einstellung in der \lstinline|pg_hba.conf| geändert werden und dann validiert ob und wie mit der Datenbank interagiert werden kann.
-
 \chapter{Curl Map Features}\label{ap:ch:curl-mapfeatures}
-Um die Arbeit mit den Map Features\cite{osm-mapfeatures} zu erleichtern, müsste man ein curl Script implemntieren, dass die Tabelleneinträge auf der Map Features Webseite ausliest und in eine csv Datei oder ähliches schreibt.\\
+Um die Arbeit mit den Map Features\cite{osm-mapfeatures} zu erleichtern, müsste man ein curl Skript implementieren, dass die Tabelleneinträge auf der Map Features\cite{osm-mapfeatures} Webseite ausliest und in eine csv Datei oder ähnliches schreibt.\\
 
-\noindent Damit wäre es im Anschluss möglich die csv Datei als Insert Grundlage der classification Tabelle zu verweden.
+Damit wäre es im Anschluss möglich die csv Datei als Grundlage für ein Insert Statement der classification Tabelle zu verwenden.

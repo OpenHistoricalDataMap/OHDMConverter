@@ -2,7 +2,7 @@
 full_file_name=$(realpath -e $0)
 path=${full_file_name%/*} 
 t1=$(date +%s)
-sudo -iu postgres psql -d ohdm -f $path'/inter2ohdm.sql'
+psql -W -d ohdm -f $path'/inter2ohdm.sql'
 sleep 3
 t2=$(date +%s)
 duration=$((t2 - t1))

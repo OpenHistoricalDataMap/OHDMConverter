@@ -33,7 +33,13 @@ local function mapfeatures_from_csv(file)
     return mapfeatures, mapfeatures_undefined
 end
 
-local file = debug.getinfo(1).source:match("@?(.*/)") .. 'classification.csv'
+local path = debug.getinfo(1).source:match("@?(.*/)")
+local file
+if path == nil then
+    file = 'classification.csv'
+else
+    file = debug.getinfo(1).source:match("@?(.*/)") .. 'classification.csv'
+end
 local mapfeatures, mapfeatures_undefined = mapfeatures_from_csv(file)
 
 SCHEMA_NAME = 'inter'

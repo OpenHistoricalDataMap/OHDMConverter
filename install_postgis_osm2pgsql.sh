@@ -29,8 +29,4 @@ make man
 
 make install
 
-printf "use osm2pgsql like\n"
-printf "sudo -iu <database-user> osm2pgsql -d <database-name> \n\t -x -O flex \n\t -S <your-defined-lua-script \n\t -c <your-osm-file>\n"
-printf "NOTE: all paths must be full absolute paths\n"
-printf "Example:\n"
-printf "sudo -iu postgres osm2pgsql -d ohdm -x -O flex\\ \n -S /home/postgres/OHDMConverter/osm2inter.lua\\ \n -c /home/postgres/OHDMConverter/berlin.osm\n"
+printf "Installed osm2pgsql\n"

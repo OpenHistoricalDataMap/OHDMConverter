@@ -1,3 +1,4 @@
 *.osm
 .idea/*
 !littlemap.osm
+*.sh

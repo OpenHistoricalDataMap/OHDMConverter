@@ -4,92 +4,50 @@ In order to be able to use osm2pgsql and psql completely, several tools are requ
 
 >**NOTE**: Only Ubuntu 20.04 and Windows 10 have been successfully tested. 
 
-# 1. Installation database management system (DBMS)
+# Installation database management system (DBMS)
 First we need the dbms itself, in this case we use PostgreSQL as the database management system.
 
-You can install postgis and osm2pgsql in one step, when you use the [installation script](TODO: add link to script])
-<details>
-  <summary>Ubuntu 20.04</summary>
+You can install postgis and osm2pgsql in one step, when you use the [installation script](https://github.com/OpenHistoricalDataMap/OHDMConverter/blob/SteSad/install_postgis_osm2pgsql.sh)
   
-  Create the file repository configuration:
+Create the file repository configuration:
 
-  ```
-  sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-  ```
+```
+sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+```
 
-  Import the repository signing key:
+Import the repository signing key:
 
-  ```
-  wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-  ```
+```
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+```
 
-  Update the package lists:
-  ```
-  sudo apt-get update
-  ```
+Update the package lists:
+```
+sudo apt-get update
+```
 
-  Install the PostgreSQL.
+Install the PostgreSQL.
 
-  ```
-  sudo apt-get -y install postgresql-14
-  ```
+```
+sudo apt-get -y install postgresql-14
+```
 
-  A server is also initialised within the installation. This server has the following values:
-  * Name of the server: main
-  * Port number: 5432
-  * Name of the database: postgres
-  * Name of the database owner: postgres
+A server is also initialised within the installation. This server has the following values:
+* Name of the server: main
+* Port number: 5432
+* Name of the database: postgres
+* Name of the database owner: postgres
 
-  In addition you have to install [PostGIS](https://postgis.net/): 
-  ```
-  sudo apt-get install postgresql-14-postgis-3
-  ```
-  PostGIS is a spatial database extender for PostgreSQL object-relational database. It adds support for geographic objects allowing location queries to be run in SQL.
-
-</details>
+In addition you have to install [PostGIS](https://postgis.net/): 
+```
+sudo apt-get install postgresql-14-postgis-3
+```
+PostGIS is a spatial database extender for PostgreSQL object-relational database. It adds support for geographic objects allowing location queries to be run in SQL.
 
 <br><br>
 
-<details>
-  <summary>Windows 10</summary>
-
-  Download PostgreSQL 14.2 &rarr; https://www.enterprisedb.com/downloads/postgres-postgresql-downloads
-
-  Start the installation of PostgresSQL.<br>
-  First you have to set the Installation Directory, (default): `C:\Program Files\PostgreSQL\14`<br>
-  Be sure the you have all Components selected:
-  * PostgreSQL Server &rarr; this is the database management server itself
-  * pgAdmin 4 &rarr; This GUI-based tool serves as an additional administrative interface for managing PostgreSQL
-  * Stack Builder &rarr; This is used to install extensions for PostgreSQL.
-  * Command Line Tools &rarr; We need this tool for the later setup of the database.
-
-  Next, we need to define a directory where the data will be stored by the server,<br> (default): `C:\Program Files\PostgreSQL\14\data`<br>
-  After that we have to assign a password for the superuser (postgres) of the database, i.e: `my_password`<br>
-  We have to select the port number the server should listen on (default): `5432`<br>
-  In addition, we can select the locale, but also leave it default.
-
-  Now the installation of PostgreSQL should start. Once this is complete, the Stack Builder can be started directly. The Stack Builder can also be started manually afterwards.
-
-  In the Stack Builder, the running PostgreSQL server must be selected. Here PostgreSQL 14 on port 5432.
-
-  [PostGIS](https://postgis.net/) must be installed as an extension, this can be found under Spatial Extensions and the latest version should be selected:<br>
-  _PostGIS 3.2 Bundle for PostgreSQL 14 (64bit) v3.2.0_ <br>
-  Before the actual installation of PostGIS begins, the path for the downloaded files can be defined.<br>
-  During the installation the path of the installation is requested, this can be the same as for PostgreSQL itself:<br>
-  `C:\Program Files\PostgreSQL\14`.
-
-  It also asks about setting up several environment variables, which should all be activated for the OHDM project.
-
-  Afterwards the system should be restarted.
-</details>
-
-<br><br>
-
-# 2. Installation osm2pgsql
+# Installation osm2pgsql
 You have to use osm2pgsql up to version 1.5.1, therefor we do not use the standard installation.
-
-<details>
-<summary>Ubuntu 20.04</summary>
 
 If you have used the [installation script](TODO: add link to script]), you can skip this section.
 
@@ -131,22 +89,17 @@ sudo make install
 ```
 
 The usage og osm2pgsql will be described later.
-</details>
 
 <br><br>
 
-<details>
-<summary>Windows</summary>
-
-## Installing osm2psql
-You can [download prebuild binaries](https://osm2pgsql.org/download/windows/). Unpack the ZIP file and you can immediately use osm2pgsql.
-
-The usage og osm2pgsql will be described later.
-</details>
-
+# Create database user
+To ensure that all scripts can be executed, you must create a database user who has full access rights to the database.
+```
+createuser --interactive --pwprompt
+```
 <br><br>
 
-# 3. Preparation for the conversions
+# Preparation for the conversions
 In order to import an osm file into the OHDM database, several intermediate steps have to be processed. In the first conversion step, osm2pgsql and psql is used to fill an intermediate database with osm data. Several components are needed for this.
 
 All necessary scripts are in the GitHub repository [OHDMConverter Branch SteSad](https://github.com/OpenHistoricalDataMap/OHDMConverter/tree/SteSad)
@@ -174,40 +127,92 @@ More information: https://osm2pgsql.org/doc/manual.html#the-flex-output
 ```bash
 psql -c "CREATE DATABASE ohdm;"
 ```
-The preparation of the database can be realized with the [preprocess.sql](TODO: add link). In this file there is also the complete insert statement for the necessary osm map features.
 
-# Usage
+<br><br>
 
-To ensure that the target schema corresponds to what the OHDM converter understands, a lua script is included when using the osm2pgsql tool.<br>
-> [osm2inter.lua](https://github.com/OpenHistoricalDataMap/OHDMConverter/blob/SteSad/osm2inter/osm2inter.lua)
+# Import OSM file to the intermediate database
+<details><summary>Use of individual scripts</summary>
 
+## Preprocess
+The 2 databases need the [map features](https://wiki.openstreetmap.org/wiki/Map_features) as a reference table. The [preprocess.sql](https://github.com/OpenHistoricalDataMap/OHDMConverter/blob/SteSad/osm2inter/preprocess.sql) realizes this and also creates the schema "inter".
+
+You can find the preprocess.sql script in the osm2inter folder after clone this repository and run with:
+```
+psql \
+--host=<servername>\
+--port=<port>\
+--username=<username>\
+--password\
+--dbname=<database>\
+--file=preprocess.sql
+```
+<br>
+
+## Extract Map Features as CSV File
+The lua script in the next step need a csv file with all map features to refer the created classcodes in the nodes, ways and relation entries. <br>
+To realizes that run:
+```
+psql \
+--host=<servername>\
+--port=<port>\
+--username=<username>\
+--password\
+--dbname=<database>\
+--command="\copy inter.classification TO <file_you_want_copy_to> WITH DELIMITER ',';"
+```
+<br>
+
+## Import OSM File with osm2pgsql
+The previous steps ensure that a database schema with the name "inter" exists and that all map features are entered as tables in this database schema. In addition, a csv file is created that reflects these entries. 
+
+Now the actual import can be started.
+```
+osm2pgsql \
+--host=<servername>\
+--port=<port>\
+--user=<username>\
+--password\
+--database=<database>\
+--log-level=info\
+--extra-attributes\
+--output=flex\
+--style=osm2inter.lua\
+--create littlemap.osm
+```
+<br>
+
+## Postprocess
+The osm2pgsql tool creates columns with unique non "Null" values, but these values are not recognized as primary keys in the PostgreSQL database. Therefore, after using the osm2pgsql tool, make sure that all tables with generated ids become primary keys. This is done with the [postprocess.sql](https://github.com/OpenHistoricalDataMap/OHDMConverter/blob/SteSad/osm2inter/postprocess.sql) script.
 
 ```
-sudo -iu <databaseuser> osm2pgsql -d <databasename> -W \
-  --extra-attributes --output=flex --style=<your_defined_lua_script> \
-  -c <your_osm_file>
-```
-* `sudo -iu <database_user>` &rarr; to run followed commands as specified user
-* `-d <database_name>` &rarr; specifies the database in which to work
-* `-W` &rarr; will promt a password input for the database connection
-* `-x` &rarr; needed for using timestamp, uid and username from osm tags
-* `-O flex` &rarr; activate using spezified style files
-* `-S <your_defined_lua_script>` &rarr; specify lua file wich will use
-* `-c <your_osm_file>` &rarr; specify the osm file wich will use
-
-i.e.
-```
-sudo -iu postgres osm2pgsql -d ohdm -W -x -O flex -S osm2inter.lua -c berlin-latest.osm
+psql \
+--host=<servername>\
+--port=<port>\
+--username=<username>\
+--password\
+--dbname=<database>\
+--file=postprocess.sql
 ```
 
 </details><br><br>
 
+<details><summary>Import as one process</summary>
 
-<details><summary>Windows</summary>
-
-### Installing osm2psql
+In addition, there is a Python file which executes all the individual processes together. For this Python script, a JSON file is needed that contains all database information:<br>
+[database-parameter.json](https://github.com/OpenHistoricalDataMap/OHDMConverter/blob/SteSad/osm2inter/database-parameter.json)
+```json
+{
+	"servername":"localhost",
+	"port":"5432",
+	"username":"postgres",
+	"password":"my_password",
+	"database":"ohdm"
+}
 ```
-C:\Program Files\osm2pgsql\.\osm2pgsql.exe -d ohdm -U postgres -W -x -O flex -S osm2inter.lua -c berlin-latest.osm
-```
 
-</details>
+Afterwards, this Python script can be executed as follows:
+```
+python3 osm2inter.py osm2inter
+```
+The additional argument "osm2inter" describes the conversion method to be used.
+</details><br><br>

@@ -1,8 +1,8 @@
 -- Run this before starting import with osm
 -- NOTE: this script must run with access rights on the database
 -- author: SteSad
-\timing
-
+\timing -- prints the duration time of each process
+-- SET client_min_messages TO WARNING; -- change loglevel
 -- recreate database
 -- NOTE: these 2 lines only in testing processes
 DO $$
@@ -12,7 +12,7 @@ BEGIN
 
     DROP SCHEMA IF EXISTS inter CASCADE;
     CREATE SCHEMA inter;
-    RAISE NOTICE E'\nRecreated inter schema\n';
+    RAISE NOTICE E'Recreated inter schema';
 END
 $$;
 
@@ -20,7 +20,7 @@ $$;
 -- ref: https://wiki.openstreetmap.org/wiki/Map_features
 DO $$
 BEGIN
-    RAISE NOTICE E'\nCreate classification table\n';
+    RAISE NOTICE E'Create classification table';
     CREATE TABLE IF NOT EXISTS inter.classification
     (
         id BIGSERIAL NOT NULL,
@@ -29,7 +29,7 @@ BEGIN
         CONSTRAINT classification_pkey PRIMARY KEY (id)
     )
     TABLESPACE pg_default;
-    RAISE NOTICE E'\nInsert all entries';
+    RAISE NOTICE E'Insert all entries';
     INSERT INTO inter.classification(id,classname, subclassname) VALUES ('-1'::BIGINT,'no_class','no_subclass');
     -- Admin Level
     INSERT INTO inter.classification(id,classname, subclassname) VALUES ('0'::BIGINT,'ohdm_boundary','undefined');
@@ -1305,6 +1305,6 @@ BEGIN
     INSERT INTO inter.classification(classname, subclassname) VALUES ('waterway','water_point');
     INSERT INTO inter.classification(classname, subclassname) VALUES ('waterway','fuel');
 
-    RAISE NOTICE E'\nInserted all mapfeatures in inter.classifiaction\n';
+    RAISE NOTICE E'Inserted all mapfeatures in inter.classifiaction';
 END
 $$;

@@ -124,9 +124,13 @@ To use osm2pgsql with the Flex Output option you need a lua script, which descri
 More information: https://osm2pgsql.org/doc/manual.html#the-flex-output
 
 ## postgresql scripts
+All scripts expect the ohdm database to be present.
 ```bash
 psql -c "CREATE DATABASE ohdm;"
 ```
+<br>
+
+> **NOTE** <...> contained in the code blocks must be replaced with your own parameters.
 
 <br><br>
 

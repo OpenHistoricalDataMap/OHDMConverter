@@ -1,8 +1,10 @@
 -- Run this before starting import with osm
 -- NOTE: this script must run with access rights on the database
 -- author: SteSad
-\timing -- prints the duration time of each process
--- SET client_min_messages TO WARNING; -- change loglevel
+-- prints the duration time of each process
+\timing
+-- change loglevel
+-- SET client_min_messages TO WARNING;
 -- recreate database
 -- NOTE: these 2 lines only in testing processes
 DO $$

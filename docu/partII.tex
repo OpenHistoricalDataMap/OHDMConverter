@@ -1,18 +1,19 @@
-\part{OHDMConverter als PostgreSQL Projekt}
+\part{\gls{ohdmconverter} als PostgreSQL Projekt}
 \chapter{Projektidee}
 Die Grundidee von \gls{ohdm} ist immer noch die selbe, kurz es sollen \gls{osm} Daten um die Dimension Zeit erweitert werden. Auch bleiben die bestehenden Datenbankschemata gleich. Die größte Änderung ist die Implementierung.
 
 \section{osm2inter}
-Für den Import von \gls{osm} Dateien soll ein bestehendes Tool \gequote{osm2pgsql}\cite{osm2pgsql} verwendet werden. osm2pgsql\cite{osm2pgsql} ist dafür ausgelegt \gls{osm} Daten in eine PostGIS Datenbank zu importieren.
+Für den Import von \gls{osm} Dateien soll ein bestehendes Tool \gequote{\gls{osm2pgsql}}\cite{osm2pgsql} verwendet werden. \gls{osm2pgsql}\cite{osm2pgsql} ist dafür ausgelegt \gls{osm} Daten in eine PostGIS Datenbank zu importieren.
 
 \begin{figure}[h]
-	\caption{Entity Relationship Diagramm der Intermediate Datenbank}
+	\caption{Entity Relationship Diagramm der \gls{inter} Datenbank}
 	\label{fig:erd-inter}
 	\includegraphics[width=\linewidth]{img/intermediate-db-erd.pdf}
 \end{figure}
 
+\newpage
 \section{inter2ohdm}
-Die Konvertierung der Intermediate Datenbank soll mithilfe von SQL Scripts realisiert werden. Hierbei soll, wenn möglich das Tool \gequote{psql}\cite{postgres-psql} eingesetzt werden.
+Die Konvertierung der \gls{inter} Datenbank soll mithilfe von SQL Scripts realisiert werden. Hierbei soll, wenn möglich das Tool \gequote{\gls{psql}}\cite{postgres-psql} eingesetzt werden.
 
 \begin{figure}[h]
 	\caption{Entity Realtionship Diagramm der \gls{ohdm} Datenbank}
@@ -21,49 +22,52 @@ Die Konvertierung der Intermediate Datenbank soll mithilfe von SQL Scripts reali
 \end{figure}
 
 \section{Zusammenfassung}
-Die beiden Datenbankschemata Intermediate (vgl. \autoref{fig:erd-inter}) und \gls{ohdm} (vgl. \autoref{fig:erd-ohdm}) sollen beibehalten werden. Allerdings soll jetzt mehr mit den Bordmittel von \gls{osm} und PostgreSQL gearbeitet werden.\\
+Die beiden Datenbankschemata \gls{inter} (vgl. \autoref{fig:erd-inter}) und \gls{ohdm} (vgl. \autoref{fig:erd-ohdm}) sollen beibehalten werden. Allerdings soll jetzt mehr mit den Bordmittel von \gls{osm} und PostgreSQL gearbeitet werden.\\
 
 Die neue Projektidee musste mit bestehenden Datenstrukturen arbeiten, da sonst auch alle anderen Teilprojekte einer Anpassung bedurften.
 
 \chapter{osm2pgsql}
 \section{Intro}
-Als Importkomponente kann osm2pgsql\cite{osm2pgsql-manual} sehr vielseitig eingesetzt werden. Innerhalb des Projektes löst osm2pgsql den \gls{ohdmconverter} zum importieren von \gls{osm} in die \gls{inter} Datenbank ab. Zusaätzlich lassen sich mit dem osm2pgsql nicht nur xml basierte \gls{osm} Dateien importieren sondern auch pbf und bz2 Kontainer. Allgemein sind \gls{pbf} Datei zu bevorzugen, da sie nur ungefähr halb so groß, wie die xml basierenden \gls{osm} Dateien sind.\cite{osm:pbf}\\
+Als Importkomponente kann osm2pgsql\cite{osm2pgsql-manual} sehr vielseitig eingesetzt werden. Innerhalb des Projektes löst osm2pgsql den \gls{ohdmconverter} zum importieren von \gls{osm} in die \gls{inter} Datenbank ab. Zusätzlich lassen sich mit dem osm2pgsql nicht nur XML basierte \gls{osm} Dateien importieren sondern auch PBF und BZ2 Container. Allgemein sind \gls{pbf} Datei zu bevorzugen, da sie nur ungefähr halb so groß, wie die XML basierenden \gls{osm} Dateien sind.\cite{osm:pbf}\\
 
-Den größten Vorteil von osm2pgsql bietet die Benutzung des \gequote{Flex Output}. Hierbei wird die Konvertierung mit einem lua Script angepasst.\\
+Den größten Vorteil von osm2pgsql bietet die Benutzung des \gequote{\gls{flexoutput}}. Hierbei wird die Konvertierung mit einem Lua Script angepasst.\\
 
-Die Installation kann auf dem GitHub Repository über die \href{https://github.com/OpenHistoricalDataMap/OHDMConverter/tree/SteSad#readme}{Readme.md} eingesehen werden\\
+Die Installation kann auf dem GitHub Repository über die \href{https://github.com/OpenHistoricalDataMap/OHDMConverter/tree/SteSad#readme}{Readme.md} eingesehen werden.
 
 \section{osm2pgsql Flags}
 Für den fehlerfreien Import sind mehrere Flags notwendig. In der nachfolgenden \autoref{tb:osm2pgsql-flags} sind diese einzeln aufgelistet mit einer entsprechenden Erklärung.
 \begin{table}[h]
-	\caption{flags}
+	\caption{Flags}
 	\label{tb:osm2pgsql-flags}
-	\renewcommand{\arraystretch}{1.5}
+	\renewcommand{\arraystretch}{1.2}
 	\begin{tabularx}{\linewidth}{|l|X|}\hline
-		Flag & Beschreibung\\\hline
-		-c & Spezifiziert die osm Datei\\\hline
-		-d & Name der Datenbank \\\hline
-		-U & Name des Datenbankbenutzers mit Rechten zur Erstellung (Standard: postgres)\\\hline
-		-O & Spezifiziert den Output z.B.: flex, pgsql (Standard), gazetteer und null\newline Für die Benutzung des lua Script basierten konvertierens, wird dieser Wert auf flex gesetzt\\\hline
-		-x & Ermöglicht die Verwendung von user name, user id, changeset id, timestamp and version\\\hline
-		-S & Dies gibt an, wie die Daten in die Datenbank importiert werden, ihr Format hängt von der Ausgabe ab\newline in diesem Flag muss das lua Script angegeben werden\\\hline		
+		\textbf{Flag} & \textbf{Beschreibung}\\\hline
+		-H, \texttt{-{}-}host=HOST & Hostname des Datenbankservers oder Standort des Unix-Domänen-Sockets\\\hline
+		-P, \texttt{-{}-}port=PORT & Port des Datenbank-Servers\\\hline
+		-U, \texttt{-{}-}user=USERNAME & Datenbank-Benutzer\\\hline
+		-W, \texttt{-{}-}password & Passwortabfrage erzwingen\\\hline
+		-d, \texttt{-{}-}database=DB & Datenbankname oder PostgreSQL Konnektivitätsstring\\\hline
+		\texttt{-{}-}log-level=LEVEL & Einstellen der Protokollstufe (debug, info (default), warn, or error)\\\hline
+		-x, \texttt{-{}-}extra-attributes & Attribute (Benutzername, Benutzerkennung, Änderungssatzkennung, Zeitstempel und Version) einschließen\\\hline
+		-O, \texttt{-{}-}output=OUTPUT & Spezifiziert den Output z.B.: flex, pgsql (Standard), gazetteer und null\\\hline
+		-S, \texttt{-{}-}style=STYLE &  Dies gibt an, wie die Daten in die Datenbank importiert werden, ihr Format hängt von der Ausgabe ab.\newline In diesem Flag muss das Lua Script angegeben werden\\\hline		
+		-c, \texttt{-{}-}create & Spezifiziert die osm Datei\\\hline
 	\end{tabularx}\vspace{0.5cm}
-	In Windows muss zusätzlich -W für eine Passworteingabe als Flag gesetzt werden. \\(mehr Ideen: \autoref{ap:ch:win-pass})
 \end{table}
 
 \newpage
 \section{Lua Script}
-Für den Import in das bestehende \gls{inter} Schema wird ein lua Script benötigt, welches den Import von \gls{osm} Daten in die \gls{inter} Datenbank spezifiziert.\\
-Für eine bessere Erklärung wird das lua Script in drei Abschnitte unterteilen:
+Für den Import in das bestehende \gls{inter} Schema wird ein Lua Script benötigt, welches den Import von \gls{osm} Daten in die \gls{inter} Datenbank spezifiziert.\\
+Für eine bessere Erklärung wird das Lua Script in drei Abschnitte unterteilen:
 \begin{enumerate}
-	\item Tabelleninizialisierung
+	\item Tabelleninitialisierung
 	\item Hilfsfunktionen und Variablen
 	\item Prozessfunktionen
 \end{enumerate}
-Diese Beschreibung ist projektspezifisch, weitere Informationen zur Verwendung des lua Script können unter folgendem Link eingesehen werden: \\
+Diese Beschreibung ist projektspezifisch, weitere Informationen zur Verwendung des Lua Script können unter folgendem Link eingesehen werden: \\
 \url{https://osm2pgsql.org/doc/manual.html#the-flex-output}
-\subsection{Tabelleninizialisierung}\label{subsec:table-init}
-Im lua Script werden erforderliche Tabellen wie in \autoref{lst:table-init-nodes} angelegt. Dies wird benötigt um die Tabelle zu spezifizieren.
+\subsection{Tabelleninitialisierung}\label{subsec:table-init}
+Im Lua Script werden erforderliche Tabellen wie in \autoref{lst:table-init-nodes} angelegt. Dies wird benötigt um die Tabelle zu spezifizieren.
 \begin{lstlisting}[language={[5.0]Lua}, caption={Initialisierung eine Tabelle für alle nodes},label={lst:table-init-nodes}]
 	tables.nodes = osm2pgsql.define_table({
 		name = 'nodes',						
@@ -88,14 +92,14 @@ Im lua Script werden erforderliche Tabellen wie in \autoref{lst:table-init-nodes
 		schema = SCHEMA_NAME
 	})
 \end{lstlisting}
-\autoref{lst:table-init-nodes} Zeile 4 spezifiziert den osm Typ für den die Tabelle angelegt werden soll (in dem Fall, für alle nodes) und die id der node wird in die Spalte \gequote{osm\_id} eingetragen.\\
-Zeile 6 erzeugt eine Spalte mit einem uniquen Integer Wert, welcher mit einem weiteren SQL Script in einen \gequote{Primary Key} verändert werden kann.\\
+\autoref{lst:table-init-nodes} Zeile 4 spezifiziert den osm Typ für den die Tabelle angelegt werden soll (in dem Fall, für alle nodes) und die ID der node wird in die Spalte \gequote{osm\_id} eingetragen.\\
+Zeile 6 erzeugt eine Spalte mit einem eindeutigem Integer Wert, welcher mit einem weiteren SQL Script in einen \gequote{Primary Key} verändert werden kann.\\
 Die Einträge Zeile 7 - 20 definieren die weiteren Spalten der Tabelle \gequote{nodes}, welche mit einer Prozess Funktion beschrieben werden.\\
 Des Weiteren kann wie in Zeile 22 ein Schema definiert werden, in die diese Tabelle geschrieben wird.
 
 \subsection{Hilfsfunktionen und Variablen}
-\subsubsection{mapfeatures}
-\begin{lstlisting}[language={[5.0]Lua}, caption={Deklaration einer lua Tabelle für die mapfeatures},label={lst:table-mapfeatures}]
+\subsubsection{Map Features}
+\begin{lstlisting}[language={[5.0]Lua}, caption={Deklaration einer Lua Tabelle für die mapfeatures},label={lst:table-mapfeatures}]
 	local map_features = {
 		'admin_level', 'aerialway', 'aeroway', 'amenity', 'barrier', 'boundary',
 		'building', 'craft', 'emergency', 'geological', 'healthcare', 'highway',
@@ -104,18 +108,18 @@ Des Weiteren kann wie in Zeile 22 ein Schema definiert werden, in die diese Tabe
 		'shop', 'sport', 'telecom', 'tourism', 'water', 'waterway'
 	}
 \end{lstlisting}
-In \autoref{lst:table-mapfeatures} werden die sogenannten \gequote{mapfeatures}\cite{osm-mapfeatures} definiert. \\
+In \autoref{lst:table-mapfeatures} werden die sogenannten \gequote{\gls{mapfeatures}}\cite{osm-mapfeatures} definiert. \\
 OpenStreetMap stellt physische Merkmale am Boden (z. B. Straßen oder Gebäude) mithilfe von Tags dar, die an seine grundlegenden Datenstrukturen (nodes, ways und relations) angehängt sind. Jedes Tag beschreibt ein geografisches Attribut des Features, das von diesem bestimmten nodes, ways oder dieser relations angezeigt wird.\\
 
-Der aktuelle Stand beschriebt zusätzlich im lua Script eine csv import alles händisch inserierten Map Features. \\(mehr Ideen: \autoref{ap:ch:curl-mapfeatures})
+Der aktuelle Stand beschriebt zusätzlich im Lua Script eine CSV importiert Tabelle der händisch inserierten Map Features. \\(mehr Ideen: \autoref{ap:ch:curl-mapfeatures})
 
 
 \subsubsection{Hilfsfunktion für name, mapfeatures, serializedtags und url}\label{subsubsec:get.quadruple}
 Die Hilfsfunktion in \autoref{lst:get-quadruple} (nächste Seite) analysiert das übergebene Objekt und gibt vier Werte zurück.
 \begin{description}
 	\item[name] Der primäre Name: im allgemeinen der prominenteste ausgeschilderte Name oder der gebräuchlichste Name in der/den Landessprache(n). 
-	\item[mapfeatures] Eine lua Tabelle, welche ein key-value Paar enthält. Diese Tabelle enthält alle tags welche eine Übereinstimmung mit der \lstinline|map_features| lua Tabelle (siehe \autoref{lst:table-mapfeatures}) haben. Der Rückgabetype ist ein String, der alle Classification Ids, Semikolon separiert, enthält.
-	\item[serializedtags] Eine lua Tabelle mit alle object.tags, welche nicht direkt für die weitere Konvertierung benötigt werden.
+	\item[mapfeatures] Eine Lua Tabelle, welche ein key-value Paar enthält. Diese Tabelle enthält alle tags welche eine Übereinstimmung mit der \lstinline|map_features| Lua Tabelle (siehe \autoref{lst:table-mapfeatures}) haben. Der Rückgabetyp ist ein String, der alle IDs der classification Tabelle, Semikolon separiert, enthält.
+	\item[serializedtags] Eine Lua Tabelle mit alle object.tags, welche nicht direkt für die weitere Konvertierung benötigt werden.
 	\item[url] Bei der Analyse der osm Dateien wurde festgestellt, dass eine url beziehungsweise Websitenreferenz auf verschiedene Arten eingetragen werden kann. Dieses Problem wurde ebenfalls mit der Hilfsfunktion \lstinline| get_tag_quadruple()| realisiert.
 \end{description}
 Der \textit{goto} Befehl entspricht in diesem Beispiel dem \textit{continue} in Java.\\
@@ -164,7 +168,7 @@ Zusätzlich dienen die Zeilen 23 - 42 der Vereinfachung der Tabelleneinträge. A
 		if next(ser) == nil then
 			ser = nil
 		end
-	-- to save the lua table as text in PostgreSQL Database,
+	-- to save the Lua table as text in PostgreSQL Database,
 	-- the table entries concat with ';' as delimiter
 	return name, table.concat(features, ';'), url, ser
 end
@@ -172,12 +176,12 @@ end
 
 \newpage
 \subsection{Prozessfunktionen}
-Damit die nodes, ways, relations spezifisch in die gewünschten Tabellen eingetragen werden, müssen die lua Funktionen \lstinline|osm2pgsql.process_node| \lstinline|osm2pgsql.process_way| \lstinline|osm2pgsql.process_relation| entsprechend aufgerufen werden. \\
+Damit die nodes, ways, relations spezifisch in die gewünschten Tabellen eingetragen werden, müssen die Lua Funktionen \lstinline|osm2pgsql.process_node| \lstinline|osm2pgsql.process_way| \lstinline|osm2pgsql.process_relation| entsprechend aufgerufen werden. \\
 Beispielhaft wurde die definierte Funktion \lstinline|osm2pgsql.process_relation| siehe nächste Seite in \autoref{lst:process-relation} aufgeführt.
 Diese enthält:
 \begin{table}[h]
 	\caption{Kurze Zeilen Beschreibung von \autoref{lst:process-relation}}
-	\renewcommand{\arraystretch}{1.5}
+	\renewcommand{\arraystretch}{1.2}
 	\begin{tabularx}{\linewidth}{|l|l|X|}\hline
 		Name & \multirow{2}{*}{\parbox{1.6cm}{Zeilen-\\ nummern}} & Beschreibung\\
 		&& \\\hline
@@ -248,10 +252,18 @@ end
 \newpage
 \section{Ausführung}
 Alle vorherigen Sektionen beschreiben die wichtigen Teile des Befehls zum Import von \gls{osm} Daten in die \gls{inter} Datenbank. Der Prozess des Importes kann nun wie folgt ausgeführt werden.
-\begin{lstlisting}[language={}]
-	osm2pgsql -d ohdm -U postgres -O flex -x \
-	-S /osm2inter/osm2inter.lua \
-	-c /osm2inter/berlin.osm
+\begin{lstlisting}[language={},basicstyle=\ttfamily,caption={Beispiel eines \gequote{osm2pgsql} Befehls mit dem osm2inter.lua Skript und dem Minimalbeispieldaten littlemap.osm}]
+	osm2pgsql \
+	--host=localhost \
+	--port=5432 \
+	--user=postgres \
+	--password \
+	--database=ohdm \
+	--log-level=info \
+	--extra-attributes \
+	--output=flex \
+	--style=/osm2inter/osm2inter.lua \
+	--create /osm2inter/littlemap.osm
 \end{lstlisting}
 \textbf{Hinweis:} Die Dateien müssen mit absoluten Pfaden angegeben werden, oder im Verzeichnis des Datenbanknutzers gespeichert werden.\\
 
@@ -264,14 +276,25 @@ Für die Ausführung von psql werden in diesem Beispiel Flags benötigt die in \
 	\label{tb:psql-flags}
 	\renewcommand{\arraystretch}{1.5}
 	\begin{tabularx}{\linewidth}{|l|X|}\hline
-		Flag & Beschreibung\\\hline
-		-d & Name der Datenbank \\\hline
-		-c command & Spezifiziert ein Kommando das mit psql ausgeführt werden soll. \\\hline
-		-f & Ermöglich die Verwendung von Dateien als Quelle für Befehle.\\\hline
+		\textbf{Flag} & \textbf{Beschreibung}\\\hline
+		-H, \texttt{-{}-}host=HOST & Hostname des Datenbankservers oder Standort des Unix-Domänen-Sockets\\\hline
+		-P, \texttt{-{}-}port=PORT & Port des Datenbank-Servers\\\hline
+		-U, \texttt{-{}-}user=USERNAME & Datenbank-Benutzer\\\hline
+		-W, \texttt{-{}-}password & Passwortabfrage erzwingen\\\hline
+		-d, \texttt{-{}-}dbname=DB & Datenbankname oder PostgreSQL Konnektivitätsstring\\\hline
+		
+		-c , \texttt{-{}-}command=command & Spezifiziert den ausführbaren Kommandostring\\\hline
+		-f, \texttt{-{}-}file=filename & Ermöglich die Verwendung von Dateien als Quelle für Befehle.\\\hline
 	\end{tabularx}\vspace{0.5cm}
 \end{table}
-\begin{lstlisting}[language={}]
-	psql -d ohdm -f /osm2inter/osm2inter_postprocess.sql
+\begin{lstlisting}[language={},basicstyle=\ttfamily,caption={Beispiel eines \gequote{psql} Befehls mit dem postprocess.sql Skript}]
+	psql \
+	--host=localhost \
+	--port=5432 \
+	--username=postgres \
+	--password \
+	--dbname=ohdm \
+	--file=/osm2inter/osm2inter_postprocess.sql
 \end{lstlisting}
 \textbf{Hinweis:} Die Dateien müssen mit absoluten Pfaden angegeben werden, oder im Verzeichnis des Datenbanknutzers gespeichert werden.\\
 
@@ -291,18 +314,18 @@ Im ersten Teil des PostgreSQL Scriptes werden alle Tabellen (siehe \autoref{fig:
 \begin{lstlisting}[language=SQL,caption={Erzeugung der \gequote{geoobject\_geometry} Tabelle},label={lst:sql-create-geoobject-geometry}]
 	CREATE TABLE IF NOT EXISTS ohdm.geoobject_geometry
 	(
-	id                  BIGSERIAL NOT NULL,
-	id_geoobject_source BIGINT,
-	id_point            BIGINT,
-	id_line             BIGINT,
-	id_polygon          BIGINT,
-	id_geoobject_target BIGINT,
-	role                VARCHAR,
-	valid_since         DATE,
-	valid_until         DATE,
-	valid_since_offset  BIGINT,
-	valid_until_offset  BIGINT,
-	CONSTRAINT geoobject_geometry_pkey PRIMARY KEY (id)
+		id                  BIGSERIAL NOT NULL,
+		id_geoobject_source BIGINT,
+		id_point            BIGINT,
+		id_line             BIGINT,
+		id_polygon          BIGINT,
+		id_geoobject_target BIGINT,
+		role                VARCHAR,
+		valid_since         DATE,
+		valid_until         DATE,
+		valid_since_offset  BIGINT,
+		valid_until_offset  BIGINT,
+		CONSTRAINT geoobject_geometry_pkey PRIMARY KEY (id)
 	);
 \end{lstlisting}
 
@@ -313,32 +336,34 @@ Mehrere Tabellen werden mit simplen SQL Queries initialisiert. Im Beipsiel der T
 \begin{lstlisting}[language=SQL,caption={Insert Statement für die \gequote{external\_users} Tabelle},label={lst:insert-users}]
 	INSERT INTO ohdm.external_users(userid, username) 
 	(
-	SELECT uid::BIGINT, username FROM inter.nodes
-	UNION
-	SELECT uid::BIGINT, username FROM inter.ways
-	UNION
-	SELECT uid::BIGINT, username FROM inter.relations
+		SELECT uid::BIGINT, username FROM inter.nodes
+		UNION
+		SELECT uid::BIGINT, username FROM inter.ways
+		UNION
+		SELECT uid::BIGINT, username FROM inter.relations
 	);
-\end{lstlisting}\vspace{1cm}
+\end{lstlisting}
+
+\newpage
 \section{Join Insert}
-Die meisten weiteren Initialisierungen werden mithilfe eines JOIN\footnote{vgl. \url{https://www.postgresql.org/docs/current/tutorial-join.html}} Statements realisiert. Hierbei wird eine Vereinigungsmenge gebildet, die abhänig von einer Spalte der beider zu vereinenden Tabellen ist. In \autoref{lst:insert-relation-geometry} wird eine spezielle Initialsiserung aufgezeigt, welche alle Relationen der \gls{inter} Datenbank in Verbindung mit der \gequote{relationmembers} Tabelle in die \gequote{geoobject\_geometry} Tabelle der OHDM Datenbank einfügt.\newpage
+Die meisten weiteren Initialisierungen werden mithilfe eines JOIN\footnote{vgl. \url{https://www.postgresql.org/docs/current/tutorial-join.html}} Statements realisiert. Hierbei wird eine Vereinigungsmenge gebildet, die abhänig von einer Spalte der beider zu vereinenden Tabellen ist. In \autoref{lst:insert-relation-geometry} wird eine spezielle Initialsiserung aufgezeigt, welche alle Relationen der \gls{inter} Datenbank in Verbindung mit der \gequote{relationmembers} Tabelle in die \gequote{geoobject\_geometry} Tabelle der OHDM Datenbank einfügt.
 
 \begin{lstlisting}[language=SQL,caption={Insert Statement für die \gequote{geoobject\_geometry} Tabelle} auf Basis von allen Realationen der \gls{inter} Datenbank,label={lst:insert-relation-geometry}]
 	INSERT INTO ohdm.geoobject_geometry(
-	id_geoobject_source, 
-	id_polygon, 
-	id_geoobject_target, 
-	role, 
-	valid_since, 
-	valid_until
+		id_geoobject_source, 
+		id_polygon, 
+		id_geoobject_target, 
+		role, 
+		valid_since, 
+		valid_until
 	)
 	(
-	SELECT source.id, p.id, target.id, rm.role, r.tstamp, CURRENT_TIMESTAMP
-	FROM inter.relations AS r
-	JOIN inter.relationmembers AS rm ON r.osm_id = rm.relation_id
-	JOIN ohdm.geoobject AS source ON r.name = source.geoobject_name
-	JOIN ohdm.polygons AS p ON geom = p.polygon
-	JOIN inter.relations AS re ON re.osm_id = rm.way_id
-	JOIN ohdm.geoobject AS target ON re.name = target.geoobject_name
+		SELECT source.id, p.id, target.id, rm.role, r.tstamp, CURRENT_TIMESTAMP
+		FROM inter.relations AS r
+		JOIN inter.relationmembers AS rm ON r.osm_id = rm.relation_id
+		JOIN ohdm.geoobject AS source ON r.name = source.geoobject_name
+		JOIN ohdm.polygons AS p ON geom = p.polygon
+		JOIN inter.relations AS re ON re.osm_id = rm.way_id
+		JOIN ohdm.geoobject AS target ON re.name = target.geoobject_name
 	);
 \end{lstlisting}

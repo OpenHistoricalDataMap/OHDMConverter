@@ -1,30 +1,23 @@
-\documentclass[paper=a4, fontsize=12pt]{scrreprt}
+\documentclass[bibliography=totoc, paper=a4, fontsize=12pt]{scrreprt}
 %fürs nächste mal nicht so große Abstände
 \usepackage[left=2.5cm,right=2cm,top=1cm,bottom=1cm]{geometry}
-\geometry{headheight=1cm, headsep=1.5cm, includehead}
-\geometry{footskip=1.5cm ,includefoot}
+\geometry{headheight=0.5cm, headsep=1.2cm, includehead}
+\geometry{footskip=1cm ,includefoot}
 \usepackage[ngerman]{babel}
-\usepackage[
-	colorlinks = true,
-	linkcolor =,
-	urlcolor  = blue,
-	citecolor = black,
-	anchorcolor = blue,
-	hypertexnames=false
-]{hyperref}
-\usepackage{lineno}
-\usepackage{csquotes}
-\usepackage{enumitem}
-\usepackage{caption}
+\usepackage[justification=centering]{caption}
 \usepackage{booktabs}
+\usepackage[hidelinks,hyperfootnotes=false,hypertexnames=false,plainpages=false,pdfpagelabels]{hyperref}
 \usepackage{graphicx} 
-\usepackage[headsepline, footsepline, plainheadsepline=false, plainfootsepline=false, automark, autooneside=false, markcase=used]{scrlayer-scrpage}
+\usepackage[headsepline,footsepline, automark, autooneside=false, markcase=used]{scrlayer-scrpage}
 \automark{chapter}
-\pagestyle{scrheadings}
 \usepackage{blindtext}
-\usepackage[acronym,nopostdot]{glossaries}
+\usepackage[acronym,nopostdot,automake=immediate]{glossaries}
+\glsdisablehyper
 \makeglossaries
+\usepackage{enumitem}
 \usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{ulem}
 \usepackage[table]{xcolor}
 \usepackage{xcolor,colortbl}
 \usepackage{makecell} %for bigger lines in table
@@ -36,16 +29,20 @@
 \usepackage{amsfonts} % <- zusätzliche Mathesymbole
 \usepackage{mathtools} % <- zusätzliche Mathesymbole
 \usepackage{setspace} %Zeilenabstand
-\usepackage{pgfplots} \pgfplotsset{compat=1.7}
+\usepackage{pgfplots}
 \usepackage{todonotes}
 \usepackage{makecell}
+\usepackage{lineno}
 \usepackage{pdfpages}
 \usepackage{numprint}
 \npthousandsep{\,}
+\usepackage[parfill]{parskip} % <- delete all intents after paragraph
+%%-----------------------------------------------------------------------------------
 %%-----------------------------------------------------------------------------------
 %% BibLaTex
 \usepackage[backend=bibtex, style=numeric, sorting=none]{biblatex}
 \addbibresource{quellen.bib}
+\DeclareFieldFormat{note}{{\textit{#1}}}%
 \renewcommand*{\labelnamepunct}{\addcolon\addspace}     % Semikollon nach Autor
 \renewcommand*{\newunitpunct}{\addsemicolon\space} 		% Trennzeichen Semikolon
 
@@ -75,7 +72,7 @@
 \renewcommand{\part}[1]{\Oldpart{#1}\renewcommand{\parttitle}{#1}}
 
 %Auch bei chapter Header und Footer
-\renewcommand*\chapterpagestyle{useheadings}
+\renewcommand*\chapterpagestyle{scrheadings}
 
 %Chapter Abstände
 \renewcommand*\chapterheadstartvskip{\vspace*{-2.5\topskip}}
@@ -145,25 +142,25 @@
 }
 \setlength\parindent{0pt}
 
-%----------------------------------------------------------------------------------------
 % Glossary
 \setglossarysection{section}
 \newglossarystyle{tabX3col}{
 	\renewenvironment{theglossary}%
-	{\renewcommand{\arraystretch}{1.5}\tabular{p{.2\linewidth} p{.55\linewidth} >{\raggedleft\arraybackslash}p{.15\linewidth}}}%
+	{\renewcommand{\arraystretch}{1.5}\tabular{p{.3\linewidth} p{.65\linewidth}}}%
 	{\endtabular}%
-	\renewcommand*{\glossaryheader}{\textbf{Bezeichnung} & \textbf{Erklärung} & \textbf{Seitenzahlen}\\[5px]}%
+	\renewcommand*{\glossaryheader}{\textbf{Bezeichnung} & \textbf{Erklärung}\\[5px]}%
 	\renewcommand*{\glsgroupheading}[1]{}%
 	\renewcommand*{\glsgroupskip}{}%
 	\renewcommand{\glossentry}[2]{%
-		\glossentryname{##1} & \glossentrydesc{##1}\hfill & ##2\\\hline%
+		\glossentryname{##1} & \glossentrydesc{##1}\\%
 	}%
 	\renewcommand*{\subglossentry}[3]{}
 }
+
 % Glossaryentry
 \newglossaryentry{ohdmconverter}{
 	name=OHDMConverter,
-	description={Javabasierte Applikation, die alle Portierungen der verschiedenen Datenbankschemata und Skripte enthält}	
+	description={Auf Java basierte Applikation, die alle Portierungen der verschiedenen Datenbankschemata und Skripte enthält}	
 }
 \newglossaryentry{ohm}{
 	name=OHM,
@@ -180,6 +177,36 @@
 	description={Abkürzung für die Konvertierungsmethode von einer OpenStreetMap Datei in eine Zwischendatenbank (Intermediate Datenbank)}
 }
 
+\newglossaryentry{osm2pgsql}{
+	name=osm2pgsql,
+	description={Tool zur Konvertierung von OpenStreetMap Daten in eine PostgreSQL Datenbank}
+}
+
+\newglossaryentry{psql}{
+	name=psql,
+	description={psql ist ein Terminal-basiertes Front-End für PostgreSQL. Es ermöglicht Ihnen, Abfragen interaktiv einzugeben, sie an PostgreSQL zu senden und die Abfrageergebnisse zu sehen. Alternativ kann die Eingabe auch aus einer Datei oder über Kommandozeilenargumente erfolgen. Darüber hinaus bietet psql eine Reihe von Meta-Befehlen und verschiedene Shell-ähnliche Funktionen, die das Schreiben von Skripten und die Automatisierung einer Vielzahl von Aufgaben erleichtern.(vgl. \cite{postgres-psql})}
+}
+
+\newglossaryentry{flexoutput}{
+	name={Flex Output},
+	description={Die flexible Ausgabe ermöglicht, wie der Name schon sagt, eine flexible Konfiguration, die osm2pgsql mitteilt, welche OSM-Daten in Ihrer Datenbank gespeichert werden sollen und wo und wie genau. Sie wird durch eine Lua-Datei konfiguriert, die
+		\begin{itemize}
+			\item die Struktur der Ausgabetabellen definiert und
+			\item Funktionen definiert, um die OSM-Daten auf das Datenformat der Datenbank abzubilden
+		\end{itemize}(vlg. \cite{osm2pgsql-flex})}
+}
+
+\newglossaryentry{mapfeatures}{
+	name=Map Features,
+	description={Schlüssel-Wert-Paar mit physischen Merkmalen zur Beschreibung eines OpenStreetMap Objektes}
+}
+
+\newglossaryentry{planetosm}{
+	name={planet.osm},
+	description={Raumbezogene Daten der gesamten Welt}
+}
+
+
 % Acronyms
 \newacronym{gui}{GUI}{Graphical User Interface}
 \newacronym{ohdm}{OHDM}{Open Historical Data Map}
@@ -188,6 +215,9 @@
 \newacronym{osm}{OSM}{OpenStreetMap}
 \newacronym{pbf}{PBF}{Protocolbuffer Binary Format}
 \newacronym{htw}{HTW}{Hochschule für Technik und Wirtschaft}
+\newacronym{pt}{PT}{Personentag}
+\newacronym{ide}{IDE}{Integrated Development Environment beziehungsweise integrierte Entwicklungsumgebung}
+\newacronym{ap}{AP}{Arbeitspaket}
 %----------------------------------------------------------------------------------------
 \newcommand{\printTitle}{Bericht über die Praktikumstätigkeit}
 

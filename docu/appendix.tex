@@ -7,14 +7,66 @@
 \newpage
 \setheadsepline{.5px}
 \setfootsepline{.5px}
-\chapter{Multiple Datenbanken in PostgreSQL}\label{ch:clustering}
+\addcontentsline{toc}{chapter}{Multiple Datenbanken in PostgreSQL}
+\section*{Multiple Datenbanken in PostgreSQL}\label{ch:clustering}
 Die Alternative zur Erstellung eines PostgreSQL Clusters\cite{postgresql-cluster} ist die Verwendung von \lstinline[language=bash]|initdb|\cite{postgresql-cluster}, allerdings gibt mit dieser Variante einige Herausforderungen die mit \lstinline[language=bash]|pg_createcluster| leichter beziehungsweise überhaupt zu bewältigen waren.
 \begin{enumerate}
 	\item Steuerung des Clusters\cite{postgresql-cluster} für die Serververwaltung
 	\item Cluster als Service auch nach einem Neustart des Server starten
 \end{enumerate}
 
-\chapter{Curl Map Features}\label{ap:ch:curl-mapfeatures}
+\addcontentsline{toc}{chapter}{Curl Map Features}
+\section*{Curl Map Features}\label{ap:ch:curl-mapfeatures}
 Um die Arbeit mit den Map Features\cite{osm-mapfeatures} zu erleichtern, müsste man ein curl Skript implementieren, dass die Tabelleneinträge auf der Map Features\cite{osm-mapfeatures} Webseite ausliest und in eine csv Datei oder ähnliches schreibt.\\
 
 Damit wäre es im Anschluss möglich die csv Datei als Grundlage für ein Insert Statement der classification Tabelle zu verwenden.
+
+\addcontentsline{toc}{chapter}{Expect Skript}
+\section*{Expect Skript}\label{ap:ch:expect}
+Zum aktuellen Zeitpunkt habe ich es leider nicht mehr geschafft ein funktionierendes Expect Skript zu formulieren. Allerdings müssten die Befehle mit \gequote{spawn} ausgeführt werden und im Anschluss mit \lstinline[language={}]|expect "Password" {send "password"}| das Passwort des Datenbanknutzers eingetragen werden.
+
+\newpage
+\addcontentsline{toc}{chapter}{Arbeiten mit Schlüssel-Wert-Paaren}
+\section*{Arbeiten mit Schlüssel-Wert-Paaren}
+Eine Überlegung während der Probleme mit den Map Features war die Benutzung der \gequote{hstore} oder \gequote{JSON} Einträge. \gequote{hstore} muss als Erweiterung hinzugefügt werden und mit \gequote{JSON} kann seit PostgreSQL 9.2 benutzt werden.\\
+
+Die Überlegung war die ausgelesenen Schlüssel-Wert-Paare aus dem \gls{osm} Objekt in die PostgreSQL Datenbank als Schlüssel-Wert-Paar (\gequote{hstore} oder \gequote{JSON}) zu speichern. Welches Format ist fast egal, denn in Lua handelt es sich um eine Tabelle die vom osm2pgsql Tool sowohl als \gequote{hstore} und auch als \gequote{JSON} in der Datenbank gespeichert werden kann. Der Ablauf ist also auch ungefähr gleich:
+\begin{enumerate}
+	\item Einlesen des \gls{osm} Objektes mit:
+	\begin{lstlisting}
+		<node [...]>
+			<tag k="barrier" v="gate"/>
+		</node>
+	\end{lstlisting}
+	\item Speichern in der Lua Tabelle:
+	\begin{lstlisting}
+		mapfeature["barrier"] = "gate"
+	\end{lstlisting}
+	\item Importieren in PostgreSQL Datenbank:\\[5pt]
+	\begin{minipage}[t]{0.45\linewidth}
+		\begin{tabular}{|c|}\hline
+			hstore\\\btrule{1.2pt}
+			\gequote{barrier}$=>$\gequote{gate}\\\hline
+		\end{tabular}
+	\end{minipage}
+	\begin{minipage}[t]{0.45\linewidth}
+		\begin{tabular}{|c|}\hline
+			json\\\btrule{1.2pt}
+			\gequote{barrier}:\gequote{gate}\\\hline
+		\end{tabular}
+	\end{minipage}
+\end{enumerate}
+
+ Im Anschluss mussten diese mit der Map Features Tabelle verglichen werden und die dazugehörigen \gequote{classcodes} eingetragen.\\
+ 
+ Beispielhaft für \gequote{hstore} würde ein PostgreSQL Update Statement wie in \autoref{lst:sql-hstore} aussehen:
+ \begin{lstlisting}[label={lst:sql-hstore},language=SQL,caption={PostgreSQL Statement mit hstore Werten}]
+ 	UPDATE nodes SET classcodes = (
+		SELECT id FROM classifaction
+		WHERE nodes.hstore <@ hstore(classname, subclassname)
+ 	)
+ \end{lstlisting}
+ 
+ Allerdings ist bei größeren Datensätzen die Laufzeit eines solchen Statements sehr hoch. Beim Versuch dieses Statement für die raumbezogenen Daten von Berlin zu verwenden, wurde dieser nach 4 Stunden Laufzeit abgebrochen.
+ 
+ 

@@ -1,11 +1,12 @@
-\ihead{\thepart. \parttitle} \chead{} \ohead{\headmark}
-\ifoot{\printTitle} \cfoot{Seite \pagemark} \ofoot{}
-\part{Praktikumsplan, Datenbank, javabasierte Konvertierung}
+\renewcommand*{\chaptermarkformat}{\chapapp~\thechapter:~}
+\ihead{Part \thepart: \parttitle} \chead{} \ohead{\headmark}
+\ifoot{Stefan Sadewasser\newline Matr.-Nr.: 568158} \cfoot{Seite \pagemark} \ofoot{HTW Berlin}
+\part{Praktikumsplan, Datenbank, Konvertierung}
 \chapter{Praktikum}
-\section{Arbeitsauftrag}
+\section{Arbeitsauftrag}\label{sec:workorder}
 Im Rahmen des Praktikums sollte ein Linux-Server vor ein Kartenprojekt neu
 aufgesetzt werden. In Zusammenarbeit mit den Administratoren vor Ort musste ein
-PostGIS-Datenbankserver aufgesetzt werden. Danach sollte eine \gls{db} aufgesetzt werden, die in Summe ca. 1 TByte Daten verwalten kann. Das Füllen der \gls{db}s würde über vorhandene Tools erfolgen. Die zusätzliche Aufgabe war es Studierende zu unterstützt, die an der Weiterentwicklung dieser Tools arbeiten.
+PostGIS-Datenbankserver aufgesetzt werden. Danach sollte eine \gls{db} aufgesetzt werden, die in Summe ca. 1 TByte Daten verwalten kann. Das Füllen der \gls{db}s würde über vorhandene Tools erfolgen. Die zusätzliche Aufgabe war es Studierende zu unterstützt, die an der Weiterentwicklung dieser Tools arbeiten. (Zitat aus einer Mail von Prof. Dr.-Ing. Thomas Schwotzer)
 
 Die Arbeit sollte wie folgt aufgeteilt werden:
 \begin{enumerate}
@@ -17,8 +18,8 @@ Die Arbeit sollte wie folgt aufgeteilt werden:
 	\end{enumerate}
 	\item Wiederaufsetzen des physischen \gls{ohm} Servers
 	\begin{enumerate}
-		\item Aufsetzen 2 separater Datenbankserver auf dem physischen \gls{ohm} Server
-		\item Importieren des planet.osm\cite{planet-osm} Datensatzes im Produktivdatenbankserver
+		\item Aufsetzen 2 separater Datenbankserver auf dem physischen \gls{ohm} Server\label{item:sep-db}
+		\item Importieren des \gls{planetosm}\cite{planet-osm} Datensatzes im Produktivdatenbankserver
 		\item Formulierung eines Cron-Jobs zur Automatisierung
 		\item Importieren von \gls{osm} Daten von Deutschland im Integrationsdatenbankserver
 	\end{enumerate}
@@ -29,13 +30,13 @@ Die Aufteilung wurde in separierten Arbeitspaketen festgehalten, welche dann im 
 \begin{tabularx}{\linewidth}{|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|}
 	\hline
 	KW & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 14 & 15 & 16 & 17 & 18 & 19 & 20\\\hline
-	\multicolumn{2}{c}{\cellcolor{blue!25}AP 1a} &&&&&&&&&&&&&\\\hline
-	& \multicolumn{2}{c}{\cellcolor{blue!25}AP 1b} &&&&&&&&&&&&\\\hline
-	&&& \multicolumn{2}{c}{\cellcolor{blue!25}AP 2a} &&&&&&&&&&\\\hline
-	&&&& \multicolumn{2}{c}{\cellcolor{blue!25}AP 2b} &&&&&&&&&\\\hline
-	&&&&&& \multicolumn{2}{c}{\cellcolor{blue!25}AP 1c} &&&&&&&\\\hline
-	&&&&&&&& \multicolumn{2}{c}{\cellcolor{blue!25}AP 2c} &&&&&\\\hline
-	&&&&&&&&& \multicolumn{2}{c}{\cellcolor{blue!25}AP 2d} &&&&\\\hline
+	\multicolumn{2}{c}{\cellcolor{blue!25}\gls{ap} 1a} &&&&&&&&&&&&&\\\hline
+	& \multicolumn{2}{c}{\cellcolor{blue!25}\gls{ap} 1b} &&&&&&&&&&&&\\\hline
+	&&& \multicolumn{2}{c}{\cellcolor{blue!25}\gls{ap} 2a} &&&&&&&&&&\\\hline
+	&&&& \multicolumn{2}{c}{\cellcolor{blue!25}\gls{ap} 2b} &&&&&&&&&\\\hline
+	&&&&&& \multicolumn{2}{c}{\cellcolor{blue!25}\gls{ap} 1c} &&&&&&&\\\hline
+	&&&&&&&& \multicolumn{2}{c}{\cellcolor{blue!25}\gls{ap} 2c} &&&&&\\\hline
+	&&&&&&&&& \multicolumn{2}{c}{\cellcolor{blue!25}\gls{ap} 2d} &&&&\\\hline
 \end{tabularx}
 
 \chapter{Datenbankserver}
@@ -50,14 +51,18 @@ Des Weiteren wurden auf dem Server mehrere administrative Tools installiert, wel
 	\item \textbf{git} \smallerurl{https://wiki.ubuntuusers.de/Git/}\\ist ein dezentrales Versionsverwaltungssystem.
 	\item \textbf{nullmailer}\\ist ein reiner Weiterleitungs-MTA (Mail Transfer Agent). Das bedeutet, dass alle auf einem System eingehenden E-Mails an einen konfigurierten externen Mailserver weitergeleitet werden. Dies kann nützlich sein, wenn die Installation eines lokalen E-Mail-Servers nicht erwünscht oder nicht wirklich sinnvoll ist, aber zumindest die System-E-Mails müssen irgendwo hin weitergeleitet werden.
 	\item \textbf{logwatch} \smallerurl{https://wiki.ubuntuusers.de/Logwatch/}\\ist ein in Perl geschriebenes Tool zur Analyse von Logdateien. Es soll Systemadministratoren helfen, die Übersicht über alle Vorgänge auf einem Serversystem zu behalten. Logwatch durchsucht die Logdateien des Systems und generiert eine Kurzfassung daraus, deren Gestaltung individuell konfiguriert werden kann. Diese kann dann entweder als Datei weiterverarbeitet oder zum Versenden an einen Mailserver weitergereicht werden.
-\end{enumerate}\newpage\pagestyle{scrheadings}
+\end{enumerate}\pagestyle{scrheadings}
 
 \begin{enumerate}[label=\textbf{\arabic*.}]\setcounter{enumi}{6}
 	\item \textbf{apticron}\\ist ein kleines Shellskript zur automatischen Benachrichtigung über Paket-Updates per E-Mail.
 	\item \textbf{fail2ban} \smallerurl{https://wiki.ubuntuusers.de/fail2ban/}\\ist ein Set aus Client, Server und Konfigurationsdateien, welches Logdateien überwacht, dort nach vordefinierten Mustern sucht und nach diesen temporär IP-Adressen sperrt.
 \end{enumerate}
 
-Der \gls{ohm} Server ist wie auch das \gls{ohdm} Projekt eine \gls{htw} Berlin Projekt, somit musst auch die Erreichbarkeit des Server aus dem \gls{htw} Netz gewährleistet werden. Dies wurde mit einem Bash Skript realisiert, das \textit{iptables}\footnote{Verwaltungstool für IPv4-Paketfilterung und NAT - \url{https://linux.die.net/man/8/iptables}} Einträge zur Port/IP Freigabe enthält.\\
+Der \gls{ohm} Server ist wie auch das \gls{ohdm} Projekt eine \gls{htw} Berlin Projekt, somit musst auch die Erreichbarkeit des Server aus dem \gls{htw} Netz gewährleistet werden. Dies wurde mit einem Bash Skript realisiert, das \textit{iptables}\footnote{Verwaltungstool für IPv4-Paketfilterung und NAT - \url{https://linux.die.net/man/8/iptables}} Einträge zur Port/IP Freigabe enthält (Beispiel der Freigabe von  HTW Berlin interner IPs in \autoref{lst:iptables}).
+\begin{lstlisting}[language=bash,caption={Freigabe aller HTW Berlin interner IPs auf 2 verschiedenen Ports},label={lst:iptables}]
+	iptables -A INPUT -s 141.45.0.0/16 -p tcp --dport 5433 -j ACCEPT
+	iptables -A INPUT -s 141.45.0.0/16 -p tcp --dport 5434 -j ACCEPT
+\end{lstlisting}
 
 Das \gls{ohdm} Projekt benutzt als \gls{dbms} PostgreSQL mit PostGIS\cite{postgis:manual} als Erweiterung.\\
 Der erste Schritt, ist die Installierung von PostgreSQL. Dieser lässt sich auf Ubuntu 20.04 wie in \autoref{lst:install-postgresql} installieren.
@@ -75,21 +80,20 @@ sudo apt-get install postgresql-14-postgis-3-scripts
 \end{lstlisting}
 
 Während der Installationen sollte standardmäßig ein PostgreSQL Cluster\cite{postgresql-cluster} erstellt werden, welches folgende Daten besitzt:\\[0.5cm]
-\begin{tabular}{r l}
-	Servername: & localhost\\
-	Port: & 5432\\
-	Clustername: & main\\
-	Datenbankbenutzer & postgres\\
-	Standarddatenbank & postgres\\
-	Datenbasis & \lstinline[language=bash]|/var/lib/postgresql/14/main|\\
-	Datenbank log Datei & \lstinline[language=bash]|/var/log/postgresql/postgresql-14-main.log|\\
-	Pfad zu den Konfigurationen & \lstinline[language=bash]|/etc/postgresql/14/main/|\\
-\end{tabular}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{|R|l|R|l|}\hline
+	Servername: & localhost & Port: & 5432\\\hline
+	Clustername: & main & Datenbankbenutzer: & postgres\\\hline
+	Standarddatenbank: & \multicolumn{3}{l|}{postgres}\\\hline
+	Datenbasis: & \multicolumn{3}{l|}{\lstinline[language=bash]|/var/lib/postgresql/14/main|}\\\hline	
+	Datenbank log Datei: & \multicolumn{3}{l|}{\lstinline[language=bash]|/var/log/postgresql/postgresql-14-main.log|}\\\hline
+	Pfad zu den Konfigurationen: & \multicolumn{3}{l|}{\lstinline[language=bash]|/etc/postgresql/14/main/|}\\\hline
+\end{tabularx}
 
 \newpage
 \section{Multiple Datenbanken in PostgreSQL}
 Mit PostgreSQL ist es möglich mehrere Datenbanken parallel laufen zu lassen.\cite[132 ff.]{postgres14:cookbook}\\
-Anhand des Arbeitspaketes sollten 2 zusätzliche Cluster\cite{postgresql-cluster} auf dem \gls{ohm} Server entstehen. Hierfür wurden bestehende beziehungsweise mitinstallierte Tools verwendet.
+Anhand des Arbeitspaketes(vgl. \autoref{sec:workorder} \autoref{item:sep-db}) sollten 2 zusätzliche Cluster\cite{postgresql-cluster} auf dem \gls{ohm} Server entstehen. Hierfür wurden bestehende beziehungsweise mitinstallierte Tools verwendet.
 
 \subsection{Cluster erzeugen}\label{subsec:create-cluster}
 Zur Erzeugung eines neuen PostgreSQL Clusters\cite{postgresql-cluster} wird der Befehl in \autoref{lst:create-cluster} verwendet. Für eine detaillierte Beschreibung der Clusterdaten dient \autoref{lst:create-cluster} Zeile \ref{ln:create-cluster} als Vorlage.\\ Weitere Überlegungen dazu in \autoref{ch:clustering}.
@@ -100,21 +104,19 @@ sudo pg_createcluster 14 integration -p 5433 %*\label{ln:create-cluster}*)
 \end{lstlisting}
 
 Durch die Verwendung des Befehls aus \autoref{lst:create-cluster} werden die Clusterdaten wie folgt erzeugt:\\[0.5cm]
-\begin{tabular}{r l}
-	Servername: & localhost\\
-	Port: & 5432\\
-	Clustername: & integration\\
-	Datenbankbenutzer & postgres\\
-	Standarddatenbank & postgres\\
-	Datenbasis & \lstinline[language=bash]|/var/lib/postgresql/14/integration|\\
-	Datenbank log Datei & \lstinline[language=bash]|/var/log/postgresql/postgresql-14-integration.log|\\
-	Pfad zu den Konfigurationen & \lstinline[language=bash]|/etc/postgresql/14/integration|\\
-\end{tabular}\vspace{0.5cm}
+\begin{tabularx}{\linewidth}{|R|l|R|l|}\hline
+	Servername: & localhost & Port: & 5432\\\hline
+	Clustername: & integration & Datenbankbenutzer: & postgres\\\hline
+	Standarddatenbank: & \multicolumn{3}{l|}{postgres}\\\hline
+	Datenbasis: & \multicolumn{3}{l|}{\lstinline[language=bash]|/var/lib/postgresql/14/integration|}\\\hline	
+	Datenbank log Datei: & \multicolumn{3}{l|}{\lstinline[language=bash]|/var/log/postgresql/postgresql-14-integration.log|}\\\hline
+	Pfad zu den Konfigurationen: & \multicolumn{3}{l|}{\lstinline[language=bash]|/etc/postgresql/14/integration/|}\\\hline
+\end{tabularx}\\[0.5cm]
 
 Weitere Informationen unter:\\ \url{http://manpages.ubuntu.com/manpages/trusty/man8/pg_createcluster.8.html}\\[0.5cm]
 
 \subsection{Cluster steuern}
-Ein \lstinline[language=bash]|start|/\lstinline[language=bash]|stop| oder \lstinline[language=bash]|restart| lässt sich nun mit dem Befehl in \autoref{lst:ctlcluster} realisieren.
+Ein \lstinline[language=bash]|start|/\lstinline[language=bash]|stop| oder \lstinline[language=bash]|restart| lässt sich nun wie in \autoref{lst:ctlcluster} realisieren.
 \begin{lstlisting}[language=bash,caption={Steuerung des Clusters},label={lst:ctlcluster}]
 sudo pg_ctlcluster [postgresql_version_number] [clustername] [start|stop|restart]
 # Beispiel mit integration
@@ -124,7 +126,7 @@ Auch hierzu gibt es weitere Informationen, die unter:\\ \url{http://manpages.ubu
 eingesehen werden können.\newpage
 
 \subsection{Cluster als Service registrieren}
-Eine Integration des erstellten Clusters\cite{postgresql-cluster} als Service ist in \autoref{lst:cluster-enable} einzusehen. Dies wird benötigt um auch nach einem Server Neustart gewährleisten zu können das der Datenbankserver dieses Clusters\cite{postgresql-cluster} erreichbar ist.
+Eine Integration des erstellten Clusters\cite{postgresql-cluster} als Service kann in \autoref{lst:cluster-enable} eingesehen werden. Dies wird benötigt um auch nach einem Server Neustart gewährleisten zu können das der Datenbankserver dieses Clusters\cite{postgresql-cluster} erreichbar ist.
 \begin{lstlisting}[language=bash,caption={Registierung des Clusters als System Service},label={lst:cluster-enable}]
 sudo systemctl enable postgresql@[postgresql_version_number]-[clustername].service
 # Beispiel mit integration
@@ -178,11 +180,11 @@ host    replication 	all         ::1/128             scram-sha-256
 
 \chapter{Konvertierung}
 \section{OHDMConverter Java}
-Der javabasierte \gls{ohdmconverter} diente als Projekthilfsprogramm um alle Portierungen einer Datei/Schema in ein anderes zu realisieren.\\
+Der \gls{ohdmconverter} diente als Projekthilfsprogramm um alle Portierungen einer Datei/Schema in ein anderes zu realisieren.\\
 \textit{Annahme:} Da der \gls{ohdmconverter} bis zum Beginn des Praktikums \gequote{nur} mit kleineren oder Testdatensätzen getestet und validiert wurde, konnten einige Fehler nicht gefunden werden.
 
 \subsection{Import der planet.osm Datei}
-Die Hauptaufgabe war es das planet.osm\cite{planet-osm} File in die PostgreSQL Datenbank zu importieren. Die Vorbereitung dieses Importes musste mit größter Sorgfalt bearbeitet werden, um:
+Die Hauptaufgabe war es das \gls{planetosm}\cite{planet-osm} File in die PostgreSQL Datenbank zu importieren. Die Vorbereitung dieses Importes musste mit größter Sorgfalt bearbeitet werden, um:
 \begin{itemize}
 	\item den fehlerfreien Ablauf zu gewährleisten,
 	\item die Auslastung des physischen Servers so minimal wie möglich zu beschränken und
@@ -191,7 +193,7 @@ Die Hauptaufgabe war es das planet.osm\cite{planet-osm} File in die PostgreSQL D
 Darüber hinaus musste auf die Größe der Datei berücksichtigt werden. Das heißt alle Tests fanden mit kleineren Dateien statt.
 
 \begin{table}[h]
-	\caption{Daten der planet.osm\cite{planet-osm} Datei}
+	\caption{Daten der \gls{planetosm}\cite{planet-osm} Datei}
 	\renewcommand{\arraystretch}{1.5}
 	\begin{tabularx}{\linewidth}{|C|C|}\hline
 		Eigenschaft & Wert\\\btrule{1.2pt}
@@ -225,7 +227,7 @@ begin 1, end 0, length 1
 \end{lstlisting}
 
 Zum Zeitpunkt des Importes waren laut:\\ \url{https://taginfo.openstreetmap.org/reports/database_statistics}\\
-\numprint{7565505545} Nodes, \numprint{844325562} Ways und \numprint{9742774} Relations in der planet.osm\cite{planet-osm} Datei enthalten. Somit fehlten der Datenbank:\\[0.5cm]
+\numprint{7565505545} Nodes, \numprint{844325562} Ways und \numprint{9742774} Relations in der \gls{planetosm}\cite{planet-osm} Datei enthalten. Somit fehlten der Datenbank:\\[0.5cm]
 \begin{tabular}{r<{ kurz} r<{, das entspricht} r l}
 	\numprint{60000000} & 60 Mio & 0,8\%& Nodes\\
 	\numprint{8000000} & 8 Mio & 0,9\%& Ways\\
@@ -234,7 +236,7 @@ Zum Zeitpunkt des Importes waren laut:\\ \url{https://taginfo.openstreetmap.org/
 
 \newpage
 \section{Erkenntnis}
-Aufgrund der gravierenden Fehler (vgl. \autoref{subsec:error}) im javabasierten \gls{ohdmconverter} wurde die Lösung als Java Applikation verworfen. Dies geschah in Rücksprache mit dem Projektleiter Prof. Dr.-Ing. Thomas Schwotzer, welcher die Grundlegende Idee \gls{osm} Daten in die \gls{ohdm} Datenbank zu importieren, als reines PostgreSQL Projekt umsetzten wollte.\\
-Das \gls{ohdm} Projekt beziehungsweise der \gls{ohdmconverter} als Java Applikation läuft bereits seit einigen Jahren kann aber mit den aktuellen Mitteln nicht stabil genug implementiert werden (auch in absehbarer Zeit nicht).\\
+Aufgrund der gravierenden Fehler (vgl. \autoref{subsec:error}) im \gls{ohdmconverter} wurde die Lösung als Java Applikation verworfen. Dies geschah in Rücksprache mit dem Projektleiter Prof. Dr.-Ing. Thomas Schwotzer, welcher die Grundlegende Idee \gls{osm} Daten in die \gls{ohdm} Datenbank zu importieren, als reines PostgreSQL Projekt umsetzten wollte.\\
+Das \gls{ohdm} Projekt beziehungsweise der \gls{ohdmconverter} als Java Applikation läuft bereits seit einigen Jahren kann aber mit den aktuellen Mitteln nicht stabil genug implementiert werden, auch in absehbarer Zeit nicht.\\
 
 Somit wurde die Projektidee neu definiert.

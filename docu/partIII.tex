@@ -6,7 +6,7 @@ Im Praktikum wurde viel Wissen erlernt das für den späteren Berufsalltag von N
 	\item Der Umgang mit mehreren Komponenten,
 	\item Aneignung von Fähigkeiten zur Benutzung von Komponenten durch Lesen der Dokumentationen,
 	\item Vertiefung des Wissens im Bereich Datenbank für PostgreSQL,
-	\item Umgang mit der Skriptsprache lua
+	\item Umgang mit der Skriptsprache Lua
 \end{itemize}
 
 \chapter{Zusätzliche Ergebnisse und Überlegungen}
@@ -23,7 +23,6 @@ Im Praktikum wurde viel Wissen erlernt das für den späteren Berufsalltag von N
 	\end{tabular}	
 \end{table}
 
-\vspace{1cm}
 \section{Backgroundprocess}
 Im ersten Versuch des Importprozess als Backgroundprocess zu starten wurde folgende Fehlermeldung geloggt.\\
 \lstinline[language={}]|sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper|\\
@@ -34,4 +33,17 @@ Somit müssen bei dem Backgroundprocess zwei Dinge beachtet werden:
 	\item psql\cite{postgres-psql} und osm2pgsql\cite{osm2pgsql} müssen mit dem Flag \gequote{-W} ausgeführt werden, um sicherzustellen das die Passworteingabe erfolgen muss.
 	\item Das Passwort muss einmalig eingegeben oder zu Ausführung hinterlegt werden.
 \end{enumerate}
-Hierfür kann ein expect oder Python Skript geschrieben werden.
+Hierfür kann ein expect (siehe \autoref{ap:ch:expect}) oder Python Skript geschrieben werden.
+
+\subsection{Python Skript}
+Das Python Skript wurde bisher so implementiert, dass ein Datenbankparameter im selben Verzeichnis hinterlegt werden muss. In dieser Datenbankparameter JSON Datei sind alle Parameter der Datenbank, sowie des Nutzers zu vermerken (Beispiel ...)
+
+\begin{lstlisting}[language={},caption={Beispiel einer JSON Datei für die Datenbankparameter}]
+	{
+		"servername":"localhost",
+		"port":"5432",
+		"username":"postgres",
+		"password":"my_password",
+		"database":"ohdm"
+	}
+\end{lstlisting}

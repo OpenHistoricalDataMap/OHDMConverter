@@ -33,6 +33,7 @@ local function mapfeatures_from_csv(file)
     return mapfeatures, mapfeatures_undefined
 end
 
+print(debug.getinfo(1).source:match("@?(.*/)"))
 local path = debug.getinfo(1).source:match("@?(.*/)")
 local file
 if path == nil then
@@ -67,7 +68,7 @@ tables.nodes = osm2pgsql.define_table({
         { column = 'tstamp', sql_type = 'timestamp' },
         { column = 'mapfeature_ids', type = 'text' },
         { column = 'serializedtags', type = 'hstore' },
-        { column = 'geom', type = 'point', projection = 4326 },
+        { column = 'geom', type = 'point', projection = 4326},
         { column = 'uid', type = 'text' },
         { column = 'username', type = 'text' },
         { column = 'name', type = 'text' },
@@ -102,11 +103,12 @@ tables.ways = osm2pgsql.define_table({
         { column = 'tstamp', sql_type = 'timestamp' },
         { column = 'mapfeature_ids', type = 'text' },
         { column = 'serializedtags', type = 'hstore' },
-        { column = 'geom', type = 'linestring', projection = 4326 },
+        { column = 'geom', type = 'geometry', projection = 4326},
         { column = 'uid', type = 'text' },
         { column = 'username', type = 'text' },
         { column = 'name', type = 'text' },
         { column = 'url', type = 'text' },
+        { column = 'member', type = 'text' },
         { column = 'geom_changed', type = 'bool' },
         { column = 'object_changed', type = 'bool' },
         { column = 'deleted', type = 'bool' },
@@ -141,11 +143,12 @@ tables.relations = osm2pgsql.define_table({
         { column = 'tstamp', sql_type = 'timestamp' },
         { column = 'mapfeature_ids', type = 'text' },
         { column = 'serializedtags', type = 'hstore' },
-        { column = 'geom', type = 'geometry', projection = 4326 },
+        { column = 'geom', type = 'geometry', projection = 4326},
         { column = 'uid', type = 'text' },
         { column = 'username', type = 'text' },
         { column = 'name', type = 'text' },
         { column = 'url', type = 'text' },
+        { column = 'member', type = 'text' },
         { column = 'geom_changed', type = 'bool' },
         { column = 'object_changed', type = 'bool' },
         { column = 'deleted', type = 'bool' },
@@ -303,7 +306,9 @@ end
 -- function for all nodes
 function osm2pgsql.process_node(object)
     local object_name, object_features, object_url, object_serializedtags = get_tag_quadruple(object)
+    local object_id = object.id
     tables.nodes:add_row({
+        osm_id = object_id,
         name = object_name,
         url = object_url,
         tstamp = reformat_date(object.timestamp),
@@ -316,7 +321,7 @@ function osm2pgsql.process_node(object)
         object_changed = false,
         deleted = false,
         object_new = false,
-        has_name = false,
+        has_name = object_name ~= nil and true or false,
         valid = false
     })
 end
@@ -324,38 +329,21 @@ end
 -- function for all ways
 function osm2pgsql.process_way(object)
     local object_name, object_features, object_url, object_serializedtags = get_tag_quadruple(object)
-    tables.ways:add_row({
-        name = object_name,
-        url = object_url,
-        tstamp = reformat_date(object.timestamp),
-        mapfeature_ids = object_features,
-        serializedtags = object_serializedtags,
-        geom = { create = 'line' },
-        uid = object.uid,
-        username = object.user,
-        geom_changed = false,
-        object_changed = false,
-        deleted = false,
-        object_new = false,
-        has_name = false,
-        valid = false
-    })
-
+    local object_id = object.id
+    local members = {}
     -- for each node id of the way insert an entry to the waynodes table
     for _, id in pairs(object.nodes) do
+        table.insert(members,id)
         tables.waynodes:add_row({
-            way_id = object.id,
+            way_id = object_id,
             node_id = id
         })
     end
-end
-
--- function for all relations
-function osm2pgsql.process_relation(object)
-    local object_name, object_features, object_url, object_serializedtags = get_tag_quadruple(object)
-    tables.relations:add_row({
+    tables.ways:add_row({
+        osm_id = object_id,
         name = object_name,
         url = object_url,
+        member = table.concat(members, ';'),
         tstamp = reformat_date(object.timestamp),
         mapfeature_ids = object_features,
         serializedtags = object_serializedtags,
@@ -366,15 +354,24 @@ function osm2pgsql.process_relation(object)
         object_changed = false,
         deleted = false,
         object_new = false,
-        has_name = false,
+        has_name = object_name ~= nil and true or false,
         valid = false
     })
 
+    
+end
+
+-- function for all relations
+function osm2pgsql.process_relation(object)
+    local object_name, object_features, object_url, object_serializedtags = get_tag_quadruple(object)
+    local object_id = object.id
+    local members = {}
     for _, member in ipairs(object.members) do
         -- if type is a node
+        table.insert(members,member.ref)
         if member.type == "n" then
             tables.relationmembers:add_row({
-                relation_id = object.id,
+                relation_id = object_id,
                 node_id = member.ref,
                 way_id = nil,
                 member_rel_id = nil,
@@ -385,7 +382,7 @@ function osm2pgsql.process_relation(object)
         -- if type is a way
         if member.type == "w" then
             tables.relationmembers:add_row({
-                relation_id = object.id,
+                relation_id = object_id,
                 node_id = nil,
                 way_id = member.ref,
                 member_rel_id = nil,
@@ -396,7 +393,7 @@ function osm2pgsql.process_relation(object)
         -- if type is a relation
         if member.type == "r" then
             tables.relationmembers:add_row({
-                relation_id = object.id,
+                relation_id = object_id,
                 node_id = nil,
                 way_id = nil,
                 member_rel_id = member.ref,
@@ -405,5 +402,26 @@ function osm2pgsql.process_relation(object)
             })
         end
     end
+
+    tables.relations:add_row({
+        osm_id = object_id,
+        name = object_name,
+        url = object_url,
+        member = table.concat(members, ';'),
+        tstamp = reformat_date(object.timestamp),
+        mapfeature_ids = object_features,
+        serializedtags = object_serializedtags,
+        geom = { create = 'area' },
+        uid = object.uid,
+        username = object.user,
+        geom_changed = false,
+        object_changed = false,
+        deleted = false,
+        object_new = false,
+        has_name = object_name ~= nil and true or false,
+        valid = false
+    })
+
+    
 
 end

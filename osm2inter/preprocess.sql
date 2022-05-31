@@ -1,17 +1,13 @@
 -- Run this before starting import with osm
 -- NOTE: this script must run with access rights on the database
 -- author: SteSad
--- prints the duration time of each process
-\timing
--- change loglevel
+-- \timing
 -- SET client_min_messages TO WARNING;
+
 -- recreate database
 -- NOTE: these 2 lines only in testing processes
 DO $$
 BEGIN
-    CREATE EXTENSION IF NOT EXISTS hstore;
-    CREATE EXTENSION IF NOT EXISTS postgis;
-
     DROP SCHEMA IF EXISTS inter CASCADE;
     CREATE SCHEMA inter;
     RAISE NOTICE E'Recreated inter schema';

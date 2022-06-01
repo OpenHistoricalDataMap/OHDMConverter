@@ -49,9 +49,9 @@ BEGIN
     WHERE nodes.osm_id = updatenodes.osm_id 
     AND nodes.tstamp = updatenodes.tstamp;
 
-    UPDATE inter.ways AS ways
+    UPDATE updatedb.ways AS updateways
     SET "valid" = true
-    FROM updatedb.ways AS updateways
+    FROM inter.ways AS ways
     WHERE ways.osm_id = updateways.osm_id 
     AND ways.tstamp = updateways.tstamp;
 
@@ -140,11 +140,11 @@ BEGIN
 
     UPDATE updatedb.ways
     SET object_new = true
-    WHERE osm_id NOT IN (SELECT osm_id FROM inter.nodes);
+    WHERE osm_id NOT IN (SELECT osm_id FROM inter.ways);
 
     UPDATE updatedb.relations
     SET object_new = true
-    WHERE osm_id NOT IN (SELECT osm_id FROM inter.nodes);
+    WHERE osm_id NOT IN (SELECT osm_id FROM inter.relations);
 
 END;
 $$;

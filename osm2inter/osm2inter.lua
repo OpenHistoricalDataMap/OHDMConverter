@@ -33,7 +33,6 @@ local function mapfeatures_from_csv(file)
     return mapfeatures, mapfeatures_undefined
 end
 
-print(debug.getinfo(1).source:match("@?(.*/)"))
 local path = debug.getinfo(1).source:match("@?(.*/)")
 local file
 if path == nil then

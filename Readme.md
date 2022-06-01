@@ -128,7 +128,21 @@ All scripts expect the ohdm database to be present.
 ```bash
 psql -c "CREATE DATABASE ohdm;"
 ```
-<br>
+
+### add neccessary extension
+- PostGIS is a spatial database extender for 		PostgreSQL object-relational database. It adds support for geographic objects allowing location queries to be run in SQL.
+	```bash
+	psql -d ohdm -c "CREATE EXTENSION postgis;"
+	```
+
+- This module implements the hstore data type for 	storing sets of key/value pairs within a single PostgreSQL value.
+	```bash
+	psql -d ohdm -c "CREATE EXTENSION hstore;"
+	```
+- The pg_trgm module provides functions and operators for determining the similarity of alphanumeric text based on trigram matching, as well as index operator classes that support fast searching for similar strings.
+	```bash
+	psql -d ohdm -c "CREATE EXTENSION pg_trgm;"
+	```
 
 > **NOTE** <...> contained in the code blocks must be replaced with your own parameters.
 

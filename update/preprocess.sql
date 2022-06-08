@@ -10,15 +10,17 @@ DO $$
 BEGIN
     DROP SCHEMA IF EXISTS updatedb CASCADE;
     CREATE SCHEMA updatedb;
-    RAISE NOTICE E'Recreated updatedb schema';
-END
-$$;
+END $$;
 
 -- Create schema updatedb with translation table for classnames
 -- ref: https://wiki.openstreetmap.org/wiki/Map_features
 DO $$
+DECLARE
+    t TIMESTAMP := clock_timestamp();
+    d1 int := 0;
+    d2 int := 0;
 BEGIN
-    RAISE NOTICE E'Create classification table';
+    RAISE NOTICE E'Process on "classification"';
     CREATE TABLE IF NOT EXISTS updatedb.classification
     (
         id BIGSERIAL NOT NULL,
@@ -27,1282 +29,1282 @@ BEGIN
         CONSTRAINT classification_pkey PRIMARY KEY (id)
     )
     TABLESPACE pg_default;
-    RAISE NOTICE E'Insert all entries';
-    INSERT INTO updatedb.classification(id,classname, subclassname) VALUES ('-1'::BIGINT,'no_class','no_subclass');
+
+    INSERT INTO updatedb.classification(id,classname, subclassname)
+    VALUES
+        ('-1'::BIGINT,'no_class','no_subclass'),
+        ('0'::BIGINT,'ohdm_boundary','undefined');
+    GET diagnostics d1 = row_count;
+
     -- Admin Level
-    INSERT INTO updatedb.classification(id,classname, subclassname) VALUES ('0'::BIGINT,'ohdm_boundary','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('ohdm_boundary','adminlevel_1');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('ohdm_boundary','adminlevel_2');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('ohdm_boundary','adminlevel_3');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('ohdm_boundary','adminlevel_4');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('ohdm_boundary','adminlevel_5');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('ohdm_boundary','adminlevel_6');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('ohdm_boundary','adminlevel_7');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('ohdm_boundary','adminlevel_8');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('ohdm_boundary','adminlevel_9');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('ohdm_boundary','adminlevel_10');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('ohdm_boundary','adminlevel_11');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('ohdm_boundary','adminlevel_12');
-    -- Aerialway
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aerialway','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aerialway','cable_car');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aerialway','gondola');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aerialway','mixed_lift');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aerialway','chair_lift');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aerialway','drag_lift');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aerialway','t-bar');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aerialway','j-bar');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aerialway','platter');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aerialway','rope_tow');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aerialway','magic_carpet');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aerialway','zip_line');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aerialway','goods');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aerialway','pylon');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aerialway','station');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aerialway','canopy');
+    INSERT INTO updatedb.classification(classname, subclassname) 
+    VALUES
+        -- Admin Level
+        ('ohdm_boundary','adminlevel_1'),
+        ('ohdm_boundary','adminlevel_9'),
+        ('ohdm_boundary','adminlevel_10'),
+        ('ohdm_boundary','adminlevel_11'),
+        ('ohdm_boundary','adminlevel_12'),
+        -- Aerialway
+        ('aerialway','undefined'),
+        ('aerialway','cable_car'),
+        ('aerialway','gondola'),
+        ('aerialway','mixed_lift'),
+        ('aerialway','chair_lift'),
+        ('aerialway','drag_lift'),
+        ('aerialway','t-bar'),
+        ('aerialway','j-bar'),
+        ('aerialway','platter'),
+        ('aerialway','rope_tow'),
+        ('aerialway','magic_carpet'),
+        ('aerialway','zip_line'),
+        ('aerialway','goods'),
+        ('aerialway','pylon'),
+        ('aerialway','station'),
+        ('aerialway','canopy'),
 
-    -- Aeroway
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aeroway','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aeroway','aerodrome');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aeroway','apron');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aeroway','gate');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aeroway','hangar');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aeroway','helipad');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aeroway','heliport');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aeroway','navigationaid');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aeroway','runway');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aeroway','spaceport');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aeroway','taxilane');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aeroway','taxiway');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aeroway','terminal');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('aeroway','windsock');
-    -- Amenity
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','bar');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','biergarten');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','cafe');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','fast_food');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','food_court');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','ice_cream');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','pub');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','restaurant');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','college');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','driving_school');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','kindergarten');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','language_school');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','library');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','toy_library');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','music_school');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','school');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','university');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','bicycle_parking');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','bicycle_repair_station');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','biycycle_rental');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','boat_rental');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','boat_sharing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','bus_station');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','car_rental');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','car_sharing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','car_wash');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','vehicle_inspection');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','charging_station');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','ferry_terminal');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','fuel');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','grit_bin');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','motorcycle_parking');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','parking');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','parking_entrance');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','parking_space');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','taxi');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','atm');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','bank');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','bureau_de_change');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','baby_hatch');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','clinic');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','dentist');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','doctors');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','hospital');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','nursing_home');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','pharmacy');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','social_facility');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','veterinary');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','arts_centre');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','brothel');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','casino');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','cinema');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','community_centre');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','conference_centre');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','events_venue');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','fountain');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','gambling');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','love_hotel');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','nightclub');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','planetarium');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','public_bookcase');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','social_centre');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','stripclub');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','studio');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','swingerclub');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','theatre');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','courthouse');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','fire_station');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','police');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','post_box');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','post_depot');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','post_office');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','prison');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','ranger_station');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','townhall');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','bbq');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','bench');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','dog_toilet');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','drinking_water');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','give_box');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','parcel_locker');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','shelter');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','shower');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','telephone');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','toilets');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','water_point');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','watering_place');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','sanitary_dump_station');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','recycling');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','waste_basket');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','waste_disposal');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','waste_transfer_station');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','animal_boarding');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','animal_breeding');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','animal_shelter');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','baking_oven');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','childcare');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','clock');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','crematorium');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','dive_centre');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','funeral_hall');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','grave_yard');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','hunting_stand');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','updatedbnet_cafe');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','kitchen');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','kneipp_water_cure');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','lounger');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','marketplace');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','monastery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','photo_booth');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','place_of_mourning');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','place_of_worship');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','public_bath');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','refugee_site');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','vending_machine');
-    -- INSERT INTO updatedb.classification(classname, subclassname) VALUES ('amenity','embassy'); -- use office=diplomatic
-    -- Barrier
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','cable_barrier');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','city_wall');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','ditch');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','fence');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','guard_rail');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','handrail');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','hedge');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','kerb');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','retaining_wall');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','wall');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','block');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','bollard');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','border_control');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','bump_gate');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','bus_trap');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','cattle_grid');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','chain');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','cycle_barrier');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','debris');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','entrance');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','full-height_turnstile');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','gate');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','hampshire_gate');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','height_restrictor');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','horse_stile');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','jersey_barrier');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','kissing_gate');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','lift_gate');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','log');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','motorcycle_barrier');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','rope');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','sally_port');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','spikes');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','stile');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','sump_buster');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','swing_gate');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','toll_booth');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','turnstile');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('barrier','yes');
-    -- Boundary
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('boundary','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('boundary','aboriginal_lands');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('boundary','administrative');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('boundary','border_zone');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('boundary','forest');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('boundary','forest_compartment');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('boundary','hazard');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('boundary','maritime');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('boundary','marker');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('boundary','national_park');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('boundary','place');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('boundary','political');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('boundary','postal_code');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('boundary','protected_area');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('boundary','special_economic_zone');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('boundary','disputed');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('boundary','historic');
-    -- Building
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','apartments');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','bungalow');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','cabin');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','detached');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','dormitory');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','farm');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','ger');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','hotel');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','house');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','houseboat');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','residential');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','semidetached_house');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','static_caravan');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','terrace');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','commercial');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','industrial');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','kiosk');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','office');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','retail');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','supermarket');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','warehouse');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','cathedral');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','chapel');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','church');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','kingdom_hall');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','monastery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','mosque');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','presbytery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','religious');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','shrine');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','synagogue');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','temple');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','bakehouse');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','civic');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','fire_station');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','government');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','hospital');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','kindergarten');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','public');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','school');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','toilets');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','train_station');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','transportation');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','university');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','barn');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','conservatory');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','cowshed');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','farm_auxiliary');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','greenhouse');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','slurry_tank');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','stable');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','sty');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','grandstand');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','pavilion');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','riding_hall');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','sports_hall');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','stadium');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','hangar');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','hut');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','shed');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','carport');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','garage');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','garages');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','parking');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','digester');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','service');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','transformer_tower');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','water_tower');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','beach_hut');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','bunker');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','bridge');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','castle');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','construction');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','container');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','gatehouse');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','roof');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','ruins');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','tent');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','tree_house');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('building','yes');
-    -- Craft
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','agricultural_engines');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','atelier');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','bakery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','basket_maker');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','beekeeper');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','blacksmith');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','boatbuilder');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','bookbinder');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','brewery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','builder');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','cabinet_maker');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','car_paupdatedb');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','carpenter');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','carpet_layer');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','caterer');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','chimney_sweeper');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','cleaning');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','clockmaker');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','confectionery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','cooper');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','dental_technician');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','distillery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','door_construction');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','dressmaker');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','electronics_repair');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','embroiderer');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','electrician');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','engraver');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','floorer');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','gardener');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','glaziery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','goldsmith');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','grinding_mill');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','handicraft');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','hvac');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','insulation');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','updatedbior_work');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','jeweller');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','joiner');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','key_cutter');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','locksmith');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','metal_construction');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','mint');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','musical_instrument');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','oil_mill');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','optician');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','organ_builder');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','paupdatedb');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','parquet_layer');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','photographer');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','photographic_laboratory');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','piano_tuner');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','plasterer');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','plumber');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','pottery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','prupdatedb');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','printmaker');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','rigger');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','roofer');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','saddler');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','sailmaker');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','sawmill');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','scaffolder');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','shoemaker');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','sculptor');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','signmaker');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','stand_builder');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','stonemason');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','stove_fitter');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','sun_protection');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','tailor');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','tiler');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','tinsmith');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','toolmaker');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','turner');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','upholsterer');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','watchmaker');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','water_well_drilling');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','window_construction');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('craft','winery');
-    -- Emergency
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','ambulance_station');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','defibrillator');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','landing_site');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','emergency_ward_entrance');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','dry_riser_inlet');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','fire_alarm_box');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','fire_extinguisher');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','fire_hose');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','fire_hydrant');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','water_tank');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','suction_point');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','lifeguard');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','life_ring');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','lifeguard_base');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','lifeguard_place');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','lifeguard_tower');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','lifeguard_platform');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','assembly_point');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','phone');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','siren');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','ses_station');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('emergency','drinking_water');
-    -- Geological
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('geological','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('geological','moraine');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('geological','outcrop');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('geological','palaeontological_site');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('geological','volcanic_caldera_rim	');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('geological','volcanic_vent');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('geological','volcanic_lava_field');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('geological','columnar_jointing');
-    -- Healthcare
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','alternative');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','audiologist');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','birthing_center');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','blood_bank');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','blood_donation');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','counselling');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','dialysis');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','hospice');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','laboratory');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','midwife');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','nurse');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','occupational_therapist');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','optometrist');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','physiotherapist');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','podiatrist');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','psychotherapist');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','rehabilitation');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','sample_collection');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','speech_therapist');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('healthcare','vaccination_centre');
-    -- Highway
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','motorway');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','trunk');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','primary');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','secondary');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','tertiary');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','unclassified');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','residential');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','motorway_link');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','trunk_link');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','primary_link');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','secondary_link');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','tertiary_link');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','living_street');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','service');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','pedestrian');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','track');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','bus_guideway');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','escape');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','raceway');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','road');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','footway');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','bridleway');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','steps');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','corridor');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','path');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','sidewalk');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','crossing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','cycleway');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','proposed');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','construction');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','bus_stop');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','elevator');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','emergency_bay');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','emergency_access_point');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','give_way');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','phone');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','milestone');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','mini_roundabout');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','motorway_junction');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','passing_place');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','platform');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','rest_area');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','speed_camera');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','street_lamp');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','services');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','stop');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','traffic_mirror');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','traffic_signals');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','trailhead');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','turning_circle');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','turning_loop');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('highway','toll_gantry');
-    -- Historic
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','aircraft');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','aqueduct');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','archaeological_site');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','battlefield');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','bomb_crater');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','boundary_stone');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','building');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','cannon');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','castle');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','castle_wall');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','charcoal_pile');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','church');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','city_gate');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','citywalls');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','creamery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','farm');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','fort');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','gallows');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','highwater_mark');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','locomotive');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','manor');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','memorial');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','milestone');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','monastery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','monument');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','optical_telegraph');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','pa');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','pillory');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','railway_car');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','ruins');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','rune_stone');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','ship');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','tank');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','tomb');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','tower');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','vehicle');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','wayside_cross');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','wayside_shrine');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','wreck');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('historic','yes');
-    -- Landuse
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','commercial');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','construction');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','education');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','industrial');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','residential');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','retail');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','allotments');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','farmland');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','farmyard');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','flowerbed');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','forest');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','meadow');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','orchard');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','vineyard');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','aquaculture');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','basin');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','salt_pond');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','brownfield');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','cemetery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','depot');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','garages');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','grass');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','greenfield');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','greenhouse_horticulture');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','landfill');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','military');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','pasture');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','peat_cutting');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','plant_nursery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','port');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','quarry');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','railway');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','recreation_ground');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','religious');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','reservoir');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','village_green');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('landuse','wupdatedb_sports');
-    -- Leisure
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','adult_gaming_centre');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','amusement_arcade');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','beach_resort');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','bandstand');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','bird_hide');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','common');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','dance');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','disc_golf_course');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','dog_park');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','escape_game');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','firepit');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','fishing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','fitness_centre');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','fitness_station');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','garden');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','golf_course');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','hackerspace');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','horse_riding');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','ice_rink');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','marina');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','miniature_golf');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','nature_reserve');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','park');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','picnic_table');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','pitch');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','playground');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','slipway');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','sports_centre');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','stadium');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','summer_camp');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','swimming_area');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','swimming_pool');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','track');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','water_park');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('leisure','wildlife_hide');
-    -- Man_made
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','adit');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','beacon');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','breakwater');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','bridge');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','bunker_silo');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','campanile');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','carpet_hanger');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','chimney');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','column');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','communications_tower');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','crane');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','cross');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','cutline');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','clearcut');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','dovecote');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','dyke');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','embankment');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','flagpole');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','gasometer');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','goods_conveyor');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','groyne');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','hot_water_tank');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','kiln');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','lighthouse');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','mast');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','mineshaft');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','monitoring_station');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','obelisk');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','observatory');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','offshore_platform');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','petroleum_well');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','pier');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','pipeline');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','pump');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','pumping_station');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','reservoir_covered');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','silo');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','snow_fence');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','snow_net');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','storage_tank');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','street_cabinet');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','stupa');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','surveillance');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','survey_point');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','tailings_pond');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','telescope');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','tower');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','wastewater_plant');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','watermill');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','water_tower');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','water_well');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','water_tap');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','water_works');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','wildlife_crossing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','windmill');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','works');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('man_made','yes');
-    -- Military
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('military','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('military','airfield');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('military','ammunition');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('military','base');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('military','bunker');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('military','barracks');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('military','checkpoint');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('military','danger_area');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('military','naval_base');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('military','nuclear_explosion_site');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('military','obstacle_course');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('military','office');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('military','range');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('military','training_area');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('military','trench');
-    -- Natural
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','fell');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','grassland');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','heath');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','moor');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','scrub');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','shrubbery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','tree');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','tree_row');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','tundra');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','wood');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','bay');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','beach');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','blowhole');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','cape');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','coastline');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','crevasse');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','geyser');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','glacier');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','hot_spring');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','isthmus');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','mud');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','peninsula');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','reef');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','shingle');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','shoal');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','spring');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','strait');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','water');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','wetland');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','arch');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','arete');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','bare_rock');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','cave_entrance');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','cliff');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','dune');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','earth_bank');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','fumarole');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','hill');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','peak');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','ridge');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','rock');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','saddle');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','sand');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','scree');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','sinkhole');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','stone');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','valley');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('natural','volcano');
-    -- Office
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','accountant');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','adoption_agency');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','advertising_agency');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','architect');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','association');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','bail_bond_agent');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','charity');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','company');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','consulting');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','courier');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','coworking');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','diplomatic');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','educational_institution');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','employment_agency');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','energy_supplier');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','engineer');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','estate_agent');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','financial');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','financial_advisor');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','forestry');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','foundation');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','geodesist');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','government');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','graphic_design');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','guide');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','harbour_master');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','insurance');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','it');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','lawyer');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','logistics');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','moving_company');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','newspaper');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','ngo');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','notary');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','political_party');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','private_investigator');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','property_management');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','quango');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','real_estate_agent');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','religion');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','research');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','security');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','surveyor');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','tax');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','tax_advisor');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','telecommunication');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','travel_agent');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','union');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','visa');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','water_utility');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('office','yes');
-    -- Place
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','country');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','state');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','region');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','province');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','district');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','county');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','municipality');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','city');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','borough');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','suburb');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','quarter');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','neighbourhood');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','city_block');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','plot');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','town');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','village');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','hamlet');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','isolated_dwelling');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','farm');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','allotments');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','continent');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','archipelago');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','island');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','islet');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','square');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','locality');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','sea');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('place','ocean');
-    -- Power
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','cable');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','catenary_mast');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','compensator');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','connection');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','converter');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','generator');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','heliostat');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','insulator');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','line');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','busbar');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','bay');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','minor_line');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','plant');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','pole');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','portal');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','substation');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','switch');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','switchgear');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','terminal');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','tower');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('power','transformer');
-    -- Public Transport
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('public_transport','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('public_transport','stop_position');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('public_transport','platform');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('public_transport','station');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('public_transport','stop_area');
-    -- Railway
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','abandoned');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','construction');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','disused');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','funicular');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','light_rail');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','miniature');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','monorail');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','narrow_gauge');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','preserved');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','rail');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','subway');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','tram');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','halt');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','platform');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','station');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','subway_entrance');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','tram_stop');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','buffer_stop');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','derail');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','crossing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','level_crossing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','signal');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','switch');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','railway_crossing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','turntable');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','roundhouse');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','traverser');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','wash');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('railway','water_crane');
-    -- Route
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','bicycle');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','bus');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','canoe');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','detour');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','ferry');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','fitness_trail');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','foot');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','hiking');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','horse');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','inline_skates');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','light_rail');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','mtb');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','nordic_walking');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','pipeline');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','piste');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','power');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','railway');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','road');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','running');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','ski');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','subway');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','train');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','tracks');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','tram');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('route','trolleybus');
-    -- Shop
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','alcohol');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','bakery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','beverages');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','brewing_supplies');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','butcher');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','cheese');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','chocolate');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','coffee');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','confectionery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','convenience');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','deli');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','dairy');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','farm');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','frozen_food');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','greengrocer');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','health_food');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','ice_cream');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','organic');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','pasta');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','pastry');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','seafood');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','spices');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','tea');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','wine');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','water');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','department_store');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','general');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','kiosk');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','mall');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','supermarket');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','wholesale');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','baby_goods');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','bag');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','boutique');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','clothes');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','fabric');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','fashion');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','fashion_accessories');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','jewelry');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','leather');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','sewing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','shoes');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','tailor');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','watches');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','wool');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','charity');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','second_hand');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','variety_store');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','beauty');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','chemist');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','cosmetics');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','drugstore');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','erotic');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','hairdresser');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','hairdresser_supply');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','hearing_aids');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','herbalist');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','massage');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','medical_supply');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','nutrition_supplements');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','optician');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','perfumery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','tattoo');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','agrarian');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','appliance');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','bathroom_furnishing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','doityourself');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','electrical');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','energy');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','fireplace');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','florist');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','garden_centre');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','garden_furniture');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','gas');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','glaziery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','groundskeeping');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','hardware');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','houseware');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','locksmith');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','paint');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','security');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','trade');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','windows');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','antiques');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','bed');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','candles');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','carpet');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','curtain');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','doors');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','flooring');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','furniture');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','household_linen');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','updatedbior_decoration');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','kitchen');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','lamps');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','lighting');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','tiles');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','window_blind');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','computer');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','electronics');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','hifi');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','mobile_phone');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','radiotechnics');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','vacuum_cleaner');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','atv');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','bicycle');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','boat');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','car');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','car_repair');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','car_parts');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','caravan');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','fuel');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','fishing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','free_flying');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','golf');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','hunting');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','jetski');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','military_surplus');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','motorcycle');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','outdoor');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','scuba_diving');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','ski');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','snowmobile');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','sports');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','swimming_pool');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','trailer');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','tyres');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','art');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','camera');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','collector');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','craft');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','frame');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','games');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','model');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','music');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','musical_instrument');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','photo');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','trophy');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','video');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','video_games');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','anime');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','books');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','gift');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','lottery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','newsagent');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','stationery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','ticket');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','bookmaker');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','cannabis');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','copyshop');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','dry_cleaning');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','e-cigarette');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','funeral_directors');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','laundry');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','money_lender');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','outpost');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','party');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','pawnbroker');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','pet');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','pet_grooming');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','pest_control');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','pyrotechnics');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','religion');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','storage_rental');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','tobacco');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','toys');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','travel_agency');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','vacant');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','weapons');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('shop','yes');
-    -- Sport
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','9pin');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','10pin');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','american_football');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','aikido');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','archery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','athletics');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','australian_football');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','badminton');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','bandy');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','baseball');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','basketball');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','beachvolleyball');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','biathlon');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','billiards');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','bmx');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','bobsleigh');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','boules');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','bowls');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','boxing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','bullfighting');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','canadian_football');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','canoe');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','chess');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','cliff_diving');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','climbing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','climbing_adventure');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','cockfighting');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','cricket');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','crossfit');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','croquet');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','curling');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','cycle_polo');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','cycling');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','darts');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','dog_agility');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','dog_racing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','equestrian');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','fencing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','field_hockey');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','fitness');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','five-a-side');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','floorball');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','four_square');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','free_flying');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','futsal');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','gaelic_games');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','gaga');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','golf');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','gymnastics');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','handball');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','hapkido');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','horseshoes');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','horse_racing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','ice_hockey');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','ice_skating');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','ice_stock');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','jiu-jitsu');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','judo');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','karate');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','karting');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','kickboxing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','kitesurfing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','korfball');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','krachtbal');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','lacrosse');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','martial_arts');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','miniature_golf');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','model_aerodrome');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','motocross');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','motor');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','multi');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','netball');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','obstacle_course');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','orienteering');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','paddle_tennis');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','padel');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','parachuting');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','parkour');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','paragliding');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','pelota');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport',CONCAT('pes', E'\u00E4', 'pallo'));
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','pickleball');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','pilates');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','pole_dance');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','racquet');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','rc_car');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','roller_skating');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','rowing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','rugby_league');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','rugby_union');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','running');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','sailing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','scuba_diving');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','shooting');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','shot-put');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','skateboard');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','ski_jumping');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','skiing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','snooker');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','soccer');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','speedway');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','squash');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','sumo');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','surfing');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','swimming');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','table_tennis');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','table_soccer');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','taekwondo');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','tennis');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','toboggan');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','ultimate');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','volleyball');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','wakeboarding');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','water_polo');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','water_ski');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','weightlifting');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','wrestling');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','yoga');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('sport','zurkhaneh_sport');
-    -- Telecom
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('telecom','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('telecom','exchange');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('telecom','connection_point');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('telecom','distribution_point');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('telecom','service_device');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('telecom','data_center');
-    -- Tourism
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','alpine_hut');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','apartment');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','aquarium');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','artwork');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','attraction');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','camp_pitch');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','camp_site');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','caravan_site');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','chalet');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','gallery');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','guest_house');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','hostel');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','hotel');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','information');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','motel');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','museum');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','picnic_site');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','theme_park');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','viewpoint');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','wilderness_hut');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','zoo');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('tourism','yes');
-    -- Water
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('water','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('water','river');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('water','oxbow');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('water','canal');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('water','ditch');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('water','lock');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('water','fish_pass');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('water','lake');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('water','reservoir');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('water','pond');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('water','basin');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('water','lagoon');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('water','stream_pool');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('water','reflecting_pool');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('water','moat');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('water','wastewater');
-    -- Waterway
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','undefined');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','river');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','riverbank');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','stream');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','tidal_channel');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','canal');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','drain');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','ditch');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','pressurised');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','wadi');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','fairway');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','dock');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','boatyard');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','dam');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','weir');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','waterfall');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','lock_gate');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','soakhole');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','turning_point');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','water_point');
-    INSERT INTO updatedb.classification(classname, subclassname) VALUES ('waterway','fuel');
-
-    RAISE NOTICE E'Inserted all mapfeatures in updatedb.classifiaction';
-END
-$$;
+        -- Aeroway
+        ('aeroway','undefined'),
+        ('aeroway','aerodrome'),
+        ('aeroway','apron'),
+        ('aeroway','gate'),
+        ('aeroway','hangar'),
+        ('aeroway','helipad'),
+        ('aeroway','heliport'),
+        ('aeroway','navigationaid'),
+        ('aeroway','runway'),
+        ('aeroway','spaceport'),
+        ('aeroway','taxilane'),
+        ('aeroway','taxiway'),
+        ('aeroway','terminal'),
+        ('aeroway','windsock'),
+        -- Amenity
+        ('amenity','undefined'),
+        ('amenity','bar'),
+        ('amenity','biergarten'),
+        ('amenity','cafe'),
+        ('amenity','fast_food'),
+        ('amenity','food_court'),
+        ('amenity','ice_cream'),
+        ('amenity','pub'),
+        ('amenity','restaurant'),
+        ('amenity','college'),
+        ('amenity','driving_school'),
+        ('amenity','kindergarten'),
+        ('amenity','language_school'),
+        ('amenity','library'),
+        ('amenity','toy_library'),
+        ('amenity','music_school'),
+        ('amenity','school'),
+        ('amenity','university'),
+        ('amenity','bicycle_parking'),
+        ('amenity','bicycle_repair_station'),
+        ('amenity','biycycle_rental'),
+        ('amenity','boat_rental'),
+        ('amenity','boat_sharing'),
+        ('amenity','bus_station'),
+        ('amenity','car_rental'),
+        ('amenity','car_sharing'),
+        ('amenity','car_wash'),
+        ('amenity','vehicle_inspection'),
+        ('amenity','charging_station'),
+        ('amenity','ferry_terminal'),
+        ('amenity','fuel'),
+        ('amenity','grit_bin'),
+        ('amenity','motorcycle_parking'),
+        ('amenity','parking'),
+        ('amenity','parking_entrance'),
+        ('amenity','parking_space'),
+        ('amenity','taxi'),
+        ('amenity','atm'),
+        ('amenity','bank'),
+        ('amenity','bureau_de_change'),
+        ('amenity','baby_hatch'),
+        ('amenity','clinic'),
+        ('amenity','dentist'),
+        ('amenity','doctors'),
+        ('amenity','hospital'),
+        ('amenity','nursing_home'),
+        ('amenity','pharmacy'),
+        ('amenity','social_facility'),
+        ('amenity','veterinary'),
+        ('amenity','arts_centre'),
+        ('amenity','brothel'),
+        ('amenity','casino'),
+        ('amenity','cinema'),
+        ('amenity','community_centre'),
+        ('amenity','conference_centre'),
+        ('amenity','events_venue'),
+        ('amenity','fountain'),
+        ('amenity','gambling'),
+        ('amenity','love_hotel'),
+        ('amenity','nightclub'),
+        ('amenity','planetarium'),
+        ('amenity','public_bookcase'),
+        ('amenity','social_centre'),
+        ('amenity','stripclub'),
+        ('amenity','studio'),
+        ('amenity','swingerclub'),
+        ('amenity','theatre'),
+        ('amenity','courthouse'),
+        ('amenity','fire_station'),
+        ('amenity','police'),
+        ('amenity','post_box'),
+        ('amenity','post_depot'),
+        ('amenity','post_office'),
+        ('amenity','prison'),
+        ('amenity','ranger_station'),
+        ('amenity','townhall'),
+        ('amenity','bbq'),
+        ('amenity','bench'),
+        ('amenity','dog_toilet'),
+        ('amenity','drinking_water'),
+        ('amenity','give_box'),
+        ('amenity','parcel_locker'),
+        ('amenity','shelter'),
+        ('amenity','shower'),
+        ('amenity','telephone'),
+        ('amenity','toilets'),
+        ('amenity','water_point'),
+        ('amenity','watering_place'),
+        ('amenity','sanitary_dump_station'),
+        ('amenity','recycling'),
+        ('amenity','waste_basket'),
+        ('amenity','waste_disposal'),
+        ('amenity','waste_transfer_station'),
+        ('amenity','animal_boarding'),
+        ('amenity','animal_breeding'),
+        ('amenity','animal_shelter'),
+        ('amenity','baking_oven'),
+        ('amenity','childcare'),
+        ('amenity','clock'),
+        ('amenity','crematorium'),
+        ('amenity','dive_centre'),
+        ('amenity','funeral_hall'),
+        ('amenity','grave_yard'),
+        ('amenity','hunting_stand'),
+        ('amenity','updatedbnet_cafe'),
+        ('amenity','kitchen'),
+        ('amenity','kneipp_water_cure'),
+        ('amenity','lounger'),
+        ('amenity','marketplace'),
+        ('amenity','monastery'),
+        ('amenity','photo_booth'),
+        ('amenity','place_of_mourning'),
+        ('amenity','place_of_worship'),
+        ('amenity','public_bath'),
+        ('amenity','refugee_site'),
+        ('amenity','vending_machine'),
+        -- ('amenity','embassy'),
+        -- Barrier
+        ('barrier','undefined'),
+        ('barrier','cable_barrier'),
+        ('barrier','city_wall'),
+        ('barrier','ditch'),
+        ('barrier','fence'),
+        ('barrier','guard_rail'),
+        ('barrier','handrail'),
+        ('barrier','hedge'),
+        ('barrier','kerb'),
+        ('barrier','retaining_wall'),
+        ('barrier','wall'),
+        ('barrier','block'),
+        ('barrier','bollard'),
+        ('barrier','border_control'),
+        ('barrier','bump_gate'),
+        ('barrier','bus_trap'),
+        ('barrier','cattle_grid'),
+        ('barrier','chain'),
+        ('barrier','cycle_barrier'),
+        ('barrier','debris'),
+        ('barrier','entrance'),
+        ('barrier','full-height_turnstile'),
+        ('barrier','gate'),
+        ('barrier','hampshire_gate'),
+        ('barrier','height_restrictor'),
+        ('barrier','horse_stile'),
+        ('barrier','jersey_barrier'),
+        ('barrier','kissing_gate'),
+        ('barrier','lift_gate'),
+        ('barrier','log'),
+        ('barrier','motorcycle_barrier'),
+        ('barrier','rope'),
+        ('barrier','sally_port'),
+        ('barrier','spikes'),
+        ('barrier','stile'),
+        ('barrier','sump_buster'),
+        ('barrier','swing_gate'),
+        ('barrier','toll_booth'),
+        ('barrier','turnstile'),
+        ('barrier','yes'),
+        -- Boundary
+        ('boundary','undefined'),
+        ('boundary','aboriginal_lands'),
+        ('boundary','administrative'),
+        ('boundary','border_zone'),
+        ('boundary','forest'),
+        ('boundary','forest_compartment'),
+        ('boundary','hazard'),
+        ('boundary','maritime'),
+        ('boundary','marker'),
+        ('boundary','national_park'),
+        ('boundary','place'),
+        ('boundary','political'),
+        ('boundary','postal_code'),
+        ('boundary','protected_area'),
+        ('boundary','special_economic_zone'),
+        ('boundary','disputed'),
+        ('boundary','historic'),
+        -- Building
+        ('building','undefined'),
+        ('building','apartments'),
+        ('building','bungalow'),
+        ('building','cabin'),
+        ('building','detached'),
+        ('building','dormitory'),
+        ('building','farm'),
+        ('building','ger'),
+        ('building','hotel'),
+        ('building','house'),
+        ('building','houseboat'),
+        ('building','residential'),
+        ('building','semidetached_house'),
+        ('building','static_caravan'),
+        ('building','terrace'),
+        ('building','commercial'),
+        ('building','industrial'),
+        ('building','kiosk'),
+        ('building','office'),
+        ('building','retail'),
+        ('building','supermarket'),
+        ('building','warehouse'),
+        ('building','cathedral'),
+        ('building','chapel'),
+        ('building','church'),
+        ('building','kingdom_hall'),
+        ('building','monastery'),
+        ('building','mosque'),
+        ('building','presbytery'),
+        ('building','religious'),
+        ('building','shrine'),
+        ('building','synagogue'),
+        ('building','temple'),
+        ('building','bakehouse'),
+        ('building','civic'),
+        ('building','fire_station'),
+        ('building','government'),
+        ('building','hospital'),
+        ('building','kindergarten'),
+        ('building','public'),
+        ('building','school'),
+        ('building','toilets'),
+        ('building','train_station'),
+        ('building','transportation'),
+        ('building','university'),
+        ('building','barn'),
+        ('building','conservatory'),
+        ('building','cowshed'),
+        ('building','farm_auxiliary'),
+        ('building','greenhouse'),
+        ('building','slurry_tank'),
+        ('building','stable'),
+        ('building','sty'),
+        ('building','grandstand'),
+        ('building','pavilion'),
+        ('building','riding_hall'),
+        ('building','sports_hall'),
+        ('building','stadium'),
+        ('building','hangar'),
+        ('building','hut'),
+        ('building','shed'),
+        ('building','carport'),
+        ('building','garage'),
+        ('building','garages'),
+        ('building','parking'),
+        ('building','digester'),
+        ('building','service'),
+        ('building','transformer_tower'),
+        ('building','water_tower'),
+        ('building','beach_hut'),
+        ('building','bunker'),
+        ('building','bridge'),
+        ('building','castle'),
+        ('building','construction'),
+        ('building','container'),
+        ('building','gatehouse'),
+        ('building','roof'),
+        ('building','ruins'),
+        ('building','tent'),
+        ('building','tree_house'),
+        ('building','yes'),
+        -- Craft
+        ('craft','undefined'),
+        ('craft','agricultural_engines'),
+        ('craft','atelier'),
+        ('craft','bakery'),
+        ('craft','basket_maker'),
+        ('craft','beekeeper'),
+        ('craft','blacksmith'),
+        ('craft','boatbuilder'),
+        ('craft','bookbinder'),
+        ('craft','brewery'),
+        ('craft','builder'),
+        ('craft','cabinet_maker'),
+        ('craft','car_paupdatedb'),
+        ('craft','carpenter'),
+        ('craft','carpet_layer'),
+        ('craft','caterer'),
+        ('craft','chimney_sweeper'),
+        ('craft','cleaning'),
+        ('craft','clockmaker'),
+        ('craft','confectionery'),
+        ('craft','cooper'),
+        ('craft','dental_technician'),
+        ('craft','distillery'),
+        ('craft','door_construction'),
+        ('craft','dressmaker'),
+        ('craft','electronics_repair'),
+        ('craft','embroiderer'),
+        ('craft','electrician'),
+        ('craft','engraver'),
+        ('craft','floorer'),
+        ('craft','gardener'),
+        ('craft','glaziery'),
+        ('craft','goldsmith'),
+        ('craft','grinding_mill'),
+        ('craft','handicraft'),
+        ('craft','hvac'),
+        ('craft','insulation'),
+        ('craft','updatedbior_work'),
+        ('craft','jeweller'),
+        ('craft','joiner'),
+        ('craft','key_cutter'),
+        ('craft','locksmith'),
+        ('craft','metal_construction'),
+        ('craft','mint'),
+        ('craft','musical_instrument'),
+        ('craft','oil_mill'),
+        ('craft','optician'),
+        ('craft','organ_builder'),
+        ('craft','paupdatedb'),
+        ('craft','parquet_layer'),
+        ('craft','photographer'),
+        ('craft','photographic_laboratory'),
+        ('craft','piano_tuner'),
+        ('craft','plasterer'),
+        ('craft','plumber'),
+        ('craft','pottery'),
+        ('craft','prupdatedb'),
+        ('craft','printmaker'),
+        ('craft','rigger'),
+        ('craft','roofer'),
+        ('craft','saddler'),
+        ('craft','sailmaker'),
+        ('craft','sawmill'),
+        ('craft','scaffolder'),
+        ('craft','shoemaker'),
+        ('craft','sculptor'),
+        ('craft','signmaker'),
+        ('craft','stand_builder'),
+        ('craft','stonemason'),
+        ('craft','stove_fitter'),
+        ('craft','sun_protection'),
+        ('craft','tailor'),
+        ('craft','tiler'),
+        ('craft','tinsmith'),
+        ('craft','toolmaker'),
+        ('craft','turner'),
+        ('craft','upholsterer'),
+        ('craft','watchmaker'),
+        ('craft','water_well_drilling'),
+        ('craft','window_construction'),
+        ('craft','winery'),
+        -- Emergency
+        ('emergency','undefined'),
+        ('emergency','ambulance_station'),
+        ('emergency','defibrillator'),
+        ('emergency','landing_site'),
+        ('emergency','emergency_ward_entrance'),
+        ('emergency','dry_riser_inlet'),
+        ('emergency','fire_alarm_box'),
+        ('emergency','fire_extinguisher'),
+        ('emergency','fire_hose'),
+        ('emergency','fire_hydrant'),
+        ('emergency','water_tank'),
+        ('emergency','suction_point'),
+        ('emergency','lifeguard'),
+        ('emergency','life_ring'),
+        ('emergency','lifeguard_base'),
+        ('emergency','lifeguard_place'),
+        ('emergency','lifeguard_tower'),
+        ('emergency','lifeguard_platform'),
+        ('emergency','assembly_point'),
+        ('emergency','phone'),
+        ('emergency','siren'),
+        ('emergency','ses_station'),
+        ('emergency','drinking_water'),
+        -- Geological
+        ('geological','undefined'),
+        ('geological','moraine'),
+        ('geological','outcrop'),
+        ('geological','palaeontological_site'),
+        ('geological','volcanic_caldera_rim'),
+        ('geological','volcanic_vent'),
+        ('geological','volcanic_lava_field'),
+        ('geological','columnar_jointing'),
+        -- Healthcare
+        ('healthcare','undefined'),
+        ('healthcare','alternative'),
+        ('healthcare','audiologist'),
+        ('healthcare','birthing_center'),
+        ('healthcare','blood_bank'),
+        ('healthcare','blood_donation'),
+        ('healthcare','counselling'),
+        ('healthcare','dialysis'),
+        ('healthcare','hospice'),
+        ('healthcare','laboratory'),
+        ('healthcare','midwife'),
+        ('healthcare','nurse'),
+        ('healthcare','occupational_therapist'),
+        ('healthcare','optometrist'),
+        ('healthcare','physiotherapist'),
+        ('healthcare','podiatrist'),
+        ('healthcare','psychotherapist'),
+        ('healthcare','rehabilitation'),
+        ('healthcare','sample_collection'),
+        ('healthcare','speech_therapist'),
+        ('healthcare','vaccination_centre'),
+        -- Highway
+        ('highway','undefined'),
+        ('highway','motorway'),
+        ('highway','trunk'),
+        ('highway','primary'),
+        ('highway','secondary'),
+        ('highway','tertiary'),
+        ('highway','unclassified'),
+        ('highway','residential'),
+        ('highway','motorway_link'),
+        ('highway','trunk_link'),
+        ('highway','primary_link'),
+        ('highway','secondary_link'),
+        ('highway','tertiary_link'),
+        ('highway','living_street'),
+        ('highway','service'),
+        ('highway','pedestrian'),
+        ('highway','track'),
+        ('highway','bus_guideway'),
+        ('highway','escape'),
+        ('highway','raceway'),
+        ('highway','road'),
+        ('highway','footway'),
+        ('highway','bridleway'),
+        ('highway','steps'),
+        ('highway','corridor'),
+        ('highway','path'),
+        ('highway','sidewalk'),
+        ('highway','crossing'),
+        ('highway','cycleway'),
+        ('highway','proposed'),
+        ('highway','construction'),
+        ('highway','bus_stop'),
+        ('highway','elevator'),
+        ('highway','emergency_bay'),
+        ('highway','emergency_access_point'),
+        ('highway','give_way'),
+        ('highway','phone'),
+        ('highway','milestone'),
+        ('highway','mini_roundabout'),
+        ('highway','motorway_junction'),
+        ('highway','passing_place'),
+        ('highway','platform'),
+        ('highway','rest_area'),
+        ('highway','speed_camera'),
+        ('highway','street_lamp'),
+        ('highway','services'),
+        ('highway','stop'),
+        ('highway','traffic_mirror'),
+        ('highway','traffic_signals'),
+        ('highway','trailhead'),
+        ('highway','turning_circle'),
+        ('highway','turning_loop'),
+        ('highway','toll_gantry'),
+        -- Historic
+        ('historic','undefined'),
+        ('historic','aircraft'),
+        ('historic','aqueduct'),
+        ('historic','archaeological_site'),
+        ('historic','battlefield'),
+        ('historic','bomb_crater'),
+        ('historic','boundary_stone'),
+        ('historic','building'),
+        ('historic','cannon'),
+        ('historic','castle'),
+        ('historic','castle_wall'),
+        ('historic','charcoal_pile'),
+        ('historic','church'),
+        ('historic','city_gate'),
+        ('historic','citywalls'),
+        ('historic','creamery'),
+        ('historic','farm'),
+        ('historic','fort'),
+        ('historic','gallows'),
+        ('historic','highwater_mark'),
+        ('historic','locomotive'),
+        ('historic','manor'),
+        ('historic','memorial'),
+        ('historic','milestone'),
+        ('historic','monastery'),
+        ('historic','monument'),
+        ('historic','optical_telegraph'),
+        ('historic','pa'),
+        ('historic','pillory'),
+        ('historic','railway_car'),
+        ('historic','ruins'),
+        ('historic','rune_stone'),
+        ('historic','ship'),
+        ('historic','tank'),
+        ('historic','tomb'),
+        ('historic','tower'),
+        ('historic','vehicle'),
+        ('historic','wayside_cross'),
+        ('historic','wayside_shrine'),
+        ('historic','wreck'),
+        ('historic','yes'),
+        -- Landuse
+        ('landuse','undefined'),
+        ('landuse','commercial'),
+        ('landuse','construction'),
+        ('landuse','education'),
+        ('landuse','industrial'),
+        ('landuse','residential'),
+        ('landuse','retail'),
+        ('landuse','allotments'),
+        ('landuse','farmland'),
+        ('landuse','farmyard'),
+        ('landuse','flowerbed'),
+        ('landuse','forest'),
+        ('landuse','meadow'),
+        ('landuse','orchard'),
+        ('landuse','vineyard'),
+        ('landuse','aquaculture'),
+        ('landuse','basin'),
+        ('landuse','salt_pond'),
+        ('landuse','brownfield'),
+        ('landuse','cemetery'),
+        ('landuse','depot'),
+        ('landuse','garages'),
+        ('landuse','grass'),
+        ('landuse','greenfield'),
+        ('landuse','greenhouse_horticulture'),
+        ('landuse','landfill'),
+        ('landuse','military'),
+        ('landuse','pasture'),
+        ('landuse','peat_cutting'),
+        ('landuse','plant_nursery'),
+        ('landuse','port'),
+        ('landuse','quarry'),
+        ('landuse','railway'),
+        ('landuse','recreation_ground'),
+        ('landuse','religious'),
+        ('landuse','reservoir'),
+        ('landuse','village_green'),
+        ('landuse','wupdatedb_sports'),
+        -- Leisure
+        ('leisure','undefined'),
+        ('leisure','adult_gaming_centre'),
+        ('leisure','amusement_arcade'),
+        ('leisure','beach_resort'),
+        ('leisure','bandstand'),
+        ('leisure','bird_hide'),
+        ('leisure','common'),
+        ('leisure','dance'),
+        ('leisure','disc_golf_course'),
+        ('leisure','dog_park'),
+        ('leisure','escape_game'),
+        ('leisure','firepit'),
+        ('leisure','fishing'),
+        ('leisure','fitness_centre'),
+        ('leisure','fitness_station'),
+        ('leisure','garden'),
+        ('leisure','golf_course'),
+        ('leisure','hackerspace'),
+        ('leisure','horse_riding'),
+        ('leisure','ice_rink'),
+        ('leisure','marina'),
+        ('leisure','miniature_golf'),
+        ('leisure','nature_reserve'),
+        ('leisure','park'),
+        ('leisure','picnic_table'),
+        ('leisure','pitch'),
+        ('leisure','playground'),
+        ('leisure','slipway'),
+        ('leisure','sports_centre'),
+        ('leisure','stadium'),
+        ('leisure','summer_camp'),
+        ('leisure','swimming_area'),
+        ('leisure','swimming_pool'),
+        ('leisure','track'),
+        ('leisure','water_park'),
+        ('leisure','wildlife_hide'),
+        -- Man_made
+        ('man_made','undefined'),
+        ('man_made','adit'),
+        ('man_made','beacon'),
+        ('man_made','breakwater'),
+        ('man_made','bridge'),
+        ('man_made','bunker_silo'),
+        ('man_made','campanile'),
+        ('man_made','carpet_hanger'),
+        ('man_made','chimney'),
+        ('man_made','column'),
+        ('man_made','communications_tower'),
+        ('man_made','crane'),
+        ('man_made','cross'),
+        ('man_made','cutline'),
+        ('man_made','clearcut'),
+        ('man_made','dovecote'),
+        ('man_made','dyke'),
+        ('man_made','embankment'),
+        ('man_made','flagpole'),
+        ('man_made','gasometer'),
+        ('man_made','goods_conveyor'),
+        ('man_made','groyne'),
+        ('man_made','hot_water_tank'),
+        ('man_made','kiln'),
+        ('man_made','lighthouse'),
+        ('man_made','mast'),
+        ('man_made','mineshaft'),
+        ('man_made','monitoring_station'),
+        ('man_made','obelisk'),
+        ('man_made','observatory'),
+        ('man_made','offshore_platform'),
+        ('man_made','petroleum_well'),
+        ('man_made','pier'),
+        ('man_made','pipeline'),
+        ('man_made','pump'),
+        ('man_made','pumping_station'),
+        ('man_made','reservoir_covered'),
+        ('man_made','silo'),
+        ('man_made','snow_fence'),
+        ('man_made','snow_net'),
+        ('man_made','storage_tank'),
+        ('man_made','street_cabinet'),
+        ('man_made','stupa'),
+        ('man_made','surveillance'),
+        ('man_made','survey_point'),
+        ('man_made','tailings_pond'),
+        ('man_made','telescope'),
+        ('man_made','tower'),
+        ('man_made','wastewater_plant'),
+        ('man_made','watermill'),
+        ('man_made','water_tower'),
+        ('man_made','water_well'),
+        ('man_made','water_tap'),
+        ('man_made','water_works'),
+        ('man_made','wildlife_crossing'),
+        ('man_made','windmill'),
+        ('man_made','works'),
+        ('man_made','yes'),
+        -- Military
+        ('military','undefined'),
+        ('military','airfield'),
+        ('military','ammunition'),
+        ('military','base'),
+        ('military','bunker'),
+        ('military','barracks'),
+        ('military','checkpoint'),
+        ('military','danger_area'),
+        ('military','naval_base'),
+        ('military','nuclear_explosion_site'),
+        ('military','obstacle_course'),
+        ('military','office'),
+        ('military','range'),
+        ('military','training_area'),
+        ('military','trench'),
+        -- Natural
+        ('natural','undefined'),
+        ('natural','fell'),
+        ('natural','grassland'),
+        ('natural','heath'),
+        ('natural','moor'),
+        ('natural','scrub'),
+        ('natural','shrubbery'),
+        ('natural','tree'),
+        ('natural','tree_row'),
+        ('natural','tundra'),
+        ('natural','wood'),
+        ('natural','bay'),
+        ('natural','beach'),
+        ('natural','blowhole'),
+        ('natural','cape'),
+        ('natural','coastline'),
+        ('natural','crevasse'),
+        ('natural','geyser'),
+        ('natural','glacier'),
+        ('natural','hot_spring'),
+        ('natural','isthmus'),
+        ('natural','mud'),
+        ('natural','peninsula'),
+        ('natural','reef'),
+        ('natural','shingle'),
+        ('natural','shoal'),
+        ('natural','spring'),
+        ('natural','strait'),
+        ('natural','water'),
+        ('natural','wetland'),
+        ('natural','arch'),
+        ('natural','arete'),
+        ('natural','bare_rock'),
+        ('natural','cave_entrance'),
+        ('natural','cliff'),
+        ('natural','dune'),
+        ('natural','earth_bank'),
+        ('natural','fumarole'),
+        ('natural','hill'),
+        ('natural','peak'),
+        ('natural','ridge'),
+        ('natural','rock'),
+        ('natural','saddle'),
+        ('natural','sand'),
+        ('natural','scree'),
+        ('natural','sinkhole'),
+        ('natural','stone'),
+        ('natural','valley'),
+        ('natural','volcano'),
+        -- Office
+        ('office','undefined'),
+        ('office','accountant'),
+        ('office','adoption_agency'),
+        ('office','advertising_agency'),
+        ('office','architect'),
+        ('office','association'),
+        ('office','bail_bond_agent'),
+        ('office','charity'),
+        ('office','company'),
+        ('office','consulting'),
+        ('office','courier'),
+        ('office','coworking'),
+        ('office','diplomatic'),
+        ('office','educational_institution'),
+        ('office','employment_agency'),
+        ('office','energy_supplier'),
+        ('office','engineer'),
+        ('office','estate_agent'),
+        ('office','financial'),
+        ('office','financial_advisor'),
+        ('office','forestry'),
+        ('office','foundation'),
+        ('office','geodesist'),
+        ('office','government'),
+        ('office','graphic_design'),
+        ('office','guide'),
+        ('office','harbour_master'),
+        ('office','insurance'),
+        ('office','it'),
+        ('office','lawyer'),
+        ('office','logistics'),
+        ('office','moving_company'),
+        ('office','newspaper'),
+        ('office','ngo'),
+        ('office','notary'),
+        ('office','political_party'),
+        ('office','private_investigator'),
+        ('office','property_management'),
+        ('office','quango'),
+        ('office','real_estate_agent'),
+        ('office','religion'),
+        ('office','research'),
+        ('office','security'),
+        ('office','surveyor'),
+        ('office','tax'),
+        ('office','tax_advisor'),
+        ('office','telecommunication'),
+        ('office','travel_agent'),
+        ('office','union'),
+        ('office','visa'),
+        ('office','water_utility'),
+        ('office','yes'),
+        -- Place
+        ('place','undefined'),
+        ('place','country'),
+        ('place','state'),
+        ('place','region'),
+        ('place','province'),
+        ('place','district'),
+        ('place','county'),
+        ('place','municipality'),
+        ('place','city'),
+        ('place','borough'),
+        ('place','suburb'),
+        ('place','quarter'),
+        ('place','neighbourhood'),
+        ('place','city_block'),
+        ('place','plot'),
+        ('place','town'),
+        ('place','village'),
+        ('place','hamlet'),
+        ('place','isolated_dwelling'),
+        ('place','farm'),
+        ('place','allotments'),
+        ('place','continent'),
+        ('place','archipelago'),
+        ('place','island'),
+        ('place','islet'),
+        ('place','square'),
+        ('place','locality'),
+        ('place','sea'),
+        ('place','ocean'),
+        -- Power
+        ('power','undefined'),
+        ('power','cable'),
+        ('power','catenary_mast'),
+        ('power','compensator'),
+        ('power','connection'),
+        ('power','converter'),
+        ('power','generator'),
+        ('power','heliostat'),
+        ('power','insulator'),
+        ('power','line'),
+        ('power','busbar'),
+        ('power','bay'),
+        ('power','minor_line'),
+        ('power','plant'),
+        ('power','pole'),
+        ('power','portal'),
+        ('power','substation'),
+        ('power','switch'),
+        ('power','switchgear'),
+        ('power','terminal'),
+        ('power','tower'),
+        ('power','transformer'),
+        -- Public Transport
+        ('public_transport','undefined'),
+        ('public_transport','stop_position'),
+        ('public_transport','platform'),
+        ('public_transport','station'),
+        ('public_transport','stop_area'),
+        -- Railway
+        ('railway','undefined'),
+        ('railway','abandoned'),
+        ('railway','construction'),
+        ('railway','disused'),
+        ('railway','funicular'),
+        ('railway','light_rail'),
+        ('railway','miniature'),
+        ('railway','monorail'),
+        ('railway','narrow_gauge'),
+        ('railway','preserved'),
+        ('railway','rail'),
+        ('railway','subway'),
+        ('railway','tram'),
+        ('railway','halt'),
+        ('railway','platform'),
+        ('railway','station'),
+        ('railway','subway_entrance'),
+        ('railway','tram_stop'),
+        ('railway','buffer_stop'),
+        ('railway','derail'),
+        ('railway','crossing'),
+        ('railway','level_crossing'),
+        ('railway','signal'),
+        ('railway','switch'),
+        ('railway','railway_crossing'),
+        ('railway','turntable'),
+        ('railway','roundhouse'),
+        ('railway','traverser'),
+        ('railway','wash'),
+        ('railway','water_crane'),
+        -- Route
+        ('route','undefined'),
+        ('route','bicycle'),
+        ('route','bus'),
+        ('route','canoe'),
+        ('route','detour'),
+        ('route','ferry'),
+        ('route','fitness_trail'),
+        ('route','foot'),
+        ('route','hiking'),
+        ('route','horse'),
+        ('route','inline_skates'),
+        ('route','light_rail'),
+        ('route','mtb'),
+        ('route','nordic_walking'),
+        ('route','pipeline'),
+        ('route','piste'),
+        ('route','power'),
+        ('route','railway'),
+        ('route','road'),
+        ('route','running'),
+        ('route','ski'),
+        ('route','subway'),
+        ('route','train'),
+        ('route','tracks'),
+        ('route','tram'),
+        ('route','trolleybus'),
+        -- Shop
+        ('shop','undefined'),
+        ('shop','alcohol'),
+        ('shop','bakery'),
+        ('shop','beverages'),
+        ('shop','brewing_supplies'),
+        ('shop','butcher'),
+        ('shop','cheese'),
+        ('shop','chocolate'),
+        ('shop','coffee'),
+        ('shop','confectionery'),
+        ('shop','convenience'),
+        ('shop','deli'),
+        ('shop','dairy'),
+        ('shop','farm'),
+        ('shop','frozen_food'),
+        ('shop','greengrocer'),
+        ('shop','health_food'),
+        ('shop','ice_cream'),
+        ('shop','organic'),
+        ('shop','pasta'),
+        ('shop','pastry'),
+        ('shop','seafood'),
+        ('shop','spices'),
+        ('shop','tea'),
+        ('shop','wine'),
+        ('shop','water'),
+        ('shop','department_store'),
+        ('shop','general'),
+        ('shop','kiosk'),
+        ('shop','mall'),
+        ('shop','supermarket'),
+        ('shop','wholesale'),
+        ('shop','baby_goods'),
+        ('shop','bag'),
+        ('shop','boutique'),
+        ('shop','clothes'),
+        ('shop','fabric'),
+        ('shop','fashion'),
+        ('shop','fashion_accessories'),
+        ('shop','jewelry'),
+        ('shop','leather'),
+        ('shop','sewing'),
+        ('shop','shoes'),
+        ('shop','tailor'),
+        ('shop','watches'),
+        ('shop','wool'),
+        ('shop','charity'),
+        ('shop','second_hand'),
+        ('shop','variety_store'),
+        ('shop','beauty'),
+        ('shop','chemist'),
+        ('shop','cosmetics'),
+        ('shop','drugstore'),
+        ('shop','erotic'),
+        ('shop','hairdresser'),
+        ('shop','hairdresser_supply'),
+        ('shop','hearing_aids'),
+        ('shop','herbalist'),
+        ('shop','massage'),
+        ('shop','medical_supply'),
+        ('shop','nutrition_supplements'),
+        ('shop','optician'),
+        ('shop','perfumery'),
+        ('shop','tattoo'),
+        ('shop','agrarian'),
+        ('shop','appliance'),
+        ('shop','bathroom_furnishing'),
+        ('shop','doityourself'),
+        ('shop','electrical'),
+        ('shop','energy'),
+        ('shop','fireplace'),
+        ('shop','florist'),
+        ('shop','garden_centre'),
+        ('shop','garden_furniture'),
+        ('shop','gas'),
+        ('shop','glaziery'),
+        ('shop','groundskeeping'),
+        ('shop','hardware'),
+        ('shop','houseware'),
+        ('shop','locksmith'),
+        ('shop','paint'),
+        ('shop','security'),
+        ('shop','trade'),
+        ('shop','windows'),
+        ('shop','antiques'),
+        ('shop','bed'),
+        ('shop','candles'),
+        ('shop','carpet'),
+        ('shop','curtain'),
+        ('shop','doors'),
+        ('shop','flooring'),
+        ('shop','furniture'),
+        ('shop','household_linen'),
+        ('shop','updatedbior_decoration'),
+        ('shop','kitchen'),
+        ('shop','lamps'),
+        ('shop','lighting'),
+        ('shop','tiles'),
+        ('shop','window_blind'),
+        ('shop','computer'),
+        ('shop','electronics'),
+        ('shop','hifi'),
+        ('shop','mobile_phone'),
+        ('shop','radiotechnics'),
+        ('shop','vacuum_cleaner'),
+        ('shop','atv'),
+        ('shop','bicycle'),
+        ('shop','boat'),
+        ('shop','car'),
+        ('shop','car_repair'),
+        ('shop','car_parts'),
+        ('shop','caravan'),
+        ('shop','fuel'),
+        ('shop','fishing'),
+        ('shop','free_flying'),
+        ('shop','golf'),
+        ('shop','hunting'),
+        ('shop','jetski'),
+        ('shop','military_surplus'),
+        ('shop','motorcycle'),
+        ('shop','outdoor'),
+        ('shop','scuba_diving'),
+        ('shop','ski'),
+        ('shop','snowmobile'),
+        ('shop','sports'),
+        ('shop','swimming_pool'),
+        ('shop','trailer'),
+        ('shop','tyres'),
+        ('shop','art'),
+        ('shop','camera'),
+        ('shop','collector'),
+        ('shop','craft'),
+        ('shop','frame'),
+        ('shop','games'),
+        ('shop','model'),
+        ('shop','music'),
+        ('shop','musical_instrument'),
+        ('shop','photo'),
+        ('shop','trophy'),
+        ('shop','video'),
+        ('shop','video_games'),
+        ('shop','anime'),
+        ('shop','books'),
+        ('shop','gift'),
+        ('shop','lottery'),
+        ('shop','newsagent'),
+        ('shop','stationery'),
+        ('shop','ticket'),
+        ('shop','bookmaker'),
+        ('shop','cannabis'),
+        ('shop','copyshop'),
+        ('shop','dry_cleaning'),
+        ('shop','e-cigarette'),
+        ('shop','funeral_directors'),
+        ('shop','laundry'),
+        ('shop','money_lender'),
+        ('shop','outpost'),
+        ('shop','party'),
+        ('shop','pawnbroker'),
+        ('shop','pet'),
+        ('shop','pet_grooming'),
+        ('shop','pest_control'),
+        ('shop','pyrotechnics'),
+        ('shop','religion'),
+        ('shop','storage_rental'),
+        ('shop','tobacco'),
+        ('shop','toys'),
+        ('shop','travel_agency'),
+        ('shop','vacant'),
+        ('shop','weapons'),
+        ('shop','yes'),
+        -- Sport
+        ('sport','undefined'),
+        ('sport','9pin'),
+        ('sport','10pin'),
+        ('sport','american_football'),
+        ('sport','aikido'),
+        ('sport','archery'),
+        ('sport','athletics'),
+        ('sport','australian_football'),
+        ('sport','badminton'),
+        ('sport','bandy'),
+        ('sport','baseball'),
+        ('sport','basketball'),
+        ('sport','beachvolleyball'),
+        ('sport','biathlon'),
+        ('sport','billiards'),
+        ('sport','bmx'),
+        ('sport','bobsleigh'),
+        ('sport','boules'),
+        ('sport','bowls'),
+        ('sport','boxing'),
+        ('sport','bullfighting'),
+        ('sport','canadian_football'),
+        ('sport','canoe'),
+        ('sport','chess'),
+        ('sport','cliff_diving'),
+        ('sport','climbing'),
+        ('sport','climbing_adventure'),
+        ('sport','cockfighting'),
+        ('sport','cricket'),
+        ('sport','crossfit'),
+        ('sport','croquet'),
+        ('sport','curling'),
+        ('sport','cycle_polo'),
+        ('sport','cycling'),
+        ('sport','darts'),
+        ('sport','dog_agility'),
+        ('sport','dog_racing'),
+        ('sport','equestrian'),
+        ('sport','fencing'),
+        ('sport','field_hockey'),
+        ('sport','fitness'),
+        ('sport','five-a-side'),
+        ('sport','floorball'),
+        ('sport','four_square'),
+        ('sport','free_flying'),
+        ('sport','futsal'),
+        ('sport','gaelic_games'),
+        ('sport','gaga'),
+        ('sport','golf'),
+        ('sport','gymnastics'),
+        ('sport','handball'),
+        ('sport','hapkido'),
+        ('sport','horseshoes'),
+        ('sport','horse_racing'),
+        ('sport','ice_hockey'),
+        ('sport','ice_skating'),
+        ('sport','ice_stock'),
+        ('sport','jiu-jitsu'),
+        ('sport','judo'),
+        ('sport','karate'),
+        ('sport','karting'),
+        ('sport','kickboxing'),
+        ('sport','kitesurfing'),
+        ('sport','korfball'),
+        ('sport','krachtbal'),
+        ('sport','lacrosse'),
+        ('sport','martial_arts'),
+        ('sport','miniature_golf'),
+        ('sport','model_aerodrome'),
+        ('sport','motocross'),
+        ('sport','motor'),
+        ('sport','multi'),
+        ('sport','netball'),
+        ('sport','obstacle_course'),
+        ('sport','orienteering'),
+        ('sport','paddle_tennis'),
+        ('sport','padel'),
+        ('sport','parachuting'),
+        ('sport','parkour'),
+        ('sport','paragliding'),
+        ('sport','pelota'),
+        ('pes', CONCAT('pes', E'\u00E4', 'pallo')),
+        ('sport','pickleball'),
+        ('sport','pilates'),
+        ('sport','pole_dance'),
+        ('sport','racquet'),
+        ('sport','rc_car'),
+        ('sport','roller_skating'),
+        ('sport','rowing'),
+        ('sport','rugby_league'),
+        ('sport','rugby_union'),
+        ('sport','running'),
+        ('sport','sailing'),
+        ('sport','scuba_diving'),
+        ('sport','shooting'),
+        ('sport','shot-put'),
+        ('sport','skateboard'),
+        ('sport','ski_jumping'),
+        ('sport','skiing'),
+        ('sport','snooker'),
+        ('sport','soccer'),
+        ('sport','speedway'),
+        ('sport','squash'),
+        ('sport','sumo'),
+        ('sport','surfing'),
+        ('sport','swimming'),
+        ('sport','table_tennis'),
+        ('sport','table_soccer'),
+        ('sport','taekwondo'),
+        ('sport','tennis'),
+        ('sport','toboggan'),
+        ('sport','ultimate'),
+        ('sport','volleyball'),
+        ('sport','wakeboarding'),
+        ('sport','water_polo'),
+        ('sport','water_ski'),
+        ('sport','weightlifting'),
+        ('sport','wrestling'),
+        ('sport','yoga'),
+        ('sport','zurkhaneh_sport'),
+        -- Telecom
+        ('telecom','undefined'),
+        ('telecom','exchange'),
+        ('telecom','connection_point'),
+        ('telecom','distribution_point'),
+        ('telecom','service_device'),
+        ('telecom','data_center'),
+        -- Tourism
+        ('tourism','undefined'),
+        ('tourism','alpine_hut'),
+        ('tourism','apartment'),
+        ('tourism','aquarium'),
+        ('tourism','artwork'),
+        ('tourism','attraction'),
+        ('tourism','camp_pitch'),
+        ('tourism','camp_site'),
+        ('tourism','caravan_site'),
+        ('tourism','chalet'),
+        ('tourism','gallery'),
+        ('tourism','guest_house'),
+        ('tourism','hostel'),
+        ('tourism','hotel'),
+        ('tourism','information'),
+        ('tourism','motel'),
+        ('tourism','museum'),
+        ('tourism','picnic_site'),
+        ('tourism','theme_park'),
+        ('tourism','viewpoint'),
+        ('tourism','wilderness_hut'),
+        ('tourism','zoo'),
+        ('tourism','yes'),
+        -- Water
+        ('water','undefined'),
+        ('water','river'),
+        ('water','oxbow'),
+        ('water','canal'),
+        ('water','ditch'),
+        ('water','lock'),
+        ('water','fish_pass'),
+        ('water','lake'),
+        ('water','reservoir'),
+        ('water','pond'),
+        ('water','basin'),
+        ('water','lagoon'),
+        ('water','stream_pool'),
+        ('water','reflecting_pool'),
+        ('water','moat'),
+        ('water','wastewater'),
+        -- Waterway
+        ('waterway','undefined'),
+        ('waterway','river'),
+        ('waterway','riverbank'),
+        ('waterway','stream'),
+        ('waterway','tidal_channel'),
+        ('waterway','canal'),
+        ('waterway','drain'),
+        ('waterway','ditch'),
+        ('waterway','pressurised'),
+        ('waterway','wadi'),
+        ('waterway','fairway'),
+        ('waterway','dock'),
+        ('waterway','boatyard'),
+        ('waterway','dam'),
+        ('waterway','weir'),
+        ('waterway','waterfall'),
+        ('waterway','lock_gate'),
+        ('waterway','soakhole'),
+        ('waterway','turning_point'),
+        ('waterway','water_point'),
+        ('waterway','fuel');
+    GET diagnostics d2 = row_count;
+    RAISE NOTICE E'inserted: % rows in updatedb.classifiaction; \tTime spent=%', d1+d2, clock_timestamp() - t; 
+END $$;
+\echo '\n'

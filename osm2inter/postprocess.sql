@@ -6,25 +6,17 @@
 -- author: SteSad
 
 -- \timing
-SET client_min_messages TO WARNING;
+-- SET client_min_messages TO WARNING;
 DO $$
-DECLARE t TIMESTAMP := clock_timestamp();
+DECLARE 
+    t TIMESTAMP := clock_timestamp();
 BEGIN
     ALTER TABLE inter.creationinformation ADD PRIMARY KEY (id);
-    RAISE NOTICE E'ALTER TABLE creationinformation WITH real primary key\nTime spent=%', clock_timestamp() -t;
-
-    SELECT clock_timestamp() INTO t;
-    --set timestampstring in creationinformation
     INSERT INTO inter.creationinformation(timestampstring) VALUES (t);
-    RAISE NOTICE E'INSERT current timestamp into creationinformation\nTime spent=%', clock_timestamp() -t;
-
-    SELECT clock_timestamp() INTO t;
-    -- alter tables with primary keys
     ALTER TABLE inter.nodes ADD PRIMARY KEY (id);
     ALTER TABLE inter.ways ADD PRIMARY KEY (id);
     ALTER TABLE inter.waynodes ADD PRIMARY KEY (id);
     ALTER TABLE inter.relations ADD PRIMARY KEY (id);
     ALTER TABLE inter.relationmembers ADD PRIMARY KEY (id);
-    RAISE NOTICE E'ALTER all other tables WITH real primary key\nTime spent=%', clock_timestamp() -t;
-END;
-$$
+END $$;
+\echo 'Postprocess done\n\n'

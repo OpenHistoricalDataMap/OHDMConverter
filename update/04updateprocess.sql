@@ -349,6 +349,6 @@ BEGIN
     RAISE NOTICE E'INSERT % row(s), there are marked as not valid,\tlasted= %', d2, clock_timestamp() - t;
 END $$;
 
-\echo 'Process for udatedb Done\n'
+\echo 'Process for updatedb Done\n'
 
 -- after full update replace updatedb with intermediate

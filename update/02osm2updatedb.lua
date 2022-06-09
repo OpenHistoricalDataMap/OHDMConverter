@@ -36,9 +36,9 @@ end
 local path = debug.getinfo(1).source:match("@?(.*/)")
 local file
 if path == nil then
-    file = 'classification.csv'
+    file = '02classification.csv'
 else
-    file = debug.getinfo(1).source:match("@?(.*/)") .. 'classification.csv'
+    file = debug.getinfo(1).source:match("@?(.*/)") .. '02classification.csv'
 end
 local mapfeatures, mapfeatures_undefined = mapfeatures_from_csv(file)
 

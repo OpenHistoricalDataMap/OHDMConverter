@@ -110,13 +110,14 @@ BEGIN
         valid_until_offset  BIGINT,
         CONSTRAINT geoobject_geometry_pkey PRIMARY KEY (id)
     );
-    RAISE NOTICE E'Declared OHDM database \tTime spent=%', clock_timestamp() - t;
+    RAISE NOTICE E'CREATE OHDM database, \tlasted=%', clock_timestamp() - t;
     
 -- manually insert source of data
     SELECT clock_timestamp() INTO t;
     INSERT INTO ohdm.external_systems(source_name, description)
     VALUES ('osm', 'Open Street Map');
-    RAISE NOTICE E'INSERT external_systems \tTime spent=%', clock_timestamp() - t;
+    GET diagnostics d1 = row_count;
+    RAISE NOTICE E'INSERT % row(s) in "external_systems" \tlasted=%', d1, clock_timestamp() - t;
 
 -- insert external_users
     SELECT clock_timestamp() INTO t;
@@ -132,7 +133,6 @@ BEGIN
             FROM inter.relations
         );
     GET diagnostics d1 = row_count;
-    RAISE NOTICE E'INSERT % rows in "external_users", last: %', d1, clock_timestamp() - t;
 
     SELECT clock_timestamp() INTO t;
     UPDATE ohdm.external_users
@@ -142,8 +142,7 @@ BEGIN
             FROM ohdm.external_systems
             WHERE source_name = 'osm'
         );
-    GET diagnostics d1 = row_count;
-    RAISE NOTICE E'UPDATE % row in "external_users", last: %', d1, clock_timestamp() - t;
+    RAISE NOTICE E'INSERT % row(s) in "external_users",\tlasted= %', d1, clock_timestamp() - t;
 
 -- insert points
     SELECT clock_timestamp() INTO t;
@@ -154,7 +153,7 @@ BEGIN
             JOIN ohdm.external_users AS e ON n.uid::BIGINT = e.userid
         );
     GET diagnostics d1 = row_count;
-    RAISE NOTICE E'INSERT % rows in "points", last: %', d1, clock_timestamp() - t;
+    RAISE NOTICE E'INSERT % row(s) in "points",\tlasted= %', d1, clock_timestamp() - t;
 
 -- insert lines
     SELECT clock_timestamp() INTO t;
@@ -165,7 +164,7 @@ BEGIN
             JOIN ohdm.external_users AS e ON w.uid::BIGINT = e.userid
         );
     GET diagnostics d1 = row_count;
-    RAISE NOTICE E'INSERT % rows in "lines", last: %', d1, clock_timestamp() - t;
+    RAISE NOTICE E'INSERT % row(s) in "lines",\tlasted= %', d1, clock_timestamp() - t;
 
 -- insert polygons
     SELECT clock_timestamp() INTO t;
@@ -176,7 +175,7 @@ BEGIN
             JOIN ohdm.external_users AS e ON r.uid::BIGINT = e.userid
         );
     GET diagnostics d1 = row_count;
-    RAISE NOTICE E'INSERT % rows in "polygons", last: %', d1, clock_timestamp() - t;
+    RAISE NOTICE E'INSERT % row(s) in "polygons",\tlasted= %', d1, clock_timestamp() - t;
 
 -- insert geoobject
     SELECT clock_timestamp() INTO t;
@@ -195,7 +194,7 @@ BEGIN
             ) AS geoob
             JOIN ohdm.external_users AS e ON geoob.uid = e.userid);
     GET diagnostics d1 = row_count;
-    RAISE NOTICE E'INSERT % rows in "geoobject", last: %', d1, clock_timestamp() - t;
+    RAISE NOTICE E'INSERT % row(s) in "geoobject",\tlasted= %', d1, clock_timestamp() - t;
 
 -- insert content
     SELECT clock_timestamp() INTO t;
@@ -211,7 +210,7 @@ BEGIN
             FROM inter.relations
         );
     GET diagnostics d1 = row_count;
-    RAISE NOTICE E'INSERT % rows in "content", last: %', d1, clock_timestamp() - t;
+    RAISE NOTICE E'INSERT % row(s) in "content",\tlasted= %', d1, clock_timestamp() - t;
 
 -- insert url
     SELECT clock_timestamp() INTO t;
@@ -227,7 +226,7 @@ BEGIN
             FROM inter.relations
         );
     GET diagnostics d1 = row_count;
-    RAISE NOTICE E'INSERT % rows in "url", last: %', d1, clock_timestamp() - t;
+    RAISE NOTICE E'INSERT % row(s) in "url",\tlasted= %', d1, clock_timestamp() - t;
 
 -- insert geoobject_content
     SELECT clock_timestamp() INTO t;
@@ -249,7 +248,7 @@ BEGIN
             JOIN ohdm.geoobject AS g ON geoob.name = g.geoobject_name
         );
     GET diagnostics d1 = row_count;
-    RAISE NOTICE E'INSERT % rows in "geoobject_content", last: %', d1, clock_timestamp() - t;
+    RAISE NOTICE E'INSERT % row(s) in "geoobject_content",\tlasted= %', d1, clock_timestamp() - t;
 
 -- insert url_content
     SELECT clock_timestamp() INTO t;
@@ -271,7 +270,7 @@ BEGIN
             JOIN ohdm.url AS u ON geoob.url = u.url
         );
     GET diagnostics d1 = row_count;
-    RAISE NOTICE E'INSERT % rows in "url_content", last: %', d1, clock_timestamp() - t;
+    RAISE NOTICE E'INSERT % row(s) in "url_content",\tlasted= %', d1, clock_timestamp() - t;
 
 -- insert geoobject_geometry
     SELECT clock_timestamp() INTO t;
@@ -341,6 +340,6 @@ BEGIN
             JOIN ohdm.geoobject AS target ON re.name = target.geoobject_name
         );
     GET diagnostics d1 = row_count; d2 = d2 + d1;
-    RAISE NOTICE E'INSERT % rows in "geoobject_geometry", last: %', d2, clock_timestamp() - t;
+    RAISE NOTICE E'INSERT % row(s) in "geoobject_geometry",\tlasted= %', d2, clock_timestamp() - t;
 END $$;
 \echo '\n\n'

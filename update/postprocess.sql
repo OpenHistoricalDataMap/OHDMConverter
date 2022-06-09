@@ -19,4 +19,4 @@ BEGIN
     ALTER TABLE updatedb.relations ADD PRIMARY KEY (id);
     ALTER TABLE updatedb.relationmembers ADD PRIMARY KEY (id);
 END $$;
-\echo '\n'
+\echo 'Postprocess DONE\n'

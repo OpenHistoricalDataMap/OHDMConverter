@@ -20,7 +20,6 @@ DECLARE
     d1 int := 0;
     d2 int := 0;
 BEGIN
-    RAISE NOTICE E'Process on "classification"';
     CREATE TABLE IF NOT EXISTS updatedb.classification
     (
         id BIGSERIAL NOT NULL,
@@ -1305,6 +1304,6 @@ BEGIN
         ('waterway','water_point'),
         ('waterway','fuel');
     GET diagnostics d2 = row_count;
-    RAISE NOTICE E'inserted: % rows in updatedb.classifiaction; \tTime spent=%', d1+d2, clock_timestamp() - t; 
+    RAISE NOTICE E'INSERT % row(s) in "classifiaction",\tlasted= %', d1+d2, clock_timestamp() - t;  
 END $$;
 \echo '\n'

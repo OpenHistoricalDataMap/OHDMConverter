@@ -13,7 +13,6 @@ DECLARE
     d1 int := 0;
     d2 int := 0;
 BEGIN
-    RAISE NOTICE E'Process on reseting flags';
     UPDATE inter.nodes
     SET 
         geom_changed = false, 
@@ -46,10 +45,9 @@ BEGIN
         valid = false
     ;
     GET diagnostics d1 = row_count; d2 = d2 + d1;
-    RAISE NOTICE E'Reset Flags in: % rows in intermediate database; \tTime spent=%', d2, clock_timestamp() - t;
+    RAISE NOTICE E'UPDATE % row(s) in intermediate database to reset flags,\tlasted= %', d2, clock_timestamp() - t;
     d2 = 0;
 --------------------------------------------------------------------------------
-    RAISE NOTICE E'Process on unchanged entries';
     SELECT clock_timestamp() INTO t;
     UPDATE updatedb.nodes AS updatenodes
     SET "valid" = true
@@ -71,9 +69,8 @@ BEGIN
     WHERE relations.osm_id = updaterelations.osm_id 
     AND relations.tstamp = updaterelations.tstamp;
     GET diagnostics d1 = row_count; d2 = d2 + d1;
-    RAISE NOTICE E'UPDATE % rows, there are unchanged entries; \tTime spent=%', d2, clock_timestamp() - t;
+    RAISE NOTICE E'UPDATE % row(s), there are unchanged entries,\tlasted= %', d2, clock_timestamp() - t;
 --------------------------------------------------------------------------------
-    RAISE NOTICE E'Process on mark changed geometries';
     SELECT clock_timestamp() INTO t;d2 = 0;
     -- geom column changed?
     UPDATE updatedb.nodes as updatenodes
@@ -111,9 +108,8 @@ BEGIN
     WHERE relations.osm_id = updaterelations.osm_id
     AND SIMILARITY(relations.member,updaterelations.member) < 1;
     GET diagnostics d1 = row_count; d2 = d2 + d1;
-    RAISE NOTICE E'UPDATE % rows, there have changed geometries; \tTime spent=%', d2, clock_timestamp() - t;
+    RAISE NOTICE E'UPDATE % row(s), there have changed geometries,\tlasted= %', d2, clock_timestamp() - t;
 --------------------------------------------------------------------------------
-    RAISE NOTICE E'Process on mark changed objects'; 
     SELECT clock_timestamp() INTO t;d2 = 0;
     UPDATE updatedb.nodes AS updatenodes
     SET object_changed = true
@@ -159,9 +155,8 @@ BEGIN
         NOT COALESCE(updaterelations.name,'') = COALESCE(relations.name, '')
     );
     GET diagnostics d1 = row_count; d2 = d2 + d1;
-    RAISE NOTICE E'UPDATE % rows, there have changed objects; \tTime spent=%', d2, clock_timestamp() - t;
+    RAISE NOTICE E'UPDATE % row(s), there have changed objects,\tlasted= %', d2, clock_timestamp() - t;
 --------------------------------------------------------------------------------
-    RAISE NOTICE E'Process on mark changed urls';
     SELECT clock_timestamp() INTO t;d2 = 0;
     UPDATE updatedb.nodes AS updatenodes
     SET url_changed = true
@@ -183,9 +178,8 @@ BEGIN
     WHERE updaterelations.osm_id = relations.osm_id 
     AND NOT COALESCE(updaterelations.url,'') = COALESCE(relations.url,'') ;
     GET diagnostics d1 = row_count; d2 = d2 + d1;
-    RAISE NOTICE E'UPDATE % rows, there have changed urls; \tTime spent=%', d2, clock_timestamp() - t;
+    RAISE NOTICE E'UPDATE % row(s), there have changed urls,\tlasted= %', d2, clock_timestamp() - t;
 --------------------------------------------------------------------------------
-    RAISE NOTICE E'Process on mark new objects';
     SELECT clock_timestamp() INTO t;d2 = 0;
     UPDATE updatedb.nodes
     SET object_new = true
@@ -201,9 +195,8 @@ BEGIN
     SET object_new = true
     WHERE osm_id NOT IN (SELECT osm_id FROM inter.relations);
     GET diagnostics d1 = row_count; d2 = d2 + d1;
-    RAISE NOTICE E'UPDATE % rows, there are new; \tTime spent=%', d2, clock_timestamp() - t;
+    RAISE NOTICE E'UPDATE % row(s), there are new,\tlasted= %', d2, clock_timestamp() - t;
 --------------------------------------------------------------------------------
-    RAISE NOTICE E'Process on INSERT old, delete objects from intermediate to updatedb'; 
     SELECT clock_timestamp() INTO t;d2 = 0;
     INSERT INTO updatedb.nodes (
         osm_id,
@@ -336,9 +329,8 @@ BEGIN
         )
     );
     GET diagnostics d1 = row_count; d2 = d2 + d1;
-    RAISE NOTICE E'INSERT % rows, there are marked as deleted; \tTime spent=%', d2, clock_timestamp() - t;
+    RAISE NOTICE E'INSERT % row(s), there are marked as deleted,\tlasted= %', d2, clock_timestamp() - t;
 --------------------------------------------------------------------------------
-    RAISE NOTICE E'Process on Mark all changed or new objects as not valid'; 
     SELECT clock_timestamp() INTO t;d2 = 0;
     UPDATE updatedb.nodes
     SET valid = false
@@ -354,7 +346,7 @@ BEGIN
     SET valid = false
     WHERE geom_changed = true or object_changed = true or object_new = true or url_changed = true;
     GET diagnostics d1 = row_count; d2 = d2 + d1;
-    RAISE NOTICE E'INSERT % rows, there are marked as not valid; \tTime spent=%', d2, clock_timestamp() - t;
+    RAISE NOTICE E'INSERT % row(s), there are marked as not valid,\tlasted= %', d2, clock_timestamp() - t;
 END $$;
 
 \echo 'Process for udatedb Done\n'

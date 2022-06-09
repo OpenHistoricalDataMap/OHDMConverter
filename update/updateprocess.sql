@@ -13,7 +13,7 @@ DECLARE
     d1 int := 0;
     d2 int := 0;
 BEGIN
-    RAISE NOTICE E'Process on reseting flags'
+    RAISE NOTICE E'Process on reseting flags';
     UPDATE inter.nodes
     SET 
         geom_changed = false, 
@@ -49,7 +49,7 @@ BEGIN
     RAISE NOTICE E'Reset Flags in: % rows in intermediate database; \tTime spent=%', d2, clock_timestamp() - t;
     d2 = 0;
 --------------------------------------------------------------------------------
-    RAISE NOTICE E'Process on unchanged entries'
+    RAISE NOTICE E'Process on unchanged entries';
     SELECT clock_timestamp() INTO t;
     UPDATE updatedb.nodes AS updatenodes
     SET "valid" = true
@@ -73,7 +73,7 @@ BEGIN
     GET diagnostics d1 = row_count; d2 = d2 + d1;
     RAISE NOTICE E'UPDATE % rows, there are unchanged entries; \tTime spent=%', d2, clock_timestamp() - t;
 --------------------------------------------------------------------------------
-    RAISE NOTICE E'Process on mark changed geometries'
+    RAISE NOTICE E'Process on mark changed geometries';
     SELECT clock_timestamp() INTO t;d2 = 0;
     -- geom column changed?
     UPDATE updatedb.nodes as updatenodes

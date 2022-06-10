@@ -11,9 +11,10 @@ printf "Saved mapfeatures into %s\n\n" "$classification_file"
 
 
 osm2pgsql -d ohdm -x -O flex -S $path'/02osm2inter.lua' -c $path'/02testmap.osm'
+# osm2pgsql -d ohdm -x -O flex -S $path'/02osm2inter.lua' -c $path'/berlin.osm.pbf'
 printf "Converted osm2inter\n\n"
 sleep 3
 psql -d ohdm -f $path'/03postprocess.sql'
 t2=$(date +%s)
 duration=$((t2 - t1))
-printf "Duration Time(H:M:S): %s" "$(date -d @${duration} -u +%H:%M:%S)"
+printf "Convert osm2inter, lasted(H:M:S)= %s\n" "$(date -d @${duration} -u +%H:%M:%S)"

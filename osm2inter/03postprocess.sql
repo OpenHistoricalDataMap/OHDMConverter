@@ -14,9 +14,12 @@ BEGIN
     ALTER TABLE inter.creationinformation ADD PRIMARY KEY (id);
     INSERT INTO inter.creationinformation(timestampstring) VALUES (t);
     ALTER TABLE inter.nodes ADD PRIMARY KEY (id);
+    CREATE UNIQUE INDEX idx_inter_nodes_osm_id ON inter.nodes(osm_id);
     ALTER TABLE inter.ways ADD PRIMARY KEY (id);
+    CREATE UNIQUE INDEX idx_inter_ways_osm_id ON inter.ways(osm_id);
     ALTER TABLE inter.waynodes ADD PRIMARY KEY (id);
     ALTER TABLE inter.relations ADD PRIMARY KEY (id);
+    CREATE UNIQUE INDEX idx_inter_relations_osm_id ON inter.relations(osm_id);
     ALTER TABLE inter.relationmembers ADD PRIMARY KEY (id);
 END $$;
 \echo 'Postprocess DONE\n'

@@ -11,4 +11,4 @@ psql -d ohdm -f $path'/update/04updateprocess.sql'
 
 psql -d ohdm -f $path'/update/05test_insert-in-ohdm.sql'
 
-psql -d ohdm -f $path'/update/06alter-inter-schema.sql'
+# psql -d ohdm -f $path'/update/06alter-inter-schema.sql'

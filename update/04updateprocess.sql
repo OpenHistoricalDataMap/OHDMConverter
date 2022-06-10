@@ -48,29 +48,6 @@ BEGIN
     RAISE NOTICE E'UPDATE % row(s) in intermediate database to reset flags,\tlasted= %', d2, clock_timestamp() - t;
     d2 = 0;
 --------------------------------------------------------------------------------
-    SELECT clock_timestamp() INTO t;
-    UPDATE updatedb.nodes AS updatenodes
-    SET "valid" = true
-    FROM inter.nodes AS nodes 
-    WHERE nodes.osm_id = updatenodes.osm_id 
-    AND nodes.tstamp = updatenodes.tstamp;
-    GET diagnostics d1 = row_count; d2 = d2 + d1;
-
-    UPDATE updatedb.ways AS updateways
-    SET "valid" = true
-    FROM inter.ways AS ways
-    WHERE ways.osm_id = updateways.osm_id 
-    AND ways.tstamp = updateways.tstamp;
-    GET diagnostics d1 = row_count; d2 = d2 + d1;
-
-    UPDATE updatedb.relations AS updaterelations
-    SET "valid" = true
-    FROM inter.relations AS relations
-    WHERE relations.osm_id = updaterelations.osm_id 
-    AND relations.tstamp = updaterelations.tstamp;
-    GET diagnostics d1 = row_count; d2 = d2 + d1;
-    RAISE NOTICE E'UPDATE % row(s), there are unchanged entries,\tlasted= %', d2, clock_timestamp() - t;
---------------------------------------------------------------------------------
     SELECT clock_timestamp() INTO t;d2 = 0;
     -- geom column changed?
     UPDATE updatedb.nodes as updatenodes
@@ -181,19 +158,34 @@ BEGIN
     RAISE NOTICE E'UPDATE % row(s), there have changed urls,\tlasted= %', d2, clock_timestamp() - t;
 --------------------------------------------------------------------------------
     SELECT clock_timestamp() INTO t;d2 = 0;
-    UPDATE updatedb.nodes
+    UPDATE updatedb.nodes AS nodes
     SET object_new = true
-    WHERE osm_id NOT IN (SELECT osm_id FROM inter.nodes);
+    FROM (
+        SELECT u.osm_id, u.tstamp FROM updatedb.nodes AS u
+        LEFT JOIN inter.nodes AS i ON i.osm_id = u.osm_id
+        WHERE i.osm_id ISNULL
+    ) AS new_objects
+    WHERE nodes.osm_id = new_objects.osm_id;
     GET diagnostics d1 = row_count; d2 = d2 + d1;
 
-    UPDATE updatedb.ways
+    UPDATE updatedb.ways AS ways
     SET object_new = true
-    WHERE osm_id NOT IN (SELECT osm_id FROM inter.ways);
+    FROM (
+        SELECT u.osm_id, u.tstamp FROM updatedb.ways AS u
+        LEFT JOIN inter.ways AS i ON i.osm_id = u.osm_id
+        WHERE i.osm_id ISNULL
+    ) AS new_objects
+    WHERE ways.osm_id = new_objects.osm_id;
     GET diagnostics d1 = row_count; d2 = d2 + d1;
 
-    UPDATE updatedb.relations
+    UPDATE updatedb.relations AS relations
     SET object_new = true
-    WHERE osm_id NOT IN (SELECT osm_id FROM inter.relations);
+    FROM (
+        SELECT u.osm_id, u.tstamp FROM updatedb.relations AS u
+        LEFT JOIN inter.relations AS i ON i.osm_id = u.osm_id
+        WHERE i.osm_id ISNULL
+    ) AS new_objects
+    WHERE relations.osm_id = new_objects.osm_id;
     GET diagnostics d1 = row_count; d2 = d2 + d1;
     RAISE NOTICE E'UPDATE % row(s), there are new,\tlasted= %', d2, clock_timestamp() - t;
 --------------------------------------------------------------------------------
@@ -218,26 +210,25 @@ BEGIN
     )
     (
         SELECT 
-            osm_id,
-            tstamp,
-            mapfeature_ids,
-            serializedtags,
-            geom,
-            uid,
-            username,
-            name,
-            url,
-            geom_changed,
-            object_changed,
-            url_changed,
+            nodes.osm_id,
+            nodes.tstamp,
+            nodes.mapfeature_ids,
+            nodes.serializedtags,
+            nodes.geom,
+            nodes.uid,
+            nodes.username,
+            nodes.name,
+            nodes.url,
+            nodes.geom_changed,
+            nodes.object_changed,
+            nodes.url_changed,
             true,
-            object_new,
-            has_name,
-            valid 
+            nodes.object_new,
+            nodes.has_name,
+            nodes.valid 
         FROM inter.nodes AS nodes
-        WHERE nodes.osm_id NOT IN (
-            SELECT osm_id FROM updatedb.nodes
-        )
+        LEFT JOIN updatedb.nodes AS updatenodes ON updatenodes.osm_id = nodes.osm_id
+        WHERE nodes.osm_id ISNULL
     );
     GET diagnostics d1 = row_count; d2 = d2 + d1;
 
@@ -258,30 +249,30 @@ BEGIN
         deleted,
         object_new,
         has_name,
-        valid 
+        valid
     )
     (
         SELECT 
-            osm_id,
-            tstamp,
-            mapfeature_ids,
-            serializedtags,
-            geom,
-            uid,
-            username,
-            name,
-            url,
-            member,
-            geom_changed,
-            object_changed,
-            url_changed,
-            true,object_new,
-            has_name,
-            valid 
+            ways.osm_id,
+            ways.tstamp,
+            ways.mapfeature_ids,
+            ways.serializedtags,
+            ways.geom,
+            ways.uid,
+            ways.username,
+            ways.name,
+            ways.url,
+            ways.member,
+            ways.geom_changed,
+            ways.object_changed,
+            ways.url_changed,
+            true,
+            ways.object_new,
+            ways.has_name,
+            ways.valid 
         FROM inter.ways AS ways
-        WHERE ways.osm_id NOT IN (
-            SELECT osm_id FROM updatedb.ways
-        )
+        LEFT JOIN updatedb.ways AS updateways ON updateways.osm_id = ways.osm_id
+        WHERE updateways.osm_id ISNULL
     );
     GET diagnostics d1 = row_count; d2 = d2 + d1;
 
@@ -306,49 +297,58 @@ BEGIN
     )
     (
         SELECT 
-            osm_id,
-            tstamp,
-            mapfeature_ids,
-            serializedtags,
-            geom,
-            uid,
-            username,
-            name,
-            url,
-            member,
-            geom_changed,
-            object_changed,
-            url_changed,
+            relations.osm_id,
+            relations.tstamp,
+            relations.mapfeature_ids,
+            relations.serializedtags,
+            relations.geom,
+            relations.uid,
+            relations.username,
+            relations.name,
+            relations.url,
+            relations.member,
+            relations.geom_changed,
+            relations.object_changed,
+            relations.url_changed,
             true,
-            object_new,
-            has_name,
-            valid 
+            relations.object_new,
+            relations.has_name,
+            relations.valid             
         FROM inter.relations AS relations
-        WHERE relations.osm_id NOT IN (
-            SELECT osm_id FROM updatedb.relations
-        )
+        LEFT JOIN updatedb.relations AS updaterelations ON updaterelations.osm_id = relations.osm_id
+        WHERE updaterelations.osm_id ISNULL
     );
     GET diagnostics d1 = row_count; d2 = d2 + d1;
     RAISE NOTICE E'INSERT % row(s), there are marked as deleted,\tlasted= %', d2, clock_timestamp() - t;
 --------------------------------------------------------------------------------
-    SELECT clock_timestamp() INTO t;d2 = 0;
+    SELECT clock_timestamp() INTO t;d2 = 0;    
     UPDATE updatedb.nodes
-    SET valid = false
-    WHERE geom_changed = true or object_changed = true or object_new = true or url_changed = true;
+    SET valid = true
+    WHERE geom_changed = false 
+        AND object_changed = false 
+        AND object_new = false 
+        AND url_changed = false 
+        AND deleted = false;
     GET diagnostics d1 = row_count; d2 = d2 + d1;
 
     UPDATE updatedb.ways
-    SET valid = false
-    WHERE geom_changed = true or object_changed = true or object_new = true or url_changed = true;
+    SET valid = true
+    WHERE geom_changed = false 
+        AND object_changed = false 
+        AND object_new = false 
+        AND url_changed = false 
+        AND deleted = false;
     GET diagnostics d1 = row_count; d2 = d2 + d1;
 
     UPDATE updatedb.relations
-    SET valid = false
-    WHERE geom_changed = true or object_changed = true or object_new = true or url_changed = true;
+    SET valid = true
+    WHERE geom_changed = false 
+        AND object_changed = false 
+        AND object_new = false 
+        AND url_changed = false 
+        AND deleted = false;
     GET diagnostics d1 = row_count; d2 = d2 + d1;
-    RAISE NOTICE E'INSERT % row(s), there are marked as not valid,\tlasted= %', d2, clock_timestamp() - t;
+    RAISE NOTICE E'UPDATE % row(s), there are unchanged entries,\tlasted= %', d2, clock_timestamp() - t;
 END $$;
 
 \echo 'Process for updatedb Done\n'
-
--- after full update replace updatedb with intermediate

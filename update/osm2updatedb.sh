@@ -11,10 +11,10 @@ printf "Saved mapfeatures into %s\n\n" "$classification_file"
 
 
 osm2pgsql -d ohdm -x -O flex -S $path'/02osm2updatedb.lua' -c $path'/02testupdate.osm'
+# osm2pgsql -d ohdm -x -O flex -S $path'/02osm2updatedb.lua' -c $path'/berlin.osm.pbf'
 printf "Converted osm2updatedb\n"
 sleep 3
 psql -d ohdm -f $path'/03postprocess.sql'
-printf "Postprocess done\n"
 t2=$(date +%s)
 duration=$((t2 - t1))
-printf "Duration Time(H:M:S): %s" "$(date -d @${duration} -u +%H:%M:%S)"
+printf "Convert osm2updatedb, lasted(H:M:S)= %s\n" "$(date -d @${duration} -u +%H:%M:%S)"

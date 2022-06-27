@@ -104,22 +104,22 @@ BEGIN
 
 -- Insert new geoobjects
     SELECT clock_timestamp() INTO t;
-    INSERT INTO ohdm.geoobject(geoobject_name, mapfeature_ids, source_user_id) 
+    INSERT INTO ohdm.geoobject(geoobject_name, classification_ids, source_user_id) 
     (
-        SELECT name, mapfeature_ids, users.id FROM (
-            SELECT uid::BIGINT, name, mapfeature_ids
+        SELECT name, classification_ids, users.id FROM (
+            SELECT uid::BIGINT, name, classification_ids
             FROM updatedb.nodes AS nodes
             WHERE nodes.valid = false 
             AND nodes.deleted = false 
             AND (nodes.object_new = true or nodes.object_changed = true)
                 UNION
-            SELECT uid::BIGINT, name, mapfeature_ids
+            SELECT uid::BIGINT, name, classification_ids
             FROM updatedb.ways AS ways
             WHERE ways.valid = false 
             AND ways.deleted = false 
             AND (ways.object_new = true or ways.object_changed = true)
                 UNION
-            SELECT uid::BIGINT, name, mapfeature_ids
+            SELECT uid::BIGINT, name, classification_ids
             FROM updatedb.relations AS relations
             WHERE relations.valid = false 
             AND relations.deleted = false 
@@ -130,7 +130,7 @@ BEGIN
         AND NOT EXISTS (
             SELECT 1 FROM ohdm.geoobject AS geoobject
             WHERE geoobject.geoobject_name = geoob.name
-            AND geoobject.mapfeature_ids = geoob.mapfeature_ids
+            AND geoobject.classification_ids = geoob.classification_ids
             AND geoobject.source_user_id = users.id
         )
     );

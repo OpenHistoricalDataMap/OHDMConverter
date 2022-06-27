@@ -96,7 +96,7 @@ BEGIN
     (
         NOT COALESCE(updatenodes.serializedtags,'') = COALESCE(nodes.serializedtags,'') OR
         NOT updatenodes.tstamp = nodes.tstamp OR
-        similarity(updatenodes.mapfeature_ids,nodes.mapfeature_ids) < 1 OR
+        similarity(updatenodes.classification_ids,nodes.classification_ids) < 1 OR
         NOT COALESCE(updatenodes.uid,'') = COALESCE(nodes.uid,'') OR
         NOT COALESCE(updatenodes.username,'') = COALESCE(nodes.username,'')  OR
         NOT COALESCE(updatenodes.name,'') = COALESCE(nodes.name, '')
@@ -111,7 +111,7 @@ BEGIN
     (
         NOT COALESCE(updateways.serializedtags,'') = COALESCE(ways.serializedtags,'')  OR
         NOT updateways.tstamp = ways.tstamp OR
-        similarity(updateways.mapfeature_ids,ways.mapfeature_ids) < 1 OR
+        similarity(updateways.classification_ids,ways.classification_ids) < 1 OR
         NOT COALESCE(updateways.uid,'') = COALESCE(ways.uid,'')  OR
         NOT COALESCE(updateways.username,'') = COALESCE(ways.username,'')  OR
         NOT updateways.name = COALESCE(ways.name, '')
@@ -126,7 +126,7 @@ BEGIN
     (
         NOT COALESCE(updaterelations.serializedtags,'') = COALESCE(relations.serializedtags,'')  OR
         NOT updaterelations.tstamp = relations.tstamp OR
-        similarity(updaterelations.mapfeature_ids,relations.mapfeature_ids) < 1 OR
+        similarity(updaterelations.classification_ids,relations.classification_ids) < 1 OR
         NOT COALESCE(updaterelations.uid,'') = COALESCE(relations.uid,'')  OR
         NOT COALESCE(updaterelations.username,'') = COALESCE(relations.username,'')  OR
         NOT COALESCE(updaterelations.name,'') = COALESCE(relations.name, '')
@@ -193,7 +193,7 @@ BEGIN
     INSERT INTO updatedb.nodes (
         osm_id,
         tstamp,
-        mapfeature_ids,
+        classification_ids,
         serializedtags,
         geom,
         uid,
@@ -212,7 +212,7 @@ BEGIN
         SELECT 
             nodes.osm_id,
             nodes.tstamp,
-            nodes.mapfeature_ids,
+            nodes.classification_ids,
             nodes.serializedtags,
             nodes.geom,
             nodes.uid,
@@ -235,7 +235,7 @@ BEGIN
     INSERT INTO updatedb.ways (
         osm_id,
         tstamp,
-        mapfeature_ids,
+        classification_ids,
         serializedtags,
         geom,
         uid,
@@ -255,7 +255,7 @@ BEGIN
         SELECT 
             ways.osm_id,
             ways.tstamp,
-            ways.mapfeature_ids,
+            ways.classification_ids,
             ways.serializedtags,
             ways.geom,
             ways.uid,
@@ -279,7 +279,7 @@ BEGIN
     INSERT INTO updatedb.relations (
         osm_id,
         tstamp,
-        mapfeature_ids,
+        classification_ids,
         serializedtags,
         geom,
         uid,
@@ -299,7 +299,7 @@ BEGIN
         SELECT 
             relations.osm_id,
             relations.tstamp,
-            relations.mapfeature_ids,
+            relations.classification_ids,
             relations.serializedtags,
             relations.geom,
             relations.uid,

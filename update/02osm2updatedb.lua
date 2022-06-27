@@ -12,25 +12,25 @@ local function file_exists(file)
 end
 
 -- get all lines from a file, returns 2 lua tables
--- with osm mapfeatures
-local function mapfeatures_from_csv(file)
+-- with osm classifications
+local function classifications_from_csv(file)
     if not file_exists(file) then
         error("can not read file:" .. file)
     end
-    local mapfeatures = {}
-    local mapfeatures_undefined = {}
+    local classifications = {}
+    local classifications_undefined = {}
     for line in io.lines(file) do
         local temp = {}
         local id, classname, subclassname = line:match("%s*(.-),%s*(.-),%s*(.*)")
         if string.match(subclassname,'[Uu]ndefined.*') then
             temp = {id = id, classname = classname, subclassname = subclassname}
-            mapfeatures_undefined[#mapfeatures_undefined + 1] = temp
+            classifications_undefined[#classifications_undefined + 1] = temp
         else
             temp = {id = id, classname = classname, subclassname = subclassname}
-            mapfeatures[#mapfeatures + 1] = temp
+            classifications[#classifications + 1] = temp
         end
     end
-    return mapfeatures, mapfeatures_undefined
+    return classifications, classifications_undefined
 end
 
 local path = debug.getinfo(1).source:match("@?(.*/)")
@@ -40,7 +40,7 @@ if path == nil then
 else
     file = debug.getinfo(1).source:match("@?(.*/)") .. '02classification.csv'
 end
-local mapfeatures, mapfeatures_undefined = mapfeatures_from_csv(file)
+local classifications, classifications_undefined = classifications_from_csv(file)
 
 SCHEMA_NAME = 'updatedb'
 
@@ -65,7 +65,7 @@ tables.nodes = osm2pgsql.define_table({
     columns = {
         { column = 'id', sql_type = 'bigserial', create_only = true },
         { column = 'tstamp', sql_type = 'timestamp' },
-        { column = 'mapfeature_ids', type = 'text' },
+        { column = 'classification_ids', type = 'text' },
         { column = 'serializedtags', type = 'hstore' },
         { column = 'geom', type = 'point', projection = 4326},
         { column = 'uid', type = 'text' },
@@ -101,7 +101,7 @@ tables.ways = osm2pgsql.define_table({
     columns = {
         { column = 'id', sql_type = 'bigserial', create_only = true },
         { column = 'tstamp', sql_type = 'timestamp' },
-        { column = 'mapfeature_ids', type = 'text' },
+        { column = 'classification_ids', type = 'text' },
         { column = 'serializedtags', type = 'hstore' },
         { column = 'geom', type = 'geometry', projection = 4326},
         { column = 'uid', type = 'text' },
@@ -142,7 +142,7 @@ tables.relations = osm2pgsql.define_table({
     columns = {
         { column = 'id', sql_type = 'bigserial', create_only = true },
         { column = 'tstamp', sql_type = 'timestamp' },
-        { column = 'mapfeature_ids', type = 'text' },
+        { column = 'classification_ids', type = 'text' },
         { column = 'serializedtags', type = 'hstore' },
         { column = 'geom', type = 'geometry', projection = 4326},
         { column = 'uid', type = 'text' },
@@ -230,8 +230,8 @@ local function get_classcode(key, value, features)
             goto undefined
         end
     end
-    -- search classcode in mapfeatures table
-    for _, entry in pairs(mapfeatures) do
+    -- search classcode in classifications table
+    for _, entry in pairs(classifications) do
         if entry.classname == key then
             if entry.subclassname == value then
                 table.insert(features, entry.id)
@@ -241,8 +241,8 @@ local function get_classcode(key, value, features)
     end
     :: undefined ::
     -- subclassname is not defined, also search in
-    -- mapfeatures_undefined table
-    for _, entry in pairs(mapfeatures_undefined) do
+    -- classifications_undefined table
+    for _, entry in pairs(classifications_undefined) do
         if entry.classname == key then
             table.insert(features, entry.id)
             return features
@@ -314,7 +314,7 @@ function osm2pgsql.process_node(object)
         name = object_name,
         url = object_url,
         tstamp = reformat_date(object.timestamp),
-        mapfeature_ids = object_features,
+        classification_ids = object_features,
         serializedtags = object_serializedtags,
         geom = { create = 'point' },
         uid = object.uid,
@@ -348,7 +348,7 @@ function osm2pgsql.process_way(object)
         url = object_url,
         member = table.concat(members, ';'),
         tstamp = reformat_date(object.timestamp),
-        mapfeature_ids = object_features,
+        classification_ids = object_features,
         serializedtags = object_serializedtags,
         geom = { create = 'area' },
         uid = object.uid,
@@ -413,7 +413,7 @@ function osm2pgsql.process_relation(object)
         url = object_url,
         member = table.concat(members, ';'),
         tstamp = reformat_date(object.timestamp),
-        mapfeature_ids = object_features,
+        classification_ids = object_features,
         serializedtags = object_serializedtags,
         geom = { create = 'area' },
         uid = object.uid,

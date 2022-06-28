@@ -18,7 +18,7 @@ BEGIN
     (
         id             BIGSERIAL NOT NULL,
         geoobject_name VARCHAR,
-        mapfeature_ids VARCHAR,
+        classification_ids VARCHAR,
         source_user_id BIGINT,
         CONSTRAINT geoobject_pkey PRIMARY KEY (id)
     );
@@ -179,17 +179,17 @@ BEGIN
 
 -- insert geoobject
     SELECT clock_timestamp() INTO t;
-    INSERT INTO ohdm.geoobject(geoobject_name, mapfeature_ids, source_user_id) 
+    INSERT INTO ohdm.geoobject(geoobject_name, classification_ids, source_user_id) 
         (
-            SELECT name, mapfeature_ids, e.id
+            SELECT name, classification_ids, e.id
             FROM (
-                SELECT uid::BIGINT, name, mapfeature_ids
+                SELECT uid::BIGINT, name, classification_ids
                 FROM inter.nodes
                     UNION
-                SELECT uid::BIGINT, name, mapfeature_ids
+                SELECT uid::BIGINT, name, classification_ids
                 FROM inter.ways
                     UNION
-                SELECT uid::BIGINT, name, mapfeature_ids
+                SELECT uid::BIGINT, name, classification_ids
                 FROM inter.relations
             ) AS geoob
             JOIN ohdm.external_users AS e ON geoob.uid = e.userid);

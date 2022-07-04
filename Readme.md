@@ -148,11 +148,11 @@ psql -c "CREATE DATABASE ohdm;"
 
 <br><br>
 
-# Import OSM file to the intermediate database
+# Import OSM file to the intermediate schema
 <details><summary>Use of individual scripts</summary>
 
 ## Preprocess
-The 2 databases need the [map features](https://wiki.openstreetmap.org/wiki/Map_features) as a reference table. The [01preprocess.sql](https://github.com/OpenHistoricalDataMap/OHDMConverter/blob/SteSad/osm2inter/01preprocess.sql) realizes this and also creates the schema "inter".
+The 2 schemas need the [map features](https://wiki.openstreetmap.org/wiki/Map_features) as a reference table. The [01preprocess.sql](https://github.com/OpenHistoricalDataMap/OHDMConverter/blob/SteSad/osm2inter/01preprocess.sql) realizes this and also creates the schema "inter".
 
 You can find the 01preprocess.sql script in the osm2inter folder after clone this repository and run with:
 ```

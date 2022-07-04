@@ -2,7 +2,7 @@ This guide is intended as an instruction for the installation of a PostgreSQL da
 osm2pgsql is a command line program written in portable C++ and serves as a tool to import geometric data in the form of osm files into the PostgreSQL database.
 In order to be able to use osm2pgsql and psql completely, several tools are required, the installation of which is shown in the following.
 
->**NOTE**: Only Ubuntu 20.04 and Windows 10 have been successfully tested. 
+>**NOTE**: Successfully tested on Ubuntu 20.04
 
 # Installation database management system (DBMS)
 First we need the dbms itself, in this case we use PostgreSQL as the database management system.
@@ -49,7 +49,7 @@ PostGIS is a spatial database extender for PostgreSQL object-relational database
 # Installation osm2pgsql
 You have to use osm2pgsql up to version 1.5.1, therefor we do not use the standard installation.
 
-If you have used the [installation script](TODO: add link to script]), you can skip this section.
+If you have used the [installation script](https://github.com/OpenHistoricalDataMap/OHDMConverter/blob/SteSad/install_postgis_osm2pgsql.sh), you can skip this section.
 
 Download a Version from the [Releases](https://github.com/openstreetmap/osm2pgsql/releases) up to 1.5.1<br>
 and extract the tar container or use the following script
@@ -110,7 +110,7 @@ git clone -b SteSad https://github.com/OpenHistoricalDataMap/OHDMConverter.git
 ```
 
 ## osm file
-One little example file of an osm file is also in the cloned repository `littlemap.osm`<br>
+One little example file of an osm file is also in the cloned repository [02testmap.osm](https://github.com/OpenHistoricalDataMap/OHDMConverter/blob/SteSad/osm2inter/02testmap.osm)<br>
 This file contains the area of the HTW Berlin Campus Wilhelminenhof.
 
 Other osm files can be downloaded from:<br>
@@ -152,17 +152,17 @@ psql -c "CREATE DATABASE ohdm;"
 <details><summary>Use of individual scripts</summary>
 
 ## Preprocess
-The 2 databases need the [map features](https://wiki.openstreetmap.org/wiki/Map_features) as a reference table. The [preprocess.sql](https://github.com/OpenHistoricalDataMap/OHDMConverter/blob/SteSad/osm2inter/preprocess.sql) realizes this and also creates the schema "inter".
+The 2 databases need the [map features](https://wiki.openstreetmap.org/wiki/Map_features) as a reference table. The [01preprocess.sql](https://github.com/OpenHistoricalDataMap/OHDMConverter/blob/SteSad/osm2inter/01preprocess.sql) realizes this and also creates the schema "inter".
 
-You can find the preprocess.sql script in the osm2inter folder after clone this repository and run with:
+You can find the 01preprocess.sql script in the osm2inter folder after clone this repository and run with:
 ```
 psql \
---host=<servername>\
---port=<port>\
---username=<username>\
---password\
---dbname=<database>\
---file=preprocess.sql
+--host=<servername> \
+--port=<port> \
+--username=<username> \
+--password \
+--dbname=<database> \
+--file=01preprocess.sql
 ```
 <br>
 
@@ -171,11 +171,11 @@ The lua script in the next step need a csv file with all map features to refer t
 To realizes that run:
 ```
 psql \
---host=<servername>\
---port=<port>\
---username=<username>\
---password\
---dbname=<database>\
+--host=<servername> \
+--port=<port> \
+--username=<username> \
+--password \
+--dbname=<database> \
 --command="\copy inter.classification TO <file_you_want_copy_to> WITH DELIMITER ',';"
 ```
 <br>
@@ -186,30 +186,30 @@ The previous steps ensure that a database schema with the name "inter" exists an
 Now the actual import can be started.
 ```
 osm2pgsql \
---host=<servername>\
---port=<port>\
---user=<username>\
---password\
---database=<database>\
---log-level=info\
---extra-attributes\
---output=flex\
---style=osm2inter.lua\
---create littlemap.osm
+--host=<servername> \
+--port=<port> \
+--user=<username> \
+--password \
+--database=<database> \
+--log-level=info \
+--extra-attributes \
+--output=flex \
+--style=02osm2inter.lua \
+--create 02testmap.osm
 ```
 <br>
 
 ## Postprocess
-The osm2pgsql tool creates columns with unique non "Null" values, but these values are not recognized as primary keys in the PostgreSQL database. Therefore, after using the osm2pgsql tool, make sure that all tables with generated ids become primary keys. This is done with the [postprocess.sql](https://github.com/OpenHistoricalDataMap/OHDMConverter/blob/SteSad/osm2inter/postprocess.sql) script.
+The osm2pgsql tool creates columns with unique non "Null" values, but these values are not recognized as primary keys in the PostgreSQL database. Therefore, after using the osm2pgsql tool, make sure that all tables with generated ids become primary keys. This is done with the [03postprocess.sql](https://github.com/OpenHistoricalDataMap/OHDMConverter/blob/SteSad/osm2inter/03postprocess.sql) script.
 
 ```
 psql \
---host=<servername>\
---port=<port>\
---username=<username>\
---password\
---dbname=<database>\
---file=postprocess.sql
+--host=<servername> \
+--port=<port> \
+--username=<username> \
+--password \
+--dbname=<database> \
+--file=03postprocess.sql
 ```
 
 </details><br><br>
